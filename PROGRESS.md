@@ -24,7 +24,7 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 | Phase 1: Foundation | completed | component skeleton, foundation headers/sources, target capability plumbing, smoke app, dual-target build validation |
 | Phase 2: Foundational Public Modules | completed | `system` and `gpio` implemented with examples, guides, and dual-target build validation |
 | Phase 3: Core Serial And Bus Modules | completed | `uart`, `i2c`, and `spi` implemented with examples, guides, and dual-target build validation |
-| Phase 4: Timing And Analog Modules | in_progress | `pwm` implemented, `adc` and `timer` pending |
+| Phase 4: Timing And Analog Modules | in_progress | `pwm` and `adc` implemented, `timer` pending |
 | Phase 5: Async And Hardening | not_started | GPIO interrupt callbacks, UART async, timer callbacks |
 | Phase 6: Stabilization | not_started | smoke tests, concurrency tests, docs cleanup |
 | Phase 7: Release | not_started | release candidate and `v1.0.0` |
@@ -90,8 +90,10 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 ### Phase 4 Timing And Analog Modules
 
 - added public `pwm` header and implementation
+- added public `adc` header and implementation
 - added `examples/pwm_basic/`
-- added module docs and task-first guide for `pwm`
+- added `examples/adc_basic/`
+- added module docs and task-first guides for `pwm` and `adc`
 - validated example builds for:
   - `esp32c3`
   - `esp32s3`
@@ -108,6 +110,7 @@ Public API currently exists for:
 - `blusys_i2c_master_*`
 - `blusys_spi_*`
 - `blusys_pwm_*`
+- `blusys_adc_*`
 
 Internal infrastructure currently exists for:
 - target-specific source selection in the component CMake
@@ -118,7 +121,6 @@ Internal infrastructure currently exists for:
 ## Open Items Before Phase 4
 
 - define the exact blocking `pwm` API surface
-- define the exact blocking `adc` API surface
 - define the exact blocking `timer` API surface
 - decide whether Phase 4 needs a shared handle pattern beyond the current lock-based implementation
 
@@ -132,6 +134,6 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. implement `adc`
-2. implement `timer`
-3. add examples and docs for the remaining Phase 4 modules
+1. implement `timer`
+2. add examples and docs for the remaining Phase 4 modules
+3. validate the full Phase 4 build matrix
