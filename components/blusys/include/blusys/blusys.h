@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 #include "blusys/error.h"
+#include "blusys/gpio.h"
+#include "blusys/system.h"
 #include "blusys/target.h"
 #include "blusys/version.h"
 

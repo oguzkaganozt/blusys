@@ -10,10 +10,10 @@ It summarizes the current build, validation, and coding rules for Blusys HAL.
 - Build system: ESP-IDF v5.5 with CMake
 - Current supported targets: `esp32c3`, `esp32s3`
 - Main component: `components/blusys/`
-- Current validation app: `examples/smoke/`
+- Current validation apps: `examples/smoke/`, `examples/system_info/`, `examples/gpio_basic/`
 
 The repository is still early-stage.
-Phase 1 foundation is implemented.
+Phase 1 foundation and Phase 2 foundational public modules are implemented.
 Formal unit tests and lint scripts do not exist yet.
 
 ## Repository Layout
@@ -25,6 +25,8 @@ Formal unit tests and lint scripts do not exist yet.
 - `components/blusys/src/targets/esp32c3/`: C3-specific internals
 - `components/blusys/src/targets/esp32s3/`: S3-specific internals
 - `examples/smoke/`: build validation app
+- `examples/system_info/`: `system` module example
+- `examples/gpio_basic/`: `gpio` module example
 - `docs/`: architecture, API rules, roadmap, workflow
 - `PROGRESS.md`: implementation progress tracker
 - `esp-idf-en-v5.5.4/`: bundled upstream ESP-IDF docs
@@ -58,11 +60,13 @@ ESP-IDF must be exported before running builds.
 Recommended local setup:
 
 ```sh
+export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 ```
 
 If the ESP-IDF Python environment fails during export, verify missing Python packages.
 This repo previously required `tree_sitter` and `tree_sitter_c` in the local ESP-IDF Python env.
+On this machine, `export.sh` may also look for a missing `idf5.5_py3.14_env`; setting `IDF_PYTHON_ENV_PATH` to the installed `idf5.5_py3.10_env` fixes it.
 
 ## Build Commands
 
@@ -78,6 +82,22 @@ idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-targ
 ```sh
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
+```
+
+### Build System Info Example
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/system_info -B build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build
+idf.py -C examples/system_info -B build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
+```
+
+### Build GPIO Basic Example
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/gpio_basic -B build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build
+idf.py -C examples/gpio_basic -B build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
 ```
 
 ### Rebuild After Clean
@@ -111,6 +131,10 @@ Current validation is build-based.
 Current practical test matrix:
 - build smoke app for `esp32c3`
 - build smoke app for `esp32s3`
+- build `system_info` for `esp32c3`
+- build `system_info` for `esp32s3`
+- build `gpio_basic` for `esp32c3`
+- build `gpio_basic` for `esp32s3`
 
 ### Closest Equivalent To A Single Test
 
@@ -231,6 +255,10 @@ Do not add unused includes.
 At minimum, for code changes touching the component:
 - build `examples/smoke` for `esp32c3`
 - build `examples/smoke` for `esp32s3`
+
+For code changes touching `system` or `gpio`:
+- build `examples/system_info` for both targets
+- build `examples/gpio_basic` for both targets
 
 For documentation-only changes:
 - keep docs consistent with code and `PROGRESS.md`

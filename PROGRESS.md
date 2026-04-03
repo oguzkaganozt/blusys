@@ -11,10 +11,10 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 
 ## Current Summary
 
-- Current phase: `Phase 1: Foundation`
+- Current phase: `Phase 3: Core Serial And Bus Modules`
 - Overall status: `in_progress`
-- Last completed milestone: project documentation baseline and Phase 1 scaffold
-- Next target milestone: `Phase 2: Foundational Public Modules`
+- Last completed milestone: `Phase 2: Foundational Public Modules`
+- Next target milestone: `Phase 3: Core Serial And Bus Modules`
 
 ## Phase Tracking
 
@@ -22,7 +22,7 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 |---|---|---|
 | Phase 0: Project Freeze | completed | architecture, rules, roadmap, docs baseline created |
 | Phase 1: Foundation | completed | component skeleton, foundation headers/sources, target capability plumbing, smoke app, dual-target build validation |
-| Phase 2: Foundational Public Modules | not_started | `system` and `gpio` planned next |
+| Phase 2: Foundational Public Modules | completed | `system` and `gpio` implemented with examples, guides, and dual-target build validation |
 | Phase 3: Core Serial And Bus Modules | not_started | `uart`, `i2c`, `spi` |
 | Phase 4: Timing And Analog Modules | not_started | `pwm`, `adc`, `timer` |
 | Phase 5: Async And Hardening | not_started | GPIO interrupt callbacks, UART async, timer callbacks |
@@ -62,35 +62,49 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
   - `esp32c3`
   - `esp32s3`
 
+### Phase 2 Foundational Public Modules
+
+- added public `system` header and implementation
+- added public `gpio` header and implementation
+- added `examples/system_info/`
+- added `examples/gpio_basic/`
+- added module docs and task-first guides for `system` and `gpio`
+- validated examples build for:
+  - `esp32c3`
+  - `esp32s3`
+
 ## Current Technical State
 
 Public API currently exists for:
 - `blusys_version_*`
 - `blusys_err_string()`
 - `blusys_target_*`
+- `blusys_system_*`
+- `blusys_gpio_*`
 
 Internal infrastructure currently exists for:
 - target-specific source selection in the component CMake
 - target capability reporting
 - shared lock abstraction for future handle-based modules
 
-## Open Items Before Phase 2
+## Open Items Before Phase 3
 
-- define exact `system` API surface
-- define exact `gpio` API surface
-- decide whether `system` should include uptime in Phase 2 or wait until later
-- extend docs with module-specific pages once `system` and `gpio` exist
+- define the exact blocking `uart` API surface
+- define the exact blocking `i2c` master API surface
+- define the exact blocking `spi` master API surface
+- define thread-safety and lifecycle rules for handle-based communication modules
 
 ## Known Environment Notes
 
 - ESP-IDF 5.5.4 local environment required missing `tree_sitter` packages before builds worked
+- this machine currently needs `IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env` before sourcing ESP-IDF export
 - dual-target validation uses separate `sdkconfig` files per target:
   - `examples/smoke/sdkconfig.esp32c3`
   - `examples/smoke/sdkconfig.esp32s3`
 
 ## Next Actions
 
-1. implement `system`
-2. implement `gpio`
-3. extend smoke validation or add first dedicated examples
-4. document `system` and `gpio`
+1. implement `uart`
+2. implement `i2c` master
+3. implement `spi` master
+4. add examples and docs for each Phase 3 module
