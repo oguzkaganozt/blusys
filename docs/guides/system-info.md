@@ -46,3 +46,27 @@ The program prints stable diagnostic values such as uptime, reset reason, and he
 ## Example App
 
 See `examples/system_info/` for a fuller example.
+
+Build for `esp32c3`:
+
+```sh
+idf.py -C examples/system_info -B build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/system_info -B build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig -p /dev/ttyUSB0 flash monitor
+```
+
+Build for `esp32s3`:
+
+```sh
+idf.py -C examples/system_info -B build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/system_info -B build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig -p /dev/ttyUSB0 flash monitor
+```

@@ -39,3 +39,31 @@ blusys_pwm_close(pwm);
 - choosing a pin that is not safe for PWM output on the board
 - expecting more than four concurrent PWM handles from the current Phase 4 implementation
 - passing raw percentages such as `50` when you meant `500` per-mille
+
+## Example App
+
+See `examples/pwm_basic/` for a runnable example.
+
+Build for `esp32c3`:
+
+```sh
+idf.py -C examples/pwm_basic -B build-esp32c3 set-target esp32c3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/pwm_basic -B build-esp32c3 -p /dev/ttyUSB0 flash monitor
+```
+
+Build for `esp32s3`:
+
+```sh
+idf.py -C examples/pwm_basic -B build-esp32s3 set-target esp32s3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/pwm_basic -B build-esp32s3 -p /dev/ttyUSB0 flash monitor
+```

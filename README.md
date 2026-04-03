@@ -1,123 +1,131 @@
 # Blusys HAL
 
-Blusys HAL is a simplified C HAL for ESP32 devices built on top of ESP-IDF v5.5.
+Blusys HAL is a simplified C hardware abstraction layer for ESP32 devices on top of ESP-IDF v5.5.
 
-The first release targets:
-- ESP32-C3
-- ESP32-S3
+It is aimed at common embedded tasks where raw ESP-IDF APIs can feel too low-level or too verbose.
 
-Project goals:
-- simpler than ESP-IDF for common embedded tasks
-- modular and maintainable internally
-- stable public API and documentation
-- common API surface across C3 and S3 for v1
+## Supported Targets
 
-This repository contains the project planning baseline and the implemented Phase 1, Phase 2, Phase 3, and Phase 4 modules, plus the current Phase 5 async surface.
+- `esp32c3`
+- `esp32s3`
 
-Current project status:
-- roadmap and project rules are documented
-- Phase 1 is completed
-- Phase 2 is completed
-- Phase 3 is completed
-- the `blusys` ESP-IDF component exists
-- public `system`, `gpio`, `uart`, `i2c`, and `spi` modules exist
-- public `pwm`, `adc`, and `timer` are now implemented as Phase 4 modules
-- direct ISR timer callbacks are implemented as the first completed Phase 5 async feature
-- direct ISR GPIO callbacks are now implemented as the next completed Phase 5 async feature
-- task-context UART async TX and RX callbacks are now implemented as the next completed Phase 5 async feature
-- the `smoke`, `system_info`, `gpio_basic`, `gpio_interrupt`, `uart_loopback`, `uart_async`, `i2c_scan`, `spi_loopback`, `pwm_basic`, `adc_basic`, and `timer_basic` examples build for both `esp32c3` and `esp32s3`
+## Current Module Set
 
-Track progress in:
-- `PROGRESS.md`
+- foundation: `version`, `error`, `target`
+- system: `system`
+- digital IO: `gpio`
+- communication: `uart`, `i2c`, `spi`
+- timing and analog: `pwm`, `adc`, `timer`
 
-Primary project documents:
-- `PROGRESS.md`
-- `docs/index.md`
-- `docs/vision.md`
-- `docs/architecture.md`
-- `docs/api-design-rules.md`
-- `docs/target-matrix.md`
-- `docs/roadmap.md`
-- `docs/testing-strategy.md`
-- `docs/development-workflow.md`
-- `docs/documentation-standards.md`
-- `docs/modules/v1-core.md`
+Current async support includes:
+- GPIO interrupt callbacks
+- UART async TX and RX callbacks
+- timer callbacks
 
-Bundled upstream reference documentation:
-- `esp-idf-en-v5.5.4/`
+## What You Get
 
-Current implementation layout:
-- `components/blusys/` for the ESP-IDF component
-- `examples/smoke/` for general build validation
-- `examples/system_info/` for the `system` module example
-- `examples/gpio_basic/` for the `gpio` module example
-- `examples/uart_loopback/` for the `uart` module example
-- `examples/uart_async/` for the `uart` async callback example
-- `examples/i2c_scan/` for the `i2c` module example
-- `examples/spi_loopback/` for the `spi` module example
-- `examples/pwm_basic/` for the `pwm` module example
-- `examples/adc_basic/` for the `adc` module example
-- `examples/timer_basic/` for the `timer` module example
-- `examples/gpio_interrupt/` for the GPIO interrupt callback example
+- a smaller public C API than ESP-IDF
+- one common API surface across ESP32-C3 and ESP32-S3 for v1
+- buildable examples for each shipped module
+- task-first documentation with guides and module reference pages
 
-Phase 1 foundation currently includes:
-- `version` public API
-- `error` public API
-- `target` public API
-- internal target capability plumbing for `esp32c3` and `esp32s3`
-- shared internal lock abstraction for future handle-based modules
+## Documentation
 
-Phase 2 foundational public modules currently include:
-- `system` public API
-- `gpio` public API
-- `system_info` example app
-- `gpio_basic` example app
-- module reference pages for `system` and `gpio`
+- GitHub Pages: `https://oguzkaganozt.github.io/blusys/`
+- Docs index in the repo: `docs/index.md`
+- Getting started guide: `docs/guides/getting-started.md`
+- Hardware smoke test guide: `docs/guides/hardware-smoke-tests.md`
 
-Phase 3 communication modules currently include:
-- `uart` public API
-- `i2c` master public API
-- `spi` master public API
-- `uart_loopback` example app
-- `i2c_scan` example app
-- `spi_loopback` example app
-- module reference pages for `uart`, `i2c`, and `spi`
+## Quick Start
 
-Phase 4 timing and analog work currently includes:
-- `pwm` public API
-- `adc` public API
-- `timer` public API
-- `pwm_basic` example app
-- `adc_basic` example app
-- `timer_basic` example app
-- module reference pages for `pwm`, `adc`, and `timer`
+If `export.sh` looks for a missing `idf5.5_py3.14_env`, set the installed Python env first:
 
-Phase 5 async and hardening work currently includes:
-- direct ISR `timer` callback support
-- direct ISR `gpio` callback support
-- task-context `uart` async TX and RX callback support
+```sh
+export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env
+```
 
-Recommended local docs workflow:
-- install docs dependencies with `pip install -r requirements-docs.txt`
-- use `mkdocs serve` for preview
-- use `mkdocs build` for static output
+Export ESP-IDF:
 
-Recommended validation workflow:
-- if `export.sh` looks for a missing `idf5.5_py3.14_env`, first set `IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env`
-- source ESP-IDF 5.5.4 with `source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh`
-- build `examples/smoke/` for `esp32c3` with `-DSDKCONFIG=sdkconfig.esp32c3`
-- build `examples/smoke/` for `esp32s3` with `-DSDKCONFIG=sdkconfig.esp32s3`
-- build `examples/system_info/` for both targets
-- build `examples/gpio_basic/` for both targets
-- build `examples/gpio_interrupt/` for both targets
-- build `examples/uart_loopback/` for both targets
-- build `examples/uart_async/` for both targets
-- build `examples/i2c_scan/` for both targets
-- build `examples/spi_loopback/` for both targets
-- build `examples/pwm_basic/` for both targets
-- build `examples/adc_basic/` for `esp32c3` with `-DSDKCONFIG=sdkconfig.esp32c3`
-- build `examples/adc_basic/` for `esp32s3` with `-DSDKCONFIG=sdkconfig.esp32s3`
-- build `examples/timer_basic/` for `esp32c3` with `idf.py -C examples/timer_basic -B examples/timer_basic/build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build`
-- build `examples/timer_basic/` for `esp32s3` with `idf.py -C examples/timer_basic -B examples/timer_basic/build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build`
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+```
 
-Remote VPS validation note: commit/push test performed from this machine.
+Build the smoke example for `esp32c3`:
+
+```sh
+idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-target esp32c3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 -p /dev/ttyUSB0 flash monitor
+```
+
+Exit the serial monitor with `Ctrl+]`.
+
+For `esp32s3`, use the matching example config:
+
+```sh
+idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
+idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 -p /dev/ttyUSB0 flash monitor
+```
+
+## Examples
+
+The repository includes these example apps:
+
+- `examples/smoke/`
+- `examples/system_info/`
+- `examples/gpio_basic/`
+- `examples/gpio_interrupt/`
+- `examples/uart_loopback/`
+- `examples/uart_async/`
+- `examples/i2c_scan/`
+- `examples/spi_loopback/`
+- `examples/pwm_basic/`
+- `examples/adc_basic/`
+- `examples/timer_basic/`
+
+Board-specific note:
+- Some examples use pins that may need to be changed for your board.
+- Review each guide and adjust pins in `idf.py menuconfig` where needed.
+
+## Local Docs Preview
+
+Install docs dependencies:
+
+```sh
+pip install -r requirements-docs.txt
+```
+
+Serve the docs locally:
+
+```sh
+mkdocs serve
+```
+
+Build the static site:
+
+```sh
+mkdocs build --strict
+```
+
+## Repository Layout
+
+- `components/blusys/`: main ESP-IDF component
+- `components/blusys/include/blusys/`: public headers
+- `examples/`: buildable example apps
+- `docs/`: user guides, module reference, and project docs
+- `PROGRESS.md`: implementation status against the roadmap
+
+## Project Status
+
+The planned v1 blocking module set is implemented.
+Phase 5 async support is implemented and is currently in runtime validation and hardening.
+
+Track detailed implementation status in `PROGRESS.md`.
+
+## Upstream Reference
+
+Bundled ESP-IDF reference documentation is available in `esp-idf-en-v5.5.4/`.

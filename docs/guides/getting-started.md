@@ -15,6 +15,60 @@ The first release focuses on a common API for:
 3. `api-design-rules.md`
 4. `modules/v1-core.md`
 
+## Set Up ESP-IDF
+
+If `export.sh` looks for a missing `idf5.5_py3.14_env`, set the installed Python env first:
+
+```sh
+export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env
+```
+
+Then export ESP-IDF:
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+```
+
+## Build, Flash, And Monitor One Example
+
+The fastest first check is the smoke example.
+
+Build for `esp32c3`:
+
+```sh
+idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-target esp32c3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 -p /dev/ttyUSB0 flash monitor
+```
+
+Build for `esp32s3`:
+
+```sh
+idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 -p /dev/ttyUSB0 flash monitor
+```
+
+Exit the serial monitor with `Ctrl+]`.
+
+## More Example Guides
+
+- `guides/system-info.md`
+- `guides/gpio-basic.md`
+- `guides/uart-loopback.md`
+- `guides/i2c-scan.md`
+- `guides/spi-loopback.md`
+- `guides/pwm-basic.md`
+- `guides/hardware-smoke-tests.md`
+
 ## Initial Implementation Priorities
 
 The project starts implementation in this order:
@@ -33,12 +87,6 @@ The project starts implementation in this order:
 
 Use the smoke app to validate that the component is discoverable and compiles for both supported targets.
 
-```sh
-source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
-idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-target esp32c3 build
-idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
-```
-
 ## Documentation Workflow
 
 When a module is added:
@@ -55,6 +103,6 @@ When a module is added:
 Recommended docs toolchain:
 
 ```sh
-pip install mkdocs-material
+pip install -r requirements-docs.txt
 mkdocs serve
 ```

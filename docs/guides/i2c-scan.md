@@ -38,3 +38,31 @@ blusys_i2c_master_close(i2c);
 - forgetting external pull-ups on a bare bus
 - scanning the wrong SDA and SCL pins for the board
 - expecting a timeout to mean “no device”; on I2C it often points to a wiring or pull-up issue instead
+
+## Example App
+
+See `examples/i2c_scan/` for a runnable example.
+
+Build for `esp32c3`:
+
+```sh
+idf.py -C examples/i2c_scan -B build-esp32c3 set-target esp32c3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/i2c_scan -B build-esp32c3 -p /dev/ttyUSB0 flash monitor
+```
+
+Build for `esp32s3`:
+
+```sh
+idf.py -C examples/i2c_scan -B build-esp32s3 set-target esp32s3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/i2c_scan -B build-esp32s3 -p /dev/ttyUSB0 flash monitor
+```
