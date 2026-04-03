@@ -17,15 +17,23 @@ The first release focuses on a common API for:
 
 ## Set Up ESP-IDF
 
-If `export.sh` looks for a missing `idf5.5_py3.14_env`, set the installed Python env first:
+If `export.sh` looks for a missing ESP-IDF Python env, check which one exists on your machine:
 
 ```sh
-export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env
+ls ~/.espressif/python_env/
 ```
 
-Then export ESP-IDF:
+Then point `IDF_PYTHON_ENV_PATH` at the matching directory and export ESP-IDF:
 
 ```sh
+export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/<your-idf-env>
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+```
+
+For example, on this machine the installed env is `idf5.5_py3.12_env`:
+
+```sh
+export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.12_env
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 ```
 

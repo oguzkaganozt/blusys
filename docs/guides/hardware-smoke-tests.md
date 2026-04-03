@@ -30,9 +30,12 @@ You need:
 Recommended shell setup:
 
 ```sh
-export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env
+ls ~/.espressif/python_env/
+export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/<your-idf-env>
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 ```
+
+For example, on this machine the installed env is `idf5.5_py3.12_env`.
 
 List serial ports before flashing:
 
