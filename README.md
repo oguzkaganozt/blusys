@@ -12,7 +12,16 @@ Project goals:
 - stable public API and documentation
 - common API surface across C3 and S3 for v1
 
-This repository contains the project planning baseline and the Phase 1 implementation scaffold.
+This repository contains the project planning baseline and the implemented Phase 1 foundation scaffold.
+
+Current project status:
+- roadmap and project rules are documented
+- Phase 1 is completed
+- the `blusys` ESP-IDF component exists
+- the smoke validation app builds for both `esp32c3` and `esp32s3`
+
+Track progress in:
+- `PROGRESS.md`
 
 Primary project documents:
 - `PROGRESS.md`
@@ -33,6 +42,13 @@ Bundled upstream reference documentation:
 Current implementation layout:
 - `components/blusys/` for the ESP-IDF component
 - `examples/smoke/` for the Phase 1 build-validation app
+
+Phase 1 foundation currently includes:
+- `version` public API
+- `error` public API
+- `target` public API
+- internal target capability plumbing for `esp32c3` and `esp32s3`
+- shared internal lock abstraction for future handle-based modules
 
 Recommended local docs workflow:
 - install docs dependencies with `pip install -r requirements-docs.txt`
