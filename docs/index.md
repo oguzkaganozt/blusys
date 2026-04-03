@@ -28,8 +28,8 @@ The project exists to make normal embedded development tasks easier than working
 
 ## Project Status
 
-Phase 1 foundation and the first public Phase 2 modules are implemented.
-The next milestone is the Phase 3 communication module set.
+Phase 1 foundation, the Phase 2 modules, and the Phase 3 communication modules are implemented.
+Phase 4 is in progress, with `pwm` implemented first.
 
 ## Upstream Reference
 

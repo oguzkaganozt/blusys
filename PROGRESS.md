@@ -11,10 +11,10 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 
 ## Current Summary
 
-- Current phase: `Phase 3: Core Serial And Bus Modules`
+- Current phase: `Phase 4: Timing And Analog Modules`
 - Overall status: `in_progress`
-- Last completed milestone: `Phase 2: Foundational Public Modules`
-- Next target milestone: `Phase 3: Core Serial And Bus Modules`
+- Last completed milestone: `Phase 3: Core Serial And Bus Modules`
+- Next target milestone: `Phase 4: Timing And Analog Modules`
 
 ## Phase Tracking
 
@@ -23,8 +23,8 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 | Phase 0: Project Freeze | completed | architecture, rules, roadmap, docs baseline created |
 | Phase 1: Foundation | completed | component skeleton, foundation headers/sources, target capability plumbing, smoke app, dual-target build validation |
 | Phase 2: Foundational Public Modules | completed | `system` and `gpio` implemented with examples, guides, and dual-target build validation |
-| Phase 3: Core Serial And Bus Modules | not_started | `uart`, `i2c`, `spi` |
-| Phase 4: Timing And Analog Modules | not_started | `pwm`, `adc`, `timer` |
+| Phase 3: Core Serial And Bus Modules | completed | `uart`, `i2c`, and `spi` implemented with examples, guides, and dual-target build validation |
+| Phase 4: Timing And Analog Modules | in_progress | `pwm` implemented, `adc` and `timer` pending |
 | Phase 5: Async And Hardening | not_started | GPIO interrupt callbacks, UART async, timer callbacks |
 | Phase 6: Stabilization | not_started | smoke tests, concurrency tests, docs cleanup |
 | Phase 7: Release | not_started | release candidate and `v1.0.0` |
@@ -73,6 +73,29 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
   - `esp32c3`
   - `esp32s3`
 
+### Phase 3 Core Serial And Bus Modules
+
+- added public `uart` header and implementation
+- added public `i2c` master header and implementation
+- added public `spi` master header and implementation
+- added `examples/uart_loopback/`
+- added `examples/i2c_scan/`
+- added `examples/spi_loopback/`
+- added module docs and task-first guides for `uart`, `i2c`, and `spi`
+- aligned `blusys_target_supports()` feature reporting with currently shipped public module support
+- validated examples build for:
+  - `esp32c3`
+  - `esp32s3`
+
+### Phase 4 Timing And Analog Modules
+
+- added public `pwm` header and implementation
+- added `examples/pwm_basic/`
+- added module docs and task-first guide for `pwm`
+- validated example builds for:
+  - `esp32c3`
+  - `esp32s3`
+
 ## Current Technical State
 
 Public API currently exists for:
@@ -81,18 +104,23 @@ Public API currently exists for:
 - `blusys_target_*`
 - `blusys_system_*`
 - `blusys_gpio_*`
+- `blusys_uart_*`
+- `blusys_i2c_master_*`
+- `blusys_spi_*`
+- `blusys_pwm_*`
 
 Internal infrastructure currently exists for:
 - target-specific source selection in the component CMake
-- target capability reporting
-- shared lock abstraction for future handle-based modules
+- target capability reporting for implemented public modules
+- shared lock abstraction for handle-based modules
+- shared internal timeout and ESP-IDF error translation helpers
 
-## Open Items Before Phase 3
+## Open Items Before Phase 4
 
-- define the exact blocking `uart` API surface
-- define the exact blocking `i2c` master API surface
-- define the exact blocking `spi` master API surface
-- define thread-safety and lifecycle rules for handle-based communication modules
+- define the exact blocking `pwm` API surface
+- define the exact blocking `adc` API surface
+- define the exact blocking `timer` API surface
+- decide whether Phase 4 needs a shared handle pattern beyond the current lock-based implementation
 
 ## Known Environment Notes
 
@@ -104,7 +132,6 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. implement `uart`
-2. implement `i2c` master
-3. implement `spi` master
-4. add examples and docs for each Phase 3 module
+1. implement `adc`
+2. implement `timer`
+3. add examples and docs for the remaining Phase 4 modules

@@ -28,8 +28,16 @@ nav:
       - Getting Started: guides/getting-started.md
       - Read System Info: guides/system-info.md
       - Basic GPIO IO: guides/gpio-basic.md
+      - UART Loopback: guides/uart-loopback.md
+      - I2C Scan: guides/i2c-scan.md
+      - SPI Loopback: guides/spi-loopback.md
+      - Basic PWM Output: guides/pwm-basic.md
   - Modules:
       - Overview: modules/index.md
       - V1 Core Modules: modules/v1-core.md
       - System: modules/system.md
       - GPIO: modules/gpio.md
+      - UART: modules/uart.md
+      - I2C Master: modules/i2c.md
+      - SPI Master: modules/spi.md
+      - PWM: modules/pwm.md

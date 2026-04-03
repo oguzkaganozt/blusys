@@ -12,15 +12,17 @@ Project goals:
 - stable public API and documentation
 - common API surface across C3 and S3 for v1
 
-This repository contains the project planning baseline and the implemented Phase 1 and Phase 2 modules.
+This repository contains the project planning baseline and the implemented Phase 1, Phase 2, and Phase 3 modules.
 
 Current project status:
 - roadmap and project rules are documented
 - Phase 1 is completed
 - Phase 2 is completed
+- Phase 3 is completed
 - the `blusys` ESP-IDF component exists
-- public `system` and `gpio` modules exist
-- the `smoke`, `system_info`, and `gpio_basic` examples build for both `esp32c3` and `esp32s3`
+- public `system`, `gpio`, `uart`, `i2c`, and `spi` modules exist
+- public `pwm` is now implemented as the first Phase 4 module
+- the `smoke`, `system_info`, `gpio_basic`, `uart_loopback`, `i2c_scan`, `spi_loopback`, and `pwm_basic` examples build for both `esp32c3` and `esp32s3`
 
 Track progress in:
 - `PROGRESS.md`
@@ -46,6 +48,10 @@ Current implementation layout:
 - `examples/smoke/` for general build validation
 - `examples/system_info/` for the `system` module example
 - `examples/gpio_basic/` for the `gpio` module example
+- `examples/uart_loopback/` for the `uart` module example
+- `examples/i2c_scan/` for the `i2c` module example
+- `examples/spi_loopback/` for the `spi` module example
+- `examples/pwm_basic/` for the `pwm` module example
 
 Phase 1 foundation currently includes:
 - `version` public API
@@ -61,6 +67,20 @@ Phase 2 foundational public modules currently include:
 - `gpio_basic` example app
 - task-first guides and API reference pages for `system` and `gpio`
 
+Phase 3 communication modules currently include:
+- `uart` public API
+- `i2c` master public API
+- `spi` master public API
+- `uart_loopback` example app
+- `i2c_scan` example app
+- `spi_loopback` example app
+- task-first guides and API reference pages for `uart`, `i2c`, and `spi`
+
+Phase 4 timing and analog work currently includes:
+- `pwm` public API
+- `pwm_basic` example app
+- task-first guide and API reference page for `pwm`
+
 Recommended local docs workflow:
 - install docs dependencies with `pip install -r requirements-docs.txt`
 - use `mkdocs serve` for preview
@@ -73,5 +93,9 @@ Recommended validation workflow:
 - build `examples/smoke/` for `esp32s3` with `-DSDKCONFIG=sdkconfig.esp32s3`
 - build `examples/system_info/` for both targets
 - build `examples/gpio_basic/` for both targets
+- build `examples/uart_loopback/` for both targets
+- build `examples/i2c_scan/` for both targets
+- build `examples/spi_loopback/` for both targets
+- build `examples/pwm_basic/` for both targets
 
 Remote VPS validation note: commit/push test performed from this machine.

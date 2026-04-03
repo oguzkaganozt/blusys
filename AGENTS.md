@@ -10,10 +10,10 @@ It summarizes the current build, validation, and coding rules for Blusys HAL.
 - Build system: ESP-IDF v5.5 with CMake
 - Current supported targets: `esp32c3`, `esp32s3`
 - Main component: `components/blusys/`
-- Current validation apps: `examples/smoke/`, `examples/system_info/`, `examples/gpio_basic/`
+- Current validation apps: `examples/smoke/`, `examples/system_info/`, `examples/gpio_basic/`, `examples/uart_loopback/`, `examples/i2c_scan/`, `examples/spi_loopback/`, `examples/pwm_basic/`
 
 The repository is still early-stage.
-Phase 1 foundation and Phase 2 foundational public modules are implemented.
+Phase 1 foundation, Phase 2 foundational public modules, and Phase 3 communication modules are implemented.
 Formal unit tests and lint scripts do not exist yet.
 
 ## Repository Layout
@@ -27,6 +27,10 @@ Formal unit tests and lint scripts do not exist yet.
 - `examples/smoke/`: build validation app
 - `examples/system_info/`: `system` module example
 - `examples/gpio_basic/`: `gpio` module example
+- `examples/uart_loopback/`: `uart` module example
+- `examples/i2c_scan/`: `i2c` master module example
+- `examples/spi_loopback/`: `spi` master module example
+- `examples/pwm_basic/`: `pwm` module example
 - `docs/`: architecture, API rules, roadmap, workflow
 - `PROGRESS.md`: implementation progress tracker
 - `esp-idf-en-v5.5.4/`: bundled upstream ESP-IDF docs
@@ -100,6 +104,38 @@ idf.py -C examples/gpio_basic -B build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconf
 idf.py -C examples/gpio_basic -B build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
 ```
 
+### Build UART Loopback Example
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/uart_loopback -B build-esp32c3 set-target esp32c3 build
+idf.py -C examples/uart_loopback -B build-esp32s3 set-target esp32s3 build
+```
+
+### Build I2C Scan Example
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/i2c_scan -B build-esp32c3 set-target esp32c3 build
+idf.py -C examples/i2c_scan -B build-esp32s3 set-target esp32s3 build
+```
+
+### Build SPI Loopback Example
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/spi_loopback -B build-esp32c3 set-target esp32c3 build
+idf.py -C examples/spi_loopback -B build-esp32s3 set-target esp32s3 build
+```
+
+### Build PWM Basic Example
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/pwm_basic -B build-esp32c3 set-target esp32c3 build
+idf.py -C examples/pwm_basic -B build-esp32s3 set-target esp32s3 build
+```
+
 ### Rebuild After Clean
 
 ```sh
@@ -135,6 +171,14 @@ Current practical test matrix:
 - build `system_info` for `esp32s3`
 - build `gpio_basic` for `esp32c3`
 - build `gpio_basic` for `esp32s3`
+- build `uart_loopback` for `esp32c3`
+- build `uart_loopback` for `esp32s3`
+- build `i2c_scan` for `esp32c3`
+- build `i2c_scan` for `esp32s3`
+- build `spi_loopback` for `esp32c3`
+- build `spi_loopback` for `esp32s3`
+- build `pwm_basic` for `esp32c3`
+- build `pwm_basic` for `esp32s3`
 
 ### Closest Equivalent To A Single Test
 
@@ -259,6 +303,14 @@ At minimum, for code changes touching the component:
 For code changes touching `system` or `gpio`:
 - build `examples/system_info` for both targets
 - build `examples/gpio_basic` for both targets
+
+For code changes touching `uart`, `i2c`, or `spi`:
+- build `examples/uart_loopback` for both targets
+- build `examples/i2c_scan` for both targets
+- build `examples/spi_loopback` for both targets
+
+For code changes touching `pwm`:
+- build `examples/pwm_basic` for both targets
 
 For documentation-only changes:
 - keep docs consistent with code and `PROGRESS.md`

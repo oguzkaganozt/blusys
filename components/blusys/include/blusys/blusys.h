@@ -7,8 +7,12 @@ extern "C" {
 
 #include "blusys/error.h"
 #include "blusys/gpio.h"
+#include "blusys/i2c.h"
+#include "blusys/pwm.h"
+#include "blusys/spi.h"
 #include "blusys/system.h"
 #include "blusys/target.h"
+#include "blusys/uart.h"
 #include "blusys/version.h"
 
 #ifdef __cplusplus

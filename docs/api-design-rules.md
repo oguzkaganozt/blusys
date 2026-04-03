@@ -35,7 +35,7 @@ Preferred function patterns:
 - `blusys_gpio_write(pin, level)`
 - `blusys_uart_open(port, tx_pin, rx_pin, baudrate, &handle)`
 - `blusys_i2c_master_open(port, sda_pin, scl_pin, freq_hz, &handle)`
-- `blusys_spi_transfer(handle, tx_buf, rx_buf, len, timeout_ms)`
+- `blusys_spi_transfer(handle, tx_buf, rx_buf, len)`
 
 Advanced setup can use `_ex` forms later if needed:
 - `blusys_uart_open_ex(...)`
