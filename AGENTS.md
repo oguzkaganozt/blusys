@@ -10,7 +10,7 @@ It summarizes the current build, validation, and coding rules for Blusys HAL.
 - Build system: ESP-IDF v5.5 with CMake
 - Current supported targets: `esp32c3`, `esp32s3`
 - Main component: `components/blusys/`
-- Current validation apps: `examples/smoke/`, `examples/system_info/`, `examples/gpio_basic/`, `examples/uart_loopback/`, `examples/i2c_scan/`, `examples/spi_loopback/`, `examples/pwm_basic/`, `examples/adc_basic/`
+- Current validation apps: `examples/smoke/`, `examples/system_info/`, `examples/gpio_basic/`, `examples/uart_loopback/`, `examples/i2c_scan/`, `examples/spi_loopback/`, `examples/pwm_basic/`, `examples/adc_basic/`, `examples/timer_basic/`
 
 The repository is still early-stage.
 Phase 1 foundation, Phase 2 foundational public modules, and Phase 3 communication modules are implemented.
@@ -32,6 +32,7 @@ Formal unit tests and lint scripts do not exist yet.
 - `examples/spi_loopback/`: `spi` master module example
 - `examples/pwm_basic/`: `pwm` module example
 - `examples/adc_basic/`: `adc` module example
+- `examples/timer_basic/`: `timer` module example
 - `docs/`: architecture, API rules, roadmap, workflow
 - `PROGRESS.md`: implementation progress tracker
 - `esp-idf-en-v5.5.4/`: bundled upstream ESP-IDF docs
@@ -145,6 +146,14 @@ idf.py -C examples/adc_basic -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-
 idf.py -C examples/adc_basic -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
 ```
 
+### Build Timer Basic Example
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/timer_basic -B examples/timer_basic/build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build
+idf.py -C examples/timer_basic -B examples/timer_basic/build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
+```
+
 ### Rebuild After Clean
 
 ```sh
@@ -190,6 +199,8 @@ Current practical test matrix:
 - build `pwm_basic` for `esp32s3`
 - build `adc_basic` for `esp32c3`
 - build `adc_basic` for `esp32s3`
+- build `timer_basic` for `esp32c3`
+- build `timer_basic` for `esp32s3`
 
 ### Closest Equivalent To A Single Test
 
@@ -325,6 +336,9 @@ For code changes touching `pwm`:
 
 For code changes touching `adc`:
 - build `examples/adc_basic` for both targets
+
+For code changes touching `timer`:
+- build `examples/timer_basic` for both targets
 
 For documentation-only changes:
 - keep docs consistent with code and `PROGRESS.md`

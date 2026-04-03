@@ -12,7 +12,7 @@ Project goals:
 - stable public API and documentation
 - common API surface across C3 and S3 for v1
 
-This repository contains the project planning baseline and the implemented Phase 1, Phase 2, Phase 3, and part of Phase 4 modules.
+This repository contains the project planning baseline and the implemented Phase 1, Phase 2, Phase 3, and Phase 4 modules.
 
 Current project status:
 - roadmap and project rules are documented
@@ -21,8 +21,9 @@ Current project status:
 - Phase 3 is completed
 - the `blusys` ESP-IDF component exists
 - public `system`, `gpio`, `uart`, `i2c`, and `spi` modules exist
-- public `pwm` and `adc` are now implemented as Phase 4 modules
-- the `smoke`, `system_info`, `gpio_basic`, `uart_loopback`, `i2c_scan`, `spi_loopback`, `pwm_basic`, and `adc_basic` examples build for both `esp32c3` and `esp32s3`
+- public `pwm`, `adc`, and `timer` are now implemented as Phase 4 modules
+- direct ISR timer callbacks are implemented as the first completed Phase 5 async feature
+- the `smoke`, `system_info`, `gpio_basic`, `uart_loopback`, `i2c_scan`, `spi_loopback`, `pwm_basic`, `adc_basic`, and `timer_basic` examples build for both `esp32c3` and `esp32s3`
 
 Track progress in:
 - `PROGRESS.md`
@@ -53,6 +54,7 @@ Current implementation layout:
 - `examples/spi_loopback/` for the `spi` module example
 - `examples/pwm_basic/` for the `pwm` module example
 - `examples/adc_basic/` for the `adc` module example
+- `examples/timer_basic/` for the `timer` module example
 
 Phase 1 foundation currently includes:
 - `version` public API
@@ -80,9 +82,14 @@ Phase 3 communication modules currently include:
 Phase 4 timing and analog work currently includes:
 - `pwm` public API
 - `adc` public API
+- `timer` public API
 - `pwm_basic` example app
 - `adc_basic` example app
-- task-first guide and API reference pages for `pwm` and `adc`
+- `timer_basic` example app
+- module reference pages for `pwm`, `adc`, and `timer`
+
+Phase 5 async and hardening work currently includes:
+- direct ISR `timer` callback support
 
 Recommended local docs workflow:
 - install docs dependencies with `pip install -r requirements-docs.txt`
@@ -102,5 +109,7 @@ Recommended validation workflow:
 - build `examples/pwm_basic/` for both targets
 - build `examples/adc_basic/` for `esp32c3` with `-DSDKCONFIG=sdkconfig.esp32c3`
 - build `examples/adc_basic/` for `esp32s3` with `-DSDKCONFIG=sdkconfig.esp32s3`
+- build `examples/timer_basic/` for `esp32c3` with `idf.py -C examples/timer_basic -B examples/timer_basic/build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build`
+- build `examples/timer_basic/` for `esp32s3` with `idf.py -C examples/timer_basic -B examples/timer_basic/build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build`
 
 Remote VPS validation note: commit/push test performed from this machine.

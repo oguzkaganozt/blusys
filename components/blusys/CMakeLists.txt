@@ -6,6 +6,7 @@ set(blusys_sources
     src/common/pwm.c
     src/common/spi.c
     src/common/system.c
+    src/common/timer.c
     src/common/target.c
     src/common/uart.c
     src/common/version.c
@@ -24,5 +25,5 @@ idf_component_register(
     SRCS ${blusys_sources}
     INCLUDE_DIRS include
     PRIV_INCLUDE_DIRS src/internal
-    REQUIRES freertos esp_adc esp_driver_gpio esp_driver_i2c esp_driver_ledc esp_driver_spi esp_driver_uart esp_system esp_timer
+    REQUIRES freertos esp_adc esp_driver_gpio esp_driver_gptimer esp_driver_i2c esp_driver_ledc esp_driver_spi esp_driver_uart esp_system esp_timer
 )

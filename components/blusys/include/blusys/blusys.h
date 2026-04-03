@@ -12,6 +12,7 @@ extern "C" {
 #include "blusys/pwm.h"
 #include "blusys/spi.h"
 #include "blusys/system.h"
+#include "blusys/timer.h"
 #include "blusys/target.h"
 #include "blusys/uart.h"
 #include "blusys/version.h"
