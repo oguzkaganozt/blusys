@@ -59,3 +59,5 @@ Recommended Phase 1 validation workflow:
 - source ESP-IDF 5.5.4 with `source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh`
 - build `examples/smoke/` for `esp32c3` with `-DSDKCONFIG=sdkconfig.esp32c3`
 - build `examples/smoke/` for `esp32s3` with `-DSDKCONFIG=sdkconfig.esp32s3`
+
+Remote VPS validation note: commit/push test performed from this machine.
