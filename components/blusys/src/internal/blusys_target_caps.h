@@ -1,0 +1,28 @@
+#ifndef BLUSYS_TARGET_CAPS_H
+#define BLUSYS_TARGET_CAPS_H
+
+#include <stdint.h>
+
+#include "blusys/target.h"
+
+#define BLUSYS_FEATURE_MASK(feature) (1u << (unsigned) (feature))
+
+#define BLUSYS_COMMON_V1_FEATURE_MASK \
+    (BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_GPIO) | \
+     BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_UART) | \
+     BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_I2C) | \
+     BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_SPI) | \
+     BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_PWM) | \
+     BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_ADC) | \
+     BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_TIMER))
+
+typedef struct {
+    blusys_target_t target;
+    const char *name;
+    uint8_t cpu_cores;
+    uint32_t feature_mask;
+} blusys_target_caps_t;
+
+const blusys_target_caps_t *blusys_target_caps_get(void);
+
+#endif

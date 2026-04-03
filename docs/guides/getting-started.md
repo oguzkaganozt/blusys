@@ -29,6 +29,16 @@ The project starts implementation in this order:
 8. `adc`
 9. `timer`
 
+## Phase 1 Build Validation
+
+Use the smoke app to validate that the component is discoverable and compiles for both supported targets.
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-target esp32c3 build
+idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
+```
+
 ## Documentation Workflow
 
 When a module is added:

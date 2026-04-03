@@ -12,9 +12,10 @@ Project goals:
 - stable public API and documentation
 - common API surface across C3 and S3 for v1
 
-This repository currently contains the project planning and documentation baseline before implementation starts.
+This repository contains the project planning baseline and the Phase 1 implementation scaffold.
 
 Primary project documents:
+- `PROGRESS.md`
 - `docs/index.md`
 - `docs/vision.md`
 - `docs/architecture.md`
@@ -29,7 +30,16 @@ Primary project documents:
 Bundled upstream reference documentation:
 - `esp-idf-en-v5.5.4/`
 
+Current implementation layout:
+- `components/blusys/` for the ESP-IDF component
+- `examples/smoke/` for the Phase 1 build-validation app
+
 Recommended local docs workflow:
 - install docs dependencies with `pip install -r requirements-docs.txt`
 - use `mkdocs serve` for preview
 - use `mkdocs build` for static output
+
+Recommended Phase 1 validation workflow:
+- source ESP-IDF 5.5.4 with `source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh`
+- build `examples/smoke/` for `esp32c3` with `-DSDKCONFIG=sdkconfig.esp32c3`
+- build `examples/smoke/` for `esp32s3` with `-DSDKCONFIG=sdkconfig.esp32s3`

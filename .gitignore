@@ -1,3 +1,10 @@
 .vscode/
 site/
 __pycache__/
+build-*/
+examples/**/build*/
+examples/**/sdkconfig
+examples/**/sdkconfig.old
+examples/**/sdkconfig.*
+!examples/**/sdkconfig.defaults
+!examples/**/sdkconfig.defaults.*
