@@ -12,7 +12,7 @@ Project goals:
 - stable public API and documentation
 - common API surface across C3 and S3 for v1
 
-This repository contains the project planning baseline and the implemented Phase 1, Phase 2, and Phase 3 modules.
+This repository contains the project planning baseline and the implemented Phase 1, Phase 2, Phase 3, and part of Phase 4 modules.
 
 Current project status:
 - roadmap and project rules are documented
@@ -21,8 +21,8 @@ Current project status:
 - Phase 3 is completed
 - the `blusys` ESP-IDF component exists
 - public `system`, `gpio`, `uart`, `i2c`, and `spi` modules exist
-- public `pwm` is now implemented as the first Phase 4 module
-- the `smoke`, `system_info`, `gpio_basic`, `uart_loopback`, `i2c_scan`, `spi_loopback`, and `pwm_basic` examples build for both `esp32c3` and `esp32s3`
+- public `pwm` and `adc` are now implemented as Phase 4 modules
+- the `smoke`, `system_info`, `gpio_basic`, `uart_loopback`, `i2c_scan`, `spi_loopback`, `pwm_basic`, and `adc_basic` examples build for both `esp32c3` and `esp32s3`
 
 Track progress in:
 - `PROGRESS.md`
@@ -52,6 +52,7 @@ Current implementation layout:
 - `examples/i2c_scan/` for the `i2c` module example
 - `examples/spi_loopback/` for the `spi` module example
 - `examples/pwm_basic/` for the `pwm` module example
+- `examples/adc_basic/` for the `adc` module example
 
 Phase 1 foundation currently includes:
 - `version` public API
@@ -78,8 +79,10 @@ Phase 3 communication modules currently include:
 
 Phase 4 timing and analog work currently includes:
 - `pwm` public API
+- `adc` public API
 - `pwm_basic` example app
-- task-first guide and API reference page for `pwm`
+- `adc_basic` example app
+- task-first guide and API reference pages for `pwm` and `adc`
 
 Recommended local docs workflow:
 - install docs dependencies with `pip install -r requirements-docs.txt`
@@ -97,5 +100,7 @@ Recommended validation workflow:
 - build `examples/i2c_scan/` for both targets
 - build `examples/spi_loopback/` for both targets
 - build `examples/pwm_basic/` for both targets
+- build `examples/adc_basic/` for `esp32c3` with `-DSDKCONFIG=sdkconfig.esp32c3`
+- build `examples/adc_basic/` for `esp32s3` with `-DSDKCONFIG=sdkconfig.esp32s3`
 
 Remote VPS validation note: commit/push test performed from this machine.
