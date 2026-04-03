@@ -64,12 +64,12 @@ Rules:
 Recommended implementation layout:
 
 ```text
-include/blusys/
-src/common/
-src/internal/
-src/port/esp_idf/
-src/targets/esp32c3/
-src/targets/esp32s3/
+components/blusys/include/blusys/
+components/blusys/src/common/
+components/blusys/src/internal/
+components/blusys/src/port/esp_idf/
+components/blusys/src/targets/esp32c3/
+components/blusys/src/targets/esp32s3/
 examples/
 tests/
 docs/
