@@ -11,10 +11,10 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 
 ## Current Summary
 
-- Current phase: `Phase 4: Timing And Analog Modules`
+- Current phase: `Phase 5: Async And Hardening`
 - Overall status: `in_progress`
-- Last completed milestone: `Phase 3: Core Serial And Bus Modules`
-- Next target milestone: `Phase 4: Timing And Analog Modules`
+- Last completed milestone: `Phase 4: Timing And Analog Modules`
+- Next target milestone: `Phase 5: Async And Hardening`
 
 ## Phase Tracking
 
@@ -24,8 +24,8 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 | Phase 1: Foundation | completed | component skeleton, foundation headers/sources, target capability plumbing, smoke app, dual-target build validation |
 | Phase 2: Foundational Public Modules | completed | `system` and `gpio` implemented with examples, guides, and dual-target build validation |
 | Phase 3: Core Serial And Bus Modules | completed | `uart`, `i2c`, and `spi` implemented with examples, guides, and dual-target build validation |
-| Phase 4: Timing And Analog Modules | in_progress | `pwm` and `adc` implemented, `timer` pending |
-| Phase 5: Async And Hardening | not_started | GPIO interrupt callbacks, UART async, timer callbacks |
+| Phase 4: Timing And Analog Modules | completed | `pwm`, `adc`, and `timer` implemented with examples, guides, and dual-target build validation |
+| Phase 5: Async And Hardening | in_progress | `timer` callbacks implemented, GPIO interrupt callbacks and UART async pending |
 | Phase 6: Stabilization | not_started | smoke tests, concurrency tests, docs cleanup |
 | Phase 7: Release | not_started | release candidate and `v1.0.0` |
 
@@ -91,12 +91,18 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 
 - added public `pwm` header and implementation
 - added public `adc` header and implementation
+- added public `timer` header and implementation
 - added `examples/pwm_basic/`
 - added `examples/adc_basic/`
-- added module docs and task-first guides for `pwm` and `adc`
+- added `examples/timer_basic/`
+- added module docs for `pwm`, `adc`, and `timer`
 - validated example builds for:
   - `esp32c3`
   - `esp32s3`
+
+### Phase 5 Async And Hardening
+
+- added direct ISR timer callback registration to the `timer` module
 
 ## Current Technical State
 
@@ -111,6 +117,7 @@ Public API currently exists for:
 - `blusys_spi_*`
 - `blusys_pwm_*`
 - `blusys_adc_*`
+- `blusys_timer_*`
 
 Internal infrastructure currently exists for:
 - target-specific source selection in the component CMake
@@ -118,11 +125,11 @@ Internal infrastructure currently exists for:
 - shared lock abstraction for handle-based modules
 - shared internal timeout and ESP-IDF error translation helpers
 
-## Open Items Before Phase 4
+## Open Items In Phase 5
 
-- define the exact blocking `pwm` API surface
-- define the exact blocking `timer` API surface
-- decide whether Phase 4 needs a shared handle pattern beyond the current lock-based implementation
+- add GPIO interrupt callback support
+- add UART async TX and RX support
+- harden callback and lifecycle behavior across the async modules
 
 ## Known Environment Notes
 
@@ -134,6 +141,6 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. implement `timer`
-2. add examples and docs for the remaining Phase 4 modules
-3. validate the full Phase 4 build matrix
+1. implement GPIO interrupt callbacks
+2. implement UART async TX and RX
+3. validate the Phase 5 async and lifecycle behavior

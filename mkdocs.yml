@@ -41,3 +41,5 @@ nav:
       - I2C Master: modules/i2c.md
       - SPI Master: modules/spi.md
       - PWM: modules/pwm.md
+      - ADC: modules/adc.md
+      - Timer: modules/timer.md
