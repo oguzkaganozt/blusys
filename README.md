@@ -12,7 +12,7 @@ Project goals:
 - stable public API and documentation
 - common API surface across C3 and S3 for v1
 
-This repository contains the project planning baseline and the implemented Phase 1, Phase 2, Phase 3, and Phase 4 modules.
+This repository contains the project planning baseline and the implemented Phase 1, Phase 2, Phase 3, and Phase 4 modules, plus the current Phase 5 async surface.
 
 Current project status:
 - roadmap and project rules are documented
@@ -23,7 +23,9 @@ Current project status:
 - public `system`, `gpio`, `uart`, `i2c`, and `spi` modules exist
 - public `pwm`, `adc`, and `timer` are now implemented as Phase 4 modules
 - direct ISR timer callbacks are implemented as the first completed Phase 5 async feature
-- the `smoke`, `system_info`, `gpio_basic`, `uart_loopback`, `i2c_scan`, `spi_loopback`, `pwm_basic`, `adc_basic`, and `timer_basic` examples build for both `esp32c3` and `esp32s3`
+- direct ISR GPIO callbacks are now implemented as the next completed Phase 5 async feature
+- task-context UART async TX and RX callbacks are now implemented as the next completed Phase 5 async feature
+- the `smoke`, `system_info`, `gpio_basic`, `gpio_interrupt`, `uart_loopback`, `uart_async`, `i2c_scan`, `spi_loopback`, `pwm_basic`, `adc_basic`, and `timer_basic` examples build for both `esp32c3` and `esp32s3`
 
 Track progress in:
 - `PROGRESS.md`
@@ -50,11 +52,13 @@ Current implementation layout:
 - `examples/system_info/` for the `system` module example
 - `examples/gpio_basic/` for the `gpio` module example
 - `examples/uart_loopback/` for the `uart` module example
+- `examples/uart_async/` for the `uart` async callback example
 - `examples/i2c_scan/` for the `i2c` module example
 - `examples/spi_loopback/` for the `spi` module example
 - `examples/pwm_basic/` for the `pwm` module example
 - `examples/adc_basic/` for the `adc` module example
 - `examples/timer_basic/` for the `timer` module example
+- `examples/gpio_interrupt/` for the GPIO interrupt callback example
 
 Phase 1 foundation currently includes:
 - `version` public API
@@ -68,7 +72,7 @@ Phase 2 foundational public modules currently include:
 - `gpio` public API
 - `system_info` example app
 - `gpio_basic` example app
-- task-first guides and API reference pages for `system` and `gpio`
+- module reference pages for `system` and `gpio`
 
 Phase 3 communication modules currently include:
 - `uart` public API
@@ -77,7 +81,7 @@ Phase 3 communication modules currently include:
 - `uart_loopback` example app
 - `i2c_scan` example app
 - `spi_loopback` example app
-- task-first guides and API reference pages for `uart`, `i2c`, and `spi`
+- module reference pages for `uart`, `i2c`, and `spi`
 
 Phase 4 timing and analog work currently includes:
 - `pwm` public API
@@ -90,6 +94,8 @@ Phase 4 timing and analog work currently includes:
 
 Phase 5 async and hardening work currently includes:
 - direct ISR `timer` callback support
+- direct ISR `gpio` callback support
+- task-context `uart` async TX and RX callback support
 
 Recommended local docs workflow:
 - install docs dependencies with `pip install -r requirements-docs.txt`
@@ -103,7 +109,9 @@ Recommended validation workflow:
 - build `examples/smoke/` for `esp32s3` with `-DSDKCONFIG=sdkconfig.esp32s3`
 - build `examples/system_info/` for both targets
 - build `examples/gpio_basic/` for both targets
+- build `examples/gpio_interrupt/` for both targets
 - build `examples/uart_loopback/` for both targets
+- build `examples/uart_async/` for both targets
 - build `examples/i2c_scan/` for both targets
 - build `examples/spi_loopback/` for both targets
 - build `examples/pwm_basic/` for both targets
