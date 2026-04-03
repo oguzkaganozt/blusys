@@ -1,5 +1,6 @@
 site_name: Blusys HAL
 site_description: Simplified ESP32 HAL on top of ESP-IDF v5.5
+site_url: https://oguzkaganozt.github.io/blusys/
 site_dir: site
 theme:
   name: material
