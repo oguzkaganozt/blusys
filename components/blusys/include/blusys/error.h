@@ -17,6 +17,8 @@ typedef enum {
     BLUSYS_ERR_INTERNAL,
 } blusys_err_t;
 
+#define BLUSYS_TIMEOUT_FOREVER (-1)
+
 const char *blusys_err_string(blusys_err_t err);
 
 #ifdef __cplusplus

@@ -1,0 +1,26 @@
+menu "Blusys UART Loopback Example"
+
+config BLUSYS_UART_LOOPBACK_PORT
+    int "UART port"
+    range 0 2
+    default 1
+    help
+        Select the UART port used by this loopback example.
+
+config BLUSYS_UART_LOOPBACK_TX_PIN
+    int "TX GPIO pin"
+    range 0 48
+    default 21 if IDF_TARGET_ESP32C3
+    default 17 if IDF_TARGET_ESP32S3
+    help
+        Select a board-safe TX output GPIO for this example.
+
+config BLUSYS_UART_LOOPBACK_RX_PIN
+    int "RX GPIO pin"
+    range 0 48
+    default 20 if IDF_TARGET_ESP32C3
+    default 18 if IDF_TARGET_ESP32S3
+    help
+        Select a board-safe RX input GPIO for this example.
+
+endmenu

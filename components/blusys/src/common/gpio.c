@@ -1,27 +1,8 @@
 #include "blusys/gpio.h"
 
-#include "driver/gpio.h"
-#include "esp_err.h"
+#include "blusys_esp_err.h"
 
-static blusys_err_t blusys_gpio_translate_error(esp_err_t err)
-{
-    switch (err) {
-    case ESP_OK:
-        return BLUSYS_OK;
-    case ESP_ERR_INVALID_ARG:
-        return BLUSYS_ERR_INVALID_ARG;
-    case ESP_ERR_INVALID_STATE:
-        return BLUSYS_ERR_INVALID_STATE;
-    case ESP_ERR_NOT_SUPPORTED:
-        return BLUSYS_ERR_NOT_SUPPORTED;
-    case ESP_ERR_TIMEOUT:
-        return BLUSYS_ERR_TIMEOUT;
-    case ESP_ERR_NO_MEM:
-        return BLUSYS_ERR_NO_MEM;
-    default:
-        return BLUSYS_ERR_INTERNAL;
-    }
-}
+#include "driver/gpio.h"
 
 static bool blusys_gpio_is_valid_input_pin(int pin)
 {
@@ -63,7 +44,7 @@ blusys_err_t blusys_gpio_reset(int pin)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    return blusys_gpio_translate_error(gpio_reset_pin((gpio_num_t) pin));
+    return blusys_translate_esp_err(gpio_reset_pin((gpio_num_t) pin));
 }
 
 blusys_err_t blusys_gpio_set_input(int pin)
@@ -72,7 +53,7 @@ blusys_err_t blusys_gpio_set_input(int pin)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    return blusys_gpio_translate_error(gpio_set_direction((gpio_num_t) pin, GPIO_MODE_INPUT));
+    return blusys_translate_esp_err(gpio_set_direction((gpio_num_t) pin, GPIO_MODE_INPUT));
 }
 
 blusys_err_t blusys_gpio_set_output(int pin)
@@ -81,7 +62,7 @@ blusys_err_t blusys_gpio_set_output(int pin)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    return blusys_gpio_translate_error(gpio_set_direction((gpio_num_t) pin, GPIO_MODE_OUTPUT));
+    return blusys_translate_esp_err(gpio_set_direction((gpio_num_t) pin, GPIO_MODE_OUTPUT));
 }
 
 blusys_err_t blusys_gpio_set_pull_mode(int pin, blusys_gpio_pull_t pull)
@@ -96,7 +77,7 @@ blusys_err_t blusys_gpio_set_pull_mode(int pin, blusys_gpio_pull_t pull)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    return blusys_gpio_translate_error(gpio_set_pull_mode((gpio_num_t) pin, pull_mode));
+    return blusys_translate_esp_err(gpio_set_pull_mode((gpio_num_t) pin, pull_mode));
 }
 
 blusys_err_t blusys_gpio_read(int pin, bool *out_level)
@@ -116,5 +97,5 @@ blusys_err_t blusys_gpio_write(int pin, bool level)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    return blusys_gpio_translate_error(gpio_set_level((gpio_num_t) pin, level ? 1u : 0u));
+    return blusys_translate_esp_err(gpio_set_level((gpio_num_t) pin, level ? 1u : 0u));
 }
