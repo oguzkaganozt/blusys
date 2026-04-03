@@ -10,10 +10,11 @@ It summarizes the current build, validation, and coding rules for Blusys HAL.
 - Build system: ESP-IDF v5.5 with CMake
 - Current supported targets: `esp32c3`, `esp32s3`
 - Main component: `components/blusys/`
-- Current validation apps: `examples/smoke/`, `examples/system_info/`, `examples/gpio_basic/`, `examples/uart_loopback/`, `examples/i2c_scan/`, `examples/spi_loopback/`, `examples/pwm_basic/`, `examples/adc_basic/`, `examples/timer_basic/`
+- Current validation apps: `examples/smoke/`, `examples/system_info/`, `examples/gpio_basic/`, `examples/gpio_interrupt/`, `examples/uart_loopback/`, `examples/uart_async/`, `examples/i2c_scan/`, `examples/spi_loopback/`, `examples/pwm_basic/`, `examples/adc_basic/`, `examples/timer_basic/`
 
 The repository is still early-stage.
-Phase 1 foundation, Phase 2 foundational public modules, and Phase 3 communication modules are implemented.
+Phase 1 foundation, Phase 2 foundational public modules, Phase 3 communication modules, and Phase 4 timing and analog modules are implemented.
+Phase 5 async support is in progress and currently includes timer callbacks, GPIO interrupt callbacks, and UART async support.
 Formal unit tests and lint scripts do not exist yet.
 
 ## Repository Layout
@@ -27,7 +28,9 @@ Formal unit tests and lint scripts do not exist yet.
 - `examples/smoke/`: build validation app
 - `examples/system_info/`: `system` module example
 - `examples/gpio_basic/`: `gpio` module example
+- `examples/gpio_interrupt/`: `gpio` interrupt callback example
 - `examples/uart_loopback/`: `uart` module example
+- `examples/uart_async/`: `uart` async callback example
 - `examples/i2c_scan/`: `i2c` master module example
 - `examples/spi_loopback/`: `spi` master module example
 - `examples/pwm_basic/`: `pwm` module example
@@ -106,12 +109,28 @@ idf.py -C examples/gpio_basic -B build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconf
 idf.py -C examples/gpio_basic -B build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
 ```
 
+### Build GPIO Interrupt Example
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/gpio_interrupt -B examples/gpio_interrupt/build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build
+idf.py -C examples/gpio_interrupt -B examples/gpio_interrupt/build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
+```
+
 ### Build UART Loopback Example
 
 ```sh
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
-idf.py -C examples/uart_loopback -B build-esp32c3 set-target esp32c3 build
-idf.py -C examples/uart_loopback -B build-esp32s3 set-target esp32s3 build
+idf.py -C examples/uart_loopback -B examples/uart_loopback/build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build
+idf.py -C examples/uart_loopback -B examples/uart_loopback/build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
+```
+
+### Build UART Async Example
+
+```sh
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+idf.py -C examples/uart_async -B examples/uart_async/build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build
+idf.py -C examples/uart_async -B examples/uart_async/build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
 ```
 
 ### Build I2C Scan Example
@@ -189,8 +208,12 @@ Current practical test matrix:
 - build `system_info` for `esp32s3`
 - build `gpio_basic` for `esp32c3`
 - build `gpio_basic` for `esp32s3`
+- build `gpio_interrupt` for `esp32c3`
+- build `gpio_interrupt` for `esp32s3`
 - build `uart_loopback` for `esp32c3`
 - build `uart_loopback` for `esp32s3`
+- build `uart_async` for `esp32c3`
+- build `uart_async` for `esp32s3`
 - build `i2c_scan` for `esp32c3`
 - build `i2c_scan` for `esp32s3`
 - build `spi_loopback` for `esp32c3`
@@ -325,9 +348,11 @@ At minimum, for code changes touching the component:
 For code changes touching `system` or `gpio`:
 - build `examples/system_info` for both targets
 - build `examples/gpio_basic` for both targets
+- build `examples/gpio_interrupt` for both targets
 
 For code changes touching `uart`, `i2c`, or `spi`:
 - build `examples/uart_loopback` for both targets
+- build `examples/uart_async` for both targets
 - build `examples/i2c_scan` for both targets
 - build `examples/spi_loopback` for both targets
 

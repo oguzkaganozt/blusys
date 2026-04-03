@@ -25,7 +25,7 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 | Phase 2: Foundational Public Modules | completed | `system` and `gpio` implemented with examples, guides, and dual-target build validation |
 | Phase 3: Core Serial And Bus Modules | completed | `uart`, `i2c`, and `spi` implemented with examples, guides, and dual-target build validation |
 | Phase 4: Timing And Analog Modules | completed | `pwm`, `adc`, and `timer` implemented with examples, guides, and dual-target build validation |
-| Phase 5: Async And Hardening | in_progress | `timer` callbacks implemented, GPIO interrupt callbacks and UART async pending |
+| Phase 5: Async And Hardening | in_progress | `timer` callbacks, GPIO interrupt callbacks, and UART async implemented; build hardening is done and runtime validation remains |
 | Phase 6: Stabilization | not_started | smoke tests, concurrency tests, docs cleanup |
 | Phase 7: Release | not_started | release candidate and `v1.0.0` |
 
@@ -68,7 +68,7 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 - added public `gpio` header and implementation
 - added `examples/system_info/`
 - added `examples/gpio_basic/`
-- added module docs and task-first guides for `system` and `gpio`
+- added module docs for `system` and `gpio`
 - validated examples build for:
   - `esp32c3`
   - `esp32s3`
@@ -81,7 +81,7 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 - added `examples/uart_loopback/`
 - added `examples/i2c_scan/`
 - added `examples/spi_loopback/`
-- added module docs and task-first guides for `uart`, `i2c`, and `spi`
+- added module docs for `uart`, `i2c`, and `spi`
 - aligned `blusys_target_supports()` feature reporting with currently shipped public module support
 - validated examples build for:
   - `esp32c3`
@@ -103,6 +103,8 @@ This file tracks implementation progress against the roadmap in `docs/roadmap.md
 ### Phase 5 Async And Hardening
 
 - added direct ISR timer callback registration to the `timer` module
+- added direct ISR GPIO callback registration to the `gpio` module
+- added task-context UART async TX and RX callback registration to the `uart` module
 
 ## Current Technical State
 
@@ -127,9 +129,8 @@ Internal infrastructure currently exists for:
 
 ## Open Items In Phase 5
 
-- add GPIO interrupt callback support
-- add UART async TX and RX support
-- harden callback and lifecycle behavior across the async modules
+- run focused hardware smoke validation for async lifecycle behavior
+- complete the final Phase 5 review and fix pass
 
 ## Known Environment Notes
 
@@ -141,6 +142,6 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. implement GPIO interrupt callbacks
-2. implement UART async TX and RX
-3. validate the Phase 5 async and lifecycle behavior
+1. run focused hardware smoke validation for async lifecycle behavior
+2. complete the Phase 5 review and fix pass
+3. decide whether Phase 5 exit criteria are met
