@@ -38,37 +38,96 @@ Current async support includes:
 
 ## Quick Start
 
-If `export.sh` looks for a missing `idf5.5_py3.14_env`, set the installed Python env first:
+If `export.sh` looks for a missing ESP-IDF Python env, check which one exists on your machine:
 
 ```sh
-export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env
+ls ~/.espressif/python_env/
 ```
 
-Export ESP-IDF:
+Then point `IDF_PYTHON_ENV_PATH` at the matching directory and export ESP-IDF:
 
 ```sh
+export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/<your-idf-env>
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 ```
 
-Build the smoke example for `esp32c3`:
+For example, on this machine the installed env is `idf5.5_py3.12_env`:
 
 ```sh
-idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-target esp32c3 build
+export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.12_env
+source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+```
+
+## Find Your Board On Linux
+
+To list likely serial devices before flashing:
+
+```sh
+ls /dev/ttyACM* /dev/ttyUSB*
+```
+
+To see USB devices:
+
+```sh
+lsusb
+```
+
+A common workflow is:
+
+1. unplug the board
+2. run `ls /dev/ttyACM* /dev/ttyUSB*`
+3. plug the board in
+4. run the command again and note the new device
+
+Use that device path with `idf.py -p`, for example `/dev/ttyACM0` or `/dev/ttyUSB0`.
+
+## Quick Test On Linux
+
+This was tested on this machine with an `ESP32-S3` board on `/dev/ttyACM0`.
+
+Build the smoke example for `esp32s3`:
+
+```sh
+idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
 ```
 
 Flash and monitor it:
 
 ```sh
-idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 -p /dev/ttyUSB0 flash monitor
+idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 -p /dev/ttyACM0 flash monitor
 ```
 
 Exit the serial monitor with `Ctrl+]`.
 
-For `esp32s3`, use the matching example config:
+Expected output includes:
+
+- `Blusys smoke app`
+- `target: ESP32-S3`
+- feature lines such as `feature_gpio: yes`
+
+## Target Must Match The Board
+
+The target you build and flash must match the connected chip.
+
+For example:
+- use the `esp32s3` build for an ESP32-S3 board
+- use the `esp32c3` build for an ESP32-C3 board
+
+If they do not match, flashing fails with an error like:
 
 ```sh
-idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
-idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 -p /dev/ttyUSB0 flash monitor
+This chip is ESP32-S3, not ESP32-C3. Wrong --chip argument?
+```
+
+If you are unsure which board is connected, try flashing once and `esptool.py` will identify the chip.
+
+## Other Target Example
+
+For `esp32c3`, use the matching example config:
+
+```sh
+idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-target esp32c3 build
+idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 -p /dev/ttyACM0 flash monitor
 ```
 
 ## Examples

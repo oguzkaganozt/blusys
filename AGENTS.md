@@ -69,13 +69,14 @@ ESP-IDF must be exported before running builds.
 Recommended local setup:
 
 ```sh
-export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env
+ls ~/.espressif/python_env/
+export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/<your-idf-env>
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 ```
 
 If the ESP-IDF Python environment fails during export, verify missing Python packages.
 This repo previously required `tree_sitter` and `tree_sitter_c` in the local ESP-IDF Python env.
-On this machine, `export.sh` may also look for a missing `idf5.5_py3.14_env`; setting `IDF_PYTHON_ENV_PATH` to the installed `idf5.5_py3.10_env` fixes it.
+On this machine, the installed env is currently `idf5.5_py3.12_env`, but the exact directory name may differ on other setups.
 
 ## Build Commands
 

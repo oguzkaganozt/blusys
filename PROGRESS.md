@@ -135,7 +135,7 @@ Internal infrastructure currently exists for:
 ## Known Environment Notes
 
 - ESP-IDF 5.5.4 local environment required missing `tree_sitter` packages before builds worked
-- this machine currently needs `IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.10_env` before sourcing ESP-IDF export
+- if `export.sh` looks for a missing ESP-IDF Python env, set `IDF_PYTHON_ENV_PATH` to the installed env directory under `~/.espressif/python_env/`
 - dual-target validation uses separate `sdkconfig` files per target:
   - `examples/smoke/sdkconfig.esp32c3`
   - `examples/smoke/sdkconfig.esp32s3`
