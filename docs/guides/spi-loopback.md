@@ -39,3 +39,31 @@ blusys_spi_close(spi);
 - choosing board pins that are reserved for flash, PSRAM, USB, or onboard peripherals
 - forgetting the MOSI-to-MISO loopback wire
 - assuming Phase 3 supports advanced multi-device SPI sharing; the first implementation intentionally keeps one handle tied to one bus and one device
+
+## Example App
+
+See `examples/spi_loopback/` for a runnable example.
+
+Build for `esp32c3`:
+
+```sh
+idf.py -C examples/spi_loopback -B build-esp32c3 set-target esp32c3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/spi_loopback -B build-esp32c3 -p /dev/ttyUSB0 flash monitor
+```
+
+Build for `esp32s3`:
+
+```sh
+idf.py -C examples/spi_loopback -B build-esp32s3 set-target esp32s3 build
+```
+
+Flash and monitor it:
+
+```sh
+idf.py -C examples/spi_loopback -B build-esp32s3 -p /dev/ttyUSB0 flash monitor
+```
