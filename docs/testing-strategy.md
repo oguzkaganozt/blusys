@@ -39,6 +39,9 @@ Required on real boards for:
 - adc
 - timer
 
+See `guides/hardware-smoke-tests.md` for the concrete ESP32-C3 and ESP32-S3 procedure.
+Use `guides/hardware-validation-report-template.md` to record results consistently.
+
 ### 4. Concurrency And Stress Tests
 
 Required for:
@@ -52,7 +55,7 @@ Required for:
 Each module is only complete when all items below are true:
 - public header exists
 - implementation exists
-- task-first guide exists
+- guide exists
 - example exists
 - both targets build successfully
 - at least one hardware smoke test passed

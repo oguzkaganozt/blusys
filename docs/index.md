@@ -28,8 +28,8 @@ The project exists to make normal embedded development tasks easier than working
 
 ## Project Status
 
-Phase 1 foundation, the Phase 2 modules, and the Phase 3 communication modules are implemented.
-Phase 4 is in progress, with `pwm` implemented first.
+Phase 1, Phase 2, Phase 3, and Phase 4 are implemented.
+Phase 5 async support is implemented and is currently in runtime validation and hardening.
 
 ## Upstream Reference
 
