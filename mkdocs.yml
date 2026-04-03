@@ -26,6 +26,10 @@ nav:
   - Documentation Standards: documentation-standards.md
   - Guides:
       - Getting Started: guides/getting-started.md
+      - Read System Info: guides/system-info.md
+      - Basic GPIO IO: guides/gpio-basic.md
   - Modules:
       - Overview: modules/index.md
       - V1 Core Modules: modules/v1-core.md
+      - System: modules/system.md
+      - GPIO: modules/gpio.md

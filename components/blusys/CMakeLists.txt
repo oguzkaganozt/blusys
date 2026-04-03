@@ -1,5 +1,7 @@
 set(blusys_sources
     src/common/error.c
+    src/common/gpio.c
+    src/common/system.c
     src/common/target.c
     src/common/version.c
     src/internal/blusys_lock_freertos.c
@@ -17,5 +19,5 @@ idf_component_register(
     SRCS ${blusys_sources}
     INCLUDE_DIRS include
     PRIV_INCLUDE_DIRS src/internal
-    REQUIRES freertos
+    REQUIRES freertos esp_driver_gpio esp_system esp_timer
 )
