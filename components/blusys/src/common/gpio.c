@@ -293,6 +293,7 @@ blusys_err_t blusys_gpio_set_callback(int pin, blusys_gpio_callback_t callback, 
     esp_err_t esp_err;
     bool added_handler = false;
     bool handler_installed;
+    bool wait_for_idle = false;
     blusys_gpio_interrupt_mode_t mode;
 
     if (!blusys_gpio_is_valid_input_pin(pin)) {
@@ -330,9 +331,30 @@ blusys_err_t blusys_gpio_set_callback(int pin, blusys_gpio_callback_t callback, 
         }
 
         portENTER_CRITICAL(&blusys_gpio_interrupt_lock);
-        entry->callback = callback;
-        entry->user_ctx = user_ctx;
+        if ((entry->callback != NULL) && ((entry->callback != callback) || (entry->user_ctx != user_ctx))) {
+            entry->callback = NULL;
+            entry->user_ctx = NULL;
+            wait_for_idle = true;
+        } else if (entry->callback == callback) {
+            entry->user_ctx = user_ctx;
+        }
         portEXIT_CRITICAL(&blusys_gpio_interrupt_lock);
+
+        if (wait_for_idle) {
+            blusys_gpio_wait_for_callback_idle(pin);
+
+            portENTER_CRITICAL(&blusys_gpio_interrupt_lock);
+            entry->callback = callback;
+            entry->user_ctx = user_ctx;
+            portEXIT_CRITICAL(&blusys_gpio_interrupt_lock);
+        }
+
+        if (!wait_for_idle) {
+            portENTER_CRITICAL(&blusys_gpio_interrupt_lock);
+            entry->callback = callback;
+            entry->user_ctx = user_ctx;
+            portEXIT_CRITICAL(&blusys_gpio_interrupt_lock);
+        }
 
         esp_err = gpio_intr_enable((gpio_num_t) pin);
         if (esp_err != ESP_OK) {

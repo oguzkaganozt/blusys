@@ -11,10 +11,14 @@
 #include "blusys/blusys.h"
 
 #define BLUSYS_GPIO_INTERRUPT_INPUT_PIN CONFIG_BLUSYS_GPIO_INTERRUPT_INPUT_PIN
+#define BLUSYS_GPIO_INTERRUPT_STAGE1_BIT (1u << 0)
+#define BLUSYS_GPIO_INTERRUPT_STAGE2_BIT (1u << 1)
 
 typedef struct {
     TaskHandle_t task;
     volatile uint32_t interrupt_count;
+    uint32_t notify_bit;
+    const char *label;
 } blusys_gpio_interrupt_ctx_t;
 
 static bool blusys_gpio_interrupt_on_edge(int pin, void *user_ctx)
@@ -25,7 +29,7 @@ static bool blusys_gpio_interrupt_on_edge(int pin, void *user_ctx)
     (void) pin;
 
     ctx->interrupt_count += 1u;
-    vTaskNotifyGiveFromISR(ctx->task, &high_task_woken);
+    xTaskNotifyFromISR(ctx->task, ctx->notify_bit, eSetBits, &high_task_woken);
 
     return high_task_woken == pdTRUE;
 }
@@ -42,16 +46,24 @@ static bool configure_step(blusys_err_t err, const char *step)
 
 void app_main(void)
 {
-    blusys_gpio_interrupt_ctx_t ctx = {
+    blusys_gpio_interrupt_ctx_t phase_a = {
         .task = xTaskGetCurrentTaskHandle(),
         .interrupt_count = 0u,
+        .notify_bit = BLUSYS_GPIO_INTERRUPT_STAGE1_BIT,
+        .label = "phase_a",
     };
-    uint32_t printed_count = 0u;
+    blusys_gpio_interrupt_ctx_t phase_b = {
+        .task = xTaskGetCurrentTaskHandle(),
+        .interrupt_count = 0u,
+        .notify_bit = BLUSYS_GPIO_INTERRUPT_STAGE2_BIT,
+        .label = "phase_b",
+    };
+    uint32_t notified_bits = 0u;
 
     printf("Blusys gpio interrupt\n");
     printf("target: %s\n", blusys_target_name());
     printf("input_pin: %d\n", BLUSYS_GPIO_INTERRUPT_INPUT_PIN);
-    printf("toggle or pulse the input pin to generate interrupts\n");
+    printf("trigger one edge for phase_a, then another edge for phase_b\n");
 
     if (!configure_step(blusys_gpio_reset(BLUSYS_GPIO_INTERRUPT_INPUT_PIN), "reset input pin") ||
         !configure_step(blusys_gpio_set_input(BLUSYS_GPIO_INTERRUPT_INPUT_PIN), "set input pin")) {
@@ -66,20 +78,37 @@ void app_main(void)
 #endif
 
     if (!configure_step(blusys_gpio_set_interrupt(BLUSYS_GPIO_INTERRUPT_INPUT_PIN, BLUSYS_GPIO_INTERRUPT_ANY_EDGE),
-                        "set interrupt mode") ||
-        !configure_step(blusys_gpio_set_callback(BLUSYS_GPIO_INTERRUPT_INPUT_PIN,
-                                                 blusys_gpio_interrupt_on_edge,
-                                                 &ctx),
-                        "set callback")) {
+                         "set interrupt mode") ||
+         !configure_step(blusys_gpio_set_callback(BLUSYS_GPIO_INTERRUPT_INPUT_PIN,
+                                                  blusys_gpio_interrupt_on_edge,
+                                                  &phase_a),
+                         "set callback")) {
         return;
     }
 
-    while (true) {
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    while ((notified_bits & BLUSYS_GPIO_INTERRUPT_STAGE1_BIT) == 0u) {
+        xTaskNotifyWait(0u, UINT32_MAX, &notified_bits, portMAX_DELAY);
+    }
 
-        if (ctx.interrupt_count != printed_count) {
-            printed_count = ctx.interrupt_count;
-            printf("interrupt_count=%u\n", (unsigned int) printed_count);
-        }
+    printf("%s interrupt_count=%u\n", phase_a.label, (unsigned int) phase_a.interrupt_count);
+
+    if (!configure_step(blusys_gpio_set_callback(BLUSYS_GPIO_INTERRUPT_INPUT_PIN,
+                                                 blusys_gpio_interrupt_on_edge,
+                                                 &phase_b),
+                        "replace callback")) {
+        return;
+    }
+
+    notified_bits = 0u;
+    while ((notified_bits & BLUSYS_GPIO_INTERRUPT_STAGE2_BIT) == 0u) {
+        xTaskNotifyWait(0u, UINT32_MAX, &notified_bits, portMAX_DELAY);
+    }
+
+    printf("%s interrupt_count=%u\n", phase_b.label, (unsigned int) phase_b.interrupt_count);
+    printf("callback_swap_result: %s\n",
+           ((phase_a.interrupt_count > 0u) && (phase_b.interrupt_count > 0u)) ? "ok" : "incomplete");
+
+    if (!configure_step(blusys_gpio_set_callback(BLUSYS_GPIO_INTERRUPT_INPUT_PIN, NULL, NULL), "clear callback")) {
+        return;
     }
 }
