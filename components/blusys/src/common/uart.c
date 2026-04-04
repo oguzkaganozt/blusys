@@ -32,12 +32,52 @@ struct blusys_uart {
     void *tx_callback_user_ctx;
     blusys_uart_rx_callback_t rx_callback;
     void *rx_callback_user_ctx;
+    unsigned int callback_active;
     bool tx_pending;
     bool closing;
     bool event_task_exited;
 };
 
 static void blusys_uart_event_task(void *arg);
+
+static bool blusys_uart_callback_active(blusys_uart_t *uart)
+{
+    bool active;
+    blusys_err_t err;
+
+    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return false;
+    }
+
+    active = uart->callback_active > 0u;
+
+    blusys_lock_give(&uart->lock);
+    return active;
+}
+
+static void blusys_uart_wait_for_callback_idle(blusys_uart_t *uart)
+{
+    while (blusys_uart_callback_active(uart)) {
+        taskYIELD();
+    }
+}
+
+static void blusys_uart_callback_finish(blusys_uart_t *uart)
+{
+    blusys_err_t err;
+
+    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return;
+    }
+
+    if (uart->callback_active > 0u) {
+        uart->callback_active -= 1u;
+    }
+
+    blusys_lock_give(&uart->lock);
+}
 
 static bool blusys_uart_is_valid_port(int port)
 {
@@ -83,6 +123,8 @@ static void blusys_uart_invoke_tx_callback(blusys_uart_t *uart,
     if (callback != NULL) {
         callback(uart, status, user_ctx);
     }
+
+    blusys_uart_callback_finish(uart);
 }
 
 static void blusys_uart_invoke_rx_callback(blusys_uart_t *uart,
@@ -94,6 +136,8 @@ static void blusys_uart_invoke_rx_callback(blusys_uart_t *uart,
     if ((callback != NULL) && (size > 0u)) {
         callback(uart, buffer, size, user_ctx);
     }
+
+    blusys_uart_callback_finish(uart);
 }
 
 static bool blusys_uart_snapshot_tx_completion(blusys_uart_t *uart,
@@ -135,6 +179,9 @@ static bool blusys_uart_snapshot_tx_completion(blusys_uart_t *uart,
     *out_status = blusys_translate_esp_err(esp_err);
     *out_callback = uart->tx_callback;
     *out_user_ctx = uart->tx_callback_user_ctx;
+    if (*out_callback != NULL) {
+        uart->callback_active += 1u;
+    }
     uart->tx_pending = false;
 
     blusys_lock_give(&uart->lock);
@@ -165,10 +212,12 @@ static void blusys_uart_dispatch_rx_data(blusys_uart_t *uart, size_t pending_siz
 
         callback = uart->rx_callback;
         callback_user_ctx = uart->rx_callback_user_ctx;
+        uart->callback_active += 1u;
         blusys_lock_give(&uart->lock);
 
         read_size = uart_read_bytes(uart->port, buffer, (uint32_t) chunk_size, 0);
         if (read_size <= 0) {
+            blusys_uart_callback_finish(uart);
             return;
         }
 
@@ -391,6 +440,8 @@ blusys_err_t blusys_uart_close(blusys_uart_t *uart)
         blusys_lock_give(&uart->lock);
     } while (!event_task_exited);
 
+    blusys_uart_wait_for_callback_idle(uart);
+
     err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
@@ -504,6 +555,8 @@ blusys_err_t blusys_uart_set_tx_callback(blusys_uart_t *uart,
                                          void *user_ctx)
 {
     blusys_err_t err;
+    bool from_event_task;
+    bool wait_for_idle = false;
 
     if (uart == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -519,6 +572,44 @@ blusys_err_t blusys_uart_set_tx_callback(blusys_uart_t *uart,
         return BLUSYS_ERR_INVALID_STATE;
     }
 
+    from_event_task = xTaskGetCurrentTaskHandle() == uart->event_task;
+
+    if ((uart->tx_callback != NULL) && ((uart->tx_callback != callback) || (uart->tx_callback_user_ctx != user_ctx))) {
+        if (from_event_task) {
+            blusys_lock_give(&uart->lock);
+            return BLUSYS_ERR_INVALID_STATE;
+        }
+
+        uart->tx_callback = NULL;
+        uart->tx_callback_user_ctx = NULL;
+        wait_for_idle = true;
+    } else if (uart->tx_callback == callback) {
+        uart->tx_callback_user_ctx = user_ctx;
+        blusys_lock_give(&uart->lock);
+        return BLUSYS_OK;
+    }
+
+    blusys_lock_give(&uart->lock);
+
+    if (wait_for_idle) {
+        blusys_uart_wait_for_callback_idle(uart);
+
+        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        if (err != BLUSYS_OK) {
+            return err;
+        }
+
+        if (uart->closing || uart->tx_pending) {
+            blusys_lock_give(&uart->lock);
+            return BLUSYS_ERR_INVALID_STATE;
+        }
+    } else {
+        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        if (err != BLUSYS_OK) {
+            return err;
+        }
+    }
+
     uart->tx_callback = callback;
     uart->tx_callback_user_ctx = user_ctx;
 
@@ -531,6 +622,8 @@ blusys_err_t blusys_uart_set_rx_callback(blusys_uart_t *uart,
                                          void *user_ctx)
 {
     blusys_err_t err;
+    bool from_event_task;
+    bool wait_for_idle = false;
 
     if (uart == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -544,6 +637,47 @@ blusys_err_t blusys_uart_set_rx_callback(blusys_uart_t *uart,
     if (uart->closing) {
         blusys_lock_give(&uart->lock);
         return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    from_event_task = xTaskGetCurrentTaskHandle() == uart->event_task;
+
+    if ((uart->rx_callback != NULL) && ((uart->rx_callback != callback) || (uart->rx_callback_user_ctx != user_ctx))) {
+        if (from_event_task) {
+            blusys_lock_give(&uart->lock);
+            return BLUSYS_ERR_INVALID_STATE;
+        }
+
+        uart->rx_callback = NULL;
+        uart->rx_callback_user_ctx = NULL;
+        wait_for_idle = true;
+    } else if (uart->rx_callback == callback) {
+        uart->rx_callback_user_ctx = user_ctx;
+        if (callback != NULL) {
+            uart_flush_input(uart->port);
+        }
+        blusys_lock_give(&uart->lock);
+        return BLUSYS_OK;
+    }
+
+    blusys_lock_give(&uart->lock);
+
+    if (wait_for_idle) {
+        blusys_uart_wait_for_callback_idle(uart);
+
+        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        if (err != BLUSYS_OK) {
+            return err;
+        }
+
+        if (uart->closing) {
+            blusys_lock_give(&uart->lock);
+            return BLUSYS_ERR_INVALID_STATE;
+        }
+    } else {
+        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        if (err != BLUSYS_OK) {
+            return err;
+        }
     }
 
     uart->rx_callback = callback;
