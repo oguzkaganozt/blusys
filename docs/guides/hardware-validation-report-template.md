@@ -133,6 +133,7 @@ Record the observed behavior for each example.
 - Target:
 - Interrupt fired on expected edge:
 - Repeated triggers worked:
+- Final result was `callback_swap_result: ok`:
 - Counts stopped when line was idle:
 - Reset/flash rerun still worked:
 - Notes:
@@ -153,7 +154,7 @@ Record the observed behavior for each example.
 - TX and RX jumper installed:
 - TX callback completed:
 - RX callback received expected payload:
-- Final result was `async_result: ok`:
+- Final result was `callback_swap_result: ok`:
 - Close/shutdown completed cleanly:
 - Notes:
 
@@ -197,6 +198,7 @@ Record the observed behavior for each example.
 - Target:
 - Tick count incremented at expected rate:
 - Timer stopped at expected count:
+- Final result was `callback_swap_result: ok`:
 - No extra ticks after stop:
 - Notes:
 

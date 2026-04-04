@@ -167,6 +167,7 @@ Setup:
 Expected result:
 
 - `interrupt_count=` increases on each edge event
+- final result prints `callback_swap_result: ok`
 - no reboot, watchdog reset, or lockup occurs
 - repeated toggling continues to work
 
@@ -236,7 +237,7 @@ Expected result:
 
 - TX callback completes and reports `BLUSYS_OK`
 - RX callback receives the expected byte string
-- final result prints `async_result: ok`
+- final result prints `callback_swap_result: ok`
 - board does not hang during shutdown
 
 Good checks:
@@ -269,6 +270,7 @@ Expected result:
 
 - `tick=` increments at the expected interval
 - the example stops after the configured tick limit
+- final result prints `callback_swap_result: ok`
 - no extra callbacks appear after stop
 - board remains stable after timer close
 
