@@ -49,6 +49,6 @@ void app_main(void)
         }
 
         printf("output=%d input=%d\n", output_level ? 1 : 0, input_level ? 1 : 0);
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
