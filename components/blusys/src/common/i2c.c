@@ -34,6 +34,11 @@ static bool blusys_i2c_is_valid_address(uint16_t device_address)
     return device_address <= 0x7fu;
 }
 
+static bool blusys_i2c_is_valid_scan_address(uint16_t device_address)
+{
+    return (device_address >= 0x08u) && (device_address <= 0x77u);
+}
+
 static blusys_err_t blusys_i2c_ensure_device(blusys_i2c_master_t *i2c, uint16_t device_address, int timeout_ms)
 {
     esp_err_t esp_err;
@@ -174,6 +179,64 @@ blusys_err_t blusys_i2c_master_probe(blusys_i2c_master_t *i2c, uint16_t device_a
     blusys_lock_give(&i2c->lock);
 
     return err;
+}
+
+blusys_err_t blusys_i2c_master_scan(blusys_i2c_master_t *i2c,
+                                    uint16_t start_address,
+                                    uint16_t end_address,
+                                    int timeout_ms,
+                                    blusys_i2c_scan_callback_t callback,
+                                    void *user_ctx,
+                                    size_t *out_count)
+{
+    blusys_err_t err;
+    esp_err_t esp_err;
+    size_t count = 0u;
+    uint16_t device_address;
+
+    if ((i2c == NULL) ||
+        !blusys_i2c_is_valid_scan_address(start_address) ||
+        !blusys_i2c_is_valid_scan_address(end_address) ||
+        (start_address > end_address) ||
+        !blusys_timeout_ms_is_valid(timeout_ms)) {
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+
+    err = blusys_lock_take(&i2c->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+
+    for (device_address = start_address; device_address <= end_address; ++device_address) {
+        esp_err = i2c_master_probe(i2c->bus_handle, device_address, timeout_ms);
+        if (esp_err == ESP_OK) {
+            count += 1u;
+
+            if ((callback != NULL) && !callback(device_address, user_ctx)) {
+                break;
+            }
+
+            continue;
+        }
+
+        if (esp_err != ESP_ERR_NOT_FOUND) {
+            blusys_lock_give(&i2c->lock);
+
+            if (out_count != NULL) {
+                *out_count = count;
+            }
+
+            return blusys_translate_esp_err(esp_err);
+        }
+    }
+
+    blusys_lock_give(&i2c->lock);
+
+    if (out_count != NULL) {
+        *out_count = count;
+    }
+
+    return BLUSYS_OK;
 }
 
 blusys_err_t blusys_i2c_master_write(blusys_i2c_master_t *i2c,

@@ -28,6 +28,7 @@ blusys_uart_close(uart);
 - `blusys_uart_open()` configures the UART port with TX, RX, and baud rate
 - `blusys_uart_write()` sends bytes and waits for transmit completion
 - `blusys_uart_read()` waits for incoming bytes and reports how many arrived
+- `blusys_uart_flush_rx()` clears buffered RX data before a fresh blocking read when needed
 - `blusys_uart_close()` releases the driver instance
 
 ## Expected Runtime Behavior

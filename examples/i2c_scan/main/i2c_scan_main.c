@@ -13,6 +13,16 @@
 #define BLUSYS_I2C_SCAN_FREQ_HZ 100000u
 #define BLUSYS_I2C_SCAN_TIMEOUT_MS 20
 
+static bool blusys_i2c_scan_on_device(uint16_t device_address, void *user_ctx)
+{
+    unsigned int *found_count = user_ctx;
+
+    printf("found: 0x%02x\n", (unsigned int) device_address);
+    *found_count += 1u;
+
+    return true;
+}
+
 void app_main(void)
 {
     blusys_i2c_master_t *i2c = NULL;
@@ -36,18 +46,15 @@ void app_main(void)
         return;
     }
 
-    for (uint16_t address = 0x08u; address < 0x78u; ++address) {
-        err = blusys_i2c_master_probe(i2c, address, BLUSYS_I2C_SCAN_TIMEOUT_MS);
-        if (err == BLUSYS_OK) {
-            printf("found: 0x%02x\n", (unsigned int) address);
-            ++found_count;
-            continue;
-        }
-
-        if (err == BLUSYS_ERR_TIMEOUT) {
-            printf("probe timeout at 0x%02x\n", (unsigned int) address);
-            break;
-        }
+    err = blusys_i2c_master_scan(i2c,
+                                 0x08u,
+                                 0x77u,
+                                 BLUSYS_I2C_SCAN_TIMEOUT_MS,
+                                 blusys_i2c_scan_on_device,
+                                 &found_count,
+                                 NULL);
+    if (err != BLUSYS_OK) {
+        printf("scan error: %s\n", blusys_err_string(err));
     }
 
     printf("devices_found: %u\n", found_count);
