@@ -73,6 +73,7 @@ RX callbacks receive UART data in task context through an internal worker task. 
 - different UART handles may be used independently
 - do not call `blusys_uart_close()` concurrently with other calls using the same handle
 - do not call `blusys_uart_close()` from a UART async callback
+- do not call `blusys_uart_set_tx_callback()` or `blusys_uart_set_rx_callback()` from a UART async callback
 - do not change the TX completion callback while an async TX is pending
 - blocking `blusys_uart_read()` is not allowed while an RX callback is registered
 - blocking and async TX cannot overlap on the same handle
@@ -91,6 +92,7 @@ The async layer uses an internal task that consumes the ESP-IDF UART event queue
 - each Blusys UART handle owns one ESP-IDF UART driver instance for one UART port
 - closing the handle cancels any pending async callback delivery
 - `blusys_uart_close()` is not allowed from the UART async callback task
+- callback registration changes are not allowed from the UART async callback task
 
 ## Error Behavior
 
