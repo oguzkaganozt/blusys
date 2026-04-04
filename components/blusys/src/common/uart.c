@@ -550,6 +550,31 @@ blusys_err_t blusys_uart_read(blusys_uart_t *uart,
     return (*out_read == size) ? BLUSYS_OK : BLUSYS_ERR_TIMEOUT;
 }
 
+blusys_err_t blusys_uart_flush_rx(blusys_uart_t *uart)
+{
+    blusys_err_t err;
+
+    if (uart == NULL) {
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+
+    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+
+    if (uart->closing || (uart->rx_callback != NULL)) {
+        blusys_lock_give(&uart->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    err = blusys_translate_esp_err(uart_flush_input(uart->port));
+
+    blusys_lock_give(&uart->lock);
+
+    return err;
+}
+
 blusys_err_t blusys_uart_set_tx_callback(blusys_uart_t *uart,
                                          blusys_uart_tx_callback_t callback,
                                          void *user_ctx)

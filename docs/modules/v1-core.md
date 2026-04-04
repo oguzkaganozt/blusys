@@ -55,7 +55,7 @@ Rules:
 Scope:
 - open and close bus
 - blocking transmit, receive, and write-read transfers
-- bus scan helper if justified
+- bus scan helper
 
 Rules:
 - master mode first

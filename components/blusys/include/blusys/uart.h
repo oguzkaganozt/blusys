@@ -31,6 +31,7 @@ blusys_err_t blusys_uart_read(blusys_uart_t *uart,
                               size_t size,
                               int timeout_ms,
                               size_t *out_read);
+blusys_err_t blusys_uart_flush_rx(blusys_uart_t *uart);
 blusys_err_t blusys_uart_set_tx_callback(blusys_uart_t *uart,
                                          blusys_uart_tx_callback_t callback,
                                          void *user_ctx);

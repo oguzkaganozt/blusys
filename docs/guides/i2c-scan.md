@@ -17,21 +17,21 @@ You want to discover which 7-bit I2C device addresses acknowledge on an ESP32-C3
 blusys_i2c_master_t *i2c;
 
 blusys_i2c_master_open(0, 8, 9, 100000, &i2c);
-blusys_i2c_master_probe(i2c, 0x3c, 20);
+blusys_i2c_master_scan(i2c, 0x08, 0x77, 20, on_device, NULL, NULL);
 blusys_i2c_master_close(i2c);
 ```
 
 ## APIs Used
 
 - `blusys_i2c_master_open()` configures the bus pins and frequency
-- `blusys_i2c_master_probe()` checks whether a device address acknowledges
+- `blusys_i2c_master_scan()` scans a normal 7-bit address range and reports acknowledged devices through a callback while preserving ESP-IDF's `not found` vs timeout behavior
 - `blusys_i2c_master_close()` releases the bus handle
 
 ## Expected Runtime Behavior
 
 - the example scans addresses `0x08` through `0x77`
 - acknowledged devices are printed one by one
-- if the bus times out, the example prints a timeout message so wiring and pull-ups can be checked
+- if the bus times out, the example prints a scan error so wiring and pull-ups can be checked
 
 ## Common Mistakes
 
