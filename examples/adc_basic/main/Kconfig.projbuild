@@ -3,8 +3,9 @@ menu "Blusys ADC Basic Example"
 config BLUSYS_ADC_BASIC_PIN
     int "ADC GPIO pin"
     range 0 48
+    default 34 if IDF_TARGET_ESP32
     default 4 if IDF_TARGET_ESP32C3
-    default 4 if IDF_TARGET_ESP32S3
+    default 1 if IDF_TARGET_ESP32S3
     help
         Select a board-safe ADC1 GPIO for this example.
 

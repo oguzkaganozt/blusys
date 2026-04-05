@@ -58,6 +58,20 @@ export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.1
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 ```
 
+To avoid repeating that setup for every example command, use the root helper scripts:
+
+```sh
+./configure.sh examples/gpio_interrupt esp32s3
+./build.sh examples/gpio_interrupt esp32s3
+./flash.sh examples/gpio_interrupt /dev/ttyACM0 esp32s3
+./monitor.sh examples/gpio_interrupt /dev/ttyACM0 esp32s3
+./run.sh examples/gpio_interrupt /dev/ttyACM0 esp32s3
+```
+
+Use `Ctrl+]` to exit the ESP-IDF serial monitor and return to the shell.
+
+If you omit the target, the scripts reuse a previously configured single target when they can and otherwise default to `esp32s3`.
+
 ## Find Your Board On Linux
 
 To list likely serial devices before flashing:

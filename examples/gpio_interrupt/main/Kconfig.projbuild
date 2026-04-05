@@ -3,6 +3,7 @@ menu "Blusys GPIO Interrupt Example"
 config BLUSYS_GPIO_INTERRUPT_INPUT_PIN
     int "Interrupt input GPIO pin"
     range 0 48
+    default 16 if IDF_TARGET_ESP32
     default 2 if IDF_TARGET_ESP32C3
     default 5 if IDF_TARGET_ESP32S3
     help

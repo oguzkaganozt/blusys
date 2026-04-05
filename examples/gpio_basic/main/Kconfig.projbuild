@@ -3,6 +3,7 @@ menu "Blusys GPIO Basic Example"
 config BLUSYS_GPIO_BASIC_OUTPUT_PIN
     int "Output GPIO pin"
     range 0 48
+    default 4 if IDF_TARGET_ESP32
     default 3 if IDF_TARGET_ESP32C3
     default 4 if IDF_TARGET_ESP32S3
     help
@@ -11,6 +12,7 @@ config BLUSYS_GPIO_BASIC_OUTPUT_PIN
 config BLUSYS_GPIO_BASIC_INPUT_PIN
     int "Input GPIO pin"
     range 0 48
+    default 16 if IDF_TARGET_ESP32
     default 2 if IDF_TARGET_ESP32C3
     default 5 if IDF_TARGET_ESP32S3
     help

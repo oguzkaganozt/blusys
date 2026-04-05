@@ -10,16 +10,18 @@ config BLUSYS_UART_LOOPBACK_PORT
 config BLUSYS_UART_LOOPBACK_TX_PIN
     int "TX GPIO pin"
     range 0 48
+    default 17 if IDF_TARGET_ESP32
     default 21 if IDF_TARGET_ESP32C3
-    default 17 if IDF_TARGET_ESP32S3
+    default 1 if IDF_TARGET_ESP32S3
     help
         Select a board-safe TX output GPIO for this example.
 
 config BLUSYS_UART_LOOPBACK_RX_PIN
     int "RX GPIO pin"
     range 0 48
+    default 16 if IDF_TARGET_ESP32
     default 20 if IDF_TARGET_ESP32C3
-    default 18 if IDF_TARGET_ESP32S3
+    default 2 if IDF_TARGET_ESP32S3
     help
         Select a board-safe RX input GPIO for this example.
 

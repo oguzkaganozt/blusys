@@ -10,6 +10,7 @@ config BLUSYS_I2C_SCAN_PORT
 config BLUSYS_I2C_SCAN_SDA_PIN
     int "SDA GPIO pin"
     range 0 48
+    default 21 if IDF_TARGET_ESP32
     default 8 if IDF_TARGET_ESP32C3
     default 8 if IDF_TARGET_ESP32S3
     help
@@ -18,6 +19,7 @@ config BLUSYS_I2C_SCAN_SDA_PIN
 config BLUSYS_I2C_SCAN_SCL_PIN
     int "SCL GPIO pin"
     range 0 48
+    default 22 if IDF_TARGET_ESP32
     default 9 if IDF_TARGET_ESP32C3
     default 9 if IDF_TARGET_ESP32S3
     help

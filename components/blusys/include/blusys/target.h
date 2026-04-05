@@ -10,6 +10,7 @@ extern "C" {
 
 typedef enum {
     BLUSYS_TARGET_UNKNOWN = 0,
+    BLUSYS_TARGET_ESP32,
     BLUSYS_TARGET_ESP32C3,
     BLUSYS_TARGET_ESP32S3,
 } blusys_target_t;
