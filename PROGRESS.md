@@ -11,10 +11,10 @@ This is the single source of truth for both roadmap and implementation progress.
 
 ## Current Summary
 
-- current phase: `V2`
+- current phase: `V3`
 - overall status: `in_progress`
-- last completed milestone: `V2: sleep`
-- next target milestone: `V2: mcpwm`
+- last completed milestone: `V2`
+- next target milestone: `V3: first item`
 - open blockers: none
 
 ## Roadmap
@@ -26,15 +26,14 @@ This is the single source of truth for both roadmap and implementation progress.
 - async support and validation work
 - `v1.0.0` release
 - first `V2` items: `pcnt`, `rmt`
+- full `V2`: `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`
 
 ### V2
 
 Core HAL expansion.
 
-- status: `in_progress`
-- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`
-- next: `mcpwm`
-- remaining: `mcpwm`
+- status: `completed`
+- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`
 
 ### V3
 
@@ -58,7 +57,7 @@ Advanced and ecosystem-level helpers.
 | Core Modules | completed | `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer` |
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
-| V2 | in_progress | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep` done, `mcpwm` next |
+| V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm` |
 | V3 | not_started | `usb`, `wifi`, `bluetooth`, `eth`, `nvs`, `ota` |
 | V4 | not_started | `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
@@ -84,7 +83,8 @@ Advanced and ecosystem-level helpers.
 - added `temp_sensor` on-chip temperature sensor API, implementation, example, and docs
 - added `wdt` task watchdog API, implementation, and example
 - added `sleep` light/deep sleep API, implementation, and example
-- added `mcpwm` complementary pair output API, implementation, and example (in progress)
+- added `mcpwm` complementary pair output API, implementation, and example
+- completed `V2` milestone
 
 ## Current Technical State
 
@@ -160,7 +160,7 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V2` with `mcpwm`
+1. begin `V3` — pick first item from: `usb`, `wifi`, `bluetooth`, `eth`, `nvs`, `ota`
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
 3. keep `rmt` limited to TX until there is a concrete need for RX or protocol helpers
 4. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
