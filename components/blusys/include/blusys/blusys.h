@@ -24,6 +24,7 @@ extern "C" {
 #include "blusys/twai.h"
 #include "blusys/uart.h"
 #include "blusys/version.h"
+#include "blusys/wdt.h"
 
 #ifdef __cplusplus
 }
