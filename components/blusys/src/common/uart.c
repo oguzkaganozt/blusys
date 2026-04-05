@@ -23,16 +23,40 @@
 #define BLUSYS_UART_EVENT_POLL_TICKS pdMS_TO_TICKS(20)
 #define BLUSYS_UART_RX_CHUNK_SIZE 64
 
+/*
+ * Two independent locks so that concurrent TX and RX from separate tasks work
+ * without serializing each other:
+ *
+ *   tx_lock  — protects: tx_callback, tx_callback_user_ctx, tx_callback_active,
+ *               tx_pending, closing, event_task_exited, and all TX operations.
+ *
+ *   rx_lock  — protects: rx_callback, rx_callback_user_ctx, rx_callback_active,
+ *               and all synchronous RX operations (blusys_uart_read /
+ *               blusys_uart_flush_rx).  Held for the full duration of
+ *               uart_read_bytes() so that blusys_uart_close() cannot delete the
+ *               driver while a read is in flight.
+ *
+ * Lock ordering when both must be held simultaneously (only in
+ * blusys_uart_close after the event task has exited): always take tx_lock
+ * first, then rx_lock, to prevent deadlock.
+ *
+ * The `closing` flag is written under tx_lock and read without rx_lock in the
+ * RX path — safe because it transitions false→true exactly once; a stale read
+ * at worst allows one extra operation to start, which will complete before
+ * the driver is deleted (close holds rx_lock for the final delete).
+ */
 struct blusys_uart {
     uart_port_t port;
-    blusys_lock_t lock;
+    blusys_lock_t tx_lock;
+    blusys_lock_t rx_lock;
     QueueHandle_t event_queue;
     TaskHandle_t event_task;
     blusys_uart_tx_callback_t tx_callback;
     void *tx_callback_user_ctx;
     blusys_uart_rx_callback_t rx_callback;
     void *rx_callback_user_ctx;
-    unsigned int callback_active;
+    unsigned int tx_callback_active;
+    unsigned int rx_callback_active;
     bool tx_pending;
     bool closing;
     bool event_task_exited;
@@ -40,43 +64,82 @@ struct blusys_uart {
 
 static void blusys_uart_event_task(void *arg);
 
-static bool blusys_uart_callback_active(blusys_uart_t *uart)
+static bool blusys_uart_tx_callback_active(blusys_uart_t *uart)
 {
     bool active;
     blusys_err_t err;
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return false;
     }
 
-    active = uart->callback_active > 0u;
+    active = uart->tx_callback_active > 0u;
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->tx_lock);
     return active;
 }
 
-static void blusys_uart_wait_for_callback_idle(blusys_uart_t *uart)
+static bool blusys_uart_rx_callback_active(blusys_uart_t *uart)
 {
-    while (blusys_uart_callback_active(uart)) {
+    bool active;
+    blusys_err_t err;
+
+    err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return false;
+    }
+
+    active = uart->rx_callback_active > 0u;
+
+    blusys_lock_give(&uart->rx_lock);
+    return active;
+}
+
+static void blusys_uart_wait_for_tx_callback_idle(blusys_uart_t *uart)
+{
+    while (blusys_uart_tx_callback_active(uart)) {
         taskYIELD();
     }
 }
 
-static void blusys_uart_callback_finish(blusys_uart_t *uart)
+static void blusys_uart_wait_for_rx_callback_idle(blusys_uart_t *uart)
+{
+    while (blusys_uart_rx_callback_active(uart)) {
+        taskYIELD();
+    }
+}
+
+static void blusys_uart_tx_callback_finish(blusys_uart_t *uart)
 {
     blusys_err_t err;
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return;
     }
 
-    if (uart->callback_active > 0u) {
-        uart->callback_active -= 1u;
+    if (uart->tx_callback_active > 0u) {
+        uart->tx_callback_active -= 1u;
     }
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->tx_lock);
+}
+
+static void blusys_uart_rx_callback_finish(blusys_uart_t *uart)
+{
+    blusys_err_t err;
+
+    err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return;
+    }
+
+    if (uart->rx_callback_active > 0u) {
+        uart->rx_callback_active -= 1u;
+    }
+
+    blusys_lock_give(&uart->rx_lock);
 }
 
 static bool blusys_uart_is_valid_port(int port)
@@ -124,7 +187,7 @@ static void blusys_uart_invoke_tx_callback(blusys_uart_t *uart,
         callback(uart, status, user_ctx);
     }
 
-    blusys_uart_callback_finish(uart);
+    blusys_uart_tx_callback_finish(uart);
 }
 
 static void blusys_uart_invoke_rx_callback(blusys_uart_t *uart,
@@ -137,7 +200,7 @@ static void blusys_uart_invoke_rx_callback(blusys_uart_t *uart,
         callback(uart, buffer, size, user_ctx);
     }
 
-    blusys_uart_callback_finish(uart);
+    blusys_uart_rx_callback_finish(uart);
 }
 
 static bool blusys_uart_snapshot_tx_completion(blusys_uart_t *uart,
@@ -148,7 +211,7 @@ static bool blusys_uart_snapshot_tx_completion(blusys_uart_t *uart,
     blusys_err_t err;
     esp_err_t esp_err;
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         *out_status = err;
         *out_callback = NULL;
@@ -157,7 +220,7 @@ static bool blusys_uart_snapshot_tx_completion(blusys_uart_t *uart,
     }
 
     if (!uart->tx_pending) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
         return false;
     }
 
@@ -166,13 +229,13 @@ static bool blusys_uart_snapshot_tx_completion(blusys_uart_t *uart,
         *out_callback = NULL;
         *out_user_ctx = NULL;
         uart->tx_pending = false;
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
         return true;
     }
 
     esp_err = uart_wait_tx_done(uart->port, 0);
     if (esp_err == ESP_ERR_TIMEOUT) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
         return false;
     }
 
@@ -180,11 +243,11 @@ static bool blusys_uart_snapshot_tx_completion(blusys_uart_t *uart,
     *out_callback = uart->tx_callback;
     *out_user_ctx = uart->tx_callback_user_ctx;
     if (*out_callback != NULL) {
-        uart->callback_active += 1u;
+        uart->tx_callback_active += 1u;
     }
     uart->tx_pending = false;
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->tx_lock);
     return true;
 }
 
@@ -200,24 +263,24 @@ static void blusys_uart_dispatch_rx_data(blusys_uart_t *uart, size_t pending_siz
         int read_size;
         size_t chunk_size = (remaining > sizeof(buffer)) ? sizeof(buffer) : remaining;
 
-        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
         if (err != BLUSYS_OK) {
             return;
         }
 
         if (uart->closing || (uart->rx_callback == NULL)) {
-            blusys_lock_give(&uart->lock);
+            blusys_lock_give(&uart->rx_lock);
             return;
         }
 
         callback = uart->rx_callback;
         callback_user_ctx = uart->rx_callback_user_ctx;
-        uart->callback_active += 1u;
-        blusys_lock_give(&uart->lock);
+        uart->rx_callback_active += 1u;
+        blusys_lock_give(&uart->rx_lock);
 
         read_size = uart_read_bytes(uart->port, buffer, (uint32_t) chunk_size, 0);
         if (read_size <= 0) {
-            blusys_uart_callback_finish(uart);
+            blusys_uart_rx_callback_finish(uart);
             return;
         }
 
@@ -234,14 +297,14 @@ static void blusys_uart_handle_event(blusys_uart_t *uart, const uart_event_t *ev
 
     switch (event->type) {
     case UART_DATA:
-        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
         if (err != BLUSYS_OK) {
             return;
         }
 
         callback = uart->rx_callback;
         callback_user_ctx = uart->rx_callback_user_ctx;
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->rx_lock);
 
         if (callback == NULL) {
             (void) callback_user_ctx;
@@ -274,7 +337,7 @@ static void blusys_uart_event_task(void *arg)
         blusys_err_t err;
         bool closing;
 
-        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
         if (err != BLUSYS_OK) {
             continue;
         }
@@ -282,11 +345,11 @@ static void blusys_uart_event_task(void *arg)
         closing = uart->closing;
         if (closing) {
             uart->event_task_exited = true;
-            blusys_lock_give(&uart->lock);
+            blusys_lock_give(&uart->tx_lock);
             vTaskDelete(NULL);
         }
 
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
 
         queue_result = xQueueReceive(uart->event_queue, &event, BLUSYS_UART_EVENT_POLL_TICKS);
         if (queue_result == pdTRUE) {
@@ -336,8 +399,15 @@ blusys_err_t blusys_uart_open(int port,
         return BLUSYS_ERR_NO_MEM;
     }
 
-    err = blusys_lock_init(&uart->lock);
+    err = blusys_lock_init(&uart->tx_lock);
     if (err != BLUSYS_OK) {
+        free(uart);
+        return err;
+    }
+
+    err = blusys_lock_init(&uart->rx_lock);
+    if (err != BLUSYS_OK) {
+        blusys_lock_deinit(&uart->tx_lock);
         free(uart);
         return err;
     }
@@ -396,7 +466,8 @@ blusys_err_t blusys_uart_open(int port,
 fail_driver:
     uart_driver_delete(uart->port);
 fail:
-    blusys_lock_deinit(&uart->lock);
+    blusys_lock_deinit(&uart->rx_lock);
+    blusys_lock_deinit(&uart->tx_lock);
     free(uart);
     return err;
 }
@@ -415,7 +486,8 @@ blusys_err_t blusys_uart_close(blusys_uart_t *uart)
         return BLUSYS_ERR_INVALID_STATE;
     }
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    /* Mark closing and clear TX state */
+    err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
@@ -424,39 +496,65 @@ blusys_err_t blusys_uart_close(blusys_uart_t *uart)
     uart->tx_pending = false;
     uart->tx_callback = NULL;
     uart->tx_callback_user_ctx = NULL;
+    blusys_lock_give(&uart->tx_lock);
+
+    /*
+     * Clear RX state.  Taking rx_lock here also ensures any in-flight
+     * synchronous read (which holds rx_lock for its full duration) completes
+     * before we proceed.
+     */
+    err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+
     uart->rx_callback = NULL;
     uart->rx_callback_user_ctx = NULL;
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->rx_lock);
 
+    /* Wait for the event task to observe closing and exit */
     do {
         vTaskDelay(1);
 
-        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
         if (err != BLUSYS_OK) {
             return err;
         }
 
         event_task_exited = uart->event_task_exited;
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
     } while (!event_task_exited);
 
-    blusys_uart_wait_for_callback_idle(uart);
+    blusys_uart_wait_for_tx_callback_idle(uart);
+    blusys_uart_wait_for_rx_callback_idle(uart);
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    /*
+     * Delete the driver.  Take both locks in order (tx first) to ensure no
+     * concurrent operation can be using the driver at this point.
+     */
+    err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
+        return err;
+    }
+
+    err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        blusys_lock_give(&uart->tx_lock);
         return err;
     }
 
     esp_err = uart_driver_delete(uart->port);
     err = blusys_translate_esp_err(esp_err);
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->rx_lock);
+    blusys_lock_give(&uart->tx_lock);
 
     if (err != BLUSYS_OK) {
         return err;
     }
 
-    blusys_lock_deinit(&uart->lock);
+    blusys_lock_deinit(&uart->rx_lock);
+    blusys_lock_deinit(&uart->tx_lock);
     free(uart);
 
     return BLUSYS_OK;
@@ -477,13 +575,13 @@ blusys_err_t blusys_uart_write(blusys_uart_t *uart, const void *data, size_t siz
         return BLUSYS_OK;
     }
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
 
     if (uart->closing || uart->tx_pending) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
@@ -491,7 +589,7 @@ blusys_err_t blusys_uart_write(blusys_uart_t *uart, const void *data, size_t siz
 
     written = uart_write_bytes(uart->port, data, size);
     if (written < 0) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
         return BLUSYS_ERR_IO;
     }
 
@@ -499,7 +597,7 @@ blusys_err_t blusys_uart_write(blusys_uart_t *uart, const void *data, size_t siz
         uart->port,
         blusys_uart_timeout_remaining_ticks(start_ticks, timeout_ms, &timed_out)));
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->tx_lock);
 
     return timed_out ? BLUSYS_ERR_TIMEOUT : err;
 }
@@ -527,25 +625,29 @@ blusys_err_t blusys_uart_read(blusys_uart_t *uart,
         return BLUSYS_OK;
     }
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    /*
+     * Hold rx_lock for the full duration of uart_read_bytes() to prevent
+     * blusys_uart_close() from deleting the driver while a read is in flight.
+     */
+    err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
 
     if (uart->closing || (uart->rx_callback != NULL)) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->rx_lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
     read_size = uart_read_bytes(uart->port, data, (uint32_t) size, blusys_timeout_ms_to_ticks(timeout_ms));
     if (read_size < 0) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->rx_lock);
         return BLUSYS_ERR_IO;
     }
 
     *out_read = (size_t) read_size;
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->rx_lock);
 
     return (*out_read == size) ? BLUSYS_OK : BLUSYS_ERR_TIMEOUT;
 }
@@ -558,19 +660,19 @@ blusys_err_t blusys_uart_flush_rx(blusys_uart_t *uart)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
 
     if (uart->closing || (uart->rx_callback != NULL)) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->rx_lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
     err = blusys_translate_esp_err(uart_flush_input(uart->port));
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->rx_lock);
 
     return err;
 }
@@ -587,13 +689,13 @@ blusys_err_t blusys_uart_set_tx_callback(blusys_uart_t *uart,
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
 
     if (uart->closing || uart->tx_pending) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
@@ -601,7 +703,7 @@ blusys_err_t blusys_uart_set_tx_callback(blusys_uart_t *uart,
 
     if ((uart->tx_callback != NULL) && ((uart->tx_callback != callback) || (uart->tx_callback_user_ctx != user_ctx))) {
         if (from_event_task) {
-            blusys_lock_give(&uart->lock);
+            blusys_lock_give(&uart->tx_lock);
             return BLUSYS_ERR_INVALID_STATE;
         }
 
@@ -610,26 +712,26 @@ blusys_err_t blusys_uart_set_tx_callback(blusys_uart_t *uart,
         wait_for_idle = true;
     } else if (uart->tx_callback == callback) {
         uart->tx_callback_user_ctx = user_ctx;
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
         return BLUSYS_OK;
     }
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->tx_lock);
 
     if (wait_for_idle) {
-        blusys_uart_wait_for_callback_idle(uart);
+        blusys_uart_wait_for_tx_callback_idle(uart);
 
-        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
         if (err != BLUSYS_OK) {
             return err;
         }
 
         if (uart->closing || uart->tx_pending) {
-            blusys_lock_give(&uart->lock);
+            blusys_lock_give(&uart->tx_lock);
             return BLUSYS_ERR_INVALID_STATE;
         }
     } else {
-        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
         if (err != BLUSYS_OK) {
             return err;
         }
@@ -638,7 +740,7 @@ blusys_err_t blusys_uart_set_tx_callback(blusys_uart_t *uart,
     uart->tx_callback = callback;
     uart->tx_callback_user_ctx = user_ctx;
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->tx_lock);
     return BLUSYS_OK;
 }
 
@@ -654,13 +756,13 @@ blusys_err_t blusys_uart_set_rx_callback(blusys_uart_t *uart,
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
 
     if (uart->closing) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->rx_lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
@@ -668,7 +770,7 @@ blusys_err_t blusys_uart_set_rx_callback(blusys_uart_t *uart,
 
     if ((uart->rx_callback != NULL) && ((uart->rx_callback != callback) || (uart->rx_callback_user_ctx != user_ctx))) {
         if (from_event_task) {
-            blusys_lock_give(&uart->lock);
+            blusys_lock_give(&uart->rx_lock);
             return BLUSYS_ERR_INVALID_STATE;
         }
 
@@ -680,26 +782,26 @@ blusys_err_t blusys_uart_set_rx_callback(blusys_uart_t *uart,
         if (callback != NULL) {
             uart_flush_input(uart->port);
         }
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->rx_lock);
         return BLUSYS_OK;
     }
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->rx_lock);
 
     if (wait_for_idle) {
-        blusys_uart_wait_for_callback_idle(uart);
+        blusys_uart_wait_for_rx_callback_idle(uart);
 
-        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
         if (err != BLUSYS_OK) {
             return err;
         }
 
         if (uart->closing) {
-            blusys_lock_give(&uart->lock);
+            blusys_lock_give(&uart->rx_lock);
             return BLUSYS_ERR_INVALID_STATE;
         }
     } else {
-        err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        err = blusys_lock_take(&uart->rx_lock, BLUSYS_LOCK_WAIT_FOREVER);
         if (err != BLUSYS_OK) {
             return err;
         }
@@ -712,7 +814,7 @@ blusys_err_t blusys_uart_set_rx_callback(blusys_uart_t *uart,
         uart_flush_input(uart->port);
     }
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->rx_lock);
     return BLUSYS_OK;
 }
 
@@ -729,24 +831,24 @@ blusys_err_t blusys_uart_write_async(blusys_uart_t *uart, const void *data, size
         return BLUSYS_OK;
     }
 
-    err = blusys_lock_take(&uart->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&uart->tx_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
 
     if (uart->closing || uart->tx_pending) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
     written = uart_write_bytes(uart->port, data, size);
     if (written < 0) {
-        blusys_lock_give(&uart->lock);
+        blusys_lock_give(&uart->tx_lock);
         return BLUSYS_ERR_IO;
     }
 
     uart->tx_pending = true;
 
-    blusys_lock_give(&uart->lock);
+    blusys_lock_give(&uart->tx_lock);
     return BLUSYS_OK;
 }
