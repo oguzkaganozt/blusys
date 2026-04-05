@@ -1,0 +1,78 @@
+menu "Blusys SDMMC Basic Example"
+
+config BLUSYS_SDMMC_BASIC_SLOT
+    int "SDMMC host slot"
+    range 0 1
+    default 0
+    help
+        SDMMC host slot index (0 is the only slot on ESP32-S3).
+
+config BLUSYS_SDMMC_BASIC_CLK_PIN
+    int "SDMMC CLK GPIO pin"
+    range 0 48
+    default 14 if IDF_TARGET_ESP32
+    default 36 if IDF_TARGET_ESP32S3
+    default 14
+    help
+        GPIO pin for SDMMC clock signal.
+
+config BLUSYS_SDMMC_BASIC_CMD_PIN
+    int "SDMMC CMD GPIO pin"
+    range 0 48
+    default 15 if IDF_TARGET_ESP32
+    default 35 if IDF_TARGET_ESP32S3
+    default 15
+    help
+        GPIO pin for SDMMC command signal.
+
+config BLUSYS_SDMMC_BASIC_D0_PIN
+    int "SDMMC D0 GPIO pin"
+    range 0 48
+    default 2 if IDF_TARGET_ESP32
+    default 37 if IDF_TARGET_ESP32S3
+    default 2
+    help
+        GPIO pin for SDMMC data line 0.
+
+config BLUSYS_SDMMC_BASIC_BUS_WIDTH
+    int "SDMMC bus width (1 or 4)"
+    range 1 4
+    default 1
+    help
+        Set to 1 for 1-bit mode or 4 for 4-bit mode. In 1-bit mode D1, D2, D3 pins are unused.
+
+config BLUSYS_SDMMC_BASIC_D1_PIN
+    int "SDMMC D1 GPIO pin (4-bit mode only)"
+    range 0 48
+    default 4 if IDF_TARGET_ESP32
+    default 38 if IDF_TARGET_ESP32S3
+    default 4
+    help
+        GPIO pin for SDMMC data line 1. Only used when bus width is 4.
+
+config BLUSYS_SDMMC_BASIC_D2_PIN
+    int "SDMMC D2 GPIO pin (4-bit mode only)"
+    range 0 48
+    default 12 if IDF_TARGET_ESP32
+    default 39 if IDF_TARGET_ESP32S3
+    default 12
+    help
+        GPIO pin for SDMMC data line 2. Only used when bus width is 4.
+
+config BLUSYS_SDMMC_BASIC_D3_PIN
+    int "SDMMC D3 GPIO pin (4-bit mode only)"
+    range 0 48
+    default 13 if IDF_TARGET_ESP32
+    default 40 if IDF_TARGET_ESP32S3
+    default 13
+    help
+        GPIO pin for SDMMC data line 3. Only used when bus width is 4.
+
+config BLUSYS_SDMMC_BASIC_FREQ_HZ
+    int "SDMMC clock frequency (Hz)"
+    range 400000 40000000
+    default 20000000
+    help
+        SDMMC clock frequency in Hz. 400000 for identification, up to 40000000 for data transfer.
+
+endmenu
