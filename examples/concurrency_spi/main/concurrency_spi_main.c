@@ -89,6 +89,7 @@ void app_main(void)
     blusys_spi_t *spi = NULL;
     blusys_err_t err;
     uint32_t notified_bits = 0u;
+    uint32_t received_bits = 0u;
     uint32_t done_mask = ctx_a.done_bit | ctx_b.done_bit;
 
     printf("Blusys concurrency spi\n");
@@ -122,7 +123,8 @@ void app_main(void)
     xTaskCreate(blusys_concurrency_spi_worker, "spi_worker_b", 4096, &ctx_b, 5, NULL);
 
     while ((notified_bits & done_mask) != done_mask) {
-        xTaskNotifyWait(0u, UINT32_MAX, &notified_bits, portMAX_DELAY);
+        xTaskNotifyWait(0u, UINT32_MAX, &received_bits, portMAX_DELAY);
+        notified_bits |= received_bits;
     }
 
     printf("task_a errors: %u\n", (unsigned int) ctx_a.errors);

@@ -149,6 +149,7 @@ void app_main(void)
     blusys_timer_t *timer = NULL;
     blusys_err_t err;
     uint32_t notified_bits = 0u;
+    uint32_t received_bits = 0u;
 
     printf("Blusys concurrency timer\n");
     printf("target: %s\n", blusys_target_name());
@@ -186,7 +187,8 @@ void app_main(void)
     xTaskCreate(blusys_concurrency_timer_worker_b, "timer_worker_b", 4096, &worker_b, 5, NULL);
 
     while ((notified_bits & BLUSYS_CONCURRENCY_TIMER_DONE_MASK) != BLUSYS_CONCURRENCY_TIMER_DONE_MASK) {
-        xTaskNotifyWait(0u, UINT32_MAX, &notified_bits, portMAX_DELAY);
+        xTaskNotifyWait(0u, UINT32_MAX, &received_bits, portMAX_DELAY);
+        notified_bits |= received_bits;
     }
 
     err = blusys_timer_stop(timer);
