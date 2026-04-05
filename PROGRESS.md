@@ -14,7 +14,7 @@ This is the single source of truth for both roadmap and implementation progress.
 - current phase: `V3`
 - overall status: `in_progress`
 - last completed milestone: `V2`
-- next target milestone: `V3: first item`
+- next target milestone: `V3: wifi or nvs`
 - open blockers: none
 
 ## Roadmap
@@ -27,13 +27,15 @@ This is the single source of truth for both roadmap and implementation progress.
 - `v1.0.0` release
 - first `V2` items: `pcnt`, `rmt`
 - full `V2`: `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`
+- symmetric counterparts: `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
+- `v2.0.0` release
 
 ### V2
 
 Core HAL expansion.
 
 - status: `completed`
-- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`
+- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
 
 ### V3
 
@@ -57,7 +59,7 @@ Advanced and ecosystem-level helpers.
 | Core Modules | completed | `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer` |
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
-| V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm` |
+| V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
 | V3 | not_started | `usb`, `wifi`, `bluetooth`, `eth`, `nvs`, `ota` |
 | V4 | not_started | `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
@@ -85,6 +87,15 @@ Advanced and ecosystem-level helpers.
 - added `sleep` light/deep sleep API, implementation, and example
 - added `mcpwm` complementary pair output API, implementation, and example
 - completed `V2` milestone
+- added `sdm` sigma-delta modulation API, implementation, example, and docs
+- `sdm` available on all three targets: `esp32`, `esp32c3`, `esp32s3`
+- added `i2c_slave` slave-mode I2C API, implementation, and example
+- added `spi_slave` slave-mode SPI API, implementation, and example
+- added `i2s_rx` I2S receive API, implementation, and example
+- added `rmt_rx` RMT receive API, implementation, and example
+- all four symmetric counterparts available on all three targets
+- completed full documentation coverage: all 22 modules have API reference and task guide
+- released `v2.0.0`
 
 ## Current Technical State
 
@@ -97,13 +108,17 @@ Public API currently exists for:
 - `blusys_gpio_*`
 - `blusys_uart_*`
 - `blusys_i2c_master_*`
+- `blusys_i2c_slave_*`
 - `blusys_i2s_tx_*`
+- `blusys_i2s_rx_*`
 - `blusys_spi_*`
+- `blusys_spi_slave_*`
 - `blusys_pwm_*`
 - `blusys_adc_*`
 - `blusys_timer_*`
 - `blusys_pcnt_*`
 - `blusys_rmt_*`
+- `blusys_rmt_rx_*`
 - `blusys_twai_*`
 - `blusys_touch_*`
 - `blusys_dac_*`
@@ -112,6 +127,7 @@ Public API currently exists for:
 - `blusys_wdt_*`
 - `blusys_sleep_*`
 - `blusys_mcpwm_*`
+- `blusys_sdm_*`
 
 Internal infrastructure currently exists for:
 
@@ -123,30 +139,16 @@ Internal infrastructure currently exists for:
 ## Validation Snapshot
 
 - `v1.0.0` release validation completed
-- `pcnt_basic` builds pass for:
-  - `esp32`
-  - `esp32c3`
-  - `esp32s3`
-- `rmt_basic` builds pass for:
-  - `esp32`
-  - `esp32c3`
-  - `esp32s3`
-- `twai_basic` builds pass for:
-  - `esp32`
-  - `esp32c3`
-  - `esp32s3`
-- `i2s_basic` builds pass for:
-  - `esp32`
-  - `esp32c3`
-  - `esp32s3`
-- `touch_basic` builds pass for:
-  - `esp32`
-  - `esp32c3`
-  - `esp32s3`
-- `dac_basic` builds pass for:
-  - `esp32`
-  - `esp32c3`
-  - `esp32s3`
+- `v2.0.0` release validation completed
+- all V2 examples build for `esp32`, `esp32c3`, `esp32s3`:
+  - `pcnt_basic`, `rmt_basic`, `rmt_rx_basic`
+  - `twai_basic`
+  - `i2s_basic`, `i2s_rx_basic`
+  - `touch_basic`, `dac_basic`
+  - `sdmmc_basic`, `temp_sensor_basic`
+  - `wdt_basic`, `sleep_basic`
+  - `mcpwm_basic`, `sdm_basic`
+  - `i2c_slave_basic`, `spi_slave_basic`
 - `smoke` builds pass for:
   - `esp32c3`
   - `esp32s3`
@@ -162,8 +164,7 @@ Internal infrastructure currently exists for:
 
 1. begin `V3` — pick first item from: `usb`, `wifi`, `bluetooth`, `eth`, `nvs`, `ota`
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
-3. keep `rmt` limited to TX until there is a concrete need for RX or protocol helpers
-4. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
-5. keep the first `i2s` cut limited to standard-mode master TX until a concrete need appears for RX, duplex, or alternate formats
-6. keep the first `touch` cut limited to one-pin polling reads until a concrete need appears for thresholds, callbacks, or sleep integration
-7. keep the first `dac` cut limited to oneshot output until a concrete need appears for cosine generation or continuous DMA output
+3. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
+4. keep the first `touch` cut limited to one-pin polling reads until a concrete need appears for thresholds, callbacks, or sleep integration
+5. keep the first `dac` cut limited to oneshot output until a concrete need appears for cosine generation or continuous DMA output
+6. keep the first `i2s` cut limited to standard-mode master TX/RX until a concrete need appears for duplex or alternate formats

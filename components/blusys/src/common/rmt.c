@@ -1,5 +1,9 @@
 #include "blusys/rmt.h"
 
+#include "soc/soc_caps.h"
+
+#if SOC_RMT_SUPPORTED
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -272,3 +276,33 @@ blusys_err_t blusys_rmt_write(blusys_rmt_t *rmt,
     free(symbols);
     return err;
 }
+
+#else
+
+blusys_err_t blusys_rmt_open(int pin, bool idle_level, blusys_rmt_t **out_rmt)
+{
+    (void) pin;
+    (void) idle_level;
+    (void) out_rmt;
+    return BLUSYS_ERR_NOT_SUPPORTED;
+}
+
+blusys_err_t blusys_rmt_close(blusys_rmt_t *rmt)
+{
+    (void) rmt;
+    return BLUSYS_ERR_NOT_SUPPORTED;
+}
+
+blusys_err_t blusys_rmt_write(blusys_rmt_t *rmt,
+                              const blusys_rmt_pulse_t *pulses,
+                              size_t pulse_count,
+                              int timeout_ms)
+{
+    (void) rmt;
+    (void) pulses;
+    (void) pulse_count;
+    (void) timeout_ms;
+    return BLUSYS_ERR_NOT_SUPPORTED;
+}
+
+#endif
