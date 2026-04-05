@@ -4,6 +4,7 @@
 
 | Target | Status | Notes |
 |---|---|---|
+| ESP32 | supported | dual-core; full v1 API surface |
 | ESP32-C3 | primary | part of the common v1 API baseline |
 | ESP32-S3 | primary | part of the common v1 API baseline |
 
@@ -34,6 +35,7 @@ Keep these out of the common public v1 API:
 
 ## Runtime And Concurrency Considerations
 
+- ESP32 is dual-core (2× Xtensa LX6)
 - ESP32-C3 is single-core
 - ESP32-S3 may run in SMP or unicore configurations
 

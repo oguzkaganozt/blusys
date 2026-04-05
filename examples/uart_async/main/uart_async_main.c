@@ -22,6 +22,7 @@ typedef struct {
     TaskHandle_t task;
     char rx_buffer[64];
     size_t rx_size;
+    size_t expected_rx_size;
     blusys_err_t tx_status;
     uint32_t notify_mask;
 } blusys_uart_async_ctx_t;
@@ -39,14 +40,20 @@ static void blusys_uart_async_on_tx(blusys_uart_t *uart, blusys_err_t status, vo
 static void blusys_uart_async_on_rx(blusys_uart_t *uart, const void *data, size_t size, void *user_ctx)
 {
     blusys_uart_async_ctx_t *ctx = user_ctx;
-    size_t copy_size = (size > (sizeof(ctx->rx_buffer) - 1u)) ? (sizeof(ctx->rx_buffer) - 1u) : size;
+    size_t available_size = (sizeof(ctx->rx_buffer) - 1u) - ctx->rx_size;
+    size_t copy_size = (size > available_size) ? available_size : size;
 
     (void) uart;
 
-    memcpy(ctx->rx_buffer, data, copy_size);
-    ctx->rx_buffer[copy_size] = '\0';
-    ctx->rx_size = copy_size;
-    xTaskNotify(ctx->task, ctx->notify_mask | BLUSYS_UART_ASYNC_RX_DONE_BIT, eSetBits);
+    if (copy_size > 0u) {
+        memcpy(&ctx->rx_buffer[ctx->rx_size], data, copy_size);
+        ctx->rx_size += copy_size;
+        ctx->rx_buffer[ctx->rx_size] = '\0';
+    }
+
+    if (ctx->rx_size >= ctx->expected_rx_size) {
+        xTaskNotify(ctx->task, ctx->notify_mask | BLUSYS_UART_ASYNC_RX_DONE_BIT, eSetBits);
+    }
 }
 
 static bool blusys_uart_async_run_round(blusys_uart_t *uart,
@@ -60,6 +67,7 @@ static bool blusys_uart_async_run_round(blusys_uart_t *uart,
 
     ctx->rx_buffer[0] = '\0';
     ctx->rx_size = 0u;
+    ctx->expected_rx_size = strlen(tx_message);
     ctx->tx_status = BLUSYS_OK;
     xTaskNotifyStateClear(ctx->task);
 
@@ -97,6 +105,7 @@ void app_main(void)
         .task = NULL,
         .rx_buffer = {0},
         .rx_size = 0u,
+        .expected_rx_size = 0u,
         .tx_status = BLUSYS_OK,
         .notify_mask = 0u,
     };
@@ -104,6 +113,7 @@ void app_main(void)
         .task = NULL,
         .rx_buffer = {0},
         .rx_size = 0u,
+        .expected_rx_size = 0u,
         .tx_status = BLUSYS_OK,
         .notify_mask = (1u << 4),
     };
