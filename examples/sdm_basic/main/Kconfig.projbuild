@@ -1,0 +1,18 @@
+menu "Blusys SDM Basic Example"
+
+config BLUSYS_SDM_BASIC_PIN
+    int "SDM output pin"
+    range 0 48
+    default 8
+    help
+        GPIO pin for the sigma-delta modulated output. Connect an RC low-pass filter
+        (e.g. 1 kOhm + 100 nF) to observe the smoothed analog voltage.
+
+config BLUSYS_SDM_BASIC_SAMPLE_RATE_HZ
+    int "SDM sample rate (Hz)"
+    default 1000000
+    help
+        Over-sample rate in Hz. Controls the carrier pulse frequency of the SDM output.
+        Higher values move the noise further from baseband. 1 MHz is a good default.
+
+endmenu

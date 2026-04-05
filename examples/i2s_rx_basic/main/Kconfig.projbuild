@@ -1,0 +1,30 @@
+menu "Blusys I2S RX Basic Example"
+
+config BLUSYS_I2S_RX_BASIC_BCLK_PIN
+    int "I2S bit clock pin (BCLK)"
+    range 0 48
+    default 4
+    help
+        GPIO pin for the I2S bit clock output (master drives this).
+
+config BLUSYS_I2S_RX_BASIC_WS_PIN
+    int "I2S word select pin (WS / LRCLK)"
+    range 0 48
+    default 5
+    help
+        GPIO pin for the I2S word select output (master drives this).
+
+config BLUSYS_I2S_RX_BASIC_DIN_PIN
+    int "I2S data input pin (DIN)"
+    range 0 48
+    default 6
+    help
+        GPIO pin for the I2S serial data input (microphone or ADC drives this).
+
+config BLUSYS_I2S_RX_BASIC_SAMPLE_RATE_HZ
+    int "Sample rate (Hz)"
+    default 16000
+    help
+        Audio sample rate in Hz. Common values: 8000, 16000, 44100, 48000.
+
+endmenu

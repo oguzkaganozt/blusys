@@ -31,7 +31,15 @@ Application
 
 - foundational modules: `version`, `error`, `target`, `system`
 - stateless pin API: `gpio`
-- handle-based APIs: `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`
+- handle-based master/TX APIs: `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`, `rmt`, `i2s`, `twai`, `pcnt`, `dac`, `sdm`, `mcpwm`, `touch`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`
+- handle-based slave/RX counterparts: `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
+
+Symmetric pairs expose the same peripheral in both directions under separate handles:
+
+- I2C: `blusys_i2c_master_*` and `blusys_i2c_slave_*`
+- SPI: `blusys_spi_*` (master) and `blusys_spi_slave_*`
+- I2S: `blusys_i2s_tx_*` and `blusys_i2s_rx_*`
+- RMT: `blusys_rmt_*` (TX) and `blusys_rmt_rx_*`
 
 Lifecycle verbs stay explicit where relevant:
 

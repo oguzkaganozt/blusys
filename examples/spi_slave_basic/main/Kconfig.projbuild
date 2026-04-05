@@ -1,0 +1,31 @@
+menu "Blusys SPI Slave Basic Example"
+
+config BLUSYS_SPI_SLAVE_BASIC_MOSI_PIN
+    int "SPI MOSI pin (slave input)"
+    range 0 48
+    default 11
+    help
+        GPIO pin for MOSI (Master Out Slave In). This is an input on the slave.
+
+config BLUSYS_SPI_SLAVE_BASIC_MISO_PIN
+    int "SPI MISO pin (slave output)"
+    range 0 48
+    default 13
+    help
+        GPIO pin for MISO (Master In Slave Out). This is an output on the slave.
+
+config BLUSYS_SPI_SLAVE_BASIC_CLK_PIN
+    int "SPI clock pin"
+    range 0 48
+    default 12
+    help
+        GPIO pin for the SPI clock signal driven by the master.
+
+config BLUSYS_SPI_SLAVE_BASIC_CS_PIN
+    int "SPI chip select pin"
+    range 0 48
+    default 10
+    help
+        GPIO pin for chip select (active low), driven by the master.
+
+endmenu

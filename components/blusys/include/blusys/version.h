@@ -7,10 +7,10 @@
 extern "C" {
 #endif
 
-#define BLUSYS_VERSION_MAJOR 1
+#define BLUSYS_VERSION_MAJOR 2
 #define BLUSYS_VERSION_MINOR 0
 #define BLUSYS_VERSION_PATCH 0
-#define BLUSYS_VERSION_STRING "1.0.0"
+#define BLUSYS_VERSION_STRING "2.0.0"
 
 uint32_t blusys_version_packed(void);
 const char *blusys_version_string(void);
