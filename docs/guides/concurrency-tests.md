@@ -20,13 +20,7 @@ Four stress tests that verify concurrent access to the same peripheral handle fr
 
 ## concurrency_i2c
 
-**Wire:** SDA and SCL each need a pull-up to 3.3 V (4.7 kΩ). No device required — absent device is a valid result.
-
-| Target   | SDA | SCL |
-|----------|-----|-----|
-| ESP32    | 21  | 22  |
-| ESP32-C3 | 8   | 9   |
-| ESP32-S3 | 8   | 9   |
+**Wire:** nothing — no external connections needed. The test only probes the bus and accepts "no device found" as a valid result.
 
 **Pass:** `concurrent_result: ok`
 
