@@ -28,6 +28,7 @@ nav:
       - ADC: guides/adc-basic.md
       - Timer: guides/timer-basic.md
       - PCNT: guides/pcnt-basic.md
+      - RMT: guides/rmt-basic.md
       - Hardware Smoke Tests: guides/hardware-smoke-tests.md
   - API Reference:
       - System: modules/system.md
@@ -39,5 +40,6 @@ nav:
       - ADC: modules/adc.md
       - Timer: modules/timer.md
       - PCNT: modules/pcnt.md
+      - RMT: modules/rmt.md
   - Compatibility: target-matrix.md
   - Contributing: contributing.md

@@ -6,22 +6,22 @@ Short version: `v1.0.0` is released, `V2` is in progress, and detailed tracking 
 
 - `v1.0.0` released
 - current work: `V2`
-- current milestone: `rmt`
+- current milestone: `twai`
 
 ## Completed
 
 - foundation and project setup
 - core modules: `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`
 - async support and validation work
-- `pcnt` started as the first `V2` item
+- `pcnt` and `rmt` started as the first `V2` items
 
 ## V2
 
 Core HAL expansion.
 
-- done: `pcnt`
-- next: `rmt`
-- remaining: `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `mcpwm`, `rtc` / low-power / sleep-control, temperature sensor, `wdt`
+- done: `pcnt`, `rmt`
+- next: `twai`
+- remaining: `i2s`, `touch`, `dac`, `sdmmc`, `mcpwm`, `rtc` / low-power / sleep-control, temperature sensor, `wdt`
 
 ## V3
 

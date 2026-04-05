@@ -21,6 +21,8 @@ static const char *feature_name(blusys_feature_t feature)
         return "timer";
     case BLUSYS_FEATURE_PCNT:
         return "pcnt";
+    case BLUSYS_FEATURE_RMT:
+        return "rmt";
     default:
         return "unknown";
     }

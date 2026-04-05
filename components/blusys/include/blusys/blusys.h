@@ -11,6 +11,7 @@ extern "C" {
 #include "blusys/i2c.h"
 #include "blusys/pcnt.h"
 #include "blusys/pwm.h"
+#include "blusys/rmt.h"
 #include "blusys/spi.h"
 #include "blusys/system.h"
 #include "blusys/timer.h"

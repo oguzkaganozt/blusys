@@ -13,8 +13,8 @@ This file tracks implementation progress against `docs/roadmap.md`.
 
 - current phase: `V2`
 - overall status: `in_progress`
-- last completed milestone: `V2: pcnt`
-- next target milestone: `V2: rmt`
+- last completed milestone: `V2: rmt`
+- next target milestone: `V2: twai`
 - open blockers: none
 
 ## Milestones
@@ -25,7 +25,7 @@ This file tracks implementation progress against `docs/roadmap.md`.
 | Core Modules | completed | `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer` |
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
-| V2 | in_progress | `pcnt` done, `rmt` next |
+| V2 | in_progress | `pcnt` and `rmt` done, `twai` next |
 | V3 | not_started | `usb`, `wifi`, `bluetooth`, `eth`, `nvs`, `ota` |
 | V4 | not_started | `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
@@ -36,6 +36,7 @@ This file tracks implementation progress against `docs/roadmap.md`.
 - aligned docs and scripts around supported targets: `esp32`, `esp32c3`, `esp32s3`
 - added `pcnt` API, implementation, example, and docs
 - added watch-point callback support for `pcnt`
+- added `rmt` TX API, implementation, example, and docs
 - gated `pcnt` by target support in the current ESP-IDF baseline:
   - supported: `esp32`, `esp32s3`
   - not supported: `esp32c3`
@@ -56,6 +57,7 @@ Public API currently exists for:
 - `blusys_adc_*`
 - `blusys_timer_*`
 - `blusys_pcnt_*`
+- `blusys_rmt_*`
 
 Internal infrastructure currently exists for:
 
@@ -68,6 +70,10 @@ Internal infrastructure currently exists for:
 
 - `v1.0.0` release validation completed
 - `pcnt_basic` builds pass for:
+  - `esp32`
+  - `esp32c3`
+  - `esp32s3`
+- `rmt_basic` builds pass for:
   - `esp32`
   - `esp32c3`
   - `esp32s3`
@@ -84,6 +90,6 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V2` with `rmt`
+1. continue `V2` with `twai`
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
-3. continue the `V2` roadmap in order unless priorities change
+3. keep `rmt` limited to TX until there is a concrete need for RX or protocol helpers
