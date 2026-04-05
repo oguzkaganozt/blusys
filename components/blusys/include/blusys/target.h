@@ -25,6 +25,7 @@ typedef enum {
     BLUSYS_FEATURE_TIMER,
     BLUSYS_FEATURE_PCNT,
     BLUSYS_FEATURE_RMT,
+    BLUSYS_FEATURE_TWAI,
     BLUSYS_FEATURE_COUNT,
 } blusys_feature_t;
 

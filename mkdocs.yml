@@ -29,6 +29,7 @@ nav:
       - Timer: guides/timer-basic.md
       - PCNT: guides/pcnt-basic.md
       - RMT: guides/rmt-basic.md
+      - TWAI: guides/twai-basic.md
       - Hardware Smoke Tests: guides/hardware-smoke-tests.md
   - API Reference:
       - System: modules/system.md
@@ -41,5 +42,6 @@ nav:
       - Timer: modules/timer.md
       - PCNT: modules/pcnt.md
       - RMT: modules/rmt.md
+      - TWAI: modules/twai.md
   - Compatibility: target-matrix.md
   - Contributing: contributing.md

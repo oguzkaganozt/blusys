@@ -16,6 +16,7 @@ extern "C" {
 #include "blusys/system.h"
 #include "blusys/timer.h"
 #include "blusys/target.h"
+#include "blusys/twai.h"
 #include "blusys/uart.h"
 #include "blusys/version.h"
 
