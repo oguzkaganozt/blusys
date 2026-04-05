@@ -13,8 +13,8 @@ This is the single source of truth for both roadmap and implementation progress.
 
 - current phase: `V2`
 - overall status: `in_progress`
-- last completed milestone: `V2: dac`
-- next target milestone: `V2: sdmmc`
+- last completed milestone: `V2: temp_sensor`
+- next target milestone: `V2: wdt`
 - open blockers: none
 
 ## Roadmap
@@ -32,9 +32,9 @@ This is the single source of truth for both roadmap and implementation progress.
 Core HAL expansion.
 
 - status: `in_progress`
-- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`
-- next: `sdmmc`
-- remaining: `sdmmc`, `mcpwm`, `rtc` / low-power / sleep-control, temperature sensor, `wdt`
+- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`
+- next: `wdt`
+- remaining: `wdt`, `mcpwm`, `rtc` / low-power / sleep-control
 
 ### V3
 
@@ -58,7 +58,7 @@ Advanced and ecosystem-level helpers.
 | Core Modules | completed | `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer` |
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
-| V2 | in_progress | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, and `dac` done, `sdmmc` next |
+| V2 | in_progress | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor` done, `wdt` next |
 | V3 | not_started | `usb`, `wifi`, `bluetooth`, `eth`, `nvs`, `ota` |
 | V4 | not_started | `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
@@ -80,6 +80,9 @@ Advanced and ecosystem-level helpers.
 - gated `dac` by target support in the current ESP-IDF baseline:
   - supported: `esp32`
   - not supported: `esp32c3`, `esp32s3`
+- added `sdmmc` SD card read/write API, implementation, example, and docs
+- added `temp_sensor` on-chip temperature sensor API, implementation, example, and docs
+- added `wdt` task watchdog API, implementation, and example (in progress)
 
 ## Current Technical State
 
@@ -102,6 +105,9 @@ Public API currently exists for:
 - `blusys_twai_*`
 - `blusys_touch_*`
 - `blusys_dac_*`
+- `blusys_sdmmc_*`
+- `blusys_temp_sensor_*`
+- `blusys_wdt_*`
 
 Internal infrastructure currently exists for:
 
@@ -150,7 +156,7 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V2` with `sdmmc`
+1. continue `V2` with `wdt`
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
 3. keep `rmt` limited to TX until there is a concrete need for RX or protocol helpers
 4. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears

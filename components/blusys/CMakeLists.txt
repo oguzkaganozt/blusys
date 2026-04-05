@@ -18,6 +18,7 @@ set(blusys_sources
     src/common/twai.c
     src/common/uart.c
     src/common/version.c
+    src/common/wdt.c
     src/internal/blusys_lock_freertos.c
 )
 
