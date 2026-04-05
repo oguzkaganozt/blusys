@@ -26,6 +26,7 @@ set(blusys_sources
     src/common/uart.c
     src/common/version.c
     src/common/wdt.c
+    src/common/nvs.c
     src/common/wifi.c
     src/internal/blusys_lock_freertos.c
 )

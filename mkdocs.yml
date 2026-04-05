@@ -45,6 +45,7 @@ nav:
       - Watchdog: guides/wdt-basic.md
       - Sleep: guides/sleep-basic.md
       - WiFi: guides/wifi-connect.md
+      - NVS: guides/nvs-basic.md
       - Hardware Smoke Tests: guides/hardware-smoke-tests.md
   - API Reference:
       - System: modules/system.md
@@ -70,5 +71,6 @@ nav:
       - Watchdog: modules/wdt.md
       - Sleep: modules/sleep.md
       - WiFi: modules/wifi.md
+      - NVS: modules/nvs.md
   - Compatibility: target-matrix.md
   - Contributing: contributing.md
