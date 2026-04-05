@@ -9,6 +9,7 @@ set(blusys_sources
     src/common/pwm.c
     src/common/rmt.c
     src/common/sdmmc.c
+    src/common/sleep.c
     src/common/spi.c
     src/common/system.c
     src/common/temp_sensor.c
