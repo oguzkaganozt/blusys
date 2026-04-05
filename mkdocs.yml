@@ -23,6 +23,7 @@ nav:
       - GPIO: guides/gpio-basic.md
       - UART: guides/uart-loopback.md
       - I2C: guides/i2c-scan.md
+      - I2S: guides/i2s-basic.md
       - SPI: guides/spi-loopback.md
       - PWM: guides/pwm-basic.md
       - ADC: guides/adc-basic.md
@@ -30,12 +31,14 @@ nav:
       - PCNT: guides/pcnt-basic.md
       - RMT: guides/rmt-basic.md
       - TWAI: guides/twai-basic.md
+      - Touch: guides/touch-basic.md
       - Hardware Smoke Tests: guides/hardware-smoke-tests.md
   - API Reference:
       - System: modules/system.md
       - GPIO: modules/gpio.md
       - UART: modules/uart.md
       - I2C Master: modules/i2c.md
+      - I2S TX: modules/i2s.md
       - SPI Master: modules/spi.md
       - PWM: modules/pwm.md
       - ADC: modules/adc.md
@@ -43,5 +46,6 @@ nav:
       - PCNT: modules/pcnt.md
       - RMT: modules/rmt.md
       - TWAI: modules/twai.md
+      - Touch: modules/touch.md
   - Compatibility: target-matrix.md
   - Contributing: contributing.md
