@@ -29,8 +29,9 @@ Recommended full smoke pass:
 9. `examples/spi_loopback`
 10. `examples/pwm_basic`
 11. `examples/adc_basic`
-12. `examples/timer_basic`
-13. `examples/touch_basic`
+12. `examples/dac_basic`
+13. `examples/timer_basic`
+14. `examples/touch_basic`
 
 ## Basic Workflow
 
@@ -157,6 +158,19 @@ Pass conditions:
 
 - raw values change with input voltage
 - millivolt readings are plausible when calibration is available
+
+### `dac_basic`
+
+Setup:
+
+1. use `esp32`
+2. connect a multimeter or oscilloscope to GPIO25 or GPIO26
+
+Pass conditions:
+
+- the example starts without open errors on `esp32`
+- the printed DAC value ramps up and down repeatedly
+- the measured analog voltage changes with the ramp pattern
 
 ### `timer_basic`
 

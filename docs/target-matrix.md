@@ -21,6 +21,7 @@ The shared API currently includes:
 - `spi`
 - `pwm`
 - `adc`
+- `dac`
 - `timer`
 - `pcnt`
 - `rmt`
@@ -43,14 +44,15 @@ The shared API currently includes:
 - `twai` classic TX and RX callback support is available on `esp32`, `esp32c3`, and `esp32s3`
 - `i2s` standard-mode master TX is available on `esp32`, `esp32c3`, and `esp32s3`
 - `touch` polling support is available on `esp32` and `esp32s3`; `esp32c3` reports `BLUSYS_FEATURE_TOUCH` as unsupported
+- `dac` oneshot output is available on `esp32`; `esp32c3` and `esp32s3` report `BLUSYS_FEATURE_DAC` as unsupported
 
 ## Out Of Scope For V1
 
 These are intentionally not part of the common public surface:
 
 - advanced I2S feature sets beyond the shipped standard TX subset
-- touch sensor support
-- DAC
+- touch sensor support beyond the shipped polling subset
+- DAC support beyond the shipped oneshot subset
 - LP peripheral variants
 - storage-specific abstractions
 - board support package behavior inside the core HAL

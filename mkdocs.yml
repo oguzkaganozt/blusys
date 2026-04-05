@@ -27,6 +27,7 @@ nav:
       - SPI: guides/spi-loopback.md
       - PWM: guides/pwm-basic.md
       - ADC: guides/adc-basic.md
+      - DAC: guides/dac-basic.md
       - Timer: guides/timer-basic.md
       - PCNT: guides/pcnt-basic.md
       - RMT: guides/rmt-basic.md
@@ -42,6 +43,7 @@ nav:
       - SPI Master: modules/spi.md
       - PWM: modules/pwm.md
       - ADC: modules/adc.md
+      - DAC: modules/dac.md
       - Timer: modules/timer.md
       - PCNT: modules/pcnt.md
       - RMT: modules/rmt.md

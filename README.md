@@ -17,12 +17,13 @@ It provides a smaller API than raw ESP-IDF for common embedded tasks while keepi
 - digital IO: `gpio`
 - communication: `uart`, `i2c`, `spi`
 - audio: `i2s`
-- timing and analog: `pwm`, `adc`, `timer`, `pcnt`, `rmt`, `touch`
+- timing and analog: `pwm`, `adc`, `timer`, `pcnt`, `rmt`, `touch`, `dac`
 - vehicle and field bus: `twai`
 
 Target note:
 - `pcnt` is currently available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
 - `touch` is currently available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
+- `dac` is currently available on `esp32`; `esp32c3` and `esp32s3` report it as unsupported
 
 Async support includes:
 - GPIO interrupt callbacks
@@ -77,6 +78,7 @@ The build target must match the connected board.
 - `examples/spi_loopback/`
 - `examples/pwm_basic/`
 - `examples/adc_basic/`
+- `examples/dac_basic/`
 - `examples/timer_basic/`
 - `examples/pcnt_basic/`
 - `examples/rmt_basic/`
@@ -91,6 +93,6 @@ The build target must match the connected board.
 
 `v1.0.0` is released.
 The planned v1 module set is implemented and validated on the supported targets.
-`V2` work has started with `pcnt`, `rmt`, `twai`, `i2s`, and `touch`.
+`V2` work has started with `pcnt`, `rmt`, `twai`, `i2s`, `touch`, and `dac`.
 
 Detailed implementation tracking remains in `PROGRESS.md`.
