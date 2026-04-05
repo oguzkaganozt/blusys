@@ -23,6 +23,8 @@ static const char *feature_name(blusys_feature_t feature)
         return "pcnt";
     case BLUSYS_FEATURE_RMT:
         return "rmt";
+    case BLUSYS_FEATURE_TWAI:
+        return "twai";
     default:
         return "unknown";
     }

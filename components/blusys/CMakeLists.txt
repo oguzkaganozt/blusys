@@ -10,6 +10,7 @@ set(blusys_sources
     src/common/system.c
     src/common/timer.c
     src/common/target.c
+    src/common/twai.c
     src/common/uart.c
     src/common/version.c
     src/internal/blusys_lock_freertos.c
@@ -30,5 +31,5 @@ idf_component_register(
     INCLUDE_DIRS include
     PRIV_INCLUDE_DIRS src/internal
     PRIV_REQUIRES esp_driver_pcnt
-    REQUIRES freertos esp_adc esp_driver_gpio esp_driver_gptimer esp_driver_i2c esp_driver_ledc esp_driver_pcnt esp_driver_rmt esp_driver_spi esp_driver_uart esp_system esp_timer
+    REQUIRES freertos esp_adc esp_driver_gpio esp_driver_gptimer esp_driver_i2c esp_driver_ledc esp_driver_pcnt esp_driver_rmt esp_driver_spi esp_driver_twai esp_driver_uart esp_system esp_timer
 )
