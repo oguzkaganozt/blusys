@@ -17,6 +17,7 @@ The shared API currently includes:
 - `gpio`
 - `uart`
 - `i2c`
+- `i2s`
 - `spi`
 - `pwm`
 - `adc`
@@ -24,6 +25,7 @@ The shared API currently includes:
 - `pcnt`
 - `rmt`
 - `twai`
+- `touch`
 
 ## Compatibility Rules
 
@@ -39,12 +41,14 @@ The shared API currently includes:
 - `pcnt` is available on `esp32` and `esp32s3`; `esp32c3` reports `BLUSYS_FEATURE_PCNT` as unsupported in the current ESP-IDF baseline
 - `rmt` TX is available on `esp32`, `esp32c3`, and `esp32s3`
 - `twai` classic TX and RX callback support is available on `esp32`, `esp32c3`, and `esp32s3`
+- `i2s` standard-mode master TX is available on `esp32`, `esp32c3`, and `esp32s3`
+- `touch` polling support is available on `esp32` and `esp32s3`; `esp32c3` reports `BLUSYS_FEATURE_TOUCH` as unsupported
 
 ## Out Of Scope For V1
 
 These are intentionally not part of the common public surface:
 
-- advanced I2S feature sets
+- advanced I2S feature sets beyond the shipped standard TX subset
 - touch sensor support
 - DAC
 - LP peripheral variants

@@ -25,10 +25,12 @@ Recommended full smoke pass:
 5. `examples/uart_loopback`
 6. `examples/uart_async`
 7. `examples/i2c_scan`
-8. `examples/spi_loopback`
-9. `examples/pwm_basic`
-10. `examples/adc_basic`
-11. `examples/timer_basic`
+8. `examples/i2s_basic`
+9. `examples/spi_loopback`
+10. `examples/pwm_basic`
+11. `examples/adc_basic`
+12. `examples/timer_basic`
+13. `examples/touch_basic`
 
 ## Basic Workflow
 
@@ -123,6 +125,19 @@ Pass conditions:
 - expected devices appear at the expected addresses
 - timeout behavior does not indicate bad wiring or missing pull-ups
 
+### `i2s_basic`
+
+Setup:
+
+1. connect the configured BCLK, WS, and DOUT pins to an external I2S DAC or codec
+2. connect MCLK as well if the external device requires it
+
+Pass conditions:
+
+- the example starts without open or start errors
+- the external I2S device receives stable clocking
+- the generated tone is audible or otherwise measurable at the external device output
+
 ### `spi_loopback`
 
 Setup:
@@ -148,6 +163,19 @@ Pass conditions:
 - tick count increments at the expected interval
 - final result shows `callback_swap_result: ok`
 - no extra callbacks appear after stop
+
+### `touch_basic`
+
+Setup:
+
+1. select a touch-capable GPIO for the current target
+2. connect or expose the matching touch pad or conductive area
+
+Pass conditions:
+
+- the example starts without open errors on `esp32` and `esp32s3`
+- repeated readings are stable when untouched
+- touching and releasing the pad produces a repeatable reading change
 
 ## What To Record
 
