@@ -14,6 +14,7 @@ The `gpio` module provides a direct pin-based API for the most common digital IO
 
 ## Supported Targets
 
+- ESP32
 - ESP32-C3
 - ESP32-S3
 

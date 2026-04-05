@@ -6,7 +6,7 @@ You want to confirm that a UART port can transmit and receive bytes through the 
 
 ## Prerequisites
 
-- ESP32-C3 or ESP32-S3 board
+- a supported board
 - a jumper wire from the example TX pin to the example RX pin
 - example UART pins reviewed in `idf.py menuconfig` if your board uses different safe pins
 
@@ -42,3 +42,8 @@ blusys_uart_close(uart);
 - using a UART port that is already occupied by board firmware or application code
 - forgetting to connect TX to RX for loopback testing
 - using board pins that are not routed safely on your hardware
+
+## Example App
+
+See `examples/uart_loopback/` for a runnable example.
+Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.

@@ -2,11 +2,11 @@
 
 ## Problem Statement
 
-You want to discover which 7-bit I2C device addresses acknowledge on an ESP32-C3 or ESP32-S3 board.
+You want to discover which 7-bit I2C device addresses acknowledge on a supported board.
 
 ## Prerequisites
 
-- ESP32-C3 or ESP32-S3 board
+- a supported board
 - SDA and SCL connected to the target I2C bus
 - pull-up resistors on SDA and SCL, or a board that already provides them
 - example I2C pins reviewed in `idf.py menuconfig` if your board uses different safe pins
@@ -43,26 +43,4 @@ blusys_i2c_master_close(i2c);
 
 See `examples/i2c_scan/` for a runnable example.
 
-Build for `esp32c3`:
-
-```sh
-idf.py -C examples/i2c_scan -B build-esp32c3 set-target esp32c3 build
-```
-
-Flash and monitor it:
-
-```sh
-idf.py -C examples/i2c_scan -B build-esp32c3 -p /dev/ttyUSB0 flash monitor
-```
-
-Build for `esp32s3`:
-
-```sh
-idf.py -C examples/i2c_scan -B build-esp32s3 set-target esp32s3 build
-```
-
-Flash and monitor it:
-
-```sh
-idf.py -C examples/i2c_scan -B build-esp32s3 -p /dev/ttyUSB0 flash monitor
-```
+Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.

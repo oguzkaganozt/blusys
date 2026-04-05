@@ -1,33 +1,23 @@
 # Vision
 
-## Mission
+Blusys HAL exists to make common ESP32 peripheral work simpler than using raw ESP-IDF directly.
 
-Blusys HAL provides a small, direct, well-documented C API for common ESP32 peripheral tasks so users can solve normal product needs without living inside ESP-IDF documentation.
+## Goals
 
-## Product Goals
+- keep the public API small and readable
+- support one shared API across `esp32`, `esp32c3`, and `esp32s3`
+- keep docs task-first and reference pages short
+- hide target-specific and ESP-IDF-specific details internally
 
-- simplify common hardware tasks
-- reduce setup and integration friction
-- keep implementation modular and maintainable
-- keep documentation focused on tasks first and reference second
-- support ESP32-C3 and ESP32-S3 through one common v1 API
+## Success Means
 
-## Success Criteria
-
-- a new user can complete common tasks by reading Blusys docs first
-- public headers are smaller and easier to scan than the corresponding ESP-IDF APIs
-- examples build for both C3 and S3
-- common concurrency behavior is documented and testable
-- the v1 API does not require target-specific `#ifdef` usage for normal cases
+- users can complete common tasks from Blusys docs first
+- examples build on all supported targets
+- normal application code does not need target-specific `#ifdef` logic
 
 ## Non-Goals For V1
 
-- networking abstraction
-- BLE abstraction
-- board support helpers
+- networking or BLE abstraction
+- board support helpers inside the core HAL
 - wrapping every ESP-IDF feature
-- exposing internal ESP-IDF HAL or LL concepts publicly
-
-## V1 Platform Promise
-
-Blusys v1 supports the common subset of ESP32-C3 and ESP32-S3 peripherals. Chip-specific features stay internal or are deferred to later extension modules.
+- exposing internal HAL or LL details publicly

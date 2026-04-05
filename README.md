@@ -2,14 +2,15 @@
 
 Blusys HAL is a simplified C hardware abstraction layer for ESP32 devices on top of ESP-IDF v5.5.
 
-It is aimed at common embedded tasks where raw ESP-IDF APIs can feel too low-level or too verbose.
+It provides a smaller API than raw ESP-IDF for common embedded tasks while keeping one shared public surface across supported targets.
 
 ## Supported Targets
 
+- `esp32`
 - `esp32c3`
 - `esp32s3`
 
-## Current Module Set
+## Included Modules
 
 - foundation: `version`, `error`, `target`
 - system: `system`
@@ -17,136 +18,46 @@ It is aimed at common embedded tasks where raw ESP-IDF APIs can feel too low-lev
 - communication: `uart`, `i2c`, `spi`
 - timing and analog: `pwm`, `adc`, `timer`
 
-Current async support includes:
+Async support includes:
 - GPIO interrupt callbacks
 - UART async TX and RX callbacks
 - timer callbacks
 
-## What You Get
-
-- a smaller public C API than ESP-IDF
-- one common API surface across ESP32-C3 and ESP32-S3 for v1
-- buildable examples for each shipped module
-- task-first documentation with guides and module reference pages
-
-## Documentation
-
-- GitHub Pages: `https://oguzkaganozt.github.io/blusys/`
-- Docs index in the repo: `docs/index.md`
-- Getting started guide: `docs/guides/getting-started.md`
-- Hardware smoke test guide: `docs/guides/hardware-smoke-tests.md`
-
 ## Quick Start
 
-If `export.sh` looks for a missing ESP-IDF Python env, check which one exists on your machine:
+Export ESP-IDF:
 
 ```sh
 ls ~/.espressif/python_env/
-```
-
-Then point `IDF_PYTHON_ENV_PATH` at the matching directory and export ESP-IDF:
-
-```sh
 export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/<your-idf-env>
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 ```
 
-For example, on this machine the installed env is `idf5.5_py3.12_env`:
+Build one example:
 
 ```sh
-export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.12_env
-source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
-```
-
-To avoid repeating that setup for every example command, use the root helper scripts:
-
-```sh
-./configure.sh examples/gpio_interrupt esp32s3
-./build.sh examples/gpio_interrupt esp32s3
-./flash.sh examples/gpio_interrupt /dev/ttyACM0 esp32s3
-./monitor.sh examples/gpio_interrupt /dev/ttyACM0 esp32s3
-./run.sh examples/gpio_interrupt /dev/ttyACM0 esp32s3
-```
-
-Use `Ctrl+]` to exit the ESP-IDF serial monitor and return to the shell.
-
-If you omit the target, the scripts reuse a previously configured single target when they can and otherwise default to `esp32s3`.
-
-## Find Your Board On Linux
-
-To list likely serial devices before flashing:
-
-```sh
-ls /dev/ttyACM* /dev/ttyUSB*
-```
-
-To see USB devices:
-
-```sh
-lsusb
-```
-
-A common workflow is:
-
-1. unplug the board
-2. run `ls /dev/ttyACM* /dev/ttyUSB*`
-3. plug the board in
-4. run the command again and note the new device
-
-Use that device path with `idf.py -p`, for example `/dev/ttyACM0` or `/dev/ttyUSB0`.
-
-## Quick Test On Linux
-
-This was tested on this machine with an `ESP32-S3` board on `/dev/ttyACM0`.
-
-Build the smoke example for `esp32s3`:
-
-```sh
-idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
+./build.sh examples/smoke esp32s3
 ```
 
 Flash and monitor it:
 
 ```sh
-idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 -p /dev/ttyACM0 flash monitor
+./run.sh examples/smoke /dev/ttyACM0 esp32s3
 ```
 
-Exit the serial monitor with `Ctrl+]`.
+The build target must match the connected board.
 
-Expected output includes:
+## Documentation
 
-- `Blusys smoke app`
-- `target: ESP32-S3`
-- feature lines such as `feature_gpio: yes`
-
-## Target Must Match The Board
-
-The target you build and flash must match the connected chip.
-
-For example:
-- use the `esp32s3` build for an ESP32-S3 board
-- use the `esp32c3` build for an ESP32-C3 board
-
-If they do not match, flashing fails with an error like:
-
-```sh
-This chip is ESP32-S3, not ESP32-C3. Wrong --chip argument?
-```
-
-If you are unsure which board is connected, try flashing once and `esptool.py` will identify the chip.
-
-## Other Target Example
-
-For `esp32c3`, use the matching example config:
-
-```sh
-idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-target esp32c3 build
-idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 -p /dev/ttyACM0 flash monitor
-```
+- Docs site: `https://oguzkaganozt.github.io/blusys/`
+- Changelog: `CHANGELOG.md`
+- Overview: `docs/index.md`
+- Getting started: `docs/guides/getting-started.md`
+- Examples and task guides: `docs/guides/`
+- API reference: `docs/modules/`
+- Contributor guidance: `docs/contributing.md`
 
 ## Examples
-
-The repository includes these example apps:
 
 - `examples/smoke/`
 - `examples/system_info/`
@@ -159,46 +70,14 @@ The repository includes these example apps:
 - `examples/pwm_basic/`
 - `examples/adc_basic/`
 - `examples/timer_basic/`
-
-Board-specific note:
-- Some examples use pins that may need to be changed for your board.
-- Review each guide and adjust pins in `idf.py menuconfig` where needed.
-
-## Local Docs Preview
-
-Install docs dependencies:
-
-```sh
-pip install -r requirements-docs.txt
-```
-
-Serve the docs locally:
-
-```sh
-mkdocs serve
-```
-
-Build the static site:
-
-```sh
-mkdocs build --strict
-```
-
-## Repository Layout
-
-- `components/blusys/`: main ESP-IDF component
-- `components/blusys/include/blusys/`: public headers
-- `examples/`: buildable example apps
-- `docs/`: user guides, module reference, and project docs
-- `PROGRESS.md`: implementation status against the roadmap
+- `examples/concurrency_i2c/`
+- `examples/concurrency_spi/`
+- `examples/concurrency_timer/`
+- `examples/concurrency_uart/`
 
 ## Project Status
 
-The planned v1 blocking module set is implemented.
-Phase 5 async support is implemented and is currently in runtime validation and hardening.
+`v1.0.0` is released.
+The planned v1 module set is implemented and validated on the supported targets.
 
-Track detailed implementation status in `PROGRESS.md`.
-
-## Upstream Reference
-
-Bundled ESP-IDF reference documentation is available in `esp-idf-en-v5.5.4/`.
+Detailed implementation tracking remains in `PROGRESS.md`.

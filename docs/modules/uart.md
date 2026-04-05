@@ -15,6 +15,7 @@ Phase 3 intentionally fixes the line format to 8 data bits, no parity, and 1 sto
 
 ## Supported Targets
 
+- ESP32
 - ESP32-C3
 - ESP32-S3
 
