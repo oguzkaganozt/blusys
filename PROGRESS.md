@@ -42,8 +42,8 @@ Core HAL expansion.
 Connectivity and system services.
 
 - status: `in_progress`
-- done: `wifi`, `nvs`
-- planned (in order): `http_client`, `mqtt`, `http_server`, `ota`, `bluetooth`, `eth`, `usb`
+- done: `wifi`, `nvs`, `http_client`
+- planned (in order): `mqtt`, `http_server`, `ota`, `bluetooth`, `eth`, `usb`
 
 ### V4
 
@@ -61,7 +61,7 @@ Advanced peripherals and ecosystem-level helpers.
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
-| V3 | in_progress | `wifi`, `nvs` done; next: `http_client`, `mqtt`, `http_server`, `ota`, `bluetooth`, `eth`, `usb` |
+| V3 | in_progress | `wifi`, `nvs`, `http_client` done; next: `mqtt`, `http_server`, `ota`, `bluetooth`, `eth`, `usb` |
 | V4 | not_started | `ana_cmpr`, `parlio`, `lcd`, `usb_serial_jtag`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
 ## Recent Work
@@ -99,6 +99,7 @@ Advanced peripherals and ecosystem-level helpers.
 - released `v2.0.0`
 - began `V3`: added `wifi` station-mode connect API, implementation, example, and docs
 - added `nvs` key-value storage API, implementation, example, and docs; available on all three targets
+- added `http_client` blocking GET/POST API, implementation, example, and docs; available on all three targets
 
 ## Current Technical State
 
@@ -133,6 +134,7 @@ Public API currently exists for:
 - `blusys_sdm_*`
 - `blusys_wifi_*`
 - `blusys_nvs_*`
+- `blusys_http_client_*`
 
 Internal infrastructure currently exists for:
 
@@ -168,7 +170,7 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V3` — next: `http_client`, then `mqtt`, `http_server`, `ota`, `bluetooth`, `eth`, `usb`
+1. continue `V3` — next: `mqtt`, `http_server`, `ota`, `bluetooth`, `eth`, `usb`
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
 3. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
 4. keep the first `touch` cut limited to one-pin polling reads until a concrete need appears for thresholds, callbacks, or sleep integration

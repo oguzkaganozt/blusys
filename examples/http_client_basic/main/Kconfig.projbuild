@@ -1,0 +1,36 @@
+menu "HTTP Client Basic Example"
+
+    config WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        help
+            SSID (network name) of the access point to connect to.
+
+    config WIFI_PASSWORD
+        string "WiFi Password"
+        default "mypassword"
+        help
+            WiFi password. Leave empty for open networks.
+
+    config WIFI_CONNECT_TIMEOUT_MS
+        int "WiFi connect timeout (ms)"
+        default 10000
+        range 1000 60000
+        help
+            Maximum time in milliseconds to wait for an IP address.
+
+    config HTTP_CLIENT_URL
+        string "HTTP request URL"
+        default "http://httpbin.org/get"
+        help
+            Full URL to fetch with an HTTP GET request.
+            Use http:// for plain HTTP or https:// for TLS (no cert verification by default).
+
+    config HTTP_CLIENT_TIMEOUT_MS
+        int "HTTP request timeout (ms)"
+        default 10000
+        range 1000 60000
+        help
+            Maximum time in milliseconds to wait for the HTTP response.
+
+endmenu
