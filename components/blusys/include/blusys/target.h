@@ -39,6 +39,7 @@ typedef enum {
     BLUSYS_FEATURE_SPI_SLAVE,
     BLUSYS_FEATURE_I2S_RX,
     BLUSYS_FEATURE_RMT_RX,
+    BLUSYS_FEATURE_WIFI,
     BLUSYS_FEATURE_COUNT,
 } blusys_feature_t;
 
