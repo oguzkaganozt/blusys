@@ -28,6 +28,7 @@ typedef enum {
     BLUSYS_FEATURE_TWAI,
     BLUSYS_FEATURE_I2S,
     BLUSYS_FEATURE_TOUCH,
+    BLUSYS_FEATURE_DAC,
     BLUSYS_FEATURE_COUNT,
 } blusys_feature_t;
 

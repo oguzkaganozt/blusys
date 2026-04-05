@@ -13,8 +13,8 @@ This is the single source of truth for both roadmap and implementation progress.
 
 - current phase: `V2`
 - overall status: `in_progress`
-- last completed milestone: `V2: touch`
-- next target milestone: `V2: dac`
+- last completed milestone: `V2: dac`
+- next target milestone: `V2: sdmmc`
 - open blockers: none
 
 ## Roadmap
@@ -32,9 +32,9 @@ This is the single source of truth for both roadmap and implementation progress.
 Core HAL expansion.
 
 - status: `in_progress`
-- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`
-- next: `dac`
-- remaining: `dac`, `sdmmc`, `mcpwm`, `rtc` / low-power / sleep-control, temperature sensor, `wdt`
+- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`
+- next: `sdmmc`
+- remaining: `sdmmc`, `mcpwm`, `rtc` / low-power / sleep-control, temperature sensor, `wdt`
 
 ### V3
 
@@ -58,7 +58,7 @@ Advanced and ecosystem-level helpers.
 | Core Modules | completed | `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer` |
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
-| V2 | in_progress | `pcnt`, `rmt`, `twai`, `i2s`, and `touch` done, `dac` next |
+| V2 | in_progress | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, and `dac` done, `sdmmc` next |
 | V3 | not_started | `usb`, `wifi`, `bluetooth`, `eth`, `nvs`, `ota` |
 | V4 | not_started | `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
@@ -73,9 +73,13 @@ Advanced and ecosystem-level helpers.
 - added `twai` classic TX API, RX callback support, example, and docs
 - added `i2s` standard-mode master TX API, implementation, example, and docs
 - added `touch` polling API, implementation, example, and docs
+- added `dac` oneshot API, implementation, example, and docs
 - gated `pcnt` by target support in the current ESP-IDF baseline:
   - supported: `esp32`, `esp32s3`
   - not supported: `esp32c3`
+- gated `dac` by target support in the current ESP-IDF baseline:
+  - supported: `esp32`
+  - not supported: `esp32c3`, `esp32s3`
 
 ## Current Technical State
 
@@ -97,6 +101,7 @@ Public API currently exists for:
 - `blusys_rmt_*`
 - `blusys_twai_*`
 - `blusys_touch_*`
+- `blusys_dac_*`
 
 Internal infrastructure currently exists for:
 
@@ -128,6 +133,10 @@ Internal infrastructure currently exists for:
   - `esp32`
   - `esp32c3`
   - `esp32s3`
+- `dac_basic` builds pass for:
+  - `esp32`
+  - `esp32c3`
+  - `esp32s3`
 - `smoke` builds pass for:
   - `esp32c3`
   - `esp32s3`
@@ -141,9 +150,10 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V2` with `dac`
+1. continue `V2` with `sdmmc`
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
 3. keep `rmt` limited to TX until there is a concrete need for RX or protocol helpers
 4. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
 5. keep the first `i2s` cut limited to standard-mode master TX until a concrete need appears for RX, duplex, or alternate formats
 6. keep the first `touch` cut limited to one-pin polling reads until a concrete need appears for thresholds, callbacks, or sleep integration
+7. keep the first `dac` cut limited to oneshot output until a concrete need appears for cosine generation or continuous DMA output

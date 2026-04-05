@@ -50,8 +50,8 @@ The v1 API is limited to the common subset of `esp32`, `esp32c3`, and `esp32s3`.
 Keep these out of the common API:
 
 - advanced I2S modes
-- touch sensor
-- DAC
+- touch sensor behavior beyond the shipped polling subset
+- DAC modes beyond the shipped oneshot subset
 - LP peripheral special cases
 - storage-specific abstractions
 

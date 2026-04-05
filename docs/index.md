@@ -25,6 +25,7 @@ Blusys HAL is a simplified C hardware abstraction layer for ESP32 devices using 
 - `spi`
 - `pwm`
 - `adc`
+- `dac`
 - `timer`
 - `pcnt`
 - `rmt`
@@ -40,7 +41,7 @@ Blusys HAL is a simplified C hardware abstraction layer for ESP32 devices using 
 ## Project Status
 
 `v1.0.0` is released.
-`V2` is in progress with `pcnt`, `rmt`, `twai`, `i2s`, and `touch`.
+`V2` is in progress with `pcnt`, `rmt`, `twai`, `i2s`, `touch`, and `dac`.
 
 ## Need More Detail?
 
