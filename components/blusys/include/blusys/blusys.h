@@ -30,6 +30,7 @@ extern "C" {
 #include "blusys/uart.h"
 #include "blusys/version.h"
 #include "blusys/wdt.h"
+#include "blusys/wifi.h"
 
 #ifdef __cplusplus
 }
