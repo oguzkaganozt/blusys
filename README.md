@@ -16,12 +16,16 @@ It provides a smaller API than raw ESP-IDF for common embedded tasks while keepi
 - system: `system`
 - digital IO: `gpio`
 - communication: `uart`, `i2c`, `spi`
-- timing and analog: `pwm`, `adc`, `timer`
+- timing and analog: `pwm`, `adc`, `timer`, `pcnt`
+
+Target note:
+- `pcnt` is currently available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
 
 Async support includes:
 - GPIO interrupt callbacks
 - UART async TX and RX callbacks
 - timer callbacks
+- PCNT watch point callbacks
 
 ## Quick Start
 
@@ -70,6 +74,7 @@ The build target must match the connected board.
 - `examples/pwm_basic/`
 - `examples/adc_basic/`
 - `examples/timer_basic/`
+- `examples/pcnt_basic/`
 - `examples/concurrency_i2c/`
 - `examples/concurrency_spi/`
 - `examples/concurrency_timer/`
@@ -79,5 +84,6 @@ The build target must match the connected board.
 
 `v1.0.0` is released.
 The planned v1 module set is implemented and validated on the supported targets.
+`V2` work has started with `pcnt`.
 
 Detailed implementation tracking remains in `PROGRESS.md`.

@@ -1,28 +1,47 @@
 # Roadmap
 
-This page is a short milestone summary. Detailed status lives in `../PROGRESS.md`.
+Short version: `v1.0.0` is released, `V2` is in progress, and detailed tracking lives in `../PROGRESS.md`.
+
+## Status
+
+- `v1.0.0` released
+- current work: `V2`
+- current milestone: `rmt`
 
 ## Completed
 
-- Phase 0: project contract and docs baseline
-- Phase 1: foundation
-- Phase 2: `system` and `gpio`
-- Phase 3: `uart`, `i2c`, and `spi`
-- Phase 4: `pwm`, `adc`, and `timer`
-- Phase 5: async support and hardware validation
+- foundation and project setup
+- core modules: `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`
+- async support and validation work
+- `pcnt` started as the first `V2` item
 
-## Current
+## V2
 
-- `v1.0.0` released
+Core HAL expansion.
 
-## Next
+- done: `pcnt`
+- next: `rmt`
+- remaining: `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `mcpwm`, `rtc` / low-power / sleep-control, temperature sensor, `wdt`
 
-- post-v1 maintenance and future module planning
+## V3
 
-## Post-V1 Candidates
+Connectivity and system services.
 
-- `rmt`
-- `twai`
-- selected `i2s` support if justified
-- service-layer libraries outside the core HAL
-- board support package as a separate layer
+- `usb`
+- `wifi`
+- `bluetooth`
+- `eth`
+- `nvs`
+- `ota`
+
+## V4
+
+Advanced and ecosystem-level helpers.
+
+- `efuse`
+- `ulp`
+- advanced power helpers
+- BSP layer
+- diagnostics and self-test helpers
+- security and provisioning helpers
+- other higher-level service wrappers

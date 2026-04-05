@@ -2,7 +2,7 @@
 
 ## Supported Targets
 
-Blusys supports these targets in v1:
+Blusys supports these targets:
 
 - `esp32`
 - `esp32c3`
@@ -10,7 +10,7 @@ Blusys supports these targets in v1:
 
 ## Common Library Surface
 
-The shared v1 API includes:
+The shared API currently includes:
 
 - `system`
 - `target`
@@ -21,6 +21,7 @@ The shared v1 API includes:
 - `pwm`
 - `adc`
 - `timer`
+- `pcnt`
 
 ## Compatibility Rules
 
@@ -33,6 +34,7 @@ The shared v1 API includes:
 - some examples use board-dependent pin defaults, so check `menuconfig` when needed
 - runtime behavior can still differ because boards expose different safe pins and wiring constraints
 - thread-safety rules are defined in task terms, not CPU-core terms
+- `pcnt` is available on `esp32` and `esp32s3`; `esp32c3` reports `BLUSYS_FEATURE_PCNT` as unsupported in the current ESP-IDF baseline
 
 ## Out Of Scope For V1
 

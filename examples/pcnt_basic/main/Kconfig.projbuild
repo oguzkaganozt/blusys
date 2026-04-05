@@ -1,0 +1,21 @@
+menu "Blusys PCNT Basic Example"
+
+config BLUSYS_PCNT_BASIC_PWM_PIN
+    int "PWM output GPIO pin"
+    range 0 48
+    default 4 if IDF_TARGET_ESP32
+    default 3 if IDF_TARGET_ESP32C3
+    default 4 if IDF_TARGET_ESP32S3
+    help
+        Select a board-safe PWM-capable output GPIO for the pulse source.
+
+config BLUSYS_PCNT_BASIC_INPUT_PIN
+    int "PCNT input GPIO pin"
+    range 0 48
+    default 5 if IDF_TARGET_ESP32
+    default 4 if IDF_TARGET_ESP32C3
+    default 5 if IDF_TARGET_ESP32S3
+    help
+        Select a GPIO to receive the looped-back pulse input.
+
+endmenu
