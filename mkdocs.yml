@@ -46,6 +46,7 @@ nav:
       - Sleep: guides/sleep-basic.md
       - WiFi: guides/wifi-connect.md
       - NVS: guides/nvs-basic.md
+      - HTTP Client: guides/http-basic.md
       - Hardware Smoke Tests: guides/hardware-smoke-tests.md
   - API Reference:
       - System: modules/system.md
@@ -72,5 +73,6 @@ nav:
       - Sleep: modules/sleep.md
       - WiFi: modules/wifi.md
       - NVS: modules/nvs.md
+      - HTTP Client: modules/http_client.md
   - Compatibility: target-matrix.md
   - Contributing: contributing.md
