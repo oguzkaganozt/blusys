@@ -3,6 +3,7 @@ site/
 __pycache__/
 build-*/
 examples/**/build*/
+examples/**/build-*.log
 examples/**/sdkconfig
 examples/**/sdkconfig.old
 examples/**/sdkconfig.*
