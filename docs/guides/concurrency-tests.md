@@ -44,4 +44,4 @@ Four stress tests that verify concurrent access to the same peripheral handle fr
 | ESP32-C3 | 21 | 20 |
 | ESP32-S3 | 1  | 2  |
 
-**Pass:** `concurrent_result: ok` and `bytes_sent == bytes_received`
+**Pass:** `concurrent_result: ok`
