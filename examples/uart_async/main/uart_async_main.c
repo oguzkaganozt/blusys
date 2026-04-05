@@ -64,6 +64,7 @@ static bool blusys_uart_async_run_round(blusys_uart_t *uart,
     blusys_err_t err;
     uint32_t expected_bits = ctx->notify_mask | BLUSYS_UART_ASYNC_TX_DONE_BIT | BLUSYS_UART_ASYNC_RX_DONE_BIT;
     uint32_t notified_bits = 0u;
+    uint32_t received_bits = 0u;
 
     ctx->rx_buffer[0] = '\0';
     ctx->rx_size = 0u;
@@ -78,7 +79,8 @@ static bool blusys_uart_async_run_round(blusys_uart_t *uart,
     }
 
     while ((notified_bits & expected_bits) != expected_bits) {
-        xTaskNotifyWait(0u, UINT32_MAX, &notified_bits, portMAX_DELAY);
+        xTaskNotifyWait(0u, UINT32_MAX, &received_bits, portMAX_DELAY);
+        notified_bits |= received_bits;
     }
 
     printf("%s tx_status: %s\n", label, blusys_err_string(ctx->tx_status));
