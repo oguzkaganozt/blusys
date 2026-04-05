@@ -117,6 +117,7 @@ void app_main(void)
     blusys_uart_t *uart = NULL;
     blusys_err_t err;
     uint32_t notified_bits = 0u;
+    uint32_t received_bits = 0u;
     uint32_t total_expected = (uint32_t)(BLUSYS_CONCURRENCY_UART_ITERS *
                                           strlen(blusys_concurrency_uart_message));
 
@@ -149,7 +150,8 @@ void app_main(void)
     xTaskCreate(blusys_concurrency_uart_rx_worker, "uart_rx", 4096, &rx_ctx, 5, NULL);
 
     while ((notified_bits & BLUSYS_CONCURRENCY_UART_DONE_MASK) != BLUSYS_CONCURRENCY_UART_DONE_MASK) {
-        xTaskNotifyWait(0u, UINT32_MAX, &notified_bits, portMAX_DELAY);
+        xTaskNotifyWait(0u, UINT32_MAX, &received_bits, portMAX_DELAY);
+        notified_bits |= received_bits;
     }
 
     printf("tx_errors: %u\n", (unsigned int) tx_ctx.errors);
