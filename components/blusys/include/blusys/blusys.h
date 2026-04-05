@@ -17,6 +17,7 @@ extern "C" {
 #include "blusys/sdmmc.h"
 #include "blusys/spi.h"
 #include "blusys/system.h"
+#include "blusys/temp_sensor.h"
 #include "blusys/timer.h"
 #include "blusys/touch.h"
 #include "blusys/target.h"
