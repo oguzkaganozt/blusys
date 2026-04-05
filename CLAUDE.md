@@ -4,47 +4,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Blusys HAL** is a simplified C Hardware Abstraction Layer for ESP32 devices, built on top of ESP-IDF v5.5.4. It exposes a smaller, more stable API surface than raw ESP-IDF. Supported targets: **ESP32**, **ESP32-C3**, and **ESP32-S3**.
-
-Current state: `v1.0.0` released — core peripherals and minimum async support are implemented and hardware-validated.
+**Blusys HAL** is a simplified C Hardware Abstraction Layer for ESP32 devices, built on top of ESP-IDF v5.5.4. It exposes a smaller, more stable API surface than raw ESP-IDF. Supported targets: **ESP32**, **ESP32-C3**, and **ESP32-S3**. Current release: `v2.0.0`.
 
 ## Build and Flash Commands
 
 All scripts live at the repo root. Default target is `esp32s3`.
 
 ```bash
-# Configure (opens menuconfig)
-./configure.sh examples/<name> [esp32c3|esp32s3]
-
-# Build
-./build.sh examples/<name> [esp32c3|esp32s3]
-
-# Flash to device
-./flash.sh examples/<name> <port> [esp32c3|esp32s3]
-# port example: /dev/ttyACM0 or /dev/ttyUSB0
-
-# Serial monitor (exit with Ctrl+])
-./monitor.sh examples/<name> <port> [esp32c3|esp32s3]
-
-# Full workflow: build → flash → monitor
-./run.sh examples/<name> <port> [esp32c3|esp32s3]
+./configure.sh examples/<name> [esp32|esp32c3|esp32s3]   # opens menuconfig
+./build.sh     examples/<name> [esp32|esp32c3|esp32s3]   # build only
+./flash.sh     examples/<name> <port> [esp32|esp32c3|esp32s3]
+./monitor.sh   examples/<name> <port> [esp32|esp32c3|esp32s3]
+./run.sh       examples/<name> <port> [esp32|esp32c3|esp32s3]   # build+flash+monitor
 ```
 
-`idf-common.sh` is sourced by all scripts and sets up the ESP-IDF environment:
+`idf-common.sh` is sourced by all scripts:
 - IDF path: `~/.espressif/v5.5.4/esp-idf/`
 - Python env: `~/.espressif/python_env/idf5.5_py3.12_env`
 
-There is no automated test runner — validation is done via hardware smoke tests on physical devices. See `docs/guides/hardware-smoke-tests.md`.
+Build artifacts land in `examples/<name>/build-esp32/`, `build-esp32c3/`, `build-esp32s3/`. If Kconfig values change, delete the build directory before rebuilding — stale `sdkconfig` will silently miss new `CONFIG_*` symbols.
+
+There is no automated test runner. Validation is via hardware smoke tests: `docs/guides/hardware-smoke-tests.md`.
 
 ## Documentation
 
 ```bash
 pip install -r requirements-docs.txt
-mkdocs serve    # local preview
-mkdocs build    # static site
+mkdocs serve          # local preview
+mkdocs build --strict # must pass before any merge
 ```
 
-Docs live in `docs/`. Key files: `docs/architecture.md`, `docs/api-design-rules.md`, `docs/roadmap.md`.
+`mkdocs build --strict` is the doc gate — it fails on broken nav references or missing pages.
 
 ## Code Architecture
 
@@ -52,68 +42,91 @@ Docs live in `docs/`. Key files: `docs/architecture.md`, `docs/api-design-rules.
 
 ```
 Application
-  → Blusys Public API  (components/blusys/include/blusys/*.h)
-  → Module Implementation  (components/blusys/src/common/*.c)
-  → Internal / Port Layer  (components/blusys/src/internal/)
-  → Target-Specific Code   (components/blusys/src/targets/esp32c3/ or esp32s3/)
+  → Blusys Public API     (components/blusys/include/blusys/*.h)
+  → Module Implementation (components/blusys/src/common/*.c)
+  → Internal Utilities    (components/blusys/src/internal/)
+  → Target Capabilities   (components/blusys/src/targets/esp32*/target_caps.c)
   → ESP-IDF Drivers
-  → ESP32 Hardware
-```
-
-### Component Structure
-
-```
-components/blusys/
-├── include/blusys/        # Public headers — the full API surface
-│   ├── error.h            # blusys_err_t and error utilities
-│   ├── gpio.h             # GPIO (stateless, pin-based)
-│   ├── uart.h             # UART (handle-based, sync + async)
-│   ├── i2c.h              # I2C master (handle-based)
-│   ├── spi.h              # SPI master (handle-based)
-│   ├── pwm.h              # PWM (handle-based)
-│   ├── adc.h              # ADC (handle-based)
-│   ├── timer.h            # Hardware timers with callbacks (handle-based)
-│   ├── system.h           # Uptime, heap, reset reason, restart
-│   ├── target.h           # Target ID and feature detection
-│   └── version.h          # Version constants
-└── src/
-    ├── common/            # One .c file per module (platform-agnostic logic)
-    ├── internal/          # Private headers: locking, timeout, esp_err mapping
-    └── targets/
-        ├── esp32c3/       # Target-specific implementations
-        └── esp32s3/
+  → Hardware
 ```
 
 ### Key API Conventions
 
-- All return values use `blusys_err_t` (never `esp_err_t` in public API).
-- Stateful peripherals (UART, I2C, SPI, PWM, ADC, Timer) use an opaque handle returned by `blusys_<module>_open()` and released with `blusys_<module>_close()`.
-- GPIO is stateless and pin-based — no handle.
-- Timeout parameter: pass `BLUSYS_TIMEOUT_FOREVER` (`-1`) to block indefinitely.
-- No ESP-IDF types, handles, or macros appear in public headers.
-- No `#ifdef` for target differences in public or common code — use capability queries (`blusys_target_supports(feature)`) or the target layer.
+- All return values use `blusys_err_t` — never `esp_err_t` in public headers.
+- Stateful peripherals use an opaque handle: `blusys_<module>_open()` → `blusys_<module>_close()`.
+- GPIO is stateless and pin-based (no handle).
+- Timeout parameter: `BLUSYS_TIMEOUT_FOREVER` (`-1`) to block indefinitely.
+- No ESP-IDF types, handles, or macros in public headers.
+- No `#ifdef` for target differences in public or common code — use `blusys_target_supports(feature)` or the SOC guard pattern (see below).
 
-### Internal Utilities
+### Internal Utilities (`src/internal/`)
 
-- `blusys_lock.h` / `blusys_lock_freertos.c` — FreeRTOS mutex abstraction used by all stateful modules.
-- `blusys_esp_err.h` — Maps `esp_err_t` → `blusys_err_t`.
-- `blusys_timeout.h` — Timeout value conversion helpers.
-- `blusys_target_caps.h` — Per-target feature capability table.
+- `blusys_lock.h` / `blusys_lock_freertos.c` — FreeRTOS mutex used by all stateful modules.
+- `blusys_esp_err.h` — `blusys_translate_esp_err(esp_err_t)` maps ESP errors to `blusys_err_t`.
+- `blusys_timeout.h` — timeout conversion helpers.
+- `blusys_target_caps.h` — `BLUSYS_FEATURE_MASK(feature)` macro and `BLUSYS_BASE_FEATURE_MASK`; per-target feature bitmasks.
+
+### Target-Gated Modules
+
+Modules not available on all targets use a SOC capability guard (see `temp_sensor.c` or `dac.c` as reference):
+
+```c
+#include "soc/soc_caps.h"
+
+#if SOC_X_SUPPORTED
+// real implementation
+#else
+// stub functions returning BLUSYS_ERR_NOT_SUPPORTED
+#endif
+```
 
 ### Examples
 
-Each example in `examples/` is a standalone ESP-IDF project that references the blusys component via `EXTRA_COMPONENT_DIRS`. Each has:
-- `main/<name>_main.c` — application entry point
-- `sdkconfig.esp32c3` and `sdkconfig.esp32s3` — per-target SDK configs
-- `build-esp32c3/` and `build-esp32s3/` — build artifact directories (gitignored pattern)
-
-The example CMakeLists.txt resolves the repo root relative to the example directory and adds `components/` to the component search path.
+Each example is a standalone ESP-IDF project:
+- `main/<name>_main.c` — entry point
+- `main/CMakeLists.txt` — `idf_component_register(SRCS "..." REQUIRES blusys)`
+- `main/Kconfig.projbuild` — menuconfig options (must be in `main/`, not project root)
+- `CMakeLists.txt` — sets `EXTRA_COMPONENT_DIRS` to `../../components`
+- `sdkconfig.esp32c3` / `sdkconfig.esp32s3` — optional per-target defaults
 
 ## Adding a New Module
 
-1. Add public header to `components/blusys/include/blusys/<module>.h` — use only `blusys_err_t` and opaque handles.
-2. Add implementation to `components/blusys/src/common/blusys_<module>.c`.
-3. Add any target-specific code under `src/targets/esp32c3/` and `src/targets/esp32s3/`.
-4. Register the new `.c` file in `components/blusys/CMakeLists.txt` under `SRCS`.
-5. Add required ESP-IDF driver to `REQUIRES` in the same CMakeLists.txt.
-6. Create a matching example in `examples/<module>_basic/`.
+### 1. Public header — `include/blusys/<module>.h`
+- Opaque handle: `typedef struct blusys_<module> blusys_<module>_t;`
+- All functions return `blusys_err_t`
+- No ESP-IDF types
+
+### 2. Implementation — `src/common/<module>.c`
+- Filename is `<module>.c` (no `blusys_` prefix)
+- `#include "soc/soc_caps.h"` + SOC guard if not universally supported
+- Use `blusys_translate_esp_err()`, `blusys_lock_*`, `calloc`/`free` pattern
+- See `temp_sensor.c` (simple) or `uart.c` (async/callback) as reference
+
+### 3. Register source and dependencies — `CMakeLists.txt`
+- Add `src/common/<module>.c` to `blusys_sources`
+- Add any new ESP-IDF component to `REQUIRES`
+
+### 4. Feature flag — `include/blusys/target.h`
+- Add `BLUSYS_FEATURE_<MODULE>` to `blusys_feature_t` enum, before `BLUSYS_FEATURE_COUNT`
+
+### 5. Capability mask — `src/internal/blusys_target_caps.h`
+- Add `#define BLUSYS_<MODULE>_FEATURE_MASK BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_<MODULE>)`
+- Add to `BLUSYS_BASE_FEATURE_MASK` if all three targets support it; otherwise leave separate
+
+### 6. Per-target caps — `src/targets/esp32/target_caps.c`, `esp32c3/`, `esp32s3/`
+- Add the new mask to `.feature_mask` in whichever targets support the module
+
+### 7. Umbrella header — `include/blusys/blusys.h`
+- Add `#include "blusys/<module>.h"` in alphabetical order
+
+### 8. Example — `examples/<module>_basic/`
+- Follow the structure described in the Examples section above
+- `Kconfig.projbuild` belongs in `main/`, not the project root
+
+### 9. Docs
+- `docs/modules/<module>.md` — API reference (see `docs/modules/temp_sensor.md` as style reference)
+- `docs/guides/<module>-basic.md` — task guide (see `docs/guides/temp-sensor-basic.md`)
+- Add both to `mkdocs.yml` under Guides and API Reference; run `mkdocs build --strict` to verify
+
+### 10. PROGRESS.md
+- Add module to Recent Work, Public API list, and Validation Snapshot
