@@ -11,6 +11,7 @@ extern "C" {
 #include "blusys/gpio.h"
 #include "blusys/i2c.h"
 #include "blusys/i2s.h"
+#include "blusys/mcpwm.h"
 #include "blusys/pcnt.h"
 #include "blusys/pwm.h"
 #include "blusys/rmt.h"

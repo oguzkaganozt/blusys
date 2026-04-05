@@ -13,8 +13,8 @@ This is the single source of truth for both roadmap and implementation progress.
 
 - current phase: `V2`
 - overall status: `in_progress`
-- last completed milestone: `V2: wdt`
-- next target milestone: `V2: sleep`
+- last completed milestone: `V2: sleep`
+- next target milestone: `V2: mcpwm`
 - open blockers: none
 
 ## Roadmap
@@ -32,9 +32,9 @@ This is the single source of truth for both roadmap and implementation progress.
 Core HAL expansion.
 
 - status: `in_progress`
-- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`
-- next: `sleep`
-- remaining: `sleep`, `mcpwm`
+- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`
+- next: `mcpwm`
+- remaining: `mcpwm`
 
 ### V3
 
@@ -58,7 +58,7 @@ Advanced and ecosystem-level helpers.
 | Core Modules | completed | `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer` |
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
-| V2 | in_progress | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt` done, `sleep` next |
+| V2 | in_progress | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep` done, `mcpwm` next |
 | V3 | not_started | `usb`, `wifi`, `bluetooth`, `eth`, `nvs`, `ota` |
 | V4 | not_started | `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
@@ -83,7 +83,8 @@ Advanced and ecosystem-level helpers.
 - added `sdmmc` SD card read/write API, implementation, example, and docs
 - added `temp_sensor` on-chip temperature sensor API, implementation, example, and docs
 - added `wdt` task watchdog API, implementation, and example
-- added `sleep` light/deep sleep API, implementation, and example (in progress)
+- added `sleep` light/deep sleep API, implementation, and example
+- added `mcpwm` complementary pair output API, implementation, and example (in progress)
 
 ## Current Technical State
 
@@ -110,6 +111,7 @@ Public API currently exists for:
 - `blusys_temp_sensor_*`
 - `blusys_wdt_*`
 - `blusys_sleep_*`
+- `blusys_mcpwm_*`
 
 Internal infrastructure currently exists for:
 
@@ -158,7 +160,7 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V2` with `sleep`
+1. continue `V2` with `mcpwm`
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
 3. keep `rmt` limited to TX until there is a concrete need for RX or protocol helpers
 4. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
