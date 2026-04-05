@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The `system` module exposes a small set of runtime helpers that are common across ESP32-C3 and ESP32-S3:
+The `system` module exposes a small set of runtime helpers that are common across ESP32, ESP32-C3, and ESP32-S3:
 
 - restart the chip
 - read uptime since boot
@@ -11,6 +11,7 @@ The `system` module exposes a small set of runtime helpers that are common acros
 
 ## Supported Targets
 
+- ESP32
 - ESP32-C3
 - ESP32-S3
 

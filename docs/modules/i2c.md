@@ -13,6 +13,7 @@ The `i2c` module provides a blocking master-mode bus API that keeps the common p
 
 ## Supported Targets
 
+- ESP32
 - ESP32-C3
 - ESP32-S3
 

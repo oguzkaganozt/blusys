@@ -2,35 +2,44 @@
 
 Blusys HAL is a simplified C hardware abstraction layer for ESP32 devices using ESP-IDF v5.5.
 
-The first release supports:
-- ESP32-C3
-- ESP32-S3
+## What It Gives You
 
-The project exists to make normal embedded development tasks easier than working directly against raw ESP-IDF APIs and documentation.
+- one common API across `ESP32`, `ESP32-C3`, and `ESP32-S3`
+- a smaller public API than raw ESP-IDF for common tasks
+- buildable examples for every shipped module
+- short task guides plus module reference pages
 
-## Principles
+## Start Here
 
-- keep the public API smaller than ESP-IDF
-- keep the public API stable and easy to read
-- expose only the common C3 and S3 subset in v1
-- hide ESP-IDF and target-specific complexity internally
-- ship task-first documentation alongside each module
-- design for thread safety from the beginning
+1. `guides/getting-started.md`
+2. pick a task guide from `guides/`
+3. use the matching module reference in `modules/` when you need API details
 
-## Reading Order
+## Modules
 
-1. `vision.md`
-2. `architecture.md`
-3. `api-design-rules.md`
-4. `target-matrix.md`
-5. `roadmap.md`
-6. `modules/v1-core.md`
+- `system`
+- `gpio`
+- `uart`
+- `i2c`
+- `spi`
+- `pwm`
+- `adc`
+- `timer`
+
+## Supported Targets
+
+- `esp32`
+- `esp32c3`
+- `esp32s3`
 
 ## Project Status
 
-Phase 1, Phase 2, Phase 3, and Phase 4 are implemented.
-Phase 5 async support is implemented and is currently in runtime validation and hardening.
+`v1.0.0` is released.
+The v1 library surface is complete and validated on supported targets.
 
-## Upstream Reference
+## Need More Detail?
 
-The bundled ESP-IDF v5.5 documentation lives in `../esp-idf-en-v5.5.4/` and remains the upstream reference when deeper backend behavior must be verified.
+- Compatibility and target notes: `target-matrix.md`
+- Hardware validation guide: `guides/hardware-smoke-tests.md`
+- Release notes: `../CHANGELOG.md`
+- Contributor guidance: `contributing.md`

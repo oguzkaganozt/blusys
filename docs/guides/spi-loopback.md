@@ -6,7 +6,7 @@ You want to confirm that a blocking SPI transfer can round-trip bytes through th
 
 ## Prerequisites
 
-- ESP32-C3 or ESP32-S3 board
+- a supported board
 - a jumper wire from the example MOSI pin to the example MISO pin
 - example pins reviewed in `idf.py menuconfig` if your board uses different safe pins
 
@@ -44,26 +44,4 @@ blusys_spi_close(spi);
 
 See `examples/spi_loopback/` for a runnable example.
 
-Build for `esp32c3`:
-
-```sh
-idf.py -C examples/spi_loopback -B build-esp32c3 set-target esp32c3 build
-```
-
-Flash and monitor it:
-
-```sh
-idf.py -C examples/spi_loopback -B build-esp32c3 -p /dev/ttyUSB0 flash monitor
-```
-
-Build for `esp32s3`:
-
-```sh
-idf.py -C examples/spi_loopback -B build-esp32s3 set-target esp32s3 build
-```
-
-Flash and monitor it:
-
-```sh
-idf.py -C examples/spi_loopback -B build-esp32s3 -p /dev/ttyUSB0 flash monitor
-```
+Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.

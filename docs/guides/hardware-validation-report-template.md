@@ -2,6 +2,7 @@
 
 Use this template to record manual hardware validation results for Blusys examples on:
 
+- ESP32
 - ESP32-C3
 - ESP32-S3
 
@@ -36,9 +37,31 @@ It is intended for real-board smoke testing after the build matrix has already p
 - Cable used:
 - Notes:
 
+### Board 3
+
+- Board name:
+- Target:
+- USB serial port:
+- Power source:
+- Cable used:
+- Notes:
+
 ## Pin Configuration Used
 
 Record the actual pin choices used during testing.
+
+### ESP32
+
+- GPIO basic input pin:
+- GPIO basic output pin:
+- GPIO interrupt pin:
+- UART loopback TX pin:
+- UART loopback RX pin:
+- UART async TX pin:
+- UART async RX pin:
+- PWM pin:
+- ADC pin:
+- Timer: no external pin required
 
 ### ESP32-C3
 
@@ -68,6 +91,15 @@ Record the actual pin choices used during testing.
 
 ## Wiring Used
 
+### ESP32
+
+- UART loopback jumper:
+- UART async jumper:
+- GPIO interrupt jumper/button setup:
+- SPI loopback jumper:
+- ADC voltage source:
+- Other:
+
 ### ESP32-C3
 
 - UART loopback jumper:
@@ -94,6 +126,7 @@ Record the actual pin choices used during testing.
 | Board name | esp32c3 | gpio_interrupt | pass | |
 | Board name | esp32c3 | uart_async | pass | |
 | Board name | esp32c3 | timer_basic | pass | |
+| Board name | esp32 | smoke | pass | |
 | Board name | esp32s3 | smoke | pass | |
 
 Use `pass`, `fail`, or `blocked` in the `Result` column.
@@ -217,10 +250,11 @@ For every failure or blocked test, record:
 
 ## Sign-Off
 
+- ESP32 smoke set complete:
 - ESP32-C3 smoke set complete:
 - ESP32-S3 smoke set complete:
 - Phase 5 async examples validated on hardware:
 - Remaining blockers:
 - Recommendation:
-  - keep Phase 5 in progress
-  - or mark Phase 5 complete
+  - keep the release in stabilization
+  - or mark the release candidate ready

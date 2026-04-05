@@ -8,13 +8,14 @@ It summarizes the current build, validation, and coding rules for Blusys HAL.
 - Project name: `Blusys HAL`
 - Language: C
 - Build system: ESP-IDF v5.5 with CMake
-- Current supported targets: `esp32c3`, `esp32s3`
+- Current supported targets: `esp32`, `esp32c3`, `esp32s3`
 - Main component: `components/blusys/`
 - Current validation apps: `examples/smoke/`, `examples/system_info/`, `examples/gpio_basic/`, `examples/gpio_interrupt/`, `examples/uart_loopback/`, `examples/uart_async/`, `examples/i2c_scan/`, `examples/spi_loopback/`, `examples/pwm_basic/`, `examples/adc_basic/`, `examples/timer_basic/`
 
-The repository is still early-stage.
+The repository has reached its first stable public release.
 Phase 1 foundation, Phase 2 foundational public modules, Phase 3 communication modules, and Phase 4 timing and analog modules are implemented.
-Phase 5 async support is in progress and currently includes timer callbacks, GPIO interrupt callbacks, and UART async support.
+Phase 5 async support is complete, including timer callbacks, GPIO interrupt callbacks, and UART async support.
+`v1.0.0` is released.
 Formal unit tests and lint scripts do not exist yet.
 
 ## Repository Layout
@@ -347,24 +348,24 @@ At minimum, for code changes touching the component:
 - build `examples/smoke` for `esp32s3`
 
 For code changes touching `system` or `gpio`:
-- build `examples/system_info` for both targets
-- build `examples/gpio_basic` for both targets
-- build `examples/gpio_interrupt` for both targets
+- build `examples/system_info` for all supported targets
+- build `examples/gpio_basic` for all supported targets
+- build `examples/gpio_interrupt` for all supported targets
 
 For code changes touching `uart`, `i2c`, or `spi`:
-- build `examples/uart_loopback` for both targets
-- build `examples/uart_async` for both targets
-- build `examples/i2c_scan` for both targets
-- build `examples/spi_loopback` for both targets
+- build `examples/uart_loopback` for all supported targets
+- build `examples/uart_async` for all supported targets
+- build `examples/i2c_scan` for all supported targets
+- build `examples/spi_loopback` for all supported targets
 
 For code changes touching `pwm`:
-- build `examples/pwm_basic` for both targets
+- build `examples/pwm_basic` for all supported targets
 
 For code changes touching `adc`:
-- build `examples/adc_basic` for both targets
+- build `examples/adc_basic` for all supported targets
 
 For code changes touching `timer`:
-- build `examples/timer_basic` for both targets
+- build `examples/timer_basic` for all supported targets
 
 For documentation-only changes:
 - keep docs consistent with code and `PROGRESS.md`

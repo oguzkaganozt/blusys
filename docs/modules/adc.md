@@ -13,6 +13,7 @@ Phase 4 keeps the API intentionally smaller than the full ESP-IDF ADC driver sur
 
 ## Supported Targets
 
+- ESP32
 - ESP32-C3
 - ESP32-S3
 
@@ -70,7 +71,7 @@ Phase 4 does not define ISR-safe ADC calls.
 
 ## Limitations
 
-- the common v1 API is limited to ADC1-backed GPIOs on ESP32-C3 and ESP32-S3
+- the common v1 API is limited to ADC1-backed GPIOs on the supported ESP32, ESP32-C3, and ESP32-S3 targets
 - the public API is pin-based and does not expose ADC unit or channel IDs
 - reads are blocking and one-shot only
 - calibrated millivolt conversion is only supported for the common calibrated attenuation modes and still depends on the target and board calibration data being usable

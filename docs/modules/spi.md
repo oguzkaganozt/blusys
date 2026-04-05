@@ -12,6 +12,7 @@ Phase 3 intentionally keeps the device configuration small and fixes the mode to
 
 ## Supported Targets
 
+- ESP32
 - ESP32-C3
 - ESP32-S3
 

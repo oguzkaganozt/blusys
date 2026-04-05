@@ -55,26 +55,4 @@ The output pin follows the level you write and the input pin reports the sampled
 See `examples/gpio_basic/` for a runnable example.
 The example uses Kconfig-selected pins so you can choose board-safe GPIOs without editing source.
 
-Build for `esp32c3`:
-
-```sh
-idf.py -C examples/gpio_basic -B build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig set-target esp32c3 build
-```
-
-Flash and monitor it:
-
-```sh
-idf.py -C examples/gpio_basic -B build-esp32c3 -DSDKCONFIG=build-esp32c3/sdkconfig -p /dev/ttyUSB0 flash monitor
-```
-
-Build for `esp32s3`:
-
-```sh
-idf.py -C examples/gpio_basic -B build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig set-target esp32s3 build
-```
-
-Flash and monitor it:
-
-```sh
-idf.py -C examples/gpio_basic -B build-esp32s3 -DSDKCONFIG=build-esp32s3/sdkconfig -p /dev/ttyUSB0 flash monitor
-```
+Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.

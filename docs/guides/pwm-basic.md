@@ -6,7 +6,7 @@ You want to drive a PWM-capable GPIO with a simple repeating duty-cycle pattern 
 
 ## Prerequisites
 
-- ESP32-C3 or ESP32-S3 board
+- a supported board
 - one PWM-safe output pin connected to the load you want to drive
 - the example pin reviewed in `idf.py menuconfig` if your board uses a different safe output pin
 
@@ -44,26 +44,4 @@ blusys_pwm_close(pwm);
 
 See `examples/pwm_basic/` for a runnable example.
 
-Build for `esp32c3`:
-
-```sh
-idf.py -C examples/pwm_basic -B build-esp32c3 set-target esp32c3 build
-```
-
-Flash and monitor it:
-
-```sh
-idf.py -C examples/pwm_basic -B build-esp32c3 -p /dev/ttyUSB0 flash monitor
-```
-
-Build for `esp32s3`:
-
-```sh
-idf.py -C examples/pwm_basic -B build-esp32s3 set-target esp32s3 build
-```
-
-Flash and monitor it:
-
-```sh
-idf.py -C examples/pwm_basic -B build-esp32s3 -p /dev/ttyUSB0 flash monitor
-```
+Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.

@@ -1,57 +1,44 @@
 # Documentation Standards
 
-## Documentation Goals
+## Goals
 
-- users should start with Blusys docs, not ESP-IDF docs
-- docs should be task-first
-- reference material should be short and precise
-- examples should match the documented API exactly
+- user docs should be task-first
+- reference docs should be short and precise
+- examples must match shipped behavior
 
-## Required Documentation Per Module
+## Required Per Public Module
 
-Every public module must have:
-- one task-first guide
-- one API reference page
-- one example application
-- target support notes
-- thread-safety notes
-- blocking and async behavior notes
-- major limitations and failure cases
+- one example
+- one task guide
+- one module reference page
+- documented target support, thread-safety notes, and limitations
 
 ## Writing Rules
 
 - write for application developers first
-- explain what the user is trying to achieve before describing functions
+- explain the task before listing APIs
 - prefer short examples over long theory
-- do not copy ESP-IDF documentation structure blindly
-- link to upstream ESP-IDF docs only as secondary reference
+- avoid repeating setup, build, and flash instructions across many pages
+- use ESP-IDF docs only as secondary reference
 
-## Example Rules
+## Page Shape
 
-- examples must compile against the documented public API
-- examples should be minimal and realistic
-- examples should prefer one clear task per example
+Module reference pages should include:
 
-## API Page Template
-
-Each module page should include:
 - purpose
 - supported targets
-- quick start example
-- lifecycle model
-- blocking APIs
-- async APIs
+- quick example
+- lifecycle
+- blocking and async behavior
 - thread safety
-- ISR notes
-- limitations
-- error behavior
+- ISR notes when relevant
+- limitations and error behavior
 
-## Guide Page Template
+Task guides should include:
 
-Each guide should include:
 - problem statement
 - prerequisites
 - minimal example
-- explanation of the few APIs used
-- expected runtime behavior
+- APIs used
+- expected behavior
 - common mistakes

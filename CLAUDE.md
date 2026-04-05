@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Blusys HAL** is a simplified C Hardware Abstraction Layer for ESP32 devices, built on top of ESP-IDF v5.5.4. It exposes a smaller, more stable API surface than raw ESP-IDF. Supported targets: **ESP32**, **ESP32-C3**, and **ESP32-S3**.
 
-Current state: Phase 5 (Async And Hardening) — core peripherals are complete, async callbacks implemented, working toward v1.0.0.
+Current state: `v1.0.0` released — core peripherals and minimum async support are implemented and hardware-validated.
 
 ## Build and Flash Commands
 

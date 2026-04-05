@@ -1,116 +1,86 @@
 # Getting Started
 
-## What Blusys Is
+## Goal
 
-Blusys HAL is a simplified C HAL for ESP32 devices on top of ESP-IDF v5.5.
+Build and run one Blusys example on your board.
 
-The first release focuses on a common API for:
-- ESP32-C3
-- ESP32-S3
+## Supported Targets
 
-## What To Read First
+- `esp32`
+- `esp32c3`
+- `esp32s3`
 
-1. `vision.md`
-2. `architecture.md`
-3. `api-design-rules.md`
-4. `modules/v1-core.md`
+## 1. Export ESP-IDF
 
-## Set Up ESP-IDF
-
-If `export.sh` looks for a missing ESP-IDF Python env, check which one exists on your machine:
+If `export.sh` looks for a missing ESP-IDF Python env, first check which one exists:
 
 ```sh
 ls ~/.espressif/python_env/
 ```
 
-Then point `IDF_PYTHON_ENV_PATH` at the matching directory and export ESP-IDF:
+Then export ESP-IDF:
 
 ```sh
 export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/<your-idf-env>
 source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 ```
 
-For example, on this machine the installed env is `idf5.5_py3.12_env`:
+On this machine the installed env is usually `idf5.5_py3.12_env`.
+
+## 2. Build The Smoke Example
+
+Using the helper script:
 
 ```sh
-export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.12_env
-source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+./build.sh examples/smoke esp32s3
 ```
 
-## Build, Flash, And Monitor One Example
-
-The fastest first check is the smoke example.
-
-Build for `esp32c3`:
-
-```sh
-idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 set-target esp32c3 build
-```
-
-Flash and monitor it:
-
-```sh
-idf.py -C examples/smoke -B build-esp32c3 -DSDKCONFIG=sdkconfig.esp32c3 -p /dev/ttyUSB0 flash monitor
-```
-
-Build for `esp32s3`:
+Or directly with `idf.py`:
 
 ```sh
 idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
 ```
 
-Flash and monitor it:
+## 3. Find The Serial Port
+
+On Linux:
 
 ```sh
-idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 -p /dev/ttyUSB0 flash monitor
+ls /dev/ttyACM* /dev/ttyUSB*
+```
+
+## 4. Flash And Monitor
+
+Using the helper script:
+
+```sh
+./run.sh examples/smoke /dev/ttyACM0 esp32s3
+```
+
+Or directly with `idf.py`:
+
+```sh
+idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 -p /dev/ttyACM0 flash monitor
 ```
 
 Exit the serial monitor with `Ctrl+]`.
 
-## More Example Guides
+## 5. Check The Output
 
-- `guides/system-info.md`
-- `guides/gpio-basic.md`
-- `guides/uart-loopback.md`
-- `guides/i2c-scan.md`
-- `guides/spi-loopback.md`
-- `guides/pwm-basic.md`
-- `guides/hardware-smoke-tests.md`
+Expected output includes lines such as:
 
-## Initial Implementation Priorities
+- `Blusys smoke app`
+- `target: ESP32-S3`
+- `feature_gpio: yes`
 
-The project starts implementation in this order:
+## Important Notes
 
-1. foundation
-2. `system`
-3. `gpio`
-4. `uart`
-5. `i2c`
-6. `spi`
-7. `pwm`
-8. `adc`
-9. `timer`
+- the selected build target must match the connected board
+- some examples use configurable pins, so review `menuconfig` when board defaults are not safe
+- if a flash fails because of a target mismatch, rebuild for the correct chip
 
-## Phase 1 Build Validation
+## Next Steps
 
-Use the smoke app to validate that the component is discoverable and compiles for both supported targets.
-
-## Documentation Workflow
-
-When a module is added:
-
-1. create the public header
-2. implement the module
-3. add the example
-4. add the guide
-5. add the API reference page
-6. validate C3 and S3 builds
-
-## Local Docs Preview
-
-Recommended docs toolchain:
-
-```sh
-pip install -r requirements-docs.txt
-mkdocs serve
-```
+- read a task guide in `guides/`
+- use `guides/hardware-smoke-tests.md` for wider board validation
+- use `modules/` for API details

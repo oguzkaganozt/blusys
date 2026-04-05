@@ -14,6 +14,7 @@ The public API keeps GPTimer configuration details internal and exposes the comm
 
 ## Supported Targets
 
+- ESP32
 - ESP32-C3
 - ESP32-S3
 
