@@ -9,6 +9,7 @@ extern "C" {
 #include "blusys/error.h"
 #include "blusys/gpio.h"
 #include "blusys/i2c.h"
+#include "blusys/pcnt.h"
 #include "blusys/pwm.h"
 #include "blusys/spi.h"
 #include "blusys/system.h"

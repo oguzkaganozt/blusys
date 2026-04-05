@@ -23,6 +23,7 @@ typedef enum {
     BLUSYS_FEATURE_PWM,
     BLUSYS_FEATURE_ADC,
     BLUSYS_FEATURE_TIMER,
+    BLUSYS_FEATURE_PCNT,
     BLUSYS_FEATURE_COUNT,
 } blusys_feature_t;
 
