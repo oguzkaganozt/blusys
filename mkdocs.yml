@@ -47,6 +47,7 @@ nav:
       - WiFi: guides/wifi-connect.md
       - NVS: guides/nvs-basic.md
       - HTTP Client: guides/http-basic.md
+      - HTTP Server: guides/http-server-basic.md
       - MQTT: guides/mqtt-basic.md
       - Hardware Smoke Tests: guides/hardware-smoke-tests.md
   - API Reference:
@@ -75,6 +76,7 @@ nav:
       - WiFi: modules/wifi.md
       - NVS: modules/nvs.md
       - HTTP Client: modules/http_client.md
+      - HTTP Server: modules/http_server.md
       - MQTT: modules/mqtt.md
   - Compatibility: target-matrix.md
   - Contributing: contributing.md
