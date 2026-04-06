@@ -38,7 +38,7 @@ Every Blusys module is documented with the same structure: **Types** (config str
 
     ---
 
-    [:octicons-arrow-right-24: System](system.md) · [NVS](nvs.md) · [Sleep](sleep.md) · [Watchdog](wdt.md)
+    [:octicons-arrow-right-24: System](system.md) · [NVS](nvs.md) · [Filesystem](fs.md) · [Sleep](sleep.md) · [Watchdog](wdt.md)
 
 -   :material-wifi:{ .lg .middle } **Networking**
 

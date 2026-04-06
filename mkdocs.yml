@@ -90,6 +90,7 @@ nav:
       - System:
           - System Info: guides/system-info.md
           - NVS: guides/nvs-basic.md
+          - Filesystem: guides/fs-basic.md
           - Sleep: guides/sleep-basic.md
           - Watchdog: guides/wdt-basic.md
       - Networking:
@@ -134,6 +135,7 @@ nav:
       - System:
           - System: modules/system.md
           - NVS: modules/nvs.md
+          - Filesystem: modules/fs.md
           - Sleep: modules/sleep.md
           - Watchdog: modules/wdt.md
       - Networking:

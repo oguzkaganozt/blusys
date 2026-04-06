@@ -14,7 +14,7 @@ This is the single source of truth for both roadmap and implementation progress.
 - current phase: `V3`
 - overall status: `in_progress`
 - last completed milestone: `V2`
-- next target milestone: `V3: eth`
+- next target milestone: `V3: espnow`
 - open blockers: none
 
 ## Roadmap
@@ -42,8 +42,8 @@ Core HAL expansion.
 Connectivity and system services.
 
 - status: `in_progress`
-- done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`
-- planned (in order): `fs`, `espnow`, `ble_gatt`
+- done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`
+- planned (in order): `espnow`, `ble_gatt`
 
 ### V4
 
@@ -61,7 +61,7 @@ Advanced peripherals and ecosystem-level helpers.
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
-| V3 | in_progress | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth` done; next: `fs`, `espnow`, `ble_gatt` |
+| V3 | in_progress | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs` done; next: `espnow`, `ble_gatt` |
 | V4 | not_started | `ana_cmpr`, `parlio`, `lcd`, `usb_serial_jtag`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
 ## Recent Work
@@ -106,6 +106,8 @@ Advanced peripherals and ecosystem-level helpers.
 - added `sntp` NTP time synchronization API, implementation, example, and docs; available on all three targets
 - added `mdns` zero-config service advertisement and discovery API, implementation, example, and docs; available on all three targets
 - added `bluetooth` BLE advertising and scanning API, implementation, example, and docs; available on all three targets (ESP32, ESP32-C3, ESP32-S3)
+- added `fs` SPIFFS filesystem API, implementation, example, and docs; available on all three targets
+- widened `feature_mask` from `uint32_t` to `uint64_t` to support more than 32 feature flags
 
 ## Current Technical State
 
@@ -147,6 +149,7 @@ Public API currently exists for:
 - `blusys_sntp_*`
 - `blusys_mdns_*`
 - `blusys_bluetooth_*`
+- `blusys_fs_*`
 
 Internal infrastructure currently exists for:
 
@@ -177,6 +180,7 @@ Internal infrastructure currently exists for:
 - `ota_basic` pending hardware smoke test
 - `sntp_basic` pending hardware smoke test
 - `mdns_basic` pending hardware smoke test
+- `fs_basic` hardware smoke test passed (ESP32)
 - `mkdocs build --strict` passes
 
 ## Environment Notes
@@ -187,7 +191,7 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V3` — next: `fs` (SPIFFS/FAT filesystem), `espnow` (peer-to-peer wireless), `ble_gatt` (BLE GATT server/client)
+1. continue `V3` — next: `espnow` (peer-to-peer wireless), `ble_gatt` (BLE GATT server/client)
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
 3. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
 4. keep the first `touch` cut limited to one-pin polling reads until a concrete need appears for thresholds, callbacks, or sleep integration

@@ -48,6 +48,7 @@ typedef enum {
     BLUSYS_FEATURE_SNTP,
     BLUSYS_FEATURE_MDNS,
     BLUSYS_FEATURE_BLUETOOTH,
+    BLUSYS_FEATURE_FS,
     BLUSYS_FEATURE_COUNT,
 } blusys_feature_t;
 
