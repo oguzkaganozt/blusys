@@ -66,6 +66,21 @@ Application
 - `blusys_timeout.h` — timeout conversion helpers.
 - `blusys_target_caps.h` — `BLUSYS_FEATURE_MASK(feature)` macro and `BLUSYS_BASE_FEATURE_MASK`; per-target feature bitmasks.
 
+### Target Feature Support Matrix
+
+Modules in `BLUSYS_BASE_FEATURE_MASK` are available on all three targets. Target-specific extras:
+
+| Module       | ESP32 | ESP32-C3 | ESP32-S3 |
+|--------------|-------|----------|----------|
+| `pcnt`       | ✓     |          | ✓        |
+| `touch`      | ✓     |          | ✓        |
+| `dac`        | ✓     |          |          |
+| `sdmmc`      | ✓     |          | ✓        |
+| `temp_sensor`|       | ✓        | ✓        |
+| `mcpwm`      | ✓     |          | ✓        |
+
+All other modules (gpio, uart, i2c, spi, pwm, adc, timer, rmt, twai, i2s, wdt, sleep, sdm, i2c_slave, spi_slave, i2s_rx, rmt_rx, wifi, nvs, http_client, mqtt, http_server, ota, sntp, mdns) are available on all targets.
+
 ### Target-Gated Modules
 
 Modules not available on all targets use a SOC capability guard (see `temp_sensor.c` or `dac.c` as reference):
@@ -79,6 +94,8 @@ Modules not available on all targets use a SOC capability guard (see `temp_senso
 // stub functions returning BLUSYS_ERR_NOT_SUPPORTED
 #endif
 ```
+
+V3 connectivity modules (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`) use `SOC_WIFI_SUPPORTED` as their guard — they are not gated by a per-target `FEATURE_MASK` entry but by Wi-Fi hardware availability. They also require `blusys_wifi_connect()` to be called first at the application level. The `mdns` module additionally depends on the `espressif/mdns` managed component — projects that use mDNS must declare this dependency in their own `main/idf_component.yml`. See `examples/mdns_basic/main/idf_component.yml` as reference. The blusys CMakeLists.txt detects the component at build time and defines `BLUSYS_HAS_MDNS` when present.
 
 ### Examples
 

@@ -1,0 +1,27 @@
+menu "mDNS Basic Example"
+
+    config WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        help
+            SSID of the access point.
+
+    config WIFI_PASSWORD
+        string "WiFi Password"
+        default "mypassword"
+        help
+            WiFi password.
+
+    config MDNS_HOSTNAME
+        string "mDNS Hostname"
+        default "blusys-device"
+        help
+            mDNS hostname (will be reachable as <hostname>.local).
+
+    config MDNS_INSTANCE
+        string "mDNS Instance Name"
+        default "Blusys mDNS Example"
+        help
+            Friendly instance name for mDNS.
+
+endmenu

@@ -31,6 +31,8 @@ set(blusys_sources
     src/common/ota.c
     src/common/mqtt.c
     src/common/nvs.c
+    src/common/sntp.c
+    src/common/mdns.c
     src/common/wifi.c
     src/internal/blusys_lock_freertos.c
 )
@@ -52,3 +54,12 @@ idf_component_register(
     PRIV_REQUIRES esp_driver_pcnt
     REQUIRES freertos esp_adc esp_driver_dac esp_driver_gpio esp_driver_gptimer esp_driver_i2c esp_driver_i2s esp_driver_ledc esp_driver_mcpwm esp_driver_pcnt esp_driver_rmt esp_driver_sdm esp_driver_sdmmc esp_driver_spi esp_driver_touch_sens esp_driver_tsens esp_driver_twai esp_driver_uart esp_system esp_timer esp_wifi esp_netif esp_event nvs_flash esp_http_client esp_http_server mqtt esp_https_ota app_update
 )
+
+# Optional managed component: espressif/mdns
+# Only available when the project declares espressif/mdns in its idf_component.yml.
+idf_build_get_property(build_components BUILD_COMPONENTS)
+if("mdns" IN_LIST build_components)
+    idf_component_get_property(mdns_lib mdns COMPONENT_LIB)
+    target_link_libraries(${COMPONENT_LIB} PUBLIC ${mdns_lib})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_MDNS=1)
+endif()

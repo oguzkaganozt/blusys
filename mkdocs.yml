@@ -50,6 +50,8 @@ nav:
       - HTTP Server: guides/http-server-basic.md
       - MQTT: guides/mqtt-basic.md
       - OTA: guides/ota-basic.md
+      - SNTP: guides/sntp-basic.md
+      - mDNS: guides/mdns-basic.md
       - Hardware Smoke Tests: guides/hardware-smoke-tests.md
   - API Reference:
       - System: modules/system.md
@@ -80,5 +82,7 @@ nav:
       - HTTP Server: modules/http_server.md
       - MQTT: modules/mqtt.md
       - OTA: modules/ota.md
+      - SNTP: modules/sntp.md
+      - mDNS: modules/mdns.md
   - Compatibility: target-matrix.md
   - Contributing: contributing.md
