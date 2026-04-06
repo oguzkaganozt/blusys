@@ -11,10 +11,10 @@ This is the single source of truth for both roadmap and implementation progress.
 
 ## Current Summary
 
-- current phase: `V3`
+- current phase: `V4`
 - overall status: `in_progress`
-- last completed milestone: `V2`
-- next target milestone: `V3: ble_gatt`
+- last completed milestone: `V3`
+- next target milestone: `V4`
 - open blockers: none
 
 ## Roadmap
@@ -41,9 +41,8 @@ Core HAL expansion.
 
 Connectivity and system services.
 
-- status: `in_progress`
-- done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`
-- planned (in order): `ble_gatt`
+- status: `completed`
+- done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt`
 
 ### V4
 
@@ -61,7 +60,7 @@ Advanced peripherals and ecosystem-level helpers.
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
-| V3 | in_progress | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow` done; next: `ble_gatt` |
+| V3 | completed | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt` |
 | V4 | not_started | `ana_cmpr`, `parlio`, `lcd`, `usb_serial_jtag`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
 ## Recent Work
@@ -109,6 +108,8 @@ Advanced peripherals and ecosystem-level helpers.
 - added `fs` SPIFFS filesystem API, implementation, example, and docs; available on all three targets
 - widened `feature_mask` from `uint32_t` to `uint64_t` to support more than 32 feature flags
 - added `espnow` connectionless peer-to-peer wireless API, implementation, example, and docs; available on all three targets
+- added `ble_gatt` BLE GATT server API, implementation, example, and docs; available on all three targets
+- completed `V3` milestone
 
 ## Current Technical State
 
@@ -152,6 +153,7 @@ Public API currently exists for:
 - `blusys_bluetooth_*`
 - `blusys_fs_*`
 - `blusys_espnow_*`
+- `blusys_ble_gatt_*`
 
 Internal infrastructure currently exists for:
 
@@ -184,6 +186,7 @@ Internal infrastructure currently exists for:
 - `mdns_basic` pending hardware smoke test
 - `fs_basic` hardware smoke test passed (ESP32)
 - `espnow_basic` pending hardware smoke test
+- `ble_gatt_basic` pending hardware smoke test
 - `mkdocs build --strict` passes
 
 ## Environment Notes
@@ -194,7 +197,7 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V3` — next: `espnow` (peer-to-peer wireless), `ble_gatt` (BLE GATT server/client)
+1. begin `V4` — first items TBD from planned list: `eth`, `usb`, `lcd`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, provisioning
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
 3. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
 4. keep the first `touch` cut limited to one-pin polling reads until a concrete need appears for thresholds, callbacks, or sleep integration
