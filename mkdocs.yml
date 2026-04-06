@@ -86,6 +86,7 @@ nav:
           - I2S TX: guides/i2s-basic.md
           - I2S RX: guides/i2s-rx-basic.md
           - SD/MMC: guides/sdmmc-basic.md
+          - SD over SPI: guides/sd-spi-basic.md
       - Sensors:
           - Touch: guides/touch-basic.md
           - Temperature: guides/temp-sensor-basic.md
@@ -137,6 +138,7 @@ nav:
           - TWAI: modules/twai.md
           - I2S: modules/i2s.md
           - SD/MMC: modules/sdmmc.md
+          - SD over SPI: modules/sd_spi.md
       - Sensors:
           - Touch: modules/touch.md
           - Temperature: modules/temp_sensor.md
