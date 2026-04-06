@@ -46,8 +46,8 @@ For each target and example:
 Helper-script path:
 
 ```sh
-./blusys.sh build examples/<name> <target>
-./blusys.sh run   examples/<name> <serial-port> <target>
+blusys build examples/<name> <target>
+blusys run   examples/<name> <serial-port> <target>
 ```
 
 Direct `idf.py` pattern:

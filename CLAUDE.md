@@ -8,22 +8,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build and Flash Commands
 
-All commands go through the unified `blusys.sh` script. Default target is `esp32s3`.
+All commands go through the `blusys` CLI. Default target is `esp32s3`. All commands default to the current directory when no project is specified.
 
 ```bash
-./blusys.sh build          examples/<name> [esp32|esp32c3|esp32s3]   # build only
-./blusys.sh flash          examples/<name> [port] [esp32|esp32c3|esp32s3]
-./blusys.sh monitor        examples/<name> [port] [esp32|esp32c3|esp32s3]
-./blusys.sh run            examples/<name> [port] [esp32|esp32c3|esp32s3]   # build+flash+monitor
-./blusys.sh config         examples/<name> [esp32|esp32c3|esp32s3]   # opens menuconfig
-./blusys.sh clean          examples/<name> [esp32|esp32c3|esp32s3]
-./blusys.sh build-examples                                           # build all examples x all targets
-./blusys.sh                examples/<name> [port] [esp32|esp32c3|esp32s3]   # shortcut for 'run'
+blusys create [path]                                              # scaffold project (default: cwd)
+blusys build          [project] [esp32|esp32c3|esp32s3]           # build only
+blusys flash          [project] [port] [esp32|esp32c3|esp32s3]
+blusys monitor        [project] [port] [esp32|esp32c3|esp32s3]
+blusys run            [project] [port] [esp32|esp32c3|esp32s3]    # build+flash+monitor
+blusys config         [project] [esp32|esp32c3|esp32s3]           # opens menuconfig
+blusys menuconfig     [project] [esp32|esp32c3|esp32s3]           # alias for config
+blusys size           [project] [esp32|esp32c3|esp32s3]           # firmware size breakdown
+blusys erase          [project] [port] [esp32|esp32c3|esp32s3]    # erase entire flash
+blusys clean          [project] [esp32|esp32c3|esp32s3]           # remove one target build dir
+blusys fullclean      [project]                                   # remove all target build dirs
+blusys build-examples                                             # build all examples x all targets
+blusys version                                                    # show version and IDF info
+blusys update                                                     # self-update via git pull
 ```
 
-`blusys.sh` configuration:
-- IDF path: `~/.espressif/v5.5.4/esp-idf/`
-- Python env: `~/.espressif/python_env/idf5.5_py3.12_env`
+`blusys` configuration:
+- IDF detection: auto-detects from `$IDF_PATH`, PATH, or `~/.espressif/*/esp-idf/`
+- `BLUSYS_PATH` is exported automatically and used by project CMakeLists.txt
 
 Build artifacts land in `examples/<name>/build-esp32/`, `build-esp32c3/`, `build-esp32s3/`. If Kconfig values change, delete the build directory before rebuilding — stale `sdkconfig` will silently miss new `CONFIG_*` symbols.
 

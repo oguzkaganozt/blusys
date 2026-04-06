@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build and run one Blusys example on your board.
+Install blusys and build your first project.
 
 ## Supported Targets
 
@@ -10,77 +10,80 @@ Build and run one Blusys example on your board.
 - `esp32c3`
 - `esp32s3`
 
-## 1. Export ESP-IDF
+## Prerequisites
 
-If `export.sh` looks for a missing ESP-IDF Python env, first check which one exists:
+Install ESP-IDF v5.5+ following the [official guide](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/).
 
-```sh
-ls ~/.espressif/python_env/
-```
+The standard install places ESP-IDF in `~/.espressif/` which blusys auto-detects.
 
-Then export ESP-IDF:
+## 1. Install Blusys
 
 ```sh
-export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/<your-idf-env>
-source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
+echo 'export PATH="$HOME/.blusys:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-On this machine the installed env is usually `idf5.5_py3.12_env`.
-
-## 2. Build The Smoke Example
-
-Using the helper script:
+Verify the installation:
 
 ```sh
-./blusys.sh build examples/smoke esp32s3
+blusys version
 ```
 
-Or directly with `idf.py`:
+This should show the blusys version and detected ESP-IDF path.
+
+## 2. Create A Project
 
 ```sh
-idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 set-target esp32s3 build
+mkdir ~/my_project && cd ~/my_project
+blusys create
 ```
 
-## 3. Find The Serial Port
+This scaffolds `CMakeLists.txt`, `main/app_main.c`, and other project files in the current directory.
 
-On Linux:
+## 3. Build
+
+```sh
+blusys build esp32s3
+```
+
+## 4. Find The Serial Port
 
 ```sh
 ls /dev/ttyACM* /dev/ttyUSB*
 ```
 
-## 4. Flash And Monitor
-
-Using the helper script:
+## 5. Flash And Monitor
 
 ```sh
-./blusys.sh run examples/smoke /dev/ttyACM0 esp32s3
-```
-
-Or directly with `idf.py`:
-
-```sh
-idf.py -C examples/smoke -B build-esp32s3 -DSDKCONFIG=sdkconfig.esp32s3 -p /dev/ttyACM0 flash monitor
+blusys run /dev/ttyACM0 esp32s3
 ```
 
 Exit the serial monitor with `Ctrl+]`.
 
-## 5. Check The Output
+## 6. Run An Example
 
-Expected output includes lines such as:
+Examples are bundled with blusys. Build one directly:
 
-- `Blusys smoke app`
-- `target: ESP32-S3`
-- `feature_gpio: yes`
+```sh
+blusys build $BLUSYS_PATH/examples/smoke esp32s3
+blusys run $BLUSYS_PATH/examples/smoke /dev/ttyACM0 esp32s3
+```
+
+## Updating Blusys
+
+```sh
+blusys update
+```
 
 ## Important Notes
 
 - the selected build target must match the connected board
-- some examples use configurable pins, so review `menuconfig` when board defaults are not safe
-- if a flash fails because of a target mismatch, rebuild for the correct chip
+- blusys requires ESP-IDF v5.5 or later
+- run `blusys version` to check your detected ESP-IDF
+- if ESP-IDF is not auto-detected, set `export IDF_PATH=/path/to/esp-idf`
 
 ## Next Steps
 
 - read a task guide in `guides/`
-- use `guides/hardware-smoke-tests.md` for wider board validation
 - use `modules/` for API details

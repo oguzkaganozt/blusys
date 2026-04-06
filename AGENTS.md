@@ -20,37 +20,42 @@ Trust scripts and CMake over prose if they disagree.
 
 ## Build And Flash Shortcuts
 
-All commands go through the unified `./blusys.sh` script:
+All commands go through the `blusys` CLI. Commands default to the current directory when no project is given:
 
-- build one example: `./blusys.sh build examples/<name> [esp32|esp32c3|esp32s3]`
-- flash one example: `./blusys.sh flash examples/<name> [port] [esp32|esp32c3|esp32s3]`
-- monitor one example: `./blusys.sh monitor examples/<name> [port] [esp32|esp32c3|esp32s3]`
-- full build/flash/monitor: `./blusys.sh run examples/<name> [port] [esp32|esp32c3|esp32s3]`
-- configure one example: `./blusys.sh config examples/<name> [esp32|esp32c3|esp32s3]`
-- remove one target build dir: `./blusys.sh clean examples/<name> [esp32|esp32c3|esp32s3]`
-- build every example for every target: `./blusys.sh build-examples`
+- scaffold a project: `blusys create [path]` (default: cwd)
+- build: `blusys build [project] [esp32|esp32c3|esp32s3]`
+- flash: `blusys flash [project] [port] [esp32|esp32c3|esp32s3]`
+- monitor: `blusys monitor [project] [port] [esp32|esp32c3|esp32s3]`
+- build/flash/monitor: `blusys run [project] [port] [esp32|esp32c3|esp32s3]`
+- menuconfig: `blusys config [project] [esp32|esp32c3|esp32s3]`
+- firmware size: `blusys size [project] [esp32|esp32c3|esp32s3]`
+- erase flash: `blusys erase [project] [port] [esp32|esp32c3|esp32s3]`
+- clean one target: `blusys clean [project] [esp32|esp32c3|esp32s3]`
+- clean all targets: `blusys fullclean [project]`
+- build all examples: `blusys build-examples`
+- version info: `blusys version`
+- self-update: `blusys update`
 
 High-signal script behavior:
 
+- default project is the current working directory
 - default target is `esp32s3` if nothing else can be inferred
-- helper scripts use build dirs named `build-<target>`
-- if `sdkconfig.<target>` exists, scripts pass it via `-DSDKCONFIG_DEFAULTS`
-- `blusys.sh` auto-detects a serial port only when exactly one `/dev/ttyUSB*` or `/dev/ttyACM*` exists; otherwise pass the port explicitly
+- build dirs are named `build-<target>`
+- if `sdkconfig.<target>` exists, it is passed via `-DSDKCONFIG_DEFAULTS`
+- `blusys` auto-detects a serial port only when exactly one `/dev/ttyUSB*` or `/dev/ttyACM*` exists; otherwise pass the port explicitly
 
 ## Environment Gotchas
 
-- ESP-IDF export is required before direct `idf.py` use; `blusys.sh` does it for you
-- `blusys.sh` assumes:
-  - export script: `/home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh`
-  - default Python env: `/home/oguzkaganozt/.espressif/python_env/idf5.5_py3.12_env`
-- if ESP-IDF export fails in this repo, check missing Python packages in the IDF env; this repo previously needed `tree_sitter` and `tree_sitter_c`
+- `blusys` auto-detects ESP-IDF via: `$IDF_PATH` env var, `idf.py` in PATH, or scanning `~/.espressif/*/esp-idf/`
+- `blusys` exports `BLUSYS_PATH` for use by project CMakeLists.txt
+- if ESP-IDF detection fails, run `blusys version` to debug
 
 ## Verification Expectations
 
 - there is no formal unit-test, lint, or formatter setup
 - closest focused verification is a single smoke build, for example:
-  - `./blusys.sh build examples/smoke esp32s3`
-- full release-style verification is `./blusys.sh build-examples`
+  - `blusys build examples/smoke esp32s3` (from the blusys repo directory)
+- full release-style verification is `blusys build-examples`
 - hardware validation lives in `docs/guides/hardware-smoke-tests.md`
 - concurrency stress examples already exist in `examples/concurrency_*`
 

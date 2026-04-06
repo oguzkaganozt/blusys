@@ -73,7 +73,7 @@ void app_main(void)
 See `examples/button_basic/` for a complete runnable project.
 
 Configure the pin via `idf.py menuconfig` → *Blusys Button Basic Example* and
-flash with `./blusys.sh run examples/button_basic <port>`.
+flash with `blusys run examples/button_basic <port>`.
 
 ## API Reference
 
