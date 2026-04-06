@@ -58,9 +58,9 @@ Pick a peripheral category to get started.
 
     ---
 
-    WiFi, HTTP, MQTT, OTA updates, SNTP time sync, and mDNS discovery.
+    WiFi, HTTP, MQTT, OTA updates, SNTP time sync, mDNS discovery, and BLE.
 
-    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [HTTP](http-basic.md) · [MQTT](mqtt-basic.md) · [OTA](ota-basic.md)
+    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [HTTP](http-basic.md) · [MQTT](mqtt-basic.md) · [OTA](ota-basic.md) · [Bluetooth](bluetooth-basic.md)
 
 -   :material-test-tube:{ .lg .middle } **Testing**
 

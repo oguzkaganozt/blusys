@@ -44,6 +44,6 @@ Every Blusys module is documented with the same structure: **Types** (config str
 
     ---
 
-    [:octicons-arrow-right-24: WiFi](wifi.md) · [HTTP Client](http_client.md) · [HTTP Server](http_server.md) · [MQTT](mqtt.md) · [OTA](ota.md) · [SNTP](sntp.md) · [mDNS](mdns.md)
+    [:octicons-arrow-right-24: WiFi](wifi.md) · [HTTP Client](http_client.md) · [HTTP Server](http_server.md) · [MQTT](mqtt.md) · [OTA](ota.md) · [SNTP](sntp.md) · [mDNS](mdns.md) · [Bluetooth](bluetooth.md)
 
 </div>
