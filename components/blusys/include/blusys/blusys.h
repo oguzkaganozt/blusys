@@ -10,6 +10,7 @@ extern "C" {
 #include "blusys/error.h"
 #include "blusys/gpio.h"
 #include "blusys/http_client.h"
+#include "blusys/http_server.h"
 #include "blusys/i2c.h"
 #include "blusys/i2c_slave.h"
 #include "blusys/i2s.h"
