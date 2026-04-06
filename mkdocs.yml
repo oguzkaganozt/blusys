@@ -102,6 +102,7 @@ nav:
           - SNTP: guides/sntp-basic.md
           - mDNS: guides/mdns-basic.md
           - Bluetooth: guides/bluetooth-basic.md
+          - ESP-NOW: guides/espnow-basic.md
       - Testing:
           - Hardware Smoke Tests: guides/hardware-smoke-tests.md
           - Concurrency Tests: guides/concurrency-tests.md
@@ -147,6 +148,7 @@ nav:
           - SNTP: modules/sntp.md
           - mDNS: modules/mdns.md
           - Bluetooth: modules/bluetooth.md
+          - ESP-NOW: modules/espnow.md
   - Project:
       - Architecture: architecture.md
       - Vision: vision.md

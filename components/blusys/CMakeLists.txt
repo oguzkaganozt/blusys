@@ -2,6 +2,7 @@ set(blusys_sources
     src/common/adc.c
     src/common/dac.c
     src/common/error.c
+    src/common/espnow.c
     src/common/fs.c
     src/common/gpio.c
     src/common/i2c.c
