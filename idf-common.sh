@@ -75,10 +75,27 @@ blusys_sdkconfig_args() {
     local project_dir="$1"
     local target="$2"
     local build_dir="$project_dir/build-$target"
-    local defaults_file="$project_dir/sdkconfig.$target"
+    local common_defaults="$project_dir/sdkconfig.defaults"
+    local target_defaults="$project_dir/sdkconfig.$target"
 
-    if [[ -f "$defaults_file" ]]; then
-        printf '%s\n' "-DSDKCONFIG_DEFAULTS=$defaults_file"
+    # Build a semicolon-separated SDKCONFIG_DEFAULTS list so that
+    # sdkconfig.defaults (common) and sdkconfig.<target> (overrides) are
+    # both applied. Without explicit layering, passing sdkconfig.<target>
+    # alone would suppress ESP-IDF's automatic sdkconfig.defaults pickup.
+    local sdkconfig_defaults=""
+    if [[ -f "$common_defaults" ]]; then
+        sdkconfig_defaults="$common_defaults"
+    fi
+    if [[ -f "$target_defaults" ]]; then
+        if [[ -n "$sdkconfig_defaults" ]]; then
+            sdkconfig_defaults="${sdkconfig_defaults};${target_defaults}"
+        else
+            sdkconfig_defaults="$target_defaults"
+        fi
+    fi
+
+    if [[ -n "$sdkconfig_defaults" ]]; then
+        printf '%s\n' "-DSDKCONFIG_DEFAULTS=$sdkconfig_defaults"
     fi
 
     printf '%s\n' "-DSDKCONFIG=$build_dir/sdkconfig"
