@@ -32,7 +32,7 @@ On this machine the installed env is usually `idf5.5_py3.12_env`.
 Using the helper script:
 
 ```sh
-./build.sh examples/smoke esp32s3
+./blusys.sh build examples/smoke esp32s3
 ```
 
 Or directly with `idf.py`:
@@ -54,7 +54,7 @@ ls /dev/ttyACM* /dev/ttyUSB*
 Using the helper script:
 
 ```sh
-./run.sh examples/smoke /dev/ttyACM0 esp32s3
+./blusys.sh run examples/smoke /dev/ttyACM0 esp32s3
 ```
 
 Or directly with `idf.py`:

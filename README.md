@@ -51,13 +51,13 @@ source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
 Build one example:
 
 ```sh
-./build.sh examples/smoke esp32s3
+./blusys.sh build examples/smoke esp32s3
 ```
 
 Flash and monitor it:
 
 ```sh
-./run.sh examples/smoke /dev/ttyACM0 esp32s3
+./blusys.sh run examples/smoke /dev/ttyACM0 esp32s3
 ```
 
 The build target must match the connected board.

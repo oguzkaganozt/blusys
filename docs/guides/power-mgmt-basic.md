@@ -72,8 +72,8 @@ The `name` pointer passed to `blusys_pm_lock_create` is stored by ESP-IDF withou
 See `examples/power_mgmt_basic/` for a runnable example that demonstrates configuration, readback, and both lock types.
 
 ```bash
-./build.sh examples/power_mgmt_basic esp32s3
-./run.sh   examples/power_mgmt_basic <port> esp32s3
+./blusys.sh build examples/power_mgmt_basic esp32s3
+./blusys.sh run   examples/power_mgmt_basic <port> esp32s3
 ```
 
 ## API Reference

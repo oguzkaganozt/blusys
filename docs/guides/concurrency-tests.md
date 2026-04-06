@@ -1,6 +1,6 @@
 # Concurrency Tests
 
-Four stress tests that verify concurrent access to the same peripheral handle from two FreeRTOS tasks. Run each with `./run.sh examples/<name>`.
+Four stress tests that verify concurrent access to the same peripheral handle from two FreeRTOS tasks. Run each with `./blusys.sh run examples/<name>`.
 
 ---
 
