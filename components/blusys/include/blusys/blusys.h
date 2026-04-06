@@ -34,6 +34,7 @@ extern "C" {
 #include "blusys/version.h"
 #include "blusys/wdt.h"
 #include "blusys/nvs.h"
+#include "blusys/ota.h"
 #include "blusys/wifi.h"
 
 #ifdef __cplusplus

@@ -21,7 +21,7 @@ It provides a smaller API than raw ESP-IDF for common embedded tasks while keepi
 - storage: `sdmmc`, `nvs`
 - sensors: `temp_sensor`
 - system services: `wdt`, `sleep`
-- connectivity: `wifi`, `http_client`, `http_server`, `mqtt`
+- connectivity: `wifi`, `http_client`, `http_server`, `mqtt`, `ota`
 
 Target notes:
 - `pcnt` is available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
@@ -108,11 +108,12 @@ The build target must match the connected board.
 - `examples/http_client_basic/`
 - `examples/http_server_basic/`
 - `examples/mqtt_basic/`
+- `examples/ota_basic/`
 
 ## Project Status
 
 `v2.0.0` is released.
 Full HAL peripheral coverage is complete, including symmetric counterparts (`i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`) and system services (`wdt`, `sleep`, `mcpwm`, `sdm`, `sdmmc`, `temp_sensor`).
-`V3` (connectivity and system services) is in progress: `wifi`, `nvs`, `http_client`, `mqtt`, and `http_server` are done; next up are `ota`, `bluetooth`, `eth`, and `usb`.
+`V3` (connectivity and system services) is in progress: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, and `ota` are done; next up are `bluetooth`, `eth`, and `usb`.
 
 Detailed implementation tracking remains in `PROGRESS.md`.
