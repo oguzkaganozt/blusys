@@ -36,6 +36,8 @@ mkdocs build --strict # must pass before any merge
 
 `mkdocs build --strict` is the doc gate — it fails on broken nav references or missing pages.
 
+The site uses MkDocs Material with navigation tabs: **Home**, **Guides**, **API Reference**, **Project**. The nav hierarchy in `mkdocs.yml` groups pages under peripheral categories (Core Peripherals, Analog, Timers & Counters, Bus, Sensors, System, Networking). When adding pages, place them in the correct category in both the Guides and API Reference tabs. Card grid landing pages live at `docs/guides/index.md` and `docs/modules/index.md` — update them when adding a new module.
+
 ## Code Architecture
 
 ### Layer Model
@@ -141,9 +143,9 @@ Each example is a standalone ESP-IDF project:
 - `Kconfig.projbuild` belongs in `main/`, not the project root
 
 ### 9. Docs
-- `docs/modules/<module>.md` — API reference (see `docs/modules/temp_sensor.md` as style reference)
-- `docs/guides/<module>-basic.md` — task guide (see `docs/guides/temp-sensor-basic.md`)
-- Add both to `mkdocs.yml` under Guides and API Reference; run `mkdocs build --strict` to verify
+- `docs/modules/<module>.md` — API reference. Use the structured format: one-line description, tip admonition linking to the guide, Target Support table, Types (full typedef code blocks), Functions (signatures + parameters + returns), Lifecycle, Thread Safety, Limitations. See `docs/modules/wifi.md` as the style reference.
+- `docs/guides/<module>-basic.md` — task guide. Follow Problem Statement → Prerequisites → Minimal Example → APIs Used → Expected Behavior → Common Mistakes → Example App → API Reference link. See `docs/guides/temp-sensor-basic.md` as reference.
+- Add both to `mkdocs.yml` nav under the appropriate peripheral category in both Guides and API Reference tabs; run `mkdocs build --strict` to verify
 
 ### 10. PROGRESS.md
 - Add module to Recent Work, Public API list, and Validation Snapshot
