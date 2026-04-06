@@ -40,27 +40,35 @@ Async support includes:
 
 ## Quick Start
 
-Export ESP-IDF:
+Install blusys (once):
 
 ```sh
-ls ~/.espressif/python_env/
-export IDF_PYTHON_ENV_PATH=/home/oguzkaganozt/.espressif/python_env/<your-idf-env>
-source /home/oguzkaganozt/.espressif/v5.5.4/esp-idf/export.sh
+git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
+echo 'export PATH="$HOME/.blusys:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-Build one example:
+Create and build a project:
 
 ```sh
-./blusys.sh build examples/smoke esp32s3
+mkdir ~/my_project && cd ~/my_project
+blusys create
+blusys build esp32s3
 ```
 
-Flash and monitor it:
+Flash and monitor:
 
 ```sh
-./blusys.sh run examples/smoke /dev/ttyACM0 esp32s3
+blusys run /dev/ttyACM0 esp32s3
 ```
 
-The build target must match the connected board.
+Check your setup:
+
+```sh
+blusys version
+```
+
+The build target must match the connected board. ESP-IDF v5.5+ is required and auto-detected.
 
 ## Documentation
 
