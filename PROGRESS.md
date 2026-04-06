@@ -43,14 +43,14 @@ Connectivity and system services.
 
 - status: `in_progress`
 - done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`
-- planned (in order): `eth`, `usb`
+- planned (in order): `eth`, `usb`, `fs`, `espnow`, `ble_gatt`
 
 ### V4
 
 Advanced peripherals and ecosystem-level helpers.
 
 - status: `not_started`
-- planned: `ana_cmpr`, `parlio`, `lcd`, `usb_serial_jtag`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, provisioning, higher-level service helpers
+- planned: `lcd`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, provisioning, higher-level service helpers
 
 ## Milestones
 
@@ -61,7 +61,7 @@ Advanced peripherals and ecosystem-level helpers.
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
-| V3 | in_progress | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth` done; next: `eth`, `usb` |
+| V3 | in_progress | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth` done; next: `eth`, `usb`, `fs`, `espnow`, `ble_gatt` |
 | V4 | not_started | `ana_cmpr`, `parlio`, `lcd`, `usb_serial_jtag`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
 ## Recent Work
@@ -187,7 +187,7 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V3` — next: `eth` (bluetooth complete)
+1. continue `V3` — next: `eth`, then `usb`, `fs` (SPIFFS/FAT filesystem), `espnow` (peer-to-peer wireless), `ble_gatt` (BLE GATT server/client)
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
 3. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
 4. keep the first `touch` cut limited to one-pin polling reads until a concrete need appears for thresholds, callbacks, or sleep integration
