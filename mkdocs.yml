@@ -63,6 +63,7 @@ nav:
       - Core Peripherals:
           - GPIO: guides/gpio-basic.md
           - Button: guides/button-basic.md
+          - LED Strip: guides/led-strip-basic.md
           - UART (Blocking): guides/uart-loopback.md
           - UART (Async): guides/uart-async.md
           - I2C Master: guides/i2c-scan.md
@@ -114,6 +115,7 @@ nav:
       - Core Peripherals:
           - GPIO: modules/gpio.md
           - Button: modules/button.md
+          - LED Strip: modules/led_strip.md
           - UART: modules/uart.md
           - I2C Master: modules/i2c.md
           - I2C Slave: modules/i2c_slave.md

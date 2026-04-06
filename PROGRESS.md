@@ -53,7 +53,7 @@ Production essentials.
 - status: `in_progress`
 - implementation order:
   1. `button` — GPIO-based debounce/long-press abstraction ✓
-  2. `led_strip` — addressable LEDs (WS2812, SK6812) via RMT
+  2. `led_strip` — addressable LEDs (WS2812, SK6812) via RMT ✓
   3. `console` — interactive UART console with command registration
   4. `fatfs` — FAT filesystem on internal flash with wear levelling
   5. `sd_spi` — SD card over SPI bus (builds on `fatfs`)
