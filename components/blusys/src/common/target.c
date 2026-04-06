@@ -25,5 +25,5 @@ bool blusys_target_supports(blusys_feature_t feature)
         return false;
     }
 
-    return (caps->feature_mask & (1u << (unsigned) feature)) != 0;
+    return (caps->feature_mask & (1ull << (unsigned) feature)) != 0;
 }

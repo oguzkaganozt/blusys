@@ -5,7 +5,7 @@
 
 #include "blusys/target.h"
 
-#define BLUSYS_FEATURE_MASK(feature) (1u << (unsigned) (feature))
+#define BLUSYS_FEATURE_MASK(feature) (1ull << (unsigned) (feature))
 
 #define BLUSYS_BASE_FEATURE_MASK \
     (BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_GPIO) | \
@@ -33,7 +33,8 @@
      BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_OTA) | \
      BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_SNTP) | \
      BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_MDNS) | \
-     BLUSYS_BLUETOOTH_FEATURE_MASK)
+     BLUSYS_BLUETOOTH_FEATURE_MASK | \
+     BLUSYS_FS_FEATURE_MASK)
 
 #define BLUSYS_NVS_FEATURE_MASK BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_NVS)
 #define BLUSYS_PCNT_FEATURE_MASK BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_PCNT)
@@ -51,12 +52,13 @@
 #define BLUSYS_SNTP_FEATURE_MASK BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_SNTP)
 #define BLUSYS_MDNS_FEATURE_MASK BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_MDNS)
 #define BLUSYS_BLUETOOTH_FEATURE_MASK BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_BLUETOOTH)
+#define BLUSYS_FS_FEATURE_MASK        BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_FS)
 
 typedef struct {
     blusys_target_t target;
     const char *name;
     uint8_t cpu_cores;
-    uint32_t feature_mask;
+    uint64_t feature_mask;
 } blusys_target_caps_t;
 
 const blusys_target_caps_t *blusys_target_caps_get(void);
