@@ -291,6 +291,10 @@ blusys_err_t blusys_mcpwm_close(blusys_mcpwm_t *mcpwm)
         return blusys_translate_esp_err(esp_err);
     }
 
+    /* Release lock before the delay — the timer has been commanded to stop
+       on empty, so no new PWM events will fire after this tick. */
+    blusys_lock_give(&mcpwm->lock);
+
     vTaskDelay(pdMS_TO_TICKS(1));   /* wait for current period to complete before disabling */
     mcpwm_timer_disable(mcpwm->timer);
     mcpwm_del_generator(mcpwm->gen_b);
@@ -298,8 +302,6 @@ blusys_err_t blusys_mcpwm_close(blusys_mcpwm_t *mcpwm)
     mcpwm_del_comparator(mcpwm->cmpr);
     mcpwm_del_operator(mcpwm->oper);
     mcpwm_del_timer(mcpwm->timer);
-
-    blusys_lock_give(&mcpwm->lock);
     blusys_lock_deinit(&mcpwm->lock);
     free_slot(mcpwm->slot);
     free(mcpwm);

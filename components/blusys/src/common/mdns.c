@@ -149,19 +149,17 @@ blusys_err_t blusys_mdns_query(blusys_mdns_t *mdns,
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    blusys_err_t err = blusys_lock_take(&mdns->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
     int query_timeout = (timeout_ms < 0) ? 5000 : timeout_ms;
 
+    /* mdns_query_ptr() blocks for up to query_timeout ms.  Do NOT hold the
+       blusys_lock across this call — it would stall add_service / remove_service
+       for the entire query duration.  The ESP-IDF mDNS component is internally
+       thread-safe, so concurrent add/query/remove is fine without our lock. */
     mdns_result_t *esp_results = NULL;
     esp_err_t esp_err = mdns_query_ptr(service_type, proto_to_str(proto),
                                         query_timeout, (int)max_results,
                                         &esp_results);
     if (esp_err != ESP_OK) {
-        blusys_lock_give(&mdns->lock);
         return blusys_translate_esp_err(esp_err);
     }
 
@@ -196,7 +194,6 @@ blusys_err_t blusys_mdns_query(blusys_mdns_t *mdns,
     }
 
     mdns_query_results_free(esp_results);
-    blusys_lock_give(&mdns->lock);
 
     *out_count = count;
     return BLUSYS_OK;

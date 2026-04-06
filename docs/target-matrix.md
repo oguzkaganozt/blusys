@@ -18,12 +18,12 @@ These modules are in the base feature mask and work on every supported target:
 
 | Category | Modules |
 |----------|---------|
-| Core Peripherals | `gpio`, `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave` |
+| Core Peripherals | `gpio`, `button`, `led_strip`, `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave` |
 | Analog | `adc`, `sdm`, `pwm` |
 | Timers & Counters | `timer`, `rmt`, `rmt_rx` |
-| Bus | `twai`, `i2s`, `i2s_rx` |
-| System | `system`, `target`, `version`, `error`, `nvs`, `fs`, `wdt`, `sleep` |
-| Networking | `wifi`, `http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `bluetooth`, `ble_gatt`, `espnow` |
+| Bus | `twai`, `i2s`, `i2s_rx`, `lcd` |
+| System | `system`, `target`, `version`, `error`, `nvs`, `fs`, `fatfs`, `sd_spi`, `console`, `wdt`, `sleep`, `power_mgmt` |
+| Networking | `wifi`, `wifi_prov`, `http_client`, `http_server`, `mqtt`, `ws_client`, `ota`, `sntp`, `mdns`, `bluetooth`, `ble_gatt`, `espnow` |
 
 ### Target-Specific Modules
 

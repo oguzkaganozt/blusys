@@ -346,10 +346,16 @@ blusys_err_t blusys_pcnt_stop(blusys_pcnt_t *pcnt)
     err = blusys_translate_esp_err(pcnt_unit_stop(pcnt->unit_handle));
     if (err == BLUSYS_OK) {
         blusys_pcnt_set_started(pcnt, false);
+    }
+
+    /* Release lock before the spin-wait — the unit is already stopped so no
+       new watch-point callbacks can fire; this drains any in-flight one. */
+    blusys_lock_give(&pcnt->lock);
+
+    if (err == BLUSYS_OK) {
         blusys_pcnt_wait_for_callback_idle(pcnt);
     }
 
-    blusys_lock_give(&pcnt->lock);
     return err;
 }
 

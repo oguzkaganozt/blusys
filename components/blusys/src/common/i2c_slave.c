@@ -155,6 +155,12 @@ blusys_err_t blusys_i2c_slave_receive(blusys_i2c_slave_t *slave,
         return err;
     }
 
+    /* Reject concurrent receives — waiting_task serves as the busy indicator. */
+    if (slave->waiting_task != NULL) {
+        blusys_lock_give(&slave->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
     slave->rx_count     = 0u;
     slave->rx_requested = size;
     slave->waiting_task = xTaskGetCurrentTaskHandle();
@@ -166,18 +172,21 @@ blusys_err_t blusys_i2c_slave_receive(blusys_i2c_slave_t *slave,
         return blusys_translate_esp_err(esp_err);
     }
 
+    /* Release lock before blocking — the ISR notifies via task notification,
+       not through the blusys_lock.  waiting_task prevents a second caller
+       from starting another receive while we are blocked. */
+    blusys_lock_give(&slave->lock);
+
     notify_val = ulTaskNotifyTake(pdTRUE,
                                   (timeout_ms < 0) ? portMAX_DELAY
                                                    : (TickType_t) pdMS_TO_TICKS(timeout_ms));
     if (notify_val == 0u) {
         slave->waiting_task = NULL;
-        blusys_lock_give(&slave->lock);
         return BLUSYS_ERR_TIMEOUT;
     }
 
     *bytes_received = slave->rx_count;
 
-    blusys_lock_give(&slave->lock);
     return BLUSYS_OK;
 }
 

@@ -84,7 +84,7 @@ Modules in `BLUSYS_BASE_FEATURE_MASK` are available on all three targets. Target
 | `temp_sensor`|       | ✓        | ✓        |
 | `mcpwm`      | ✓     |          | ✓        |
 
-All other modules (gpio, uart, i2c, spi, pwm, adc, timer, rmt, twai, i2s, wdt, sleep, sdm, i2c_slave, spi_slave, i2s_rx, rmt_rx, wifi, nvs, http_client, mqtt, http_server, ota, sntp, mdns, bluetooth, fs, espnow, ble_gatt) are in `BLUSYS_BASE_FEATURE_MASK` and available on all targets.
+All other modules (gpio, uart, i2c, spi, pwm, adc, timer, rmt, twai, i2s, wdt, sleep, sdm, i2c_slave, spi_slave, i2s_rx, rmt_rx, wifi, nvs, http_client, mqtt, http_server, ota, sntp, mdns, bluetooth, fs, espnow, ble_gatt, button, led_strip, console, fatfs, sd_spi, power_mgmt, ws_client, wifi_prov, lcd) are in `BLUSYS_BASE_FEATURE_MASK` and available on all targets.
 
 **Combined headers:** `i2s.h` declares both `blusys_i2s_tx_*` and `blusys_i2s_rx_*`. `rmt.h` declares both `blusys_rmt_*` (TX) and `blusys_rmt_rx_*`. Their implementations live in separate `.c` files (`i2s.c` / `i2s_rx.c`, `rmt.c` / `rmt_rx.c`).
 

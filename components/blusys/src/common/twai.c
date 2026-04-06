@@ -353,14 +353,21 @@ blusys_err_t blusys_twai_close(blusys_twai_t *twai)
         blusys_twai_set_started(twai, false);
     }
 
+    /* Release lock before the spin-wait — closing flag prevents concurrent
+       callers from using the handle.  The node is already disabled so no new
+       RX callbacks can fire; this wait drains any in-flight one. */
+    blusys_lock_give(&twai->lock);
+
     blusys_twai_wait_for_callback_idle(twai);
 
     err = blusys_translate_esp_err(twai_node_delete(twai->node_handle));
     if (err != BLUSYS_OK) {
-        goto fail;
+        blusys_lock_take(&twai->lock, BLUSYS_LOCK_WAIT_FOREVER);
+        blusys_twai_set_closing(twai, false);
+        blusys_lock_give(&twai->lock);
+        return err;
     }
 
-    blusys_lock_give(&twai->lock);
     blusys_lock_deinit(&twai->lock);
     free(twai);
     return BLUSYS_OK;

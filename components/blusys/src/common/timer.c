@@ -217,16 +217,20 @@ blusys_err_t blusys_timer_close(blusys_timer_t *timer)
         goto fail;
     }
 
-    /* Wait for any in-flight ISR callback to finish before freeing the handle. */
+    /* Release lock before the spin-wait — closing flag prevents concurrent
+       callers from using the handle.  The timer is already disabled so no
+       new ISR callbacks can fire; this wait is only for an in-flight one. */
+    blusys_lock_give(&timer->lock);
+
     blusys_timer_wait_for_callback_idle(timer);
 
     esp_err = gptimer_del_timer(timer->handle);
     if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail;
+        blusys_lock_deinit(&timer->lock);
+        free(timer);
+        return blusys_translate_esp_err(esp_err);
     }
 
-    blusys_lock_give(&timer->lock);
     blusys_lock_deinit(&timer->lock);
     free(timer);
     return BLUSYS_OK;

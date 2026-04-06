@@ -181,6 +181,12 @@ blusys_err_t blusys_rmt_rx_read(blusys_rmt_rx_t *rmt_rx,
         return err;
     }
 
+    /* Reject concurrent receives — waiting_task serves as the busy indicator. */
+    if (rmt_rx->waiting_task != NULL) {
+        blusys_lock_give(&rmt_rx->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
     rmt_rx->pulse_count  = 0u;
     rmt_rx->waiting_task = xTaskGetCurrentTaskHandle();
 
@@ -197,16 +203,20 @@ blusys_err_t blusys_rmt_rx_read(blusys_rmt_rx_t *rmt_rx,
         return blusys_translate_esp_err(esp_err);
     }
 
+    /* Release lock before blocking — the ISR notifies via task notification,
+       not through the blusys_lock, so no deadlock.  waiting_task prevents
+       a second caller from starting another receive while we are blocked. */
+    blusys_lock_give(&rmt_rx->lock);
+
     notify_val = ulTaskNotifyTake(pdTRUE,
                                   (timeout_ms < 0) ? portMAX_DELAY
                                                    : (TickType_t) pdMS_TO_TICKS(timeout_ms));
     if (notify_val == 0u) {
         rmt_rx->waiting_task = NULL;
-        blusys_lock_give(&rmt_rx->lock);
         return BLUSYS_ERR_TIMEOUT;
     }
 
-    /* Convert rmt_symbol_word_t pairs → blusys_rmt_pulse_t flat array */
+    /* ISR has finished writing pulse_count / symbol_buf — safe to read. */
     size_t sym_count = rmt_rx->pulse_count / 2u;
     size_t out = 0u;
 
@@ -226,8 +236,8 @@ blusys_err_t blusys_rmt_rx_read(blusys_rmt_rx_t *rmt_rx,
     }
 
     *out_count = out;
+    rmt_rx->waiting_task = NULL;
 
-    blusys_lock_give(&rmt_rx->lock);
     return BLUSYS_OK;
 }
 
