@@ -181,8 +181,10 @@ blusys_err_t blusys_mqtt_connect(blusys_mqtt_t *handle)
                          MQTT_CONNECTED_BIT | MQTT_DISCONNECTED_BIT | MQTT_ERROR_BIT);
 
     esp_err_t esp_err = esp_mqtt_client_start(handle->esp_handle);
+
+    blusys_lock_give(&handle->lock);
+
     if (esp_err != ESP_OK) {
-        blusys_lock_give(&handle->lock);
         return blusys_translate_esp_err(esp_err);
     }
 
@@ -192,17 +194,13 @@ blusys_err_t blusys_mqtt_connect(blusys_mqtt_t *handle)
                                             pdFALSE, pdFALSE, ticks);
 
     if (bits & MQTT_CONNECTED_BIT) {
-        err = BLUSYS_OK;
-    } else if (bits & (MQTT_ERROR_BIT | MQTT_DISCONNECTED_BIT)) {
-        esp_mqtt_client_stop(handle->esp_handle);
-        err = BLUSYS_ERR_IO;
-    } else {
-        esp_mqtt_client_stop(handle->esp_handle);
-        err = BLUSYS_ERR_TIMEOUT;
+        return BLUSYS_OK;
     }
 
-    blusys_lock_give(&handle->lock);
-    return err;
+    /* Connection failed or timed out — stop the client (esp_mqtt_client_stop is thread-safe) */
+    esp_mqtt_client_stop(handle->esp_handle);
+
+    return (bits & (MQTT_ERROR_BIT | MQTT_DISCONNECTED_BIT)) ? BLUSYS_ERR_IO : BLUSYS_ERR_TIMEOUT;
 }
 
 blusys_err_t blusys_mqtt_disconnect(blusys_mqtt_t *handle)

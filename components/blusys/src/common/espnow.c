@@ -212,7 +212,11 @@ blusys_err_t blusys_espnow_close(blusys_espnow_t *handle)
     esp_event_loop_delete_default();
     esp_netif_deinit();
 
-    blusys_lock_take(&s_espnow_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&s_espnow_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        blusys_lock_give(&handle->lock);
+        return err;
+    }
     s_handle = NULL;
     blusys_lock_give(&s_espnow_global_lock);
 

@@ -15,6 +15,7 @@
 
 struct blusys_fs {
     char          base_path[32];
+    char          partition_label[17]; /* stored to unregister the correct SPIFFS partition */
     blusys_lock_t lock;
 };
 
@@ -49,10 +50,13 @@ blusys_err_t blusys_fs_mount(const blusys_fs_config_t *config, blusys_fs_t **out
     }
 
     strncpy(h->base_path, config->base_path, sizeof(h->base_path) - 1);
+    if (config->partition_label != NULL) {
+        strncpy(h->partition_label, config->partition_label, sizeof(h->partition_label) - 1);
+    }
 
     esp_vfs_spiffs_conf_t spiffs_conf = {
         .base_path              = h->base_path,
-        .partition_label        = config->partition_label,
+        .partition_label        = (h->partition_label[0] != '\0') ? h->partition_label : NULL,
         .max_files              = (config->max_files > 0) ? config->max_files
                                                           : BLUSYS_FS_DEFAULT_MAX_FILES,
         .format_if_mount_failed = config->format_if_mount_failed,
@@ -83,7 +87,8 @@ blusys_err_t blusys_fs_unmount(blusys_fs_t *fs)
         return err;
     }
 
-    esp_err_t esp_err = esp_vfs_spiffs_unregister(NULL);
+    esp_err_t esp_err = esp_vfs_spiffs_unregister(
+        (fs->partition_label[0] != '\0') ? fs->partition_label : NULL);
     err = blusys_translate_esp_err(esp_err);
 
     blusys_lock_give(&fs->lock);

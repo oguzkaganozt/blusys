@@ -213,8 +213,10 @@ blusys_err_t blusys_wifi_connect(blusys_wifi_t *wifi, int timeout_ms)
     xEventGroupClearBits(wifi->event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT);
 
     esp_err_t esp_err = esp_wifi_connect();
+
+    blusys_lock_give(&wifi->lock);
+
     if (esp_err != ESP_OK) {
-        blusys_lock_give(&wifi->lock);
         return blusys_translate_esp_err(esp_err);
     }
 
@@ -224,15 +226,12 @@ blusys_err_t blusys_wifi_connect(blusys_wifi_t *wifi, int timeout_ms)
                                             pdFALSE, pdFALSE, ticks);
 
     if (bits & WIFI_CONNECTED_BIT) {
-        err = BLUSYS_OK;
+        return BLUSYS_OK;
     } else if (bits & WIFI_FAIL_BIT) {
-        err = BLUSYS_ERR_IO;
+        return BLUSYS_ERR_IO;
     } else {
-        err = BLUSYS_ERR_TIMEOUT;
+        return BLUSYS_ERR_TIMEOUT;
     }
-
-    blusys_lock_give(&wifi->lock);
-    return err;
 }
 
 blusys_err_t blusys_wifi_disconnect(blusys_wifi_t *wifi)

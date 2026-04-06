@@ -415,9 +415,10 @@ fail_nimble:
     /* Global lock was already released before nimble_port_freertos_init */
     nimble_port_stop();
     nimble_port_deinit();
-    blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
-    s_gatt_handle = NULL;
-    blusys_lock_give(&s_gatt_global_lock);
+    if (blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+        s_gatt_handle = NULL;
+        blusys_lock_give(&s_gatt_global_lock);
+    }
     free_nimble_tables(h);
     vEventGroupDelete(h->sync_event);
     blusys_lock_deinit(&h->lock);
@@ -450,7 +451,11 @@ blusys_err_t blusys_ble_gatt_close(blusys_ble_gatt_t *handle)
 
     ble_gap_adv_stop();
 
-    blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    err = blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        blusys_lock_give(&handle->lock);
+        return err;
+    }
     s_gatt_handle = NULL;
     blusys_lock_give(&s_gatt_global_lock);
 
