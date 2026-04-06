@@ -4,13 +4,32 @@ set -euo pipefail
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-BLUSYS_REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+BLUSYS_REPO_ROOT="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 BLUSYS_DEFAULT_TARGET="esp32s3"
 BLUSYS_DEFAULT_PROJECT="."
 BLUSYS_MIN_IDF_MAJOR=5
 BLUSYS_MIN_IDF_MINOR=5
 
+BLUSYS_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/blusys"
+BLUSYS_CONFIG_FILE="$BLUSYS_CONFIG_DIR/config"
+
 export BLUSYS_PATH="$BLUSYS_REPO_ROOT"
+
+# Load saved config (IDF_PATH etc.) — env vars take precedence
+if [[ -f "$BLUSYS_CONFIG_FILE" ]]; then
+    while IFS='=' read -r key value; do
+        [[ -z "$key" || "$key" = \#* ]] && continue
+        key="$(printf '%s' "$key" | tr -d '[:space:]')"
+        value="$(printf '%s' "$value" | sed 's/^[[:space:]]*//')"
+        case "$key" in
+            IDF_PATH)
+                if [[ -z "${IDF_PATH:-}" ]]; then
+                    export IDF_PATH="$value"
+                fi
+                ;;
+        esac
+    done < "$BLUSYS_CONFIG_FILE"
+fi
 
 # ── Utility Functions ────────────────────────────────────────────────────────
 
@@ -343,6 +362,7 @@ Commands:
   clean            Remove build directory for one target
   fullclean        Remove build directories for all targets
   build-examples   Build all examples for all targets
+  config-idf       Select default ESP-IDF version
   version          Show blusys and ESP-IDF version info
   update           Self-update blusys via git pull
   help             Show this help message
@@ -421,6 +441,12 @@ blusys_help_version() {
 blusys_help_update() {
     printf 'Usage: blusys update\n'
     printf '\nSelf-update blusys via git pull from the installation directory.\n'
+}
+
+blusys_help_config_idf() {
+    printf 'Usage: blusys config-idf\n'
+    printf '\nSelect the default ESP-IDF version from detected installations.\n'
+    printf 'Saved to %s\n' "${XDG_CONFIG_HOME:-\$HOME/.config}/blusys/config"
 }
 
 # ── Subcommands ──────────────────────────────────────────────────────────────
@@ -528,6 +554,10 @@ cmd_version() {
     else
         printf 'ESP-IDF: not found\n'
     fi
+
+    if [[ -f "$BLUSYS_CONFIG_FILE" ]]; then
+        printf 'config: %s\n' "$BLUSYS_CONFIG_FILE"
+    fi
 }
 
 cmd_update() {
@@ -538,6 +568,66 @@ cmd_update() {
         return 1
     }
     printf 'Done.\n'
+}
+
+cmd_config_idf() {
+    # Discover all ESP-IDF installations
+    local -a idf_paths=() idf_labels=()
+
+    for candidate_dir in "$HOME"/.espressif/*/esp-idf; do
+        [[ -d "$candidate_dir" && -f "$candidate_dir/export.sh" ]] || continue
+        local version_dir
+        version_dir="$(basename "$(dirname "$candidate_dir")")"
+        idf_paths+=("$candidate_dir")
+        idf_labels+=("$version_dir")
+    done
+
+    if [[ ${#idf_paths[@]} -eq 0 ]]; then
+        printf 'No ESP-IDF installations found in ~/.espressif/\n' >&2
+        printf 'Install ESP-IDF: https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/\n' >&2
+        exit 1
+    fi
+
+    # Show current setting
+    local current_idf=""
+    if [[ -f "$BLUSYS_CONFIG_FILE" ]]; then
+        current_idf="$(grep '^IDF_PATH=' "$BLUSYS_CONFIG_FILE" 2>/dev/null | cut -d= -f2-)" || true
+    fi
+
+    printf 'Detected ESP-IDF installations:\n'
+    for i in "${!idf_paths[@]}"; do
+        local marker="  "
+        if [[ "${idf_paths[$i]}" = "$current_idf" ]]; then
+            marker="* "
+        fi
+        printf '  %s%d) %-10s %s\n' "$marker" "$((i + 1))" "${idf_labels[$i]}" "${idf_paths[$i]}"
+    done
+
+    if [[ -n "$current_idf" ]]; then
+        printf '\n  * = current default\n'
+    fi
+
+    printf '\nSelect default [1-%d]: ' "${#idf_paths[@]}"
+    read -r choice
+
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [[ "$choice" -lt 1 || "$choice" -gt ${#idf_paths[@]} ]]; then
+        printf 'Invalid selection.\n' >&2
+        exit 1
+    fi
+
+    local selected_path="${idf_paths[$((choice - 1))]}"
+
+    mkdir -p "$BLUSYS_CONFIG_DIR"
+
+    # Write or update config file
+    if [[ -f "$BLUSYS_CONFIG_FILE" ]]; then
+        # Remove existing IDF_PATH line and append new one
+        grep -v '^IDF_PATH=' "$BLUSYS_CONFIG_FILE" > "$BLUSYS_CONFIG_FILE.tmp" || true
+        mv "$BLUSYS_CONFIG_FILE.tmp" "$BLUSYS_CONFIG_FILE"
+    fi
+    printf 'IDF_PATH=%s\n' "$selected_path" >> "$BLUSYS_CONFIG_FILE"
+
+    printf 'Saved: IDF_PATH=%s\n' "$selected_path"
 }
 
 cmd_build() {
@@ -774,6 +864,7 @@ main() {
         clean)          shift; cmd_clean "$@" ;;
         fullclean)      shift; cmd_fullclean "$@" ;;
         build-examples) shift; cmd_build_examples "$@" ;;
+        config-idf)     shift; cmd_config_idf "$@" ;;
         version|-v|--version) shift; cmd_version "$@" ;;
         update)         shift; cmd_update "$@" ;;
         help|-h|--help)
