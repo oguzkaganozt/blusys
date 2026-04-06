@@ -34,9 +34,9 @@ Pick a peripheral category to get started.
 
     ---
 
-    TWAI/CAN frames, I2S audio, and SD/MMC block access.
+    TWAI/CAN frames, I2S audio, and SD card access over SDMMC or SPI.
 
-    [:octicons-arrow-right-24: TWAI](twai-basic.md) · [I2S TX](i2s-basic.md) · [I2S RX](i2s-rx-basic.md) · [SD/MMC](sdmmc-basic.md)
+    [:octicons-arrow-right-24: TWAI](twai-basic.md) · [I2S TX](i2s-basic.md) · [I2S RX](i2s-rx-basic.md) · [SD/MMC](sdmmc-basic.md) · [SD over SPI](sd-spi-basic.md)
 
 -   :material-thermometer:{ .lg .middle } **Sensors**
 

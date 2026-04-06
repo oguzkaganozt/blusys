@@ -20,6 +20,7 @@ set(blusys_sources
     src/common/rmt.c
     src/common/rmt_rx.c
     src/common/sdm.c
+    src/common/sd_spi.c
     src/common/sdmmc.c
     src/common/sleep.c
     src/common/spi.c

@@ -30,6 +30,7 @@ extern "C" {
 #include "blusys/pcnt.h"
 #include "blusys/pwm.h"
 #include "blusys/rmt.h"
+#include "blusys/sd_spi.h"
 #include "blusys/sdm.h"
 #include "blusys/sdmmc.h"
 #include "blusys/sleep.h"
