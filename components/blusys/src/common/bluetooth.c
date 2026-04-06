@@ -11,7 +11,6 @@
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
 
-#include "esp_nimble_hci.h"
 #include "nimble/nimble_port.h"
 #include "nimble/nimble_port_freertos.h"
 #include "host/ble_hs.h"
@@ -126,13 +125,11 @@ blusys_err_t blusys_bluetooth_open(const blusys_bluetooth_config_t *config,
     strncpy(h->device_name, config->device_name, sizeof(h->device_name) - 1);
     s_active_handle = h;
 
-    esp_err_t esp_err = esp_nimble_hci_and_controller_init();
+    esp_err_t esp_err = nimble_port_init();
     if (esp_err != ESP_OK) {
         err = blusys_translate_esp_err(esp_err);
         goto fail_hci;
     }
-
-    nimble_port_init();
 
     ble_hs_cfg.sync_cb  = on_ble_sync;
     ble_hs_cfg.reset_cb = on_ble_reset;
@@ -154,7 +151,6 @@ blusys_err_t blusys_bluetooth_open(const blusys_bluetooth_config_t *config,
 fail_nimble:
     nimble_port_stop();
     nimble_port_deinit();
-    esp_nimble_hci_and_controller_deinit();
 fail_hci:
     s_active_handle = NULL;
     vEventGroupDelete(h->sync_event);
@@ -191,7 +187,6 @@ blusys_err_t blusys_bluetooth_close(blusys_bluetooth_t *bt)
 
     nimble_port_stop();
     nimble_port_deinit();
-    esp_nimble_hci_and_controller_deinit();
 
     s_active_handle = NULL;
     vEventGroupDelete(bt->sync_event);
