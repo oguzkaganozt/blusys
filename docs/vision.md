@@ -15,9 +15,9 @@ Blusys HAL exists to make common ESP32 peripheral work simpler than using raw ES
 - examples build on all supported targets
 - normal application code does not need target-specific `#ifdef` logic
 
-## Non-Goals For V1
+## Non-Goals
 
-- networking or BLE abstraction
 - board support helpers inside the core HAL
 - wrapping every ESP-IDF feature
 - exposing internal HAL or LL details publicly
+- Ethernet, USB, LCD, or eFuse abstraction (see [Roadmap](roadmap.md) for future plans)

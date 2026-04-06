@@ -106,7 +106,7 @@ Byte array:  { 0xab, 0x90, 0x78, 0x56, 0x34, 0x12,
                0x78, 0x56, 0x34, 0x12 }
 ```
 
-Use an online UUID converter or the Python snippet `bytes.fromhex("1234567890ab123412341234123456789".replace("-",""))[::-1].hex()` to verify.
+Use an online UUID converter or the Python snippet `bytes.fromhex("123456781234123412341234567890ab")[::-1].hex()` to verify.
 
 ## sdkconfig Requirements
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Blusys HAL** is a simplified C Hardware Abstraction Layer for ESP32 devices, built on top of ESP-IDF v5.5.4. It exposes a smaller, more stable API surface than raw ESP-IDF. Supported targets: **ESP32**, **ESP32-C3**, and **ESP32-S3**. Current release: `v2.0.0`.
+**Blusys HAL** is a simplified C Hardware Abstraction Layer for ESP32 devices, built on top of ESP-IDF v5.5.4. It exposes a smaller, more stable API surface than raw ESP-IDF. Supported targets: **ESP32**, **ESP32-C3**, and **ESP32-S3**. Current release: `v2.0.0` (V3 milestone complete — version string not yet bumped).
 
 ## Build and Flash Commands
 
@@ -67,6 +67,9 @@ Application
 - `blusys_esp_err.h` — `blusys_translate_esp_err(esp_err_t)` maps ESP errors to `blusys_err_t`.
 - `blusys_timeout.h` — timeout conversion helpers.
 - `blusys_target_caps.h` — `BLUSYS_FEATURE_MASK(feature)` macro and `BLUSYS_BASE_FEATURE_MASK`; per-target feature bitmasks.
+- `blusys_nvs_init.h` — `blusys_nvs_ensure_init()` shared helper used by any module that requires NVS (wifi, espnow, bluetooth, ble_gatt). Use this instead of calling `nvs_flash_init()` directly.
+
+**Critical thread-safety rule:** Never hold a `blusys_lock_t` across a blocking wait (`xEventGroupWaitBits`, `vTaskDelay`, etc.). The pattern is: take lock → prepare → give lock → block. Violating this deadlocks any concurrent caller on the same handle. See `wifi.c:blusys_wifi_connect()` and `mqtt.c:blusys_mqtt_connect()` as correct reference implementations.
 
 ### Target Feature Support Matrix
 
@@ -81,7 +84,11 @@ Modules in `BLUSYS_BASE_FEATURE_MASK` are available on all three targets. Target
 | `temp_sensor`|       | ✓        | ✓        |
 | `mcpwm`      | ✓     |          | ✓        |
 
-All other modules (gpio, uart, i2c, spi, pwm, adc, timer, rmt, twai, i2s, wdt, sleep, sdm, i2c_slave, spi_slave, i2s_rx, rmt_rx, wifi, nvs, http_client, mqtt, http_server, ota, sntp, mdns) are available on all targets.
+All other modules (gpio, uart, i2c, spi, pwm, adc, timer, rmt, twai, i2s, wdt, sleep, sdm, i2c_slave, spi_slave, i2s_rx, rmt_rx, wifi, nvs, http_client, mqtt, http_server, ota, sntp, mdns, bluetooth, fs, espnow, ble_gatt) are in `BLUSYS_BASE_FEATURE_MASK` and available on all targets.
+
+**Combined headers:** `i2s.h` declares both `blusys_i2s_tx_*` and `blusys_i2s_rx_*`. `rmt.h` declares both `blusys_rmt_*` (TX) and `blusys_rmt_rx_*`. Their implementations live in separate `.c` files (`i2s.c` / `i2s_rx.c`, `rmt.c` / `rmt_rx.c`).
+
+**Singleton modules:** `bluetooth`, `ble_gatt`, `espnow`, and `sntp` each maintain a global static handle and only support one open instance at a time. Opening a second instance returns `BLUSYS_ERR_INVALID_STATE`. They use an `ensure_global_lock()` helper and a module-level `s_*_handle` static for callback dispatch.
 
 ### Target-Gated Modules
 
@@ -97,7 +104,7 @@ Modules not available on all targets use a SOC capability guard (see `temp_senso
 #endif
 ```
 
-V3 connectivity modules (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`) use `SOC_WIFI_SUPPORTED` as their guard — they are not gated by a per-target `FEATURE_MASK` entry but by Wi-Fi hardware availability. They also require `blusys_wifi_connect()` to be called first at the application level. The `mdns` module additionally depends on the `espressif/mdns` managed component — projects that use mDNS must declare this dependency in their own `main/idf_component.yml`. See `examples/mdns_basic/main/idf_component.yml` as reference. The blusys CMakeLists.txt detects the component at build time and defines `BLUSYS_HAS_MDNS` when present.
+V3 connectivity modules (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`) use `SOC_WIFI_SUPPORTED` as their guard. `bluetooth` and `ble_gatt` use `CONFIG_BT_NIMBLE_ENABLED` (set via menuconfig) as their guard — they require NimBLE to be enabled in the project's sdkconfig. — they are not gated by a per-target `FEATURE_MASK` entry but by Wi-Fi hardware availability. They also require `blusys_wifi_connect()` to be called first at the application level. The `mdns` module additionally depends on the `espressif/mdns` managed component — projects that use mDNS must declare this dependency in their own `main/idf_component.yml`. See `examples/mdns_basic/main/idf_component.yml` as reference. The blusys CMakeLists.txt detects the component at build time and defines `BLUSYS_HAS_MDNS` when present.
 
 ### Examples
 
@@ -119,7 +126,8 @@ Each example is a standalone ESP-IDF project:
 - Filename is `<module>.c` (no `blusys_` prefix)
 - `#include "soc/soc_caps.h"` + SOC guard if not universally supported
 - Use `blusys_translate_esp_err()`, `blusys_lock_*`, `calloc`/`free` pattern
-- See `temp_sensor.c` (simple) or `uart.c` (async/callback) as reference
+- Always check the return value of `blusys_lock_take()` — even in `close()` and cleanup paths
+- See `temp_sensor.c` (simple), `uart.c` (async/callback), or `wifi.c` (event-group connect) as reference
 
 ### 3. Register source and dependencies — `CMakeLists.txt`
 - Add `src/common/<module>.c` to `blusys_sources`

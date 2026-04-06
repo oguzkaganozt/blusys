@@ -144,7 +144,7 @@ Discovers services of the given type on the local network. Blocks until at least
 
 - `service_type` — service type to search for (e.g. `"_http"`)
 - `proto` — `BLUSYS_MDNS_PROTO_TCP` or `BLUSYS_MDNS_PROTO_UDP`
-- `timeout_ms` — maximum wait time; use `BLUSYS_TIMEOUT_FOREVER` for 5 s default
+- `timeout_ms` — maximum wait time in milliseconds; `BLUSYS_TIMEOUT_FOREVER` (`-1`) uses a 5 s default
 - `results` — caller-provided array to receive results
 - `max_results` — capacity of the results array
 - `out_count` — number of results found
