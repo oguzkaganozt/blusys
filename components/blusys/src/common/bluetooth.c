@@ -16,6 +16,8 @@
 #include "host/ble_hs.h"
 #include "services/gap/ble_svc_gap.h"
 
+#include "nvs_flash.h"
+
 #include "blusys_esp_err.h"
 #include "blusys_lock.h"
 #include "blusys_timeout.h"
@@ -125,7 +127,18 @@ blusys_err_t blusys_bluetooth_open(const blusys_bluetooth_config_t *config,
     strncpy(h->device_name, config->device_name, sizeof(h->device_name) - 1);
     s_active_handle = h;
 
-    esp_err_t esp_err = nimble_port_init();
+    /* NVS is required by the BT controller for RF calibration data */
+    esp_err_t esp_err = nvs_flash_init();
+    if (esp_err == ESP_ERR_NVS_NO_FREE_PAGES || esp_err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        nvs_flash_erase();
+        esp_err = nvs_flash_init();
+    }
+    if (esp_err != ESP_OK) {
+        err = blusys_translate_esp_err(esp_err);
+        goto fail_hci;
+    }
+
+    esp_err = nimble_port_init();
     if (esp_err != ESP_OK) {
         err = blusys_translate_esp_err(esp_err);
         goto fail_hci;
