@@ -58,7 +58,7 @@ Production essentials.
   4. `fatfs` — FAT filesystem on internal flash with wear levelling ✓
   5. `sd_spi` — SD card over SPI bus (builds on `fatfs`) ✓
   6. `power_mgmt` — CPU frequency scaling, auto light sleep ✓
-  7. `websocket` — WebSocket client for real-time bidirectional comms
+  7. `ws_client` — WebSocket client for real-time bidirectional comms ✓
   8. `wifi_prov` — BLE/SoftAP-based WiFi credential provisioning
   9. `lcd` — SPI/I2C/parallel display drivers
 
@@ -101,6 +101,7 @@ Advanced connectivity and peripherals.
 - added `fatfs` module (V4) — FAT filesystem on internal flash with wear-levelling
 - added `sd_spi` module (V4) — SD card over SPI with FAT filesystem
 - added `power_mgmt` module (V4) — CPU frequency scaling and automatic light sleep via esp_pm
+- added `ws_client` module (V4) — WebSocket client with async message callback via FreeRTOS receive task
 
 ## Current Technical State
 
@@ -151,6 +152,7 @@ Public API currently exists for:
 - `blusys_fatfs_*`
 - `blusys_sd_spi_*`
 - `blusys_pm_*`
+- `blusys_ws_client_*`
 
 Internal infrastructure currently exists for:
 

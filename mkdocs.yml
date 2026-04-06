@@ -110,6 +110,7 @@ nav:
           - Bluetooth: guides/bluetooth-basic.md
           - BLE GATT: guides/ble_gatt-basic.md
           - ESP-NOW: guides/espnow-basic.md
+          - WebSocket Client: guides/ws-client-basic.md
       - Testing:
           - Hardware Smoke Tests: guides/hardware-smoke-tests.md
           - Concurrency Tests: guides/concurrency-tests.md
@@ -163,6 +164,7 @@ nav:
           - Bluetooth: modules/bluetooth.md
           - BLE GATT: modules/ble_gatt.md
           - ESP-NOW: modules/espnow.md
+          - WebSocket Client: modules/ws_client.md
   - Project:
       - Architecture: architecture.md
       - Vision: vision.md
