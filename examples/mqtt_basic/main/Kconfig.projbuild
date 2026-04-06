@@ -1,0 +1,36 @@
+menu "MQTT Basic Example"
+
+    config WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        help
+            SSID (network name) of the access point to connect to.
+
+    config WIFI_PASSWORD
+        string "WiFi Password"
+        default "mypassword"
+        help
+            WiFi password. Leave empty for open networks.
+
+    config WIFI_CONNECT_TIMEOUT_MS
+        int "WiFi connect timeout (ms)"
+        default 10000
+        range 1000 60000
+        help
+            Maximum time in milliseconds to wait for an IP address.
+
+    config MQTT_BROKER_URL
+        string "MQTT broker URL"
+        default "mqtt://test.mosquitto.org"
+        help
+            Full broker URI including scheme and port if non-default.
+            Use mqtt:// for plain MQTT (port 1883) or mqtts:// for TLS (port 8883).
+
+    config MQTT_CONNECT_TIMEOUT_MS
+        int "MQTT connect timeout (ms)"
+        default 10000
+        range 1000 60000
+        help
+            Maximum time in milliseconds to wait for CONNACK from the broker.
+
+endmenu

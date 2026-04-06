@@ -15,21 +15,26 @@ It provides a smaller API than raw ESP-IDF for common embedded tasks while keepi
 - foundation: `version`, `error`, `target`
 - system: `system`
 - digital IO: `gpio`
-- communication: `uart`, `i2c`, `spi`
-- audio: `i2s`
-- timing and analog: `pwm`, `adc`, `timer`, `pcnt`, `rmt`, `touch`, `dac`
-- vehicle and field bus: `twai`
+- communication: `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave`, `twai`
+- audio: `i2s` (TX and RX)
+- timing and analog: `pwm`, `adc`, `timer`, `pcnt`, `rmt` (TX and RX), `touch`, `dac`, `mcpwm`, `sdm`
+- storage: `sdmmc`, `nvs`
+- sensors: `temp_sensor`
+- system services: `wdt`, `sleep`
+- connectivity: `wifi`, `http_client`, `mqtt`
 
-Target note:
-- `pcnt` is currently available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
-- `touch` is currently available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
-- `dac` is currently available on `esp32`; `esp32c3` and `esp32s3` report it as unsupported
+Target notes:
+- `pcnt` is available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
+- `touch` is available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
+- `dac` is available on `esp32`; `esp32c3` and `esp32s3` report it as unsupported
+- all other modules are available on all three targets
 
 Async support includes:
 - GPIO interrupt callbacks
 - UART async TX and RX callbacks
 - timer callbacks
 - PCNT watch point callbacks
+- TWAI RX callbacks
 
 ## Quick Start
 
@@ -88,11 +93,25 @@ The build target must match the connected board.
 - `examples/concurrency_spi/`
 - `examples/concurrency_timer/`
 - `examples/concurrency_uart/`
+- `examples/sdmmc_basic/`
+- `examples/temp_sensor_basic/`
+- `examples/wdt_basic/`
+- `examples/sleep_basic/`
+- `examples/mcpwm_basic/`
+- `examples/sdm_basic/`
+- `examples/i2c_slave_basic/`
+- `examples/spi_slave_basic/`
+- `examples/i2s_rx_basic/`
+- `examples/rmt_rx_basic/`
+- `examples/wifi_basic/`
+- `examples/nvs_basic/`
+- `examples/http_client_basic/`
+- `examples/mqtt_basic/`
 
 ## Project Status
 
-`v1.0.0` is released.
-The planned v1 module set is implemented and validated on the supported targets.
-`V2` work has started with `pcnt`, `rmt`, `twai`, `i2s`, `touch`, and `dac`.
+`v2.0.0` is released.
+Full HAL peripheral coverage is complete, including symmetric counterparts (`i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`) and system services (`wdt`, `sleep`, `mcpwm`, `sdm`, `sdmmc`, `temp_sensor`).
+`V3` (connectivity and system services) is in progress: `wifi`, `nvs`, `http_client`, and `mqtt` are done; next up are `http_server`, `ota`, `bluetooth`, `eth`, and `usb`.
 
 Detailed implementation tracking remains in `PROGRESS.md`.
