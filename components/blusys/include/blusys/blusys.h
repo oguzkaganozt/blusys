@@ -28,6 +28,7 @@ extern "C" {
 #include "blusys/nvs.h"
 #include "blusys/ota.h"
 #include "blusys/pcnt.h"
+#include "blusys/power_mgmt.h"
 #include "blusys/pwm.h"
 #include "blusys/rmt.h"
 #include "blusys/sd_spi.h"
