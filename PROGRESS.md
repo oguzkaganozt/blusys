@@ -48,10 +48,35 @@ Connectivity and system services.
 
 ### V4
 
-Advanced peripherals and ecosystem-level helpers.
+Production essentials.
 
 - status: `not_started`
-- planned: `eth`, `usb`, `lcd`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, provisioning, higher-level service helpers
+- implementation order:
+  1. `button` — GPIO-based debounce/long-press abstraction
+  2. `led_strip` — addressable LEDs (WS2812, SK6812) via RMT
+  3. `console` — interactive UART console with command registration
+  4. `fatfs` — FAT filesystem on internal flash with wear levelling
+  5. `sd_spi` — SD card over SPI bus (builds on `fatfs`)
+  6. `power_mgmt` — CPU frequency scaling, auto light sleep
+  7. `websocket` — WebSocket client for real-time bidirectional comms
+  8. `wifi_prov` — BLE/SoftAP-based WiFi credential provisioning
+  9. `lcd` — SPI/I2C/parallel display drivers
+
+### V5
+
+Advanced connectivity and peripherals.
+
+- status: `not_started`
+- implementation order:
+  1. `gpio_expander` — I2C/SPI-based port expanders
+  2. `ana_cmpr` — analog signal comparison (C3, S3 only)
+  3. `efuse` — one-time programmable memory reading
+  4. `ethernet` — wired networking (SPI W5500, or native EMAC on ESP32)
+  5. `ulp` — ultra low power coprocessor programming (ESP32, S3 only)
+  6. `wifi_mesh` — lightweight mesh networking via `esp_mesh_lite`
+  7. `usb_hid` — USB HID (S3 USB-OTG) and BLE HID (all targets)
+  8. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
+  9. `local_ctrl` — local device control over BLE/WiFi
 
 ## Milestones
 
@@ -63,56 +88,13 @@ Advanced peripherals and ecosystem-level helpers.
 | Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
 | V3 | completed | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt` — released `v3.0.0` |
-| V4 | not_started | `ana_cmpr`, `parlio`, `lcd`, `usb_serial_jtag`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
+| V4 | not_started | `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `websocket`, `wifi_prov`, `lcd` |
+| V5 | not_started | `gpio_expander`, `ana_cmpr`, `efuse`, `ethernet`, `ulp`, `wifi_mesh`, `usb_hid`, `camera`, `local_ctrl` |
 
 ## Recent Work
 
-- released `v1.0.0`
-- simplified docs and project guidance
-- aligned docs and scripts around supported targets: `esp32`, `esp32c3`, `esp32s3`
-- added `pcnt` API, implementation, example, and docs
-- added watch-point callback support for `pcnt`
-- added `rmt` TX API, implementation, example, and docs
-- added `twai` classic TX API, RX callback support, example, and docs
-- added `i2s` standard-mode master TX API, implementation, example, and docs
-- added `touch` polling API, implementation, example, and docs
-- added `dac` oneshot API, implementation, example, and docs
-- gated `pcnt` by target support in the current ESP-IDF baseline:
-  - supported: `esp32`, `esp32s3`
-  - not supported: `esp32c3`
-- gated `dac` by target support in the current ESP-IDF baseline:
-  - supported: `esp32`
-  - not supported: `esp32c3`, `esp32s3`
-- added `sdmmc` SD card read/write API, implementation, example, and docs
-- added `temp_sensor` on-chip temperature sensor API, implementation, example, and docs
-- added `wdt` task watchdog API, implementation, and example
-- added `sleep` light/deep sleep API, implementation, and example
-- added `mcpwm` complementary pair output API, implementation, and example
-- completed `V2` milestone
-- added `sdm` sigma-delta modulation API, implementation, example, and docs
-- `sdm` available on all three targets: `esp32`, `esp32c3`, `esp32s3`
-- added `i2c_slave` slave-mode I2C API, implementation, and example
-- added `spi_slave` slave-mode SPI API, implementation, and example
-- added `i2s_rx` I2S receive API, implementation, and example
-- added `rmt_rx` RMT receive API, implementation, and example
-- all four symmetric counterparts available on all three targets
-- completed full documentation coverage: all 22 modules have API reference and task guide
-- released `v2.0.0`
-- began `V3`: added `wifi` station-mode connect API, implementation, example, and docs
-- added `nvs` key-value storage API, implementation, example, and docs; available on all three targets
-- added `http_client` blocking GET/POST API, implementation, example, and docs; available on all three targets
-- added `mqtt` publish/subscribe client API, implementation, example, and docs; available on all three targets
-- added `http_server` embedded HTTP server API, implementation, example, and docs; available on all three targets
-- added `ota` over-the-air firmware update API, implementation, example, and docs; available on all three targets
-- added `sntp` NTP time synchronization API, implementation, example, and docs; available on all three targets
-- added `mdns` zero-config service advertisement and discovery API, implementation, example, and docs; available on all three targets
-- added `bluetooth` BLE advertising and scanning API, implementation, example, and docs; available on all three targets (ESP32, ESP32-C3, ESP32-S3)
-- added `fs` SPIFFS filesystem API, implementation, example, and docs; available on all three targets
-- widened `feature_mask` from `uint32_t` to `uint64_t` to support more than 32 feature flags
-- added `espnow` connectionless peer-to-peer wireless API, implementation, example, and docs; available on all three targets
-- added `ble_gatt` BLE GATT server API, implementation, example, and docs; available on all three targets
-- completed `V3` milestone
 - released `v3.0.0`
+- restructured feature roadmap into V4/V5 release plan
 
 ## Current Technical State
 
@@ -170,27 +152,6 @@ Internal infrastructure currently exists for:
 - `v1.0.0` release validation completed
 - `v2.0.0` release validation completed
 - `v3.0.0` release validation completed
-- all V2 examples build for `esp32`, `esp32c3`, `esp32s3`:
-  - `pcnt_basic`, `rmt_basic`, `rmt_rx_basic`
-  - `twai_basic`
-  - `i2s_basic`, `i2s_rx_basic`
-  - `touch_basic`, `dac_basic`
-  - `sdmmc_basic`, `temp_sensor_basic`
-  - `wdt_basic`, `sleep_basic`
-  - `mcpwm_basic`, `sdm_basic`
-  - `i2c_slave_basic`, `spi_slave_basic`
-- `smoke` builds pass for:
-  - `esp32c3`
-  - `esp32s3`
-- `nvs_basic` pending hardware smoke test
-- `mqtt_basic` pending hardware smoke test
-- `http_server_basic` pending hardware smoke test
-- `ota_basic` pending hardware smoke test
-- `sntp_basic` pending hardware smoke test
-- `mdns_basic` pending hardware smoke test
-- `fs_basic` hardware smoke test passed (ESP32)
-- `espnow_basic` pending hardware smoke test
-- `ble_gatt_basic` pending hardware smoke test
 - `mkdocs build --strict` passes
 
 ## Environment Notes
@@ -201,9 +162,5 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. begin `V4` — first items TBD from planned list: `eth`, `usb`, `lcd`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, provisioning
-2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
-3. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
-4. keep the first `touch` cut limited to one-pin polling reads until a concrete need appears for thresholds, callbacks, or sleep integration
-5. keep the first `dac` cut limited to oneshot output until a concrete need appears for cosine generation or continuous DMA output
-6. keep the first `i2s` cut limited to standard-mode master TX/RX until a concrete need appears for duplex or alternate formats
+1. begin `V4` — first module: `button`
+2. follow implementation order: `button` → `led_strip` → `console` → `fatfs` → `sd_spi` → `power_mgmt` → `websocket` → `wifi_prov` → `lcd`
