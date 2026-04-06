@@ -44,8 +44,7 @@ Install blusys (once):
 
 ```sh
 git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
-echo 'export PATH="$HOME/.blusys:$PATH"' >> ~/.bashrc
-source ~/.bashrc
+~/.blusys/install.sh
 ```
 
 Create and build a project:

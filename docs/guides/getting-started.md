@@ -20,8 +20,7 @@ The standard install places ESP-IDF in `~/.espressif/` which blusys auto-detects
 
 ```sh
 git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
-echo 'export PATH="$HOME/.blusys:$PATH"' >> ~/.bashrc
-source ~/.bashrc
+~/.blusys/install.sh
 ```
 
 Verify the installation:
