@@ -91,6 +91,7 @@ nav:
           - Temperature: guides/temp-sensor-basic.md
       - System:
           - System Info: guides/system-info.md
+          - Console: guides/console-basic.md
           - NVS: guides/nvs-basic.md
           - Filesystem: guides/fs-basic.md
           - Sleep: guides/sleep-basic.md
@@ -140,6 +141,7 @@ nav:
           - Temperature: modules/temp_sensor.md
       - System:
           - System: modules/system.md
+          - Console: modules/console.md
           - NVS: modules/nvs.md
           - Filesystem: modules/fs.md
           - Sleep: modules/sleep.md
