@@ -1,51 +1,45 @@
 # Blusys HAL
 
-Blusys HAL is a simplified C hardware abstraction layer for ESP32 devices using ESP-IDF v5.5.
+A simplified C hardware abstraction layer for ESP32 devices, built on top of ESP-IDF v5.5. Blusys exposes a smaller, more stable API surface than raw ESP-IDF so your application code stays clean across hardware revisions.
 
-## What It Gives You
+<div class="grid cards" markdown>
 
-- one common API across `ESP32`, `ESP32-C3`, and `ESP32-S3`
-- a smaller public API than raw ESP-IDF for common tasks
-- buildable examples for every shipped module
-- short task guides plus module reference pages
+-   :material-rocket-launch:{ .lg .middle } **Get Started**
 
-## Start Here
+    ---
 
-1. `guides/getting-started.md`
-2. pick a task guide from `guides/`
-3. use the matching module reference in `modules/` when you need API details
+    Set up your environment and run your first Blusys example in minutes.
 
-## Modules
+    [:octicons-arrow-right-24: Getting Started](guides/getting-started.md)
 
-- `system`
-- `gpio`
-- `uart`
-- `i2c`
-- `i2s`
-- `spi`
-- `pwm`
-- `adc`
-- `dac`
-- `timer`
-- `pcnt`
-- `rmt`
-- `twai`
-- `touch`
+-   :material-book-open-variant:{ .lg .middle } **Task Guides**
+
+    ---
+
+    Step-by-step guides for every peripheral — from GPIO to MQTT.
+
+    [:octicons-arrow-right-24: Browse Guides](guides/index.md)
+
+-   :material-code-braces:{ .lg .middle } **API Reference**
+
+    ---
+
+    Complete type definitions, function signatures, and error codes for every module.
+
+    [:octicons-arrow-right-24: Browse API Reference](modules/index.md)
+
+</div>
 
 ## Supported Targets
 
-- `esp32`
-- `esp32c3`
-- `esp32s3`
+| Target | Status |
+|--------|--------|
+| ESP32 | Supported |
+| ESP32-C3 | Supported |
+| ESP32-S3 | Supported |
 
-## Project Status
+See [Compatibility](target-matrix.md) for the full per-module support matrix.
 
-`v1.0.0` is released.
-`V2` is in progress with `pcnt`, `rmt`, `twai`, `i2s`, `touch`, and `dac`.
-
-## Need More Detail?
-
-- Compatibility and target notes: `target-matrix.md`
-- Hardware validation guide: `guides/hardware-smoke-tests.md`
-- Release notes: `../CHANGELOG.md`
-- Contributor guidance: `contributing.md`
+!!! info "Current Release"
+    **v2.0.0** — all core, analog, timer, bus, sensor, system, and networking modules are available.
+    See [Roadmap](roadmap.md) for what's planned next.

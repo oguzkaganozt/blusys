@@ -60,3 +60,8 @@ void app_main(void)
 ## Example App
 
 See `examples/rmt_basic/`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [RMT API Reference](../modules/rmt.md).

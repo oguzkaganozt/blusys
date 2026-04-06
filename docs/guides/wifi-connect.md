@@ -86,3 +86,8 @@ blusys_wifi_sta_config_t cfg = {
 See `examples/wifi_connect/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [WiFi API Reference](../modules/wifi.md).

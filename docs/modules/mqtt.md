@@ -2,6 +2,9 @@
 
 Publish/subscribe messaging client for connecting to an MQTT broker over WiFi.
 
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [MQTT Basics](../guides/mqtt-basic.md).
+
 ## Target Support
 
 | Target | Supported |

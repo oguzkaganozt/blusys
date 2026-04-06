@@ -1,89 +1,179 @@
 # I2C Master
 
-## Purpose
+Blocking master-mode I2C bus: probe, write, read, and write-then-read register transactions.
 
-The `i2c` module provides a blocking master-mode bus API that keeps the common path short:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [I2C Scan](../guides/i2c-scan.md).
 
-- open an I2C master bus with SDA, SCL, and frequency
-- probe a 7-bit device address
-- write to a device
-- read from a device
-- perform write-then-read register transactions
-- close the bus handle
+## Target Support
 
-## Supported Targets
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
-- ESP32
-- ESP32-C3
-- ESP32-S3
+## Types
 
-## Quick Start Example
+### `blusys_i2c_master_t`
 
 ```c
-#include <stdint.h>
-
-#include "blusys/i2c.h"
-
-void app_main(void)
-{
-    blusys_i2c_master_t *i2c;
-    uint8_t who_am_i = 0;
-
-    if (blusys_i2c_master_open(0, 8, 9, 100000, &i2c) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_i2c_master_write_read(i2c, 0x68, "\x75", 1, &who_am_i, 1, 100);
-    blusys_i2c_master_close(i2c);
-}
+typedef struct blusys_i2c_master blusys_i2c_master_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_i2c_master_open()`. Represents one configured I2C bus.
 
-I2C master is handle-based:
+### `blusys_i2c_scan_callback_t`
 
-1. call `blusys_i2c_master_open()`
-2. use probe, write, read, or write-read calls
-3. call `blusys_i2c_master_close()` when finished
+```c
+typedef bool (*blusys_i2c_scan_callback_t)(uint16_t device_address, void *user_ctx);
+```
 
-The public handle represents one configured bus.
-Device selection stays per transfer through the `device_address` argument.
+Called for each address that responds during a scan. Return `false` to continue scanning, `true` to stop early.
 
-## Blocking APIs
+## Functions
 
-- `blusys_i2c_master_open()`
-- `blusys_i2c_master_close()`
-- `blusys_i2c_master_probe()`
-- `blusys_i2c_master_write()`
-- `blusys_i2c_master_read()`
-- `blusys_i2c_master_write_read()`
+### `blusys_i2c_master_open`
 
-## Async APIs
+```c
+blusys_err_t blusys_i2c_master_open(int port,
+                                    int sda_pin,
+                                    int scl_pin,
+                                    uint32_t freq_hz,
+                                    blusys_i2c_master_t **out_i2c);
+```
 
-None in Phase 3.
+Opens an I2C master bus. Internal pull-ups are enabled; proper external pull-ups are still recommended.
+
+**Parameters:**
+- `port` — I2C port number (0 or 1)
+- `sda_pin` — GPIO for SDA
+- `scl_pin` — GPIO for SCL
+- `freq_hz` — bus clock frequency (e.g. 100000 or 400000)
+- `out_i2c` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid arguments.
+
+---
+
+### `blusys_i2c_master_close`
+
+```c
+blusys_err_t blusys_i2c_master_close(blusys_i2c_master_t *i2c);
+```
+
+Releases the I2C bus and frees the handle.
+
+---
+
+### `blusys_i2c_master_probe`
+
+```c
+blusys_err_t blusys_i2c_master_probe(blusys_i2c_master_t *i2c, uint16_t device_address, int timeout_ms);
+```
+
+Checks whether a device responds at the given address.
+
+**Parameters:**
+- `i2c` — handle
+- `device_address` — 7-bit device address
+- `timeout_ms` — milliseconds to wait
+
+**Returns:** `BLUSYS_OK` if the device ACKs, `BLUSYS_ERR_IO` if no ACK (device absent), `BLUSYS_ERR_TIMEOUT` on bus timeout.
+
+---
+
+### `blusys_i2c_master_scan`
+
+```c
+blusys_err_t blusys_i2c_master_scan(blusys_i2c_master_t *i2c,
+                                    uint16_t start_address,
+                                    uint16_t end_address,
+                                    int timeout_ms,
+                                    blusys_i2c_scan_callback_t callback,
+                                    void *user_ctx,
+                                    size_t *out_count);
+```
+
+Probes each address in `[start_address, end_address]` and calls `callback` for each that responds.
+
+**Parameters:**
+- `start_address` / `end_address` — address range (7-bit)
+- `timeout_ms` — per-address probe timeout
+- `callback` — called for each responding device; may be NULL
+- `out_count` — total number of responding devices found; may be NULL
+
+**Returns:** `BLUSYS_OK` on completion.
+
+---
+
+### `blusys_i2c_master_write`
+
+```c
+blusys_err_t blusys_i2c_master_write(blusys_i2c_master_t *i2c,
+                                     uint16_t device_address,
+                                     const void *data,
+                                     size_t size,
+                                     int timeout_ms);
+```
+
+Sends bytes to a device.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT` on bus timeout, `BLUSYS_ERR_IO` on NACK.
+
+---
+
+### `blusys_i2c_master_read`
+
+```c
+blusys_err_t blusys_i2c_master_read(blusys_i2c_master_t *i2c,
+                                    uint16_t device_address,
+                                    void *data,
+                                    size_t size,
+                                    int timeout_ms);
+```
+
+Reads bytes from a device.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT` on bus timeout, `BLUSYS_ERR_IO` on NACK.
+
+---
+
+### `blusys_i2c_master_write_read`
+
+```c
+blusys_err_t blusys_i2c_master_write_read(blusys_i2c_master_t *i2c,
+                                          uint16_t device_address,
+                                          const void *tx_data,
+                                          size_t tx_size,
+                                          void *rx_data,
+                                          size_t rx_size,
+                                          int timeout_ms);
+```
+
+Performs a write followed by a repeated-start read in one atomic transaction. Typical use: write a register address, read the register value.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT`, `BLUSYS_ERR_IO` on NACK.
+
+## Lifecycle
+
+1. `blusys_i2c_master_open()` — configure bus
+2. `blusys_i2c_master_probe()` / `blusys_i2c_master_write()` / `blusys_i2c_master_read()` / `blusys_i2c_master_write_read()` — transfers
+3. `blusys_i2c_master_close()` — release
+
+Device selection is per-transfer through the `device_address` argument; no per-device handle is needed.
 
 ## Thread Safety
 
 - concurrent operations on the same handle are serialized internally
-- different I2C handles may be used independently when they use different hardware ports
-- do not call `blusys_i2c_master_close()` concurrently with other calls using the same handle
-
-## ISR Notes
-
-Phase 3 does not define ISR-safe I2C calls.
+- different handles may be used independently when they use different hardware ports
+- do not call `blusys_i2c_master_close()` concurrently with other calls on the same handle
 
 ## Limitations
 
-- only 7-bit addressing is exposed in Phase 3
+- only 7-bit addressing is supported
 - only master mode is exposed
-- internal pull-ups are enabled for convenience, but proper external pull-ups are still recommended
-- the current handle keeps one backend device slot and switches its address between blocking transfers as needed
-
-## Error Behavior
-
-- invalid ports, pins, addresses, timeouts, or pointers return `BLUSYS_ERR_INVALID_ARG`
-- bus-level timeout failures return `BLUSYS_ERR_TIMEOUT`
-- missing devices and NACK-style probe failures are reported as `BLUSYS_ERR_IO`
+- the current implementation uses one backend device slot and switches its address between transfers as needed
 
 ## Example App
 

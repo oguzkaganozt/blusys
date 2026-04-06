@@ -1,79 +1,88 @@
 # Touch
 
-## Purpose
+Capacitive touch sensor: open one touch-capable GPIO and read filtered touch values.
 
-The `touch` module provides a small handle-based API for one capacitive touch GPIO:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [Touch Basics](../guides/touch-basic.md).
 
-- open one touch-capable pin
-- read a filtered touch value
-- close the handle when finished
+## Target Support
 
-The public API hides the ESP-IDF controller, channel, and touch-hardware-version details behind one blocking read path.
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | no |
+| ESP32-S3 | yes |
 
-## Supported Targets
+On ESP32-C3, all public functions return `BLUSYS_ERR_NOT_SUPPORTED`. Use `blusys_target_supports(BLUSYS_FEATURE_TOUCH)` to check at runtime.
 
-- ESP32
-- ESP32-S3
+## Types
 
-On `ESP32-C3`, the public API is present but returns `BLUSYS_ERR_NOT_SUPPORTED`, and `blusys_target_supports(BLUSYS_FEATURE_TOUCH)` reports `false`.
-
-## Quick Start Example
+### `blusys_touch_t`
 
 ```c
-#include <stdint.h>
-
-#include "blusys/touch.h"
-
-void app_main(void)
-{
-    blusys_touch_t *touch;
-    uint32_t value;
-
-    if (blusys_touch_open(4, &touch) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_touch_read(touch, &value);
-    blusys_touch_close(touch);
-}
+typedef struct blusys_touch blusys_touch_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_touch_open()`.
 
-Touch is handle-based:
+## Functions
 
-1. call `blusys_touch_open()`
-2. call `blusys_touch_read()` one or more times
-3. call `blusys_touch_close()` when finished
+### `blusys_touch_open`
 
-`blusys_touch_open()` starts internal background scanning so `blusys_touch_read()` can return a filtered value without extra start or trigger calls.
+```c
+blusys_err_t blusys_touch_open(int pin, blusys_touch_t **out_touch);
+```
 
-## Blocking APIs
+Enables the touch controller and begins background scanning for the given pin. Only one touch handle may be open at a time.
 
-- `blusys_touch_open()`
-- `blusys_touch_close()`
-- `blusys_touch_read()`
+**Parameters:**
+- `pin` — touch-capable GPIO number (target-dependent)
+- `out_touch` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for non-touch GPIOs or NULL pointer, `BLUSYS_ERR_BUSY` if another touch handle is already open, `BLUSYS_ERR_NOT_SUPPORTED` on ESP32-C3.
+
+---
+
+### `blusys_touch_close`
+
+```c
+blusys_err_t blusys_touch_close(blusys_touch_t *touch);
+```
+
+Stops background scanning and frees the handle.
+
+---
+
+### `blusys_touch_read`
+
+```c
+blusys_err_t blusys_touch_read(blusys_touch_t *touch, uint32_t *out_value);
+```
+
+Returns the current filtered touch reading. A higher value typically indicates stronger touch contact, but the absolute scale is target- and board-dependent.
+
+**Parameters:**
+- `touch` — handle
+- `out_value` — output pointer for the touch reading
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if called after close has started, `BLUSYS_ERR_INVALID_ARG` if `out_value` is NULL.
+
+## Lifecycle
+
+1. `blusys_touch_open()` — enable controller and start scanning
+2. `blusys_touch_read()` — poll touch value
+3. `blusys_touch_close()` — stop and release
 
 ## Thread Safety
 
-- concurrent calls using the same handle are serialized internally
-- do not call `blusys_touch_close()` concurrently with other calls using the same handle
-- there is no callback API in the first release
+- concurrent calls on the same handle are serialized internally
+- do not call `blusys_touch_close()` concurrently with other calls on the same handle
 
 ## Limitations
 
-- the public API is limited to one touch GPIO per handle
-- the first release supports only one open touch handle at a time across the whole process
-- the returned value is a filtered touch reading, and its absolute magnitude is target- and board-dependent
-- threshold configuration, active or inactive events, wake-up behavior, waterproofing, and proximity sensing are out of scope for the first release
-
-## Error Behavior
-
-- invalid pointers and non-touch GPIOs return `BLUSYS_ERR_INVALID_ARG`
-- opening a second touch handle while one is already open returns `BLUSYS_ERR_BUSY`
-- calling `blusys_touch_read()` after close has started returns `BLUSYS_ERR_INVALID_STATE`
-- unsupported targets return `BLUSYS_ERR_NOT_SUPPORTED`
-- backend allocation and driver failures are translated into `blusys_err_t`
+- one touch GPIO per handle; only one handle can be open at a time across the whole process
+- the returned value is a filtered reading; its magnitude is target- and board-dependent
+- threshold configuration, active/inactive events, wakeup, waterproofing, and proximity sensing are not exposed
 
 ## Example App
 

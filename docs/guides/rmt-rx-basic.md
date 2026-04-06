@@ -78,3 +78,8 @@ A typical NEC IR frame produces ~68 pulses (9 ms burst, 4.5 ms space, 32 data bi
 See `examples/rmt_rx_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [RMT API Reference](../modules/rmt.md).

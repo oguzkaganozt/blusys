@@ -77,3 +77,8 @@ Calling `set_tx_callback()` or `set_rx_callback()` again with a new function and
 See `examples/uart_async/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [UART API Reference](../modules/uart.md).

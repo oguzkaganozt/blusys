@@ -1,66 +1,129 @@
 # SD/MMC Card
 
-## Purpose
+Block-level read and write access to SD and MMC cards using the hardware SDMMC peripheral.
 
-The `sdmmc` module provides block-level read and write access to SD and MMC cards:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [SD/MMC Basics](../guides/sdmmc-basic.md).
 
-- open an SD/MMC slot with configurable pins, bus width, and frequency
-- read one or more 512-byte blocks
-- write one or more 512-byte blocks
-- close the handle
+## Target Support
 
-## Supported Targets
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | no |
+| ESP32-S3 | yes |
 
-- ESP32
-- ESP32-S3
+On ESP32-C3, all public functions return `BLUSYS_ERR_NOT_SUPPORTED`. Use `blusys_target_supports(BLUSYS_FEATURE_SDMMC)` to check at runtime.
 
-Not available on ESP32-C3 (no SDMMC hardware peripheral).
+## Types
 
-## Quick Start Example
+### `blusys_sdmmc_t`
 
 ```c
-#include <stdint.h>
-
-#include "blusys/sdmmc.h"
-
-void app_main(void)
-{
-    blusys_sdmmc_t *sdmmc;
-    static uint8_t buf[512];
-
-    /* 1-bit bus, slot 0 */
-    if (blusys_sdmmc_open(0, 14, 15, 2, -1, -1, -1, 1, 20000000, &sdmmc) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_sdmmc_read_blocks(sdmmc, 0, buf, 1, 1000);
-    blusys_sdmmc_close(sdmmc);
-}
+typedef struct blusys_sdmmc blusys_sdmmc_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_sdmmc_open()`.
 
-SDMMC is handle-based:
+## Functions
 
-1. call `blusys_sdmmc_open()` — initializes the slot, negotiates card speed, and mounts the card
-2. call `blusys_sdmmc_read_blocks()` or `blusys_sdmmc_write_blocks()` as needed
-3. call `blusys_sdmmc_close()` when finished
+### `blusys_sdmmc_open`
 
-## Bus Width
+```c
+blusys_err_t blusys_sdmmc_open(int slot,
+                               int clk_pin,
+                               int cmd_pin,
+                               int d0_pin,
+                               int d1_pin,
+                               int d2_pin,
+                               int d3_pin,
+                               int bus_width,
+                               uint32_t freq_hz,
+                               blusys_sdmmc_t **out_sdmmc);
+```
 
-Pass `bus_width` as `1` or `4`. When using 1-bit mode, set `d1`, `d2`, and `d3` pins to `-1`.
+Initializes the SDMMC slot, negotiates card speed, and mounts the card.
 
-## Blocking APIs
+**Parameters:**
+- `slot` — SDMMC slot index (0 or 1)
+- `clk_pin` — GPIO for clock
+- `cmd_pin` — GPIO for command
+- `d0_pin` — GPIO for data line 0
+- `d1_pin` — GPIO for data line 1; set to `-1` for 1-bit mode
+- `d2_pin` — GPIO for data line 2; set to `-1` for 1-bit mode
+- `d3_pin` — GPIO for data line 3; set to `-1` for 1-bit mode
+- `bus_width` — `1` for 1-bit mode, `4` for 4-bit mode
+- `freq_hz` — bus frequency (e.g. 20000000 for 20 MHz)
+- `out_sdmmc` — output handle
 
-- `blusys_sdmmc_open()`
-- `blusys_sdmmc_close()`
-- `blusys_sdmmc_read_blocks()`
-- `blusys_sdmmc_write_blocks()`
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid pins or zero block count, translated ESP-IDF error on card initialization failure, `BLUSYS_ERR_NOT_SUPPORTED` on ESP32-C3.
+
+---
+
+### `blusys_sdmmc_close`
+
+```c
+blusys_err_t blusys_sdmmc_close(blusys_sdmmc_t *sdmmc);
+```
+
+Unmounts the card and releases the handle.
+
+---
+
+### `blusys_sdmmc_read_blocks`
+
+```c
+blusys_err_t blusys_sdmmc_read_blocks(blusys_sdmmc_t *sdmmc,
+                                      uint32_t start_block,
+                                      void *buffer,
+                                      uint32_t num_blocks,
+                                      int timeout_ms);
+```
+
+Reads one or more 512-byte blocks from the card.
+
+**Parameters:**
+- `sdmmc` — handle
+- `start_block` — logical block address of the first block to read
+- `buffer` — destination buffer; must be at least `num_blocks * 512` bytes
+- `num_blocks` — number of blocks to read; must be at least 1
+- `timeout_ms` — milliseconds to wait for the operation
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT`, translated ESP-IDF error on card failure.
+
+---
+
+### `blusys_sdmmc_write_blocks`
+
+```c
+blusys_err_t blusys_sdmmc_write_blocks(blusys_sdmmc_t *sdmmc,
+                                       uint32_t start_block,
+                                       const void *buffer,
+                                       uint32_t num_blocks,
+                                       int timeout_ms);
+```
+
+Writes one or more 512-byte blocks to the card.
+
+**Parameters:**
+- `sdmmc` — handle
+- `start_block` — logical block address of the first block to write
+- `buffer` — source buffer; must be at least `num_blocks * 512` bytes
+- `num_blocks` — number of blocks to write; must be at least 1
+- `timeout_ms` — milliseconds to wait for the operation
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT`, translated ESP-IDF error on card failure.
+
+## Lifecycle
+
+1. `blusys_sdmmc_open()` — initialize slot and mount card
+2. `blusys_sdmmc_read_blocks()` / `blusys_sdmmc_write_blocks()` — raw block access
+3. `blusys_sdmmc_close()` — unmount and release
 
 ## Thread Safety
 
 - concurrent operations on the same handle are serialized internally
-- do not call `blusys_sdmmc_close()` concurrently with other calls using the same handle
+- do not call `blusys_sdmmc_close()` concurrently with other calls on the same handle
 
 ## ISR Notes
 
@@ -68,17 +131,9 @@ No ISR-safe calls are defined for the SDMMC module.
 
 ## Limitations
 
-- block size is fixed at 512 bytes; `num_blocks` must be at least 1
-- only hardware SDMMC peripheral is used (not SPI-mode SD)
-- available only on targets with SDMMC hardware: ESP32 and ESP32-S3
+- block size is fixed at 512 bytes
+- only the hardware SDMMC peripheral is used (not SPI-mode SD)
 - filesystem layers (FAT, littlefs) are not part of this API; this is raw block access
-
-## Error Behavior
-
-- invalid pins, zero block count, or null pointer return `BLUSYS_ERR_INVALID_ARG`
-- card not present or initialization failure returns the translated ESP-IDF error
-- timeout waiting for a card operation returns `BLUSYS_ERR_TIMEOUT`
-- `BLUSYS_ERR_NOT_SUPPORTED` is returned on ESP32-C3
 
 ## Example App
 

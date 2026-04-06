@@ -2,87 +2,153 @@ site_name: Blusys HAL
 site_description: Simplified ESP32 HAL on top of ESP-IDF v5.5
 site_url: https://oguzkaganozt.github.io/blusys/
 site_dir: site
+
 theme:
   name: material
+  icon:
+    logo: material/chip
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
     - navigation.instant
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
-    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - navigation.path
     - content.code.copy
+    - content.code.annotate
+    - search.highlight
+    - search.suggest
+    - toc.follow
+
 markdown_extensions:
   - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - attr_list
+  - md_in_html
+  - def_list
   - tables
   - toc:
       permalink: true
+
 nav:
-  - Overview: index.md
-  - Get Started: guides/getting-started.md
+  - Home:
+      - index.md
+      - Getting Started: guides/getting-started.md
+      - Compatibility: target-matrix.md
   - Guides:
-      - System: guides/system-info.md
-      - GPIO: guides/gpio-basic.md
-      - UART (Blocking): guides/uart-loopback.md
-      - UART (Async): guides/uart-async.md
-      - I2C Master: guides/i2c-scan.md
-      - I2C Slave: guides/i2c-slave-basic.md
-      - I2S TX: guides/i2s-basic.md
-      - I2S RX: guides/i2s-rx-basic.md
-      - SPI Master: guides/spi-loopback.md
-      - SPI Slave: guides/spi-slave-basic.md
-      - PWM: guides/pwm-basic.md
-      - ADC: guides/adc-basic.md
-      - DAC: guides/dac-basic.md
-      - SDM: guides/sdm-basic.md
-      - MCPWM: guides/mcpwm-basic.md
-      - Timer: guides/timer-basic.md
-      - PCNT: guides/pcnt-basic.md
-      - RMT TX: guides/rmt-basic.md
-      - RMT RX: guides/rmt-rx-basic.md
-      - TWAI: guides/twai-basic.md
-      - Touch: guides/touch-basic.md
-      - SD/MMC: guides/sdmmc-basic.md
-      - Temperature Sensor: guides/temp-sensor-basic.md
-      - Watchdog: guides/wdt-basic.md
-      - Sleep: guides/sleep-basic.md
-      - WiFi: guides/wifi-connect.md
-      - NVS: guides/nvs-basic.md
-      - HTTP Client: guides/http-basic.md
-      - HTTP Server: guides/http-server-basic.md
-      - MQTT: guides/mqtt-basic.md
-      - OTA: guides/ota-basic.md
-      - SNTP: guides/sntp-basic.md
-      - mDNS: guides/mdns-basic.md
-      - Hardware Smoke Tests: guides/hardware-smoke-tests.md
+      - guides/index.md
+      - Core Peripherals:
+          - GPIO: guides/gpio-basic.md
+          - UART (Blocking): guides/uart-loopback.md
+          - UART (Async): guides/uart-async.md
+          - I2C Master: guides/i2c-scan.md
+          - I2C Slave: guides/i2c-slave-basic.md
+          - SPI Master: guides/spi-loopback.md
+          - SPI Slave: guides/spi-slave-basic.md
+      - Analog:
+          - ADC: guides/adc-basic.md
+          - DAC: guides/dac-basic.md
+          - SDM: guides/sdm-basic.md
+          - PWM: guides/pwm-basic.md
+      - Timers & Counters:
+          - Timer: guides/timer-basic.md
+          - PCNT: guides/pcnt-basic.md
+          - RMT TX: guides/rmt-basic.md
+          - RMT RX: guides/rmt-rx-basic.md
+          - MCPWM: guides/mcpwm-basic.md
+      - Bus:
+          - TWAI: guides/twai-basic.md
+          - I2S TX: guides/i2s-basic.md
+          - I2S RX: guides/i2s-rx-basic.md
+          - SD/MMC: guides/sdmmc-basic.md
+      - Sensors:
+          - Touch: guides/touch-basic.md
+          - Temperature: guides/temp-sensor-basic.md
+      - System:
+          - System Info: guides/system-info.md
+          - NVS: guides/nvs-basic.md
+          - Sleep: guides/sleep-basic.md
+          - Watchdog: guides/wdt-basic.md
+      - Networking:
+          - WiFi: guides/wifi-connect.md
+          - HTTP Client: guides/http-basic.md
+          - HTTP Server: guides/http-server-basic.md
+          - MQTT: guides/mqtt-basic.md
+          - OTA: guides/ota-basic.md
+          - SNTP: guides/sntp-basic.md
+          - mDNS: guides/mdns-basic.md
+      - Testing:
+          - Hardware Smoke Tests: guides/hardware-smoke-tests.md
+          - Concurrency Tests: guides/concurrency-tests.md
+          - Validation Template: guides/hardware-validation-report-template.md
   - API Reference:
-      - System: modules/system.md
-      - GPIO: modules/gpio.md
-      - UART: modules/uart.md
-      - I2C Master: modules/i2c.md
-      - I2C Slave: modules/i2c_slave.md
-      - I2S TX: modules/i2s.md
-      - SPI Master: modules/spi.md
-      - SPI Slave: modules/spi_slave.md
-      - PWM: modules/pwm.md
-      - ADC: modules/adc.md
-      - DAC: modules/dac.md
-      - SDM: modules/sdm.md
-      - MCPWM: modules/mcpwm.md
-      - Timer: modules/timer.md
-      - PCNT: modules/pcnt.md
-      - RMT: modules/rmt.md
-      - TWAI: modules/twai.md
-      - Touch: modules/touch.md
-      - SD/MMC: modules/sdmmc.md
-      - Temperature Sensor: modules/temp_sensor.md
-      - Watchdog: modules/wdt.md
-      - Sleep: modules/sleep.md
-      - WiFi: modules/wifi.md
-      - NVS: modules/nvs.md
-      - HTTP Client: modules/http_client.md
-      - HTTP Server: modules/http_server.md
-      - MQTT: modules/mqtt.md
-      - OTA: modules/ota.md
-      - SNTP: modules/sntp.md
-      - mDNS: modules/mdns.md
-  - Compatibility: target-matrix.md
-  - Contributing: contributing.md
+      - modules/index.md
+      - Core Peripherals:
+          - GPIO: modules/gpio.md
+          - UART: modules/uart.md
+          - I2C Master: modules/i2c.md
+          - I2C Slave: modules/i2c_slave.md
+          - SPI Master: modules/spi.md
+          - SPI Slave: modules/spi_slave.md
+      - Analog:
+          - ADC: modules/adc.md
+          - DAC: modules/dac.md
+          - SDM: modules/sdm.md
+          - PWM: modules/pwm.md
+      - Timers & Counters:
+          - Timer: modules/timer.md
+          - PCNT: modules/pcnt.md
+          - RMT: modules/rmt.md
+          - MCPWM: modules/mcpwm.md
+      - Bus:
+          - TWAI: modules/twai.md
+          - I2S: modules/i2s.md
+          - SD/MMC: modules/sdmmc.md
+      - Sensors:
+          - Touch: modules/touch.md
+          - Temperature: modules/temp_sensor.md
+      - System:
+          - System: modules/system.md
+          - NVS: modules/nvs.md
+          - Sleep: modules/sleep.md
+          - Watchdog: modules/wdt.md
+      - Networking:
+          - WiFi: modules/wifi.md
+          - HTTP Client: modules/http_client.md
+          - HTTP Server: modules/http_server.md
+          - MQTT: modules/mqtt.md
+          - OTA: modules/ota.md
+          - SNTP: modules/sntp.md
+          - mDNS: modules/mdns.md
+  - Project:
+      - Architecture: architecture.md
+      - Vision: vision.md
+      - API Design Rules: api-design-rules.md
+      - Contributing: contributing.md
+      - Development Workflow: development-workflow.md
+      - Testing Strategy: testing-strategy.md
+      - Documentation Standards: documentation-standards.md
+      - Roadmap: roadmap.md

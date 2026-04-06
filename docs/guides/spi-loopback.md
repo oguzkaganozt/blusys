@@ -45,3 +45,8 @@ blusys_spi_close(spi);
 See `examples/spi_loopback/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [SPI Master API Reference](../modules/spi.md).

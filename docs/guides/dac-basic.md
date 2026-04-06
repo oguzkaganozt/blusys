@@ -59,3 +59,8 @@ void app_main(void)
 ## Example App
 
 See `examples/dac_basic/`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [DAC API Reference](../modules/dac.md).

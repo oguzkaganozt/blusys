@@ -2,6 +2,9 @@
 
 NTP time synchronization for setting the system clock after boot.
 
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [SNTP Basics](../guides/sntp-basic.md).
+
 ## Target Support
 
 | Target | Supported |

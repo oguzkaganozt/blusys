@@ -143,3 +143,8 @@ Check `response.body_truncated` to detect truncation.
 ## Example App
 
 See `examples/http_client_basic/` for a runnable example that connects to WiFi and performs a GET request.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [HTTP Client API Reference](../modules/http_client.md).

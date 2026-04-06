@@ -54,3 +54,8 @@ Duty is in per-mille: 0 = 0%, 500 = 50%, 1000 = 100%.
 See `examples/mcpwm_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [MCPWM API Reference](../modules/mcpwm.md).

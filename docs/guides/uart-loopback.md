@@ -47,3 +47,8 @@ blusys_uart_close(uart);
 
 See `examples/uart_loopback/` for a runnable example.
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [UART API Reference](../modules/uart.md).

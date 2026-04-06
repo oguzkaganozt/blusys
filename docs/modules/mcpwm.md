@@ -1,63 +1,90 @@
 # Motor Control PWM
 
-## Purpose
+Complementary PWM pair with configurable dead-time, designed for half-bridge and H-bridge motor drivers.
 
-The `mcpwm` module provides a complementary PWM pair suitable for half-bridge and H-bridge motor drivers:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [MCPWM Basics](../guides/mcpwm-basic.md).
 
-- open a complementary output pair (pin A and pin B) with frequency, duty cycle, and dead-time
-- update duty cycle at runtime
-- close the handle
+## Target Support
 
-## Supported Targets
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | no |
+| ESP32-S3 | yes |
 
-- ESP32
-- ESP32-S3
+On ESP32-C3, all public functions return `BLUSYS_ERR_NOT_SUPPORTED`. Use `blusys_target_supports(BLUSYS_FEATURE_MCPWM)` to check at runtime.
 
-Not available on ESP32-C3 (no MCPWM hardware).
+## Types
 
-## Quick Start Example
+### `blusys_mcpwm_t`
 
 ```c
-#include "blusys/mcpwm.h"
-
-void app_main(void)
-{
-    blusys_mcpwm_t *mcpwm;
-
-    /* 20 kHz, 50% duty, 500 ns dead-time between A and B */
-    if (blusys_mcpwm_open(18, 19, 20000, 500, 500, &mcpwm) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_mcpwm_set_duty(mcpwm, 700);  /* 70% */
-    blusys_mcpwm_close(mcpwm);
-}
+typedef struct blusys_mcpwm blusys_mcpwm_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_mcpwm_open()`.
 
-MCPWM is handle-based:
+## Functions
 
-1. call `blusys_mcpwm_open()` — configures the complementary pair and starts PWM immediately
-2. call `blusys_mcpwm_set_duty()` to change duty cycle at any time
-3. call `blusys_mcpwm_close()` when finished
+### `blusys_mcpwm_open`
 
-## Duty Cycle Units
+```c
+blusys_err_t blusys_mcpwm_open(int pin_a,
+                               int pin_b,
+                               uint32_t freq_hz,
+                               uint16_t duty_permille,
+                               uint32_t dead_time_ns,
+                               blusys_mcpwm_t **out_mcpwm);
+```
 
-Duty is expressed in per-mille (‰): 0 = 0%, 500 = 50%, 1000 = 100%.
+Configures a complementary PWM pair and starts output immediately. Pin A follows the duty cycle; pin B is the complement with dead-time inserted on both edges.
 
-Pin A follows the configured duty. Pin B is the complement with `dead_time_ns` inserted on both edges.
+**Parameters:**
+- `pin_a` — GPIO for the primary (non-inverted) output
+- `pin_b` — GPIO for the complementary (inverted) output
+- `freq_hz` — PWM frequency in Hz
+- `duty_permille` — initial duty in per-mille (0–1000; 500 = 50%)
+- `dead_time_ns` — dead-time in nanoseconds applied symmetrically to both edges
+- `out_mcpwm` — output handle
 
-## Blocking APIs
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid pins, zero frequency, duty out of range, or NULL pointer, `BLUSYS_ERR_NOT_SUPPORTED` on ESP32-C3.
 
-- `blusys_mcpwm_open()`
-- `blusys_mcpwm_close()`
-- `blusys_mcpwm_set_duty()`
+---
+
+### `blusys_mcpwm_close`
+
+```c
+blusys_err_t blusys_mcpwm_close(blusys_mcpwm_t *mcpwm);
+```
+
+Stops the PWM output and releases the handle.
+
+---
+
+### `blusys_mcpwm_set_duty`
+
+```c
+blusys_err_t blusys_mcpwm_set_duty(blusys_mcpwm_t *mcpwm, uint16_t duty_permille);
+```
+
+Updates the duty cycle at runtime. Changes take effect on the next PWM period.
+
+**Parameters:**
+- `duty_permille` — 0 (0%) to 1000 (100%)
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if duty is out of range.
+
+## Lifecycle
+
+1. `blusys_mcpwm_open()` — configure pair, output starts immediately
+2. `blusys_mcpwm_set_duty()` — update duty at any time
+3. `blusys_mcpwm_close()` — stop and release
 
 ## Thread Safety
 
 - concurrent operations on the same handle are serialized internally
-- do not call `blusys_mcpwm_close()` concurrently with other calls using the same handle
+- do not call `blusys_mcpwm_close()` concurrently with other calls on the same handle
 
 ## ISR Notes
 
@@ -65,15 +92,9 @@ No ISR-safe calls are defined for the MCPWM module.
 
 ## Limitations
 
-- one complementary pair per handle; multiple handles require separate timer and operator resources
-- dead-time is symmetric (same nanoseconds applied to rising and falling edges of both outputs)
-- available only on targets with MCPWM hardware: ESP32 and ESP32-S3
-
-## Error Behavior
-
-- invalid pins, zero frequency, duty out of range, or null pointer return `BLUSYS_ERR_INVALID_ARG`
-- `BLUSYS_ERR_NOT_SUPPORTED` is returned on ESP32-C3
-- driver initialization failures return the translated ESP-IDF error
+- one complementary pair per handle; multiple handles require separate MCPWM timer and operator resources
+- dead-time is symmetric (same nanoseconds applied to both edges of both outputs)
+- frequency cannot be changed after `open()`; close and reopen with the new frequency
 
 ## Example App
 

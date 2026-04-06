@@ -48,3 +48,8 @@ blusys_i2c_slave_close(slave);
 See `examples/i2c_slave_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [I2C Slave API Reference](../modules/i2c_slave.md).

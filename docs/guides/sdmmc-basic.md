@@ -48,3 +48,8 @@ blusys_sdmmc_close(sdmmc);
 See `examples/sdmmc_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [SD/MMC API Reference](../modules/sdmmc.md).

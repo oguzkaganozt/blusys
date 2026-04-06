@@ -56,3 +56,8 @@ See `examples/gpio_basic/` for a runnable example.
 The example uses Kconfig-selected pins so you can choose board-safe GPIOs without editing source.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [GPIO API Reference](../modules/gpio.md).

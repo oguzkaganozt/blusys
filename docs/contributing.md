@@ -1,15 +1,15 @@
 # Contributing
 
-This page keeps contributor-facing material out of the main user path.
+Contributor-facing documentation. All project docs are available under the **Project** tab in the navigation.
 
 ## Read These First
 
-- `architecture.md`
-- `api-design-rules.md`
-- `testing-strategy.md`
-- `development-workflow.md`
-- `roadmap.md`
-- `documentation-standards.md`
+- [Architecture](architecture.md)
+- [API Design Rules](api-design-rules.md)
+- [Testing Strategy](testing-strategy.md)
+- [Development Workflow](development-workflow.md)
+- [Roadmap](roadmap.md)
+- [Documentation Standards](documentation-standards.md)
 
 ## Working Rules
 

@@ -54,3 +54,8 @@ void app_main(void)
 ## Example App
 
 See `examples/adc_basic/`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [ADC API Reference](../modules/adc.md).

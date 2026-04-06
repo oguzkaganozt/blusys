@@ -2,6 +2,9 @@
 
 Zero-configuration networking: advertise services and discover other devices on the local network using multicast DNS.
 
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [mDNS Basics](../guides/mdns-basic.md).
+
 ## Target Support
 
 | Target | Supported |

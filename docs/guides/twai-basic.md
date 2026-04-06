@@ -77,3 +77,8 @@ void app_main(void)
 ## Example App
 
 See `examples/twai_basic/`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [TWAI API Reference](../modules/twai.md).

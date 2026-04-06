@@ -64,3 +64,8 @@ void app_main(void)
 ## Example App
 
 See `examples/touch_basic/`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [Touch API Reference](../modules/touch.md).
