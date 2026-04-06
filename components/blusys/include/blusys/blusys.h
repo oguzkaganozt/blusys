@@ -21,6 +21,7 @@ extern "C" {
 #include "blusys/i2c.h"
 #include "blusys/i2c_slave.h"
 #include "blusys/i2s.h"
+#include "blusys/lcd.h"
 #include "blusys/led_strip.h"
 #include "blusys/mcpwm.h"
 #include "blusys/mdns.h"

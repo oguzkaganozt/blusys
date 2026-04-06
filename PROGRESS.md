@@ -60,7 +60,7 @@ Production essentials.
   6. `power_mgmt` — CPU frequency scaling, auto light sleep ✓
   7. `ws_client` — WebSocket client for real-time bidirectional comms ✓
   8. `wifi_prov` — BLE/SoftAP-based WiFi credential provisioning ✓
-  9. `lcd` — SPI/I2C/parallel display drivers
+  9. `lcd` — SPI/I2C display drivers (ST7789, SSD1306, NT35510) ✓
 
 ### V5
 
@@ -103,6 +103,7 @@ Advanced connectivity and peripherals.
 - added `power_mgmt` module (V4) — CPU frequency scaling and automatic light sleep via esp_pm
 - added `ws_client` module (V4) — WebSocket client with async message callback via FreeRTOS receive task
 - added `wifi_prov` module (V4) — BLE/SoftAP WiFi credential provisioning with NVS persistence
+- added `lcd` module (V4) — ST7789, SSD1306, NT35510 display drivers via esp_lcd
 
 ## Current Technical State
 
@@ -155,6 +156,7 @@ Public API currently exists for:
 - `blusys_pm_*`
 - `blusys_ws_client_*`
 - `blusys_wifi_prov_*`
+- `blusys_lcd_*`
 
 Internal infrastructure currently exists for:
 
@@ -178,4 +180,4 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V4` — next module: `lcd`
+1. `V4` complete — all modules implemented; proceed to validation and `v4.0.0` release
