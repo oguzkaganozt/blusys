@@ -55,7 +55,7 @@ Production essentials.
   1. `button` — GPIO-based debounce/long-press abstraction ✓
   2. `led_strip` — addressable LEDs (WS2812, SK6812) via RMT ✓
   3. `console` — interactive UART console with command registration ✓
-  4. `fatfs` — FAT filesystem on internal flash with wear levelling
+  4. `fatfs` — FAT filesystem on internal flash with wear levelling ✓
   5. `sd_spi` — SD card over SPI bus (builds on `fatfs`)
   6. `power_mgmt` — CPU frequency scaling, auto light sleep
   7. `websocket` — WebSocket client for real-time bidirectional comms
@@ -98,6 +98,7 @@ Advanced connectivity and peripherals.
 - added `button` module (V4) — GPIO debounce and long-press abstraction
 - added `led_strip` module (V4) — WS2812B addressable LED driver via RMT
 - added `console` module (V4) — interactive UART REPL with command registration
+- added `fatfs` module (V4) — FAT filesystem on internal flash with wear-levelling
 
 ## Current Technical State
 
@@ -145,6 +146,7 @@ Public API currently exists for:
 - `blusys_button_*`
 - `blusys_led_strip_*`
 - `blusys_console_*`
+- `blusys_fatfs_*`
 
 Internal infrastructure currently exists for:
 
@@ -168,5 +170,5 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V4` — next module: `fatfs`
-2. follow implementation order: `fatfs` → `sd_spi` → `power_mgmt` → `websocket` → `wifi_prov` → `lcd`
+1. continue `V4` — next module: `sd_spi`
+2. follow implementation order: `sd_spi` → `power_mgmt` → `websocket` → `wifi_prov` → `lcd`
