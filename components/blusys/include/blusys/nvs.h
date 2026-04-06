@@ -64,4 +64,4 @@ blusys_err_t blusys_nvs_set_blob(blusys_nvs_t *nvs, const char *key, const void 
 }
 #endif
 
-#endif /* BLUSYS_NVS_H */
+#endif

@@ -132,4 +132,4 @@ blusys_err_t blusys_ble_gatt_notify(blusys_ble_gatt_t *handle,
 }
 #endif
 
-#endif /* BLUSYS_BLE_GATT_H */
+#endif

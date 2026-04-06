@@ -21,8 +21,8 @@ typedef struct blusys_http_server_req blusys_http_server_req_t; /* opaque; valid
 typedef blusys_err_t (*blusys_http_server_handler_t)(blusys_http_server_req_t *req,
                                                       void                     *user_ctx);
 
-/* A single URI/method binding.  The routes array must remain valid for the
-   lifetime of the server handle (the pointer is not copied). */
+/* A single URI/method binding.  The routes array is copied during open,
+   so the caller need not keep it alive after open returns. */
 typedef struct {
     const char                     *uri;      /* required; exact match, e.g. "/api/data" */
     blusys_http_method_t            method;

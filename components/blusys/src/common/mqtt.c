@@ -54,8 +54,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
         break;
 
     case MQTT_EVENT_DATA:
-        if ((h->message_cb != NULL) &&
-            (event->topic != NULL) && (event->topic_len > 0)) {
+        if (h->message_cb == NULL) {
+            break;
+        }
+        if ((event->topic != NULL) && (event->topic_len > 0)) {
             /* topic and data from ESP-IDF are NOT null-terminated */
             char *topic = strndup(event->topic, (size_t)event->topic_len);
             if (topic != NULL) {
@@ -308,7 +310,16 @@ bool blusys_mqtt_is_connected(blusys_mqtt_t *handle)
     if (handle == NULL) {
         return false;
     }
-    return handle->connected;
+
+    blusys_err_t err = blusys_lock_take(&handle->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return false;
+    }
+
+    bool connected = handle->connected;
+
+    blusys_lock_give(&handle->lock);
+    return connected;
 }
 
 #else /* !SOC_WIFI_SUPPORTED */

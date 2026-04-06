@@ -1,6 +1,7 @@
 #include "blusys/http_server.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "soc/soc_caps.h"
 
@@ -11,8 +12,10 @@
 #include "blusys_esp_err.h"
 
 struct blusys_http_server {
-    httpd_handle_t  esp_handle;
-    volatile bool   running;
+    httpd_handle_t                esp_handle;
+    volatile bool                 running;
+    blusys_http_server_route_t   *routes;       /* owned copy of the user's route array */
+    size_t                        route_count;
 };
 
 struct blusys_http_server_req {
@@ -83,22 +86,36 @@ blusys_err_t blusys_http_server_open(const blusys_http_server_config_t *config,
     }
     esp_cfg.max_uri_handlers = (int)config->route_count;
 
+    /* Deep-copy the routes array so callers need not keep it alive */
+    if (config->route_count > 0) {
+        h->routes = calloc(config->route_count, sizeof(blusys_http_server_route_t));
+        if (h->routes == NULL) {
+            free(h);
+            return BLUSYS_ERR_NO_MEM;
+        }
+        memcpy(h->routes, config->routes,
+               config->route_count * sizeof(blusys_http_server_route_t));
+        h->route_count = config->route_count;
+    }
+
     esp_err_t esp_err = httpd_start(&h->esp_handle, &esp_cfg);
     if (esp_err != ESP_OK) {
+        free(h->routes);
         free(h);
         return blusys_translate_esp_err(esp_err);
     }
 
-    for (size_t i = 0; i < config->route_count; i++) {
+    for (size_t i = 0; i < h->route_count; i++) {
         httpd_uri_t uri_cfg = {
-            .uri      = config->routes[i].uri,
-            .method   = to_esp_method(config->routes[i].method),
+            .uri      = h->routes[i].uri,
+            .method   = to_esp_method(h->routes[i].method),
             .handler  = route_wrapper,
-            .user_ctx = (void *)&config->routes[i],
+            .user_ctx = (void *)&h->routes[i],
         };
         esp_err = httpd_register_uri_handler(h->esp_handle, &uri_cfg);
         if (esp_err != ESP_OK) {
             httpd_stop(h->esp_handle);
+            free(h->routes);
             free(h);
             return blusys_translate_esp_err(esp_err);
         }
@@ -117,6 +134,7 @@ blusys_err_t blusys_http_server_close(blusys_http_server_t *handle)
 
     esp_err_t esp_err = httpd_stop(handle->esp_handle);
     handle->running   = false;
+    free(handle->routes);
     free(handle);
     return blusys_translate_esp_err(esp_err);
 }

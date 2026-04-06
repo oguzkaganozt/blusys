@@ -143,7 +143,12 @@ blusys_err_t blusys_rmt_rx_close(blusys_rmt_rx_t *rmt_rx)
         return err;
     }
 
-    rmt_disable(rmt_rx->channel);
+    esp_err_t esp_err = rmt_disable(rmt_rx->channel);
+    if (esp_err != ESP_OK) {
+        blusys_lock_give(&rmt_rx->lock);
+        return blusys_translate_esp_err(esp_err);
+    }
+
     rmt_del_channel(rmt_rx->channel);
 
     blusys_lock_give(&rmt_rx->lock);

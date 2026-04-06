@@ -166,6 +166,8 @@ blusys_err_t blusys_sdmmc_close(blusys_sdmmc_t *sdmmc)
         return err;
     }
 
+    sdmmc_host_deinit();
+
     free(sdmmc->card);
     sdmmc->card = NULL;
 
@@ -192,7 +194,7 @@ blusys_err_t blusys_sdmmc_read_blocks(blusys_sdmmc_t *sdmmc,
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    err = blusys_lock_take(&sdmmc->lock, timeout_ms);
+    err = blusys_lock_take(&sdmmc->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
@@ -226,7 +228,7 @@ blusys_err_t blusys_sdmmc_write_blocks(blusys_sdmmc_t *sdmmc,
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    err = blusys_lock_take(&sdmmc->lock, timeout_ms);
+    err = blusys_lock_take(&sdmmc->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }

@@ -15,10 +15,10 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
 #include "lwip/ip4_addr.h"
-#include "nvs_flash.h"
 
 #include "blusys_esp_err.h"
 #include "blusys_lock.h"
+#include "blusys_nvs_init.h"
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
@@ -78,17 +78,12 @@ blusys_err_t blusys_wifi_open(const blusys_wifi_sta_config_t *config, blusys_wif
     }
 
     /* NVS is required by the WiFi driver for RF calibration data */
-    esp_err_t esp_err = nvs_flash_init();
-    if (esp_err == ESP_ERR_NVS_NO_FREE_PAGES || esp_err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        nvs_flash_erase();
-        esp_err = nvs_flash_init();
-    }
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+    err = blusys_nvs_ensure_init();
+    if (err != BLUSYS_OK) {
         goto fail_nvs;
     }
 
-    esp_err = esp_netif_init();
+    esp_err_t esp_err = esp_netif_init();
     if (esp_err != ESP_OK) {
         err = blusys_translate_esp_err(esp_err);
         goto fail_netif_init;
@@ -246,8 +241,16 @@ blusys_err_t blusys_wifi_disconnect(blusys_wifi_t *wifi)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
+    blusys_err_t err = blusys_lock_take(&wifi->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+
     esp_err_t esp_err = esp_wifi_disconnect();
-    return blusys_translate_esp_err(esp_err);
+    err = blusys_translate_esp_err(esp_err);
+
+    blusys_lock_give(&wifi->lock);
+    return err;
 }
 
 blusys_err_t blusys_wifi_get_ip_info(blusys_wifi_t *wifi, blusys_wifi_ip_info_t *out_info)
@@ -256,13 +259,20 @@ blusys_err_t blusys_wifi_get_ip_info(blusys_wifi_t *wifi, blusys_wifi_ip_info_t 
         return BLUSYS_ERR_INVALID_ARG;
     }
 
+    blusys_err_t err = blusys_lock_take(&wifi->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+
     if (!wifi->connected) {
+        blusys_lock_give(&wifi->lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
     esp_netif_ip_info_t ip_info;
     esp_err_t esp_err = esp_netif_get_ip_info(wifi->netif, &ip_info);
     if (esp_err != ESP_OK) {
+        blusys_lock_give(&wifi->lock);
         return blusys_translate_esp_err(esp_err);
     }
 
@@ -270,6 +280,7 @@ blusys_err_t blusys_wifi_get_ip_info(blusys_wifi_t *wifi, blusys_wifi_ip_info_t 
     snprintf(out_info->netmask, sizeof(out_info->netmask),  IPSTR, IP2STR(&ip_info.netmask));
     snprintf(out_info->gateway, sizeof(out_info->gateway),  IPSTR, IP2STR(&ip_info.gw));
 
+    blusys_lock_give(&wifi->lock);
     return BLUSYS_OK;
 }
 
@@ -278,7 +289,16 @@ bool blusys_wifi_is_connected(blusys_wifi_t *wifi)
     if (wifi == NULL) {
         return false;
     }
-    return wifi->connected;
+
+    blusys_err_t err = blusys_lock_take(&wifi->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return false;
+    }
+
+    bool connected = wifi->connected;
+
+    blusys_lock_give(&wifi->lock);
+    return connected;
 }
 
 #else /* !SOC_WIFI_SUPPORTED */
