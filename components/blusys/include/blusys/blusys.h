@@ -14,6 +14,7 @@ extern "C" {
 #include "blusys/i2c_slave.h"
 #include "blusys/i2s.h"
 #include "blusys/mcpwm.h"
+#include "blusys/mqtt.h"
 #include "blusys/pcnt.h"
 #include "blusys/pwm.h"
 #include "blusys/rmt.h"
