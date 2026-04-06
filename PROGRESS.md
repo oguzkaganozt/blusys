@@ -14,7 +14,7 @@ This is the single source of truth for both roadmap and implementation progress.
 - current phase: `V3`
 - overall status: `in_progress`
 - last completed milestone: `V2`
-- next target milestone: `V3: espnow`
+- next target milestone: `V3: ble_gatt`
 - open blockers: none
 
 ## Roadmap
@@ -42,8 +42,8 @@ Core HAL expansion.
 Connectivity and system services.
 
 - status: `in_progress`
-- done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`
-- planned (in order): `espnow`, `ble_gatt`
+- done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`
+- planned (in order): `ble_gatt`
 
 ### V4
 
@@ -61,7 +61,7 @@ Advanced peripherals and ecosystem-level helpers.
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
-| V3 | in_progress | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs` done; next: `espnow`, `ble_gatt` |
+| V3 | in_progress | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow` done; next: `ble_gatt` |
 | V4 | not_started | `ana_cmpr`, `parlio`, `lcd`, `usb_serial_jtag`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
 ## Recent Work
@@ -108,6 +108,7 @@ Advanced peripherals and ecosystem-level helpers.
 - added `bluetooth` BLE advertising and scanning API, implementation, example, and docs; available on all three targets (ESP32, ESP32-C3, ESP32-S3)
 - added `fs` SPIFFS filesystem API, implementation, example, and docs; available on all three targets
 - widened `feature_mask` from `uint32_t` to `uint64_t` to support more than 32 feature flags
+- added `espnow` connectionless peer-to-peer wireless API, implementation, example, and docs; available on all three targets
 
 ## Current Technical State
 
@@ -150,6 +151,7 @@ Public API currently exists for:
 - `blusys_mdns_*`
 - `blusys_bluetooth_*`
 - `blusys_fs_*`
+- `blusys_espnow_*`
 
 Internal infrastructure currently exists for:
 
@@ -181,6 +183,7 @@ Internal infrastructure currently exists for:
 - `sntp_basic` pending hardware smoke test
 - `mdns_basic` pending hardware smoke test
 - `fs_basic` hardware smoke test passed (ESP32)
+- `espnow_basic` pending hardware smoke test
 - `mkdocs build --strict` passes
 
 ## Environment Notes
