@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "soc/soc_caps.h"
+#include "sdkconfig.h"
 
-#if SOC_BT_SUPPORTED
+#if defined(CONFIG_BT_NIMBLE_ENABLED)
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -329,7 +329,7 @@ blusys_err_t blusys_bluetooth_scan_stop(blusys_bluetooth_t *bt)
     return BLUSYS_OK;
 }
 
-#else /* !SOC_BT_SUPPORTED */
+#else /* !CONFIG_BT_NIMBLE_ENABLED */
 
 blusys_err_t blusys_bluetooth_open(const blusys_bluetooth_config_t *config,
                                     blusys_bluetooth_t **out_bt)
@@ -370,4 +370,4 @@ blusys_err_t blusys_bluetooth_scan_stop(blusys_bluetooth_t *bt)
     return BLUSYS_ERR_NOT_SUPPORTED;
 }
 
-#endif /* SOC_BT_SUPPORTED */
+#endif /* CONFIG_BT_NIMBLE_ENABLED */
