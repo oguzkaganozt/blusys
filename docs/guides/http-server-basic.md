@@ -5,7 +5,7 @@ Run an embedded HTTP server on an ESP32 that responds to incoming requests over 
 ## Prerequisites
 
 - WiFi station connected (see [WiFi guide](wifi-connect.md))
-- ESP-IDF v5.5.4 environment sourced
+- blusys installed (`blusys version` to verify)
 
 ## Minimal Example
 
