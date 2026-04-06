@@ -52,7 +52,7 @@ Pick a peripheral category to get started.
 
     Runtime info, interactive console, persistent storage, sleep modes, and watchdog.
 
-    [:octicons-arrow-right-24: System Info](system-info.md) · [Console](console-basic.md) · [NVS](nvs-basic.md) · [Filesystem](fs-basic.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md)
+    [:octicons-arrow-right-24: System Info](system-info.md) · [Console](console-basic.md) · [NVS](nvs-basic.md) · [Filesystem](fs-basic.md) · [FAT Filesystem](fatfs-basic.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md)
 
 -   :material-wifi:{ .lg .middle } **Networking**
 

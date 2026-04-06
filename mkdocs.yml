@@ -94,6 +94,7 @@ nav:
           - Console: guides/console-basic.md
           - NVS: guides/nvs-basic.md
           - Filesystem: guides/fs-basic.md
+          - FAT Filesystem: guides/fatfs-basic.md
           - Sleep: guides/sleep-basic.md
           - Watchdog: guides/wdt-basic.md
       - Networking:
@@ -144,6 +145,7 @@ nav:
           - Console: modules/console.md
           - NVS: modules/nvs.md
           - Filesystem: modules/fs.md
+          - FAT Filesystem: modules/fatfs.md
           - Sleep: modules/sleep.md
           - Watchdog: modules/wdt.md
       - Networking:

@@ -13,6 +13,7 @@ extern "C" {
 #include "blusys/dac.h"
 #include "blusys/error.h"
 #include "blusys/espnow.h"
+#include "blusys/fatfs.h"
 #include "blusys/fs.h"
 #include "blusys/gpio.h"
 #include "blusys/http_client.h"
