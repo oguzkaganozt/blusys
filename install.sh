@@ -4,8 +4,11 @@ set -euo pipefail
 
 BLUSYS_DIR="$(cd "$(dirname "$0")" && pwd)"
 BLUSYS_BIN="$BLUSYS_DIR/blusys"
+BLUSYS_COMPLETION="$BLUSYS_DIR/completions/blusys.bash"
 LINK_DIR="$HOME/.local/bin"
 LINK_PATH="$LINK_DIR/blusys"
+COMP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions"
+COMP_PATH="$COMP_DIR/blusys"
 
 if [[ ! -x "$BLUSYS_BIN" ]]; then
     printf 'error: blusys not found at %s\n' "$BLUSYS_BIN" >&2
@@ -21,6 +24,11 @@ if [[ -L "$LINK_PATH" ]]; then
     if [[ "$existing" = "$BLUSYS_BIN" ]]; then
         printf 'blusys is already installed at %s\n' "$LINK_PATH"
         printf 'blusys path: %s\n' "$BLUSYS_DIR"
+        # Still update completion in case it changed
+        if [[ -f "$BLUSYS_COMPLETION" ]]; then
+            mkdir -p "$COMP_DIR"
+            ln -sf "$BLUSYS_COMPLETION" "$COMP_PATH"
+        fi
         exit 0
     fi
     printf 'Updating symlink: %s -> %s\n' "$LINK_PATH" "$BLUSYS_BIN"
@@ -32,6 +40,13 @@ elif [[ -e "$LINK_PATH" ]]; then
 else
     printf 'Creating symlink: %s -> %s\n' "$LINK_PATH" "$BLUSYS_BIN"
     ln -s "$BLUSYS_BIN" "$LINK_PATH"
+fi
+
+# Install bash completion
+if [[ -f "$BLUSYS_COMPLETION" ]]; then
+    mkdir -p "$COMP_DIR"
+    ln -sf "$BLUSYS_COMPLETION" "$COMP_PATH"
+    printf 'Installed bash completion: %s\n' "$COMP_PATH"
 fi
 
 # Check if ~/.local/bin is in PATH
