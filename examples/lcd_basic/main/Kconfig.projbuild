@@ -1,0 +1,44 @@
+menu "Blusys LCD Basic Example"
+
+config BLUSYS_LCD_BASIC_SPI_BUS
+    int "SPI bus"
+    range 0 1
+    default 0
+
+config BLUSYS_LCD_BASIC_SCLK_PIN
+    int "SCLK GPIO pin"
+    default 18 if IDF_TARGET_ESP32
+    default 4 if IDF_TARGET_ESP32C3
+    default 12 if IDF_TARGET_ESP32S3
+
+config BLUSYS_LCD_BASIC_MOSI_PIN
+    int "MOSI GPIO pin"
+    default 23 if IDF_TARGET_ESP32
+    default 6 if IDF_TARGET_ESP32C3
+    default 11 if IDF_TARGET_ESP32S3
+
+config BLUSYS_LCD_BASIC_CS_PIN
+    int "CS GPIO pin"
+    default 5 if IDF_TARGET_ESP32
+    default 7 if IDF_TARGET_ESP32C3
+    default 10 if IDF_TARGET_ESP32S3
+
+config BLUSYS_LCD_BASIC_DC_PIN
+    int "DC GPIO pin"
+    default 2 if IDF_TARGET_ESP32
+    default 3 if IDF_TARGET_ESP32C3
+    default 13 if IDF_TARGET_ESP32S3
+
+config BLUSYS_LCD_BASIC_RST_PIN
+    int "RST GPIO pin (-1 if not used)"
+    default -1
+
+config BLUSYS_LCD_BASIC_BL_PIN
+    int "Backlight GPIO pin (-1 if not used)"
+    default -1
+
+config BLUSYS_LCD_BASIC_PCLK_HZ
+    int "SPI pixel clock Hz"
+    default 20000000
+
+endmenu

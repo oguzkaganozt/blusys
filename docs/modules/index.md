@@ -26,7 +26,7 @@ Every Blusys module is documented with the same structure: **Types** (config str
 
     ---
 
-    [:octicons-arrow-right-24: TWAI](twai.md) · [I2S](i2s.md) · [SD/MMC](sdmmc.md) · [SD over SPI](sd_spi.md)
+    [:octicons-arrow-right-24: TWAI](twai.md) · [I2S](i2s.md) · [SD/MMC](sdmmc.md) · [SD over SPI](sd_spi.md) · [LCD](lcd.md)
 
 -   :material-thermometer:{ .lg .middle } **Sensors**
 
