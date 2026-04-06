@@ -48,6 +48,7 @@ extern "C" {
 #include "blusys/version.h"
 #include "blusys/wdt.h"
 #include "blusys/wifi.h"
+#include "blusys/ws_client.h"
 
 #ifdef __cplusplus
 }
