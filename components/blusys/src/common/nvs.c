@@ -7,6 +7,7 @@
 
 #include "blusys_esp_err.h"
 #include "blusys_lock.h"
+#include "blusys_nvs_init.h"
 
 struct blusys_nvs {
     nvs_handle_t      handle;
@@ -35,13 +36,8 @@ blusys_err_t blusys_nvs_open(const char *namespace_name, blusys_nvs_mode_t mode,
         return err;
     }
 
-    esp_err = nvs_flash_init();
-    if (esp_err == ESP_ERR_NVS_NO_FREE_PAGES || esp_err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        nvs_flash_erase();
-        esp_err = nvs_flash_init();
-    }
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+    err = blusys_nvs_ensure_init();
+    if (err != BLUSYS_OK) {
         blusys_lock_deinit(&h->lock);
         free(h);
         return err;

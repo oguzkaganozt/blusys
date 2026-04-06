@@ -127,7 +127,10 @@ blusys_err_t blusys_sntp_close(blusys_sntp_t *sntp)
 
     esp_netif_sntp_deinit();
 
-    blusys_lock_take(&s_sntp_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    blusys_err_t err = blusys_lock_take(&s_sntp_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
     s_active_handle = NULL;
     blusys_lock_give(&s_sntp_global_lock);
 
