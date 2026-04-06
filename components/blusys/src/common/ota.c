@@ -9,8 +9,8 @@
 #include "esp_https_ota.h"
 #include "esp_http_client.h"
 #include "esp_ota_ops.h"
-#include "esp_system.h"
 
+#include "blusys/system.h"
 #include "blusys_esp_err.h"
 
 #define DEFAULT_TIMEOUT_MS 30000
@@ -27,7 +27,7 @@ blusys_err_t blusys_ota_open(const blusys_ota_config_t *config, blusys_ota_t **o
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    blusys_ota_t *h = calloc(1, sizeof(*h));
+    blusys_ota_t *h = malloc(sizeof(*h));
     if (h == NULL) {
         return BLUSYS_ERR_NO_MEM;
     }
@@ -50,7 +50,6 @@ blusys_err_t blusys_ota_perform(blusys_ota_t *handle)
         .url        = handle->url,
         .cert_pem   = handle->cert_pem,
         .timeout_ms = (handle->timeout_ms > 0) ? handle->timeout_ms : DEFAULT_TIMEOUT_MS,
-        .keep_alive_enable = true,
     };
     esp_https_ota_config_t ota_cfg = {
         .http_config = &http_cfg,
@@ -94,7 +93,7 @@ blusys_err_t blusys_ota_close(blusys_ota_t *handle)
 
 void blusys_ota_restart(void)
 {
-    esp_restart();
+    blusys_system_restart();
 }
 
 blusys_err_t blusys_ota_mark_valid(void)
