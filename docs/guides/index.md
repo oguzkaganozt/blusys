@@ -60,7 +60,7 @@ Pick a peripheral category to get started.
 
     WiFi, HTTP, MQTT, WebSocket, OTA updates, SNTP time sync, mDNS discovery, BLE, BLE GATT, and ESP-NOW.
 
-    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [HTTP Client](http-basic.md) · [HTTP Server](http-server-basic.md) · [MQTT](mqtt-basic.md) · [WebSocket Client](ws-client-basic.md) · [OTA](ota-basic.md) · [SNTP](sntp-basic.md) · [mDNS](mdns-basic.md) · [Bluetooth](bluetooth-basic.md) · [BLE GATT](ble_gatt-basic.md) · [ESP-NOW](espnow-basic.md)
+    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [WiFi Provisioning](wifi-prov-basic.md) · [HTTP Client](http-basic.md) · [HTTP Server](http-server-basic.md) · [MQTT](mqtt-basic.md) · [WebSocket Client](ws-client-basic.md) · [OTA](ota-basic.md) · [SNTP](sntp-basic.md) · [mDNS](mdns-basic.md) · [Bluetooth](bluetooth-basic.md) · [BLE GATT](ble_gatt-basic.md) · [ESP-NOW](espnow-basic.md)
 
 -   :material-test-tube:{ .lg .middle } **Testing**
 

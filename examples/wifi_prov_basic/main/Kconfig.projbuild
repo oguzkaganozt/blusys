@@ -1,0 +1,40 @@
+menu "WiFi Provisioning Basic Example"
+
+    choice PROV_TRANSPORT
+        prompt "Provisioning transport"
+        default PROV_TRANSPORT_BLE
+        help
+            Select the transport used to receive WiFi credentials.
+
+        config PROV_TRANSPORT_BLE
+            bool "BLE"
+            help
+                Use BLE advertising. Requires CONFIG_BT_NIMBLE_ENABLED.
+
+        config PROV_TRANSPORT_SOFTAP
+            bool "SoftAP"
+            help
+                Create a temporary access point and use HTTP to receive credentials.
+    endchoice
+
+    config PROV_SERVICE_NAME
+        string "Service name"
+        default "PROV_DEVICE"
+        help
+            BLE device name or SoftAP SSID advertised to the provisioning app.
+
+    config PROV_POP
+        string "Proof of possession"
+        default ""
+        help
+            Optional security string shown to the user in the provisioning app.
+            Leave empty to disable proof-of-possession security.
+
+    config PROV_SERVICE_KEY
+        string "SoftAP password"
+        default ""
+        help
+            Password for the SoftAP access point. Leave empty for an open AP.
+            Ignored when using BLE transport.
+
+endmenu

@@ -111,6 +111,7 @@ nav:
           - BLE GATT: guides/ble_gatt-basic.md
           - ESP-NOW: guides/espnow-basic.md
           - WebSocket Client: guides/ws-client-basic.md
+          - WiFi Provisioning: guides/wifi-prov-basic.md
       - Testing:
           - Hardware Smoke Tests: guides/hardware-smoke-tests.md
           - Concurrency Tests: guides/concurrency-tests.md
@@ -165,6 +166,7 @@ nav:
           - BLE GATT: modules/ble_gatt.md
           - ESP-NOW: modules/espnow.md
           - WebSocket Client: modules/ws_client.md
+          - WiFi Provisioning: modules/wifi_prov.md
   - Project:
       - Architecture: architecture.md
       - Vision: vision.md
