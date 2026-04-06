@@ -129,6 +129,6 @@ The build target must match the connected board. ESP-IDF v5.5+ is required and a
 
 `v3.0.0` is released.
 Full HAL peripheral coverage and connectivity stack are complete: 35 modules covering core peripherals, symmetric counterparts, system services, WiFi/HTTP/MQTT networking, Bluetooth/BLE, and storage.
-`V4` (advanced peripherals and ecosystem helpers) is planned: `eth`, `usb`, `lcd`, `efuse`, `ulp`, provisioning, and more.
+`V4` (advanced peripherals and ecosystem helpers) is in progress — shipped so far: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`.
 
 Detailed implementation tracking remains in `PROGRESS.md`.
