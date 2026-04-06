@@ -42,8 +42,8 @@ Core HAL expansion.
 Connectivity and system services.
 
 - status: `in_progress`
-- done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`
-- planned (in order): `ota`, `bluetooth`, `eth`, `usb`
+- done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`
+- planned (in order): `bluetooth`, `eth`, `usb`
 
 ### V4
 
@@ -61,7 +61,7 @@ Advanced peripherals and ecosystem-level helpers.
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
-| V3 | in_progress | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server` done; next: `ota`, `bluetooth`, `eth`, `usb` |
+| V3 | in_progress | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota` done; next: `bluetooth`, `eth`, `usb` |
 | V4 | not_started | `ana_cmpr`, `parlio`, `lcd`, `usb_serial_jtag`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
 ## Recent Work
@@ -102,6 +102,7 @@ Advanced peripherals and ecosystem-level helpers.
 - added `http_client` blocking GET/POST API, implementation, example, and docs; available on all three targets
 - added `mqtt` publish/subscribe client API, implementation, example, and docs; available on all three targets
 - added `http_server` embedded HTTP server API, implementation, example, and docs; available on all three targets
+- added `ota` over-the-air firmware update API, implementation, example, and docs; available on all three targets
 
 ## Current Technical State
 
@@ -139,6 +140,7 @@ Public API currently exists for:
 - `blusys_http_client_*`
 - `blusys_mqtt_*`
 - `blusys_http_server_*`
+- `blusys_ota_*`
 
 Internal infrastructure currently exists for:
 
@@ -166,6 +168,7 @@ Internal infrastructure currently exists for:
 - `nvs_basic` pending hardware smoke test
 - `mqtt_basic` pending hardware smoke test
 - `http_server_basic` pending hardware smoke test
+- `ota_basic` pending hardware smoke test
 - `mkdocs build --strict` passes
 
 ## Environment Notes
@@ -176,7 +179,7 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V3` — next: `ota`, `bluetooth`, `eth`, `usb`
+1. continue `V3` — next: `bluetooth`, `eth`, `usb`
 2. keep `pcnt` limited to watch points unless a concrete encoder or multi-channel use case appears
 3. keep the first `twai` cut limited to classic frames, blocking TX, and RX callbacks until a concrete need for filters, recovery, or CAN FD appears
 4. keep the first `touch` cut limited to one-pin polling reads until a concrete need appears for thresholds, callbacks, or sleep integration
