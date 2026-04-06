@@ -98,6 +98,7 @@ nav:
           - FAT Filesystem: guides/fatfs-basic.md
           - Sleep: guides/sleep-basic.md
           - Watchdog: guides/wdt-basic.md
+          - Power Management: guides/power-mgmt-basic.md
       - Networking:
           - WiFi: guides/wifi-connect.md
           - HTTP Client: guides/http-basic.md
@@ -150,6 +151,7 @@ nav:
           - FAT Filesystem: modules/fatfs.md
           - Sleep: modules/sleep.md
           - Watchdog: modules/wdt.md
+          - Power Management: modules/power_mgmt.md
       - Networking:
           - WiFi: modules/wifi.md
           - HTTP Client: modules/http_client.md
