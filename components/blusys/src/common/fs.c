@@ -18,9 +18,13 @@ struct blusys_fs {
     blusys_lock_t lock;
 };
 
-static void build_path(const blusys_fs_t *fs, const char *path, char *out, size_t out_size)
+static blusys_err_t build_path(const blusys_fs_t *fs, const char *path, char *out, size_t out_size)
 {
-    snprintf(out, out_size, "%s/%s", fs->base_path, path);
+    int ret = snprintf(out, out_size, "%s/%s", fs->base_path, path);
+    if (ret < 0 || (size_t)ret >= out_size) {
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+    return BLUSYS_OK;
 }
 
 blusys_err_t blusys_fs_mount(const blusys_fs_config_t *config, blusys_fs_t **out_fs)
@@ -97,7 +101,10 @@ blusys_err_t blusys_fs_write(blusys_fs_t *fs, const char *path, const void *data
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    build_path(fs, path, full, sizeof(full));
+    err = build_path(fs, path, full, sizeof(full));
+    if (err != BLUSYS_OK) {
+        return err;
+    }
 
     err = blusys_lock_take(&fs->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
@@ -130,7 +137,10 @@ blusys_err_t blusys_fs_read(blusys_fs_t *fs, const char *path, void *buf, size_t
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    build_path(fs, path, full, sizeof(full));
+    err = build_path(fs, path, full, sizeof(full));
+    if (err != BLUSYS_OK) {
+        return err;
+    }
 
     err = blusys_lock_take(&fs->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
@@ -160,7 +170,10 @@ blusys_err_t blusys_fs_append(blusys_fs_t *fs, const char *path, const void *dat
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    build_path(fs, path, full, sizeof(full));
+    err = build_path(fs, path, full, sizeof(full));
+    if (err != BLUSYS_OK) {
+        return err;
+    }
 
     err = blusys_lock_take(&fs->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
@@ -192,7 +205,10 @@ blusys_err_t blusys_fs_remove(blusys_fs_t *fs, const char *path)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    build_path(fs, path, full, sizeof(full));
+    err = build_path(fs, path, full, sizeof(full));
+    if (err != BLUSYS_OK) {
+        return err;
+    }
 
     err = blusys_lock_take(&fs->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
@@ -215,7 +231,10 @@ blusys_err_t blusys_fs_exists(blusys_fs_t *fs, const char *path, bool *out_exist
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    build_path(fs, path, full, sizeof(full));
+    err = build_path(fs, path, full, sizeof(full));
+    if (err != BLUSYS_OK) {
+        return err;
+    }
 
     err = blusys_lock_take(&fs->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
@@ -238,7 +257,10 @@ blusys_err_t blusys_fs_size(blusys_fs_t *fs, const char *path, size_t *out_size)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    build_path(fs, path, full, sizeof(full));
+    err = build_path(fs, path, full, sizeof(full));
+    if (err != BLUSYS_OK) {
+        return err;
+    }
 
     err = blusys_lock_take(&fs->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {

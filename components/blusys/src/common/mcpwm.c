@@ -285,7 +285,12 @@ blusys_err_t blusys_mcpwm_close(blusys_mcpwm_t *mcpwm)
         return err;
     }
 
-    mcpwm_timer_start_stop(mcpwm->timer, MCPWM_TIMER_START_STOP_EMPTY);
+    esp_err_t esp_err = mcpwm_timer_start_stop(mcpwm->timer, MCPWM_TIMER_START_STOP_EMPTY);
+    if (esp_err != ESP_OK) {
+        blusys_lock_give(&mcpwm->lock);
+        return blusys_translate_esp_err(esp_err);
+    }
+
     vTaskDelay(pdMS_TO_TICKS(1));   /* wait for current period to complete before disabling */
     mcpwm_timer_disable(mcpwm->timer);
     mcpwm_del_generator(mcpwm->gen_b);

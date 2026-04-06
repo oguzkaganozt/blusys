@@ -22,15 +22,33 @@ struct blusys_sntp {
     void                   *user_ctx;
 };
 
+static blusys_lock_t  s_sntp_global_lock;
+static bool           s_sntp_global_lock_inited;
 static blusys_sntp_t *s_active_handle;
+
+static blusys_err_t ensure_global_lock(void)
+{
+    if (!s_sntp_global_lock_inited) {
+        blusys_err_t err = blusys_lock_init(&s_sntp_global_lock);
+        if (err != BLUSYS_OK) {
+            return err;
+        }
+        s_sntp_global_lock_inited = true;
+    }
+    return BLUSYS_OK;
+}
 
 static void sntp_sync_cb(struct timeval *tv)
 {
     (void)tv;
+    if (blusys_lock_take(&s_sntp_global_lock, 0) != BLUSYS_OK) {
+        return;
+    }
     blusys_sntp_t *h = s_active_handle;
     if (h && h->sync_cb) {
         h->sync_cb(h->user_ctx);
     }
+    blusys_lock_give(&s_sntp_global_lock);
 }
 
 blusys_err_t blusys_sntp_open(const blusys_sntp_config_t *config, blusys_sntp_t **out_sntp)
@@ -39,7 +57,18 @@ blusys_err_t blusys_sntp_open(const blusys_sntp_config_t *config, blusys_sntp_t 
         return BLUSYS_ERR_INVALID_ARG;
     }
 
+    blusys_err_t gerr = ensure_global_lock();
+    if (gerr != BLUSYS_OK) {
+        return gerr;
+    }
+
+    gerr = blusys_lock_take(&s_sntp_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (gerr != BLUSYS_OK) {
+        return gerr;
+    }
+
     if (s_active_handle != NULL) {
+        blusys_lock_give(&s_sntp_global_lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
@@ -47,11 +76,13 @@ blusys_err_t blusys_sntp_open(const blusys_sntp_config_t *config, blusys_sntp_t 
 
     blusys_sntp_t *h = calloc(1, sizeof(*h));
     if (h == NULL) {
+        blusys_lock_give(&s_sntp_global_lock);
         return BLUSYS_ERR_NO_MEM;
     }
 
     blusys_err_t err = blusys_lock_init(&h->lock);
     if (err != BLUSYS_OK) {
+        blusys_lock_give(&s_sntp_global_lock);
         free(h);
         return err;
     }
@@ -77,11 +108,13 @@ blusys_err_t blusys_sntp_open(const blusys_sntp_config_t *config, blusys_sntp_t 
     esp_err_t esp_err = esp_netif_sntp_init(&sntp_cfg);
     if (esp_err != ESP_OK) {
         s_active_handle = NULL;
+        blusys_lock_give(&s_sntp_global_lock);
         blusys_lock_deinit(&h->lock);
         free(h);
         return blusys_translate_esp_err(esp_err);
     }
 
+    blusys_lock_give(&s_sntp_global_lock);
     *out_sntp = h;
     return BLUSYS_OK;
 }
@@ -93,7 +126,11 @@ blusys_err_t blusys_sntp_close(blusys_sntp_t *sntp)
     }
 
     esp_netif_sntp_deinit();
+
+    blusys_lock_take(&s_sntp_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
     s_active_handle = NULL;
+    blusys_lock_give(&s_sntp_global_lock);
+
     blusys_lock_deinit(&sntp->lock);
     free(sntp);
     return BLUSYS_OK;

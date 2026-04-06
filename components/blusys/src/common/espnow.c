@@ -11,10 +11,10 @@
 #include "esp_netif.h"
 #include "esp_now.h"
 #include "esp_wifi.h"
-#include "nvs_flash.h"
 
 #include "blusys_esp_err.h"
 #include "blusys_lock.h"
+#include "blusys_nvs_init.h"
 
 #define ESPNOW_MAX_DATA_LEN ESP_NOW_MAX_DATA_LEN  /* 250 bytes */
 
@@ -27,23 +27,45 @@ struct blusys_espnow {
 };
 
 /* ESP-NOW callbacks have no user-data pointer; use a static handle ref. */
+static blusys_lock_t    s_espnow_global_lock;
+static bool             s_espnow_global_lock_inited;
 static blusys_espnow_t *s_handle;
+
+static blusys_err_t ensure_global_lock(void)
+{
+    if (!s_espnow_global_lock_inited) {
+        blusys_err_t err = blusys_lock_init(&s_espnow_global_lock);
+        if (err != BLUSYS_OK) {
+            return err;
+        }
+        s_espnow_global_lock_inited = true;
+    }
+    return BLUSYS_OK;
+}
 
 static void espnow_recv_cb(const esp_now_recv_info_t *info,
                            const uint8_t *data, int len)
 {
+    if (blusys_lock_take(&s_espnow_global_lock, 0) != BLUSYS_OK) {
+        return;
+    }
     blusys_espnow_t *h = s_handle;
     if (h && h->recv_cb) {
         h->recv_cb(info->src_addr, data, (size_t)len, h->recv_user_ctx);
     }
+    blusys_lock_give(&s_espnow_global_lock);
 }
 
 static void espnow_send_cb(const esp_now_send_info_t *info, esp_now_send_status_t status)
 {
+    if (blusys_lock_take(&s_espnow_global_lock, 0) != BLUSYS_OK) {
+        return;
+    }
     blusys_espnow_t *h = s_handle;
     if (h && h->send_cb) {
         h->send_cb(info->des_addr, status == ESP_NOW_SEND_SUCCESS, h->send_user_ctx);
     }
+    blusys_lock_give(&s_espnow_global_lock);
 }
 
 blusys_err_t blusys_espnow_open(const blusys_espnow_config_t *config,
@@ -53,17 +75,30 @@ blusys_err_t blusys_espnow_open(const blusys_espnow_config_t *config,
         return BLUSYS_ERR_INVALID_ARG;
     }
 
+    blusys_err_t gerr = ensure_global_lock();
+    if (gerr != BLUSYS_OK) {
+        return gerr;
+    }
+
+    gerr = blusys_lock_take(&s_espnow_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (gerr != BLUSYS_OK) {
+        return gerr;
+    }
+
     if (s_handle != NULL) {
+        blusys_lock_give(&s_espnow_global_lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
     blusys_espnow_t *h = calloc(1, sizeof(*h));
     if (h == NULL) {
+        blusys_lock_give(&s_espnow_global_lock);
         return BLUSYS_ERR_NO_MEM;
     }
 
     blusys_err_t err = blusys_lock_init(&h->lock);
     if (err != BLUSYS_OK) {
+        blusys_lock_give(&s_espnow_global_lock);
         free(h);
         return err;
     }
@@ -74,17 +109,12 @@ blusys_err_t blusys_espnow_open(const blusys_espnow_config_t *config,
     h->send_user_ctx = config->send_user_ctx;
 
     /* NVS required by the WiFi driver for RF calibration data */
-    esp_err_t esp_err = nvs_flash_init();
-    if (esp_err == ESP_ERR_NVS_NO_FREE_PAGES || esp_err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        nvs_flash_erase();
-        esp_err = nvs_flash_init();
-    }
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+    err = blusys_nvs_ensure_init();
+    if (err != BLUSYS_OK) {
         goto fail_nvs;
     }
 
-    esp_err = esp_netif_init();
+    esp_err_t esp_err = esp_netif_init();
     if (esp_err != ESP_OK) {
         err = blusys_translate_esp_err(esp_err);
         goto fail_netif_init;
@@ -142,6 +172,8 @@ blusys_err_t blusys_espnow_open(const blusys_espnow_config_t *config,
     }
 
     s_handle  = h;
+    blusys_lock_give(&s_espnow_global_lock);
+
     *out_handle = h;
     return BLUSYS_OK;
 
@@ -157,6 +189,7 @@ fail_event_loop:
     esp_netif_deinit();
 fail_netif_init:
 fail_nvs:
+    blusys_lock_give(&s_espnow_global_lock);
     blusys_lock_deinit(&h->lock);
     free(h);
     return err;
@@ -179,7 +212,9 @@ blusys_err_t blusys_espnow_close(blusys_espnow_t *handle)
     esp_event_loop_delete_default();
     esp_netif_deinit();
 
+    blusys_lock_take(&s_espnow_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
     s_handle = NULL;
+    blusys_lock_give(&s_espnow_global_lock);
 
     blusys_lock_give(&handle->lock);
     blusys_lock_deinit(&handle->lock);

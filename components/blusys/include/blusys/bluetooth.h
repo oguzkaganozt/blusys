@@ -39,4 +39,4 @@ blusys_err_t blusys_bluetooth_scan_stop(blusys_bluetooth_t *bt);
 }
 #endif
 
-#endif /* BLUSYS_BLUETOOTH_H */
+#endif

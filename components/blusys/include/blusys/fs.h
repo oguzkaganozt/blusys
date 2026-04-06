@@ -104,4 +104,4 @@ blusys_err_t blusys_fs_size(blusys_fs_t *fs, const char *path, size_t *out_size)
 }
 #endif
 
-#endif /* BLUSYS_FS_H */
+#endif
