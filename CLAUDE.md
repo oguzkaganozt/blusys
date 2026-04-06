@@ -8,17 +8,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build and Flash Commands
 
-All scripts live at the repo root. Default target is `esp32s3`.
+All commands go through the unified `blusys.sh` script. Default target is `esp32s3`.
 
 ```bash
-./configure.sh examples/<name> [esp32|esp32c3|esp32s3]   # opens menuconfig
-./build.sh     examples/<name> [esp32|esp32c3|esp32s3]   # build only
-./flash.sh     examples/<name> <port> [esp32|esp32c3|esp32s3]
-./monitor.sh   examples/<name> <port> [esp32|esp32c3|esp32s3]
-./run.sh       examples/<name> <port> [esp32|esp32c3|esp32s3]   # build+flash+monitor
+./blusys.sh build          examples/<name> [esp32|esp32c3|esp32s3]   # build only
+./blusys.sh flash          examples/<name> [port] [esp32|esp32c3|esp32s3]
+./blusys.sh monitor        examples/<name> [port] [esp32|esp32c3|esp32s3]
+./blusys.sh run            examples/<name> [port] [esp32|esp32c3|esp32s3]   # build+flash+monitor
+./blusys.sh config         examples/<name> [esp32|esp32c3|esp32s3]   # opens menuconfig
+./blusys.sh clean          examples/<name> [esp32|esp32c3|esp32s3]
+./blusys.sh build-examples                                           # build all examples x all targets
+./blusys.sh                examples/<name> [port] [esp32|esp32c3|esp32s3]   # shortcut for 'run'
 ```
 
-`idf-common.sh` is sourced by all scripts:
+`blusys.sh` configuration:
 - IDF path: `~/.espressif/v5.5.4/esp-idf/`
 - Python env: `~/.espressif/python_env/idf5.5_py3.12_env`
 

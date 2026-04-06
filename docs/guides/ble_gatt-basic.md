@@ -142,7 +142,7 @@ See `examples/ble_gatt_basic/` for a runnable example that demonstrates a read-n
 Flash and monitor with:
 
 ```
-./run.sh examples/ble_gatt_basic <port> esp32
+./blusys.sh run examples/ble_gatt_basic <port> esp32
 ```
 
 Then connect with **nRF Connect** (iOS/Android): scan for `BlusysGATT`, tap Connect, find the custom service, and enable notifications on the first characteristic to see the counter increment every 2 s.
