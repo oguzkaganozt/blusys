@@ -29,6 +29,8 @@ This is the single source of truth for both roadmap and implementation progress.
 - full `V2`: `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`
 - symmetric counterparts: `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
 - `v2.0.0` release
+- full `V3`: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt`
+- `v3.0.0` release
 
 ### V2
 
@@ -60,7 +62,7 @@ Advanced peripherals and ecosystem-level helpers.
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
 | Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
-| V3 | completed | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt` |
+| V3 | completed | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt` — released `v3.0.0` |
 | V4 | not_started | `ana_cmpr`, `parlio`, `lcd`, `usb_serial_jtag`, `efuse`, `ulp`, advanced power, BSP, diagnostics, security, service helpers |
 
 ## Recent Work
@@ -110,6 +112,7 @@ Advanced peripherals and ecosystem-level helpers.
 - added `espnow` connectionless peer-to-peer wireless API, implementation, example, and docs; available on all three targets
 - added `ble_gatt` BLE GATT server API, implementation, example, and docs; available on all three targets
 - completed `V3` milestone
+- released `v3.0.0`
 
 ## Current Technical State
 
@@ -166,6 +169,7 @@ Internal infrastructure currently exists for:
 
 - `v1.0.0` release validation completed
 - `v2.0.0` release validation completed
+- `v3.0.0` release validation completed
 - all V2 examples build for `esp32`, `esp32c3`, `esp32s3`:
   - `pcnt_basic`, `rmt_basic`, `rmt_rx_basic`
   - `twai_basic`

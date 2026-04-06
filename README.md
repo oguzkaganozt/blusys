@@ -18,10 +18,12 @@ It provides a smaller API than raw ESP-IDF for common embedded tasks while keepi
 - communication: `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave`, `twai`
 - audio: `i2s` (TX and RX)
 - timing and analog: `pwm`, `adc`, `timer`, `pcnt`, `rmt` (TX and RX), `touch`, `dac`, `mcpwm`, `sdm`
-- storage: `sdmmc`, `nvs`
+- storage: `sdmmc`
 - sensors: `temp_sensor`
 - system services: `wdt`, `sleep`
-- connectivity: `wifi`, `http_client`, `http_server`, `mqtt`, `ota`
+- connectivity: `wifi`, `http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`
+- bluetooth: `bluetooth`, `ble_gatt`
+- storage: `fs`, `nvs`
 
 Target notes:
 - `pcnt` is available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
@@ -109,11 +111,17 @@ The build target must match the connected board.
 - `examples/http_server_basic/`
 - `examples/mqtt_basic/`
 - `examples/ota_basic/`
+- `examples/sntp_basic/`
+- `examples/mdns_basic/`
+- `examples/bluetooth_basic/`
+- `examples/fs_basic/`
+- `examples/espnow_basic/`
+- `examples/ble_gatt_basic/`
 
 ## Project Status
 
-`v2.0.0` is released.
-Full HAL peripheral coverage is complete, including symmetric counterparts (`i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`) and system services (`wdt`, `sleep`, `mcpwm`, `sdm`, `sdmmc`, `temp_sensor`).
-`V3` (connectivity and system services) is in progress: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, and `ota` are done; next up are `bluetooth`, `eth`, and `usb`.
+`v3.0.0` is released.
+Full HAL peripheral coverage and connectivity stack are complete: 35 modules covering core peripherals, symmetric counterparts, system services, WiFi/HTTP/MQTT networking, Bluetooth/BLE, and storage.
+`V4` (advanced peripherals and ecosystem helpers) is planned: `eth`, `usb`, `lcd`, `efuse`, `ulp`, provisioning, and more.
 
 Detailed implementation tracking remains in `PROGRESS.md`.
