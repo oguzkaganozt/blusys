@@ -11,10 +11,10 @@ This is the single source of truth for both roadmap and implementation progress.
 
 ## Current Summary
 
-- current phase: `V4`
+- current phase: `V5`
 - overall status: `in_progress`
-- last completed milestone: `V3`
-- next target milestone: `V4`
+- last completed milestone: `V4`
+- next target milestone: `V5`
 - open blockers: none
 
 ## Roadmap
@@ -31,6 +31,9 @@ This is the single source of truth for both roadmap and implementation progress.
 - `v2.0.0` release
 - full `V3`: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt`
 - `v3.0.0` release
+- full `V4`: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`
+- standalone `blusys` CLI with install-once workflow, IDF auto-detection, tab completion
+- `v4.0.0` release
 
 ### V2
 
@@ -48,19 +51,11 @@ Connectivity and system services.
 
 ### V4
 
-Production essentials.
+Production essentials and standalone CLI.
 
-- status: `in_progress`
-- implementation order:
-  1. `button` — GPIO-based debounce/long-press abstraction ✓
-  2. `led_strip` — addressable LEDs (WS2812, SK6812) via RMT ✓
-  3. `console` — interactive UART console with command registration ✓
-  4. `fatfs` — FAT filesystem on internal flash with wear levelling ✓
-  5. `sd_spi` — SD card over SPI bus (builds on `fatfs`) ✓
-  6. `power_mgmt` — CPU frequency scaling, auto light sleep ✓
-  7. `ws_client` — WebSocket client for real-time bidirectional comms ✓
-  8. `wifi_prov` — BLE/SoftAP-based WiFi credential provisioning ✓
-  9. `lcd` — SPI/I2C display drivers (ST7789, SSD1306, NT35510) ✓
+- status: `completed`
+- done: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`
+- tooling: standalone `blusys` CLI, `install.sh`, IDF auto-detection, `config-idf`, `example` command, bash tab completion
 
 ### V5
 
@@ -88,22 +83,18 @@ Advanced connectivity and peripherals.
 | Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
 | V3 | completed | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt` — released `v3.0.0` |
-| V4 | not_started | `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `websocket`, `wifi_prov`, `lcd` |
+| V4 | completed | `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`, standalone CLI — released `v4.0.0` |
 | V5 | not_started | `gpio_expander`, `ana_cmpr`, `efuse`, `ethernet`, `ulp`, `wifi_mesh`, `usb_hid`, `camera`, `local_ctrl` |
 
 ## Recent Work
 
-- released `v3.0.0`
-- restructured feature roadmap into V4/V5 release plan
-- added `button` module (V4) — GPIO debounce and long-press abstraction
-- added `led_strip` module (V4) — WS2812B addressable LED driver via RMT
-- added `console` module (V4) — interactive UART REPL with command registration
-- added `fatfs` module (V4) — FAT filesystem on internal flash with wear-levelling
-- added `sd_spi` module (V4) — SD card over SPI with FAT filesystem
-- added `power_mgmt` module (V4) — CPU frequency scaling and automatic light sleep via esp_pm
-- added `ws_client` module (V4) — WebSocket client with async message callback via FreeRTOS receive task
-- added `wifi_prov` module (V4) — BLE/SoftAP WiFi credential provisioning with NVS persistence
-- added `lcd` module (V4) — ST7789, SSD1306, NT35510 display drivers via esp_lcd
+- released `v4.0.0`
+- V4 modules: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`
+- standalone `blusys` CLI — install once, create projects anywhere, IDF auto-detection
+- `install.sh` for zero-config setup via `~/.local/bin` symlink
+- `config-idf` for interactive ESP-IDF version selection
+- `example` command for running bundled examples from anywhere
+- bash tab completion for all commands, targets, ports, and example names
 
 ## Current Technical State
 
@@ -170,14 +161,15 @@ Internal infrastructure currently exists for:
 - `v1.0.0` release validation completed
 - `v2.0.0` release validation completed
 - `v3.0.0` release validation completed
+- `v4.0.0` release validation completed
 - `mkdocs build --strict` passes
 
 ## Environment Notes
 
-- ESP-IDF version in use: `5.5.4`
-- if `export.sh` looks for a missing ESP-IDF Python env, set `IDF_PYTHON_ENV_PATH` to the installed env under `~/.espressif/python_env/`
+- ESP-IDF v5.5+ required; auto-detected by `blusys` CLI
+- install: `git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys && ~/.blusys/install.sh`
 - some examples use target-specific `sdkconfig` files
 
 ## Next Actions
 
-1. `V4` complete — all modules implemented; proceed to validation and `v4.0.0` release
+1. Begin `V5` — advanced connectivity and peripherals
