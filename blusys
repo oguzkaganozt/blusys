@@ -361,6 +361,7 @@ Commands:
   erase            Erase entire flash
   clean            Remove build directory for one target
   fullclean        Remove build directories for all targets
+  example          Run a command on a bundled example
   build-examples   Build all examples for all targets
   config-idf       Select default ESP-IDF version
   version          Show blusys and ESP-IDF version info
@@ -426,6 +427,15 @@ blusys_help_menuconfig() {
 blusys_help_fullclean() {
     printf 'Usage: blusys fullclean [project]\n'
     printf '\nRemove build directories for all targets (esp32, esp32c3, esp32s3).\n'
+}
+
+blusys_help_example() {
+    printf 'Usage: blusys example [name] [command] [args...]\n'
+    printf '\nRun a command on a bundled example.\n'
+    printf '  blusys example                      list available examples\n'
+    printf '  blusys example smoke build esp32s3   build the smoke example\n'
+    printf '  blusys example smoke run /dev/ttyACM0 esp32s3\n'
+    printf '\nIf no command is given, defaults to build.\n'
 }
 
 blusys_help_build_examples() {
@@ -774,6 +784,62 @@ cmd_fullclean() {
     fi
 }
 
+cmd_example() {
+    local examples_dir="$BLUSYS_REPO_ROOT/examples"
+
+    # No args: list available examples
+    if [[ $# -eq 0 ]]; then
+        printf 'Available examples:\n'
+        for dir in "$examples_dir"/*/CMakeLists.txt; do
+            [[ -f "$dir" ]] || continue
+            printf '  %s\n' "$(basename "$(dirname "$dir")")"
+        done
+        printf '\nUsage: blusys example <name> [command] [args...]\n'
+        return
+    fi
+
+    local name="$1"
+    shift
+    local example_path="$examples_dir/$name"
+
+    if [[ ! -d "$example_path" ]]; then
+        printf 'error: example not found: %s\n' "$name" >&2
+        printf '\nAvailable examples:\n' >&2
+        for dir in "$examples_dir"/*/CMakeLists.txt; do
+            [[ -f "$dir" ]] || continue
+            printf '  %s\n' "$(basename "$(dirname "$dir")")" >&2
+        done
+        exit 1
+    fi
+
+    # No command after name: default to build
+    if [[ $# -eq 0 ]]; then
+        cmd_build "$example_path"
+        return
+    fi
+
+    # Dispatch the command with example path as the project
+    local subcmd="$1"
+    shift
+
+    case "$subcmd" in
+        build)          cmd_build "$example_path" "$@" ;;
+        flash)          cmd_flash "$example_path" "$@" ;;
+        monitor)        cmd_monitor "$example_path" "$@" ;;
+        run)            cmd_run "$example_path" "$@" ;;
+        config|menuconfig) cmd_config "$example_path" "$@" ;;
+        size)           cmd_size "$example_path" "$@" ;;
+        erase)          cmd_erase "$example_path" "$@" ;;
+        clean)          cmd_clean "$example_path" "$@" ;;
+        fullclean)      cmd_fullclean "$example_path" ;;
+        *)
+            printf 'error: unknown command: %s\n' "$subcmd" >&2
+            blusys_help_example
+            exit 1
+            ;;
+    esac
+}
+
 cmd_build_examples() {
     if [[ $# -gt 0 ]]; then
         blusys_help_build_examples
@@ -863,6 +929,7 @@ main() {
         erase)          shift; cmd_erase "$@" ;;
         clean)          shift; cmd_clean "$@" ;;
         fullclean)      shift; cmd_fullclean "$@" ;;
+        example)        shift; cmd_example "$@" ;;
         build-examples) shift; cmd_build_examples "$@" ;;
         config-idf)     shift; cmd_config_idf "$@" ;;
         version|-v|--version) shift; cmd_version "$@" ;;

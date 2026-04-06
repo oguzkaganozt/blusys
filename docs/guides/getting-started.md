@@ -62,11 +62,12 @@ Exit the serial monitor with `Ctrl+]`.
 
 ## 6. Run An Example
 
-Examples are bundled with blusys. Build one directly:
+Examples are bundled with blusys:
 
 ```sh
-blusys build $BLUSYS_PATH/examples/smoke esp32s3
-blusys run $BLUSYS_PATH/examples/smoke /dev/ttyACM0 esp32s3
+blusys example                                   # list all examples
+blusys example smoke build esp32s3               # build the smoke example
+blusys example smoke run /dev/ttyACM0 esp32s3    # build, flash, and monitor
 ```
 
 ## Updating Blusys

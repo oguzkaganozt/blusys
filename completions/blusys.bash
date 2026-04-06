@@ -1,8 +1,9 @@
 # Bash completion for blusys
 # Auto-loaded from ~/.local/share/bash-completion/completions/blusys
 
-_blusys_commands="create build flash monitor run config menuconfig size erase clean fullclean build-examples config-idf version update help"
+_blusys_commands="create build flash monitor run config menuconfig size erase clean fullclean example build-examples config-idf version update help"
 _blusys_targets="esp32 esp32c3 esp32s3"
+_blusys_example_commands="build flash monitor run config menuconfig size erase clean fullclean"
 
 _blusys_complete_ports() {
     local ports=()
@@ -24,6 +25,15 @@ _blusys_complete_projects() {
             [[ -f "${dir}CMakeLists.txt" ]] && printf '%s\n' "${dir%/}"
         done
     fi
+}
+
+_blusys_complete_examples() {
+    local blusys_root
+    blusys_root="$(readlink -f "$(command -v blusys)" 2>/dev/null)"
+    blusys_root="$(dirname "$blusys_root")"
+    for dir in "$blusys_root"/examples/*/CMakeLists.txt; do
+        [[ -f "$dir" ]] && basename "$(dirname "$dir")"
+    done
 }
 
 _blusys() {
@@ -78,6 +88,32 @@ _blusys() {
             elif [[ $nargs -eq 3 ]]; then
                 # Must be target
                 COMPREPLY=($(compgen -W "$_blusys_targets" -- "$cur"))
+            fi
+            ;;
+
+        example)
+            local nargs=$((cword - 1))
+            if [[ $nargs -eq 1 ]]; then
+                # Complete example names
+                local examples
+                examples="$(_blusys_complete_examples)"
+                COMPREPLY=($(compgen -W "$examples" -- "$cur"))
+            elif [[ $nargs -eq 2 ]]; then
+                # Complete subcommands
+                COMPREPLY=($(compgen -W "$_blusys_example_commands" -- "$cur"))
+            elif [[ $nargs -ge 3 ]]; then
+                # Complete targets and ports based on the subcommand
+                local subcmd="${words[3]}"
+                case "$subcmd" in
+                    build|config|menuconfig|size|clean)
+                        COMPREPLY=($(compgen -W "$_blusys_targets" -- "$cur"))
+                        ;;
+                    flash|monitor|run|erase)
+                        local ports
+                        ports="$(_blusys_complete_ports)"
+                        COMPREPLY=($(compgen -W "$_blusys_targets $ports" -- "$cur"))
+                        ;;
+                esac
             fi
             ;;
 
