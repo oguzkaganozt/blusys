@@ -44,6 +44,7 @@ set(blusys_sources
     src/common/bluetooth.c
     src/common/mdns.c
     src/common/wifi.c
+    src/common/wifi_prov.c
     src/common/ws_client.c
     src/internal/blusys_lock_freertos.c
 )
@@ -62,7 +63,7 @@ idf_component_register(
     SRCS ${blusys_sources}
     INCLUDE_DIRS include
     PRIV_INCLUDE_DIRS src/internal
-    REQUIRES freertos console esp_adc esp_driver_dac esp_driver_gpio esp_driver_gptimer esp_driver_i2c esp_driver_i2s esp_driver_ledc esp_driver_mcpwm esp_driver_pcnt esp_driver_rmt esp_driver_sdm esp_driver_sdmmc esp_driver_spi esp_driver_touch_sens esp_driver_tsens esp_driver_twai esp_driver_uart esp_system esp_timer esp_wifi esp_netif esp_event nvs_flash esp_http_client esp_http_server mqtt esp_https_ota app_update bt spiffs fatfs wear_levelling esp_pm tcp_transport
+    REQUIRES freertos console esp_adc esp_driver_dac esp_driver_gpio esp_driver_gptimer esp_driver_i2c esp_driver_i2s esp_driver_ledc esp_driver_mcpwm esp_driver_pcnt esp_driver_rmt esp_driver_sdm esp_driver_sdmmc esp_driver_spi esp_driver_touch_sens esp_driver_tsens esp_driver_twai esp_driver_uart esp_system esp_timer esp_wifi esp_netif esp_event nvs_flash esp_http_client esp_http_server mqtt esp_https_ota app_update bt spiffs fatfs wear_levelling esp_pm tcp_transport wifi_provisioning protocomm
 )
 
 # Optional managed component: espressif/mdns

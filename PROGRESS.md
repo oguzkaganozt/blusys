@@ -59,7 +59,7 @@ Production essentials.
   5. `sd_spi` — SD card over SPI bus (builds on `fatfs`) ✓
   6. `power_mgmt` — CPU frequency scaling, auto light sleep ✓
   7. `ws_client` — WebSocket client for real-time bidirectional comms ✓
-  8. `wifi_prov` — BLE/SoftAP-based WiFi credential provisioning
+  8. `wifi_prov` — BLE/SoftAP-based WiFi credential provisioning ✓
   9. `lcd` — SPI/I2C/parallel display drivers
 
 ### V5
@@ -102,6 +102,7 @@ Advanced connectivity and peripherals.
 - added `sd_spi` module (V4) — SD card over SPI with FAT filesystem
 - added `power_mgmt` module (V4) — CPU frequency scaling and automatic light sleep via esp_pm
 - added `ws_client` module (V4) — WebSocket client with async message callback via FreeRTOS receive task
+- added `wifi_prov` module (V4) — BLE/SoftAP WiFi credential provisioning with NVS persistence
 
 ## Current Technical State
 
@@ -153,6 +154,7 @@ Public API currently exists for:
 - `blusys_sd_spi_*`
 - `blusys_pm_*`
 - `blusys_ws_client_*`
+- `blusys_wifi_prov_*`
 
 Internal infrastructure currently exists for:
 
@@ -176,5 +178,4 @@ Internal infrastructure currently exists for:
 
 ## Next Actions
 
-1. continue `V4` — next module: `websocket`
-2. follow implementation order: `websocket` → `wifi_prov` → `lcd`
+1. continue `V4` — next module: `lcd`
