@@ -58,3 +58,8 @@ After an RC low-pass filter the output voltage tracks approximately linearly wit
 See `examples/sdm_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [SDM API Reference](../modules/sdm.md).

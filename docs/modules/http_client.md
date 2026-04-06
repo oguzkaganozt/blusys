@@ -2,6 +2,9 @@
 
 Blocking HTTP/HTTPS client for fetching and posting data over a WiFi connection.
 
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [HTTP Client Basics](../guides/http-basic.md).
+
 ## Target Support
 
 | Target | Supported |

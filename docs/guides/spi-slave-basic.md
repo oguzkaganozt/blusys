@@ -45,3 +45,8 @@ blusys_spi_slave_close(slave);
 See `examples/spi_slave_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [SPI Slave API Reference](../modules/spi_slave.md).

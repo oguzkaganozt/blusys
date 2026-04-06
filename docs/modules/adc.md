@@ -1,89 +1,120 @@
 # ADC
 
-## Purpose
+Single-channel ADC input: raw conversion values and calibrated millivolt readings.
 
-The `adc` module provides a blocking handle-based API for the common single-channel ADC path:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [ADC Basics](../guides/adc-basic.md).
 
-- open one ADC input on a GPIO pin
-- read the raw conversion value
-- read a calibrated millivolt value when calibration is available
-- close the ADC handle
+## Target Support
 
-Phase 4 keeps the API intentionally smaller than the full ESP-IDF ADC driver surface and hides ADC unit and channel mapping internally.
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
-## Supported Targets
+## Types
 
-- ESP32
-- ESP32-C3
-- ESP32-S3
-
-## Quick Start Example
+### `blusys_adc_t`
 
 ```c
-#include "blusys/adc.h"
-
-void app_main(void)
-{
-    blusys_adc_t *adc;
-    int raw;
-
-    if (blusys_adc_open(4, BLUSYS_ADC_ATTEN_DB_12, &adc) != BLUSYS_OK) {
-        return;
-    }
-
-    if (blusys_adc_read_raw(adc, &raw) == BLUSYS_OK) {
-        /* use raw */
-    }
-
-    blusys_adc_close(adc);
-}
+typedef struct blusys_adc blusys_adc_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_adc_open()`.
 
-ADC is handle-based:
+### `blusys_adc_atten_t`
 
-1. call `blusys_adc_open()`
-2. call `blusys_adc_read_raw()` or `blusys_adc_read_mv()` as needed
-3. call `blusys_adc_close()` when finished
+```c
+typedef enum {
+    BLUSYS_ADC_ATTEN_DB_0 = 0,   /* 0–750 mV */
+    BLUSYS_ADC_ATTEN_DB_2_5,     /* 0–1050 mV */
+    BLUSYS_ADC_ATTEN_DB_6,       /* 0–1300 mV */
+    BLUSYS_ADC_ATTEN_DB_12,      /* 0–2500 mV */
+} blusys_adc_atten_t;
+```
 
-## Blocking APIs
+Selects the input attenuation and the corresponding full-scale voltage range.
 
-- `blusys_adc_open()`
-- `blusys_adc_close()`
-- `blusys_adc_read_raw()`
-- `blusys_adc_read_mv()`
+## Functions
 
-## Async APIs
+### `blusys_adc_open`
 
-None in Phase 4.
+```c
+blusys_err_t blusys_adc_open(int pin, blusys_adc_atten_t atten, blusys_adc_t **out_adc);
+```
+
+Opens one ADC channel on the given GPIO pin. ADC unit and channel are resolved internally.
+
+**Parameters:**
+- `pin` — GPIO number; must be an ADC1-capable pin on the target
+- `atten` — input attenuation and voltage range
+- `out_adc` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid pin or attenuation, `BLUSYS_ERR_BUSY` if the channel is already owned.
+
+---
+
+### `blusys_adc_close`
+
+```c
+blusys_err_t blusys_adc_close(blusys_adc_t *adc);
+```
+
+Releases the ADC channel and frees the handle.
+
+---
+
+### `blusys_adc_read_raw`
+
+```c
+blusys_err_t blusys_adc_read_raw(blusys_adc_t *adc, int *out_raw);
+```
+
+Reads the raw ADC conversion value. Range depends on the hardware resolution (typically 0–4095 for 12-bit).
+
+**Parameters:**
+- `adc` — handle
+- `out_raw` — output pointer for the raw value
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `out_raw` is NULL.
+
+---
+
+### `blusys_adc_read_mv`
+
+```c
+blusys_err_t blusys_adc_read_mv(blusys_adc_t *adc, int *out_mv);
+```
+
+Reads a calibrated millivolt value. Requires factory calibration data to be stored in eFuse or OTP.
+
+**Parameters:**
+- `adc` — handle
+- `out_mv` — output pointer for millivolt value
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_NOT_SUPPORTED` when calibrated conversion is not available on the current board, `BLUSYS_ERR_INVALID_ARG` if `out_mv` is NULL.
+
+## Lifecycle
+
+1. `blusys_adc_open()` — claim channel
+2. `blusys_adc_read_raw()` / `blusys_adc_read_mv()` — one-shot reads
+3. `blusys_adc_close()` — release channel
 
 ## Thread Safety
 
-- concurrent calls using the same handle are serialized internally
-- different ADC handles may be used independently on different ADC1 channels
-- the same ADC1 channel cannot be opened by more than one handle at a time
-- do not call `blusys_adc_close()` concurrently with other calls using the same handle
-
-## ISR Notes
-
-Phase 4 does not define ISR-safe ADC calls.
+- concurrent reads on the same handle are serialized internally
+- different handles may be used independently on different ADC1 channels
+- the same channel cannot be opened by more than one handle at a time
+- do not call `blusys_adc_close()` concurrently with other calls on the same handle
 
 ## Limitations
 
-- the common v1 API is limited to ADC1-backed GPIOs on the supported ESP32, ESP32-C3, and ESP32-S3 targets
-- the public API is pin-based and does not expose ADC unit or channel IDs
+- limited to ADC1-backed GPIOs on the supported targets
+- the public API is pin-based; ADC unit and channel IDs are not exposed
 - reads are blocking and one-shot only
-- calibrated millivolt conversion is only supported for the common calibrated attenuation modes and still depends on the target and board calibration data being usable
-- ADC readings are approximate and may be noisy depending on the board and source impedance
-
-## Error Behavior
-
-- invalid pins, attenuation values, or pointers return `BLUSYS_ERR_INVALID_ARG`
-- opening an ADC channel that is already owned by another Blusys ADC handle returns `BLUSYS_ERR_BUSY`
-- attenuation modes without calibration support still allow `blusys_adc_read_raw()`, but `blusys_adc_read_mv()` returns `BLUSYS_ERR_NOT_SUPPORTED`
-- `blusys_adc_read_mv()` returns `BLUSYS_ERR_NOT_SUPPORTED` when calibrated conversion is not available on the current board configuration
-- backend ADC failures are translated into `blusys_err_t`
+- ADC readings are approximate and may be noisy depending on board layout and source impedance
+- `blusys_adc_read_mv()` is only valid for attenuation modes with calibration support; `BLUSYS_ADC_ATTEN_DB_0` may return `BLUSYS_ERR_NOT_SUPPORTED` on some boards
 
 ## Example App
 

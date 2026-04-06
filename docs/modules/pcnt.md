@@ -1,85 +1,175 @@
 # PCNT
 
-## Purpose
+Pulse counter input with edge selection, watch-point callbacks, and glitch filtering.
 
-The `pcnt` module provides a handle-based API for the common pulse counting path:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [PCNT Basics](../guides/pcnt-basic.md).
 
-- open one pulse counter input
-- count rising, falling, or both edges
-- start and stop counting
-- clear and read the current count
-- register one watch-point callback
+## Target Support
 
-The public API keeps the ESP-IDF PCNT unit and channel model internal and exposes a smaller edge-counting surface.
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | no |
+| ESP32-S3 | yes |
 
-## Supported Targets
+On ESP32-C3, all public functions return `BLUSYS_ERR_NOT_SUPPORTED`. Use `blusys_target_supports(BLUSYS_FEATURE_PCNT)` to check at runtime.
 
-- ESP32
-- ESP32-S3
+## Types
 
-On `ESP32-C3`, the public API is present but returns `BLUSYS_ERR_NOT_SUPPORTED`, and `blusys_target_supports(BLUSYS_FEATURE_PCNT)` reports `false`.
-
-## Quick Start Example
+### `blusys_pcnt_t`
 
 ```c
-#include "blusys/pcnt.h"
-
-static bool on_watch(blusys_pcnt_t *pcnt, int watch_point, void *user_ctx)
-{
-    (void) pcnt;
-    (void) watch_point;
-    (void) user_ctx;
-    return false;
-}
-
-void app_main(void)
-{
-    blusys_pcnt_t *pcnt;
-
-    if (blusys_pcnt_open(5, BLUSYS_PCNT_EDGE_RISING, 1000u, &pcnt) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_pcnt_set_callback(pcnt, on_watch, NULL);
-    blusys_pcnt_add_watch_point(pcnt, 100);
-    blusys_pcnt_start(pcnt);
-}
+typedef struct blusys_pcnt blusys_pcnt_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_pcnt_open()`.
 
-PCNT is handle-based:
+### `blusys_pcnt_edge_t`
 
-1. call `blusys_pcnt_open()`
-2. optionally call `blusys_pcnt_set_callback()` while stopped
-3. optionally call `blusys_pcnt_add_watch_point()` while stopped
-4. call `blusys_pcnt_start()` to begin counting
-5. call `blusys_pcnt_stop()` before reconfiguration or close
-6. call `blusys_pcnt_close()` when finished
+```c
+typedef enum {
+    BLUSYS_PCNT_EDGE_RISING = 0,
+    BLUSYS_PCNT_EDGE_FALLING,
+    BLUSYS_PCNT_EDGE_BOTH,
+} blusys_pcnt_edge_t;
+```
 
-## Blocking APIs
+### `blusys_pcnt_callback_t`
 
-- `blusys_pcnt_open()`
-- `blusys_pcnt_close()`
-- `blusys_pcnt_start()`
-- `blusys_pcnt_stop()`
-- `blusys_pcnt_clear_count()`
-- `blusys_pcnt_get_count()`
-- `blusys_pcnt_add_watch_point()`
-- `blusys_pcnt_remove_watch_point()`
-- `blusys_pcnt_set_callback()`
+```c
+typedef bool (*blusys_pcnt_callback_t)(blusys_pcnt_t *pcnt, int watch_point, void *user_ctx);
+```
 
-## Async APIs
+Called in ISR context when the counter reaches a configured watch point. `watch_point` is the threshold that triggered the event. Return `true` to request a FreeRTOS yield.
 
-- `blusys_pcnt_set_callback()` registers one ISR-context callback
+## Functions
 
-The callback runs when the counter reaches any configured watch point. The return value is passed back to the PCNT driver so application code can request a yield after waking a higher-priority task from ISR context.
+### `blusys_pcnt_open`
+
+```c
+blusys_err_t blusys_pcnt_open(int pin,
+                              blusys_pcnt_edge_t edge,
+                              uint32_t max_glitch_ns,
+                              blusys_pcnt_t **out_pcnt);
+```
+
+Opens a pulse counter on the given pin. Counting begins only after `blusys_pcnt_start()`.
+
+**Parameters:**
+- `pin` — GPIO number
+- `edge` — edges to count
+- `max_glitch_ns` — glitch filter threshold in nanoseconds; pulses shorter than this are ignored (set to 0 to disable)
+- `out_pcnt` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid arguments, `BLUSYS_ERR_NOT_SUPPORTED` on ESP32-C3.
+
+---
+
+### `blusys_pcnt_close`
+
+```c
+blusys_err_t blusys_pcnt_close(blusys_pcnt_t *pcnt);
+```
+
+Stops counting and releases the handle.
+
+---
+
+### `blusys_pcnt_start`
+
+```c
+blusys_err_t blusys_pcnt_start(blusys_pcnt_t *pcnt);
+```
+
+Enables the counter.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if already running.
+
+---
+
+### `blusys_pcnt_stop`
+
+```c
+blusys_err_t blusys_pcnt_stop(blusys_pcnt_t *pcnt);
+```
+
+Disables the counter without clearing the count.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if already stopped.
+
+---
+
+### `blusys_pcnt_clear_count`
+
+```c
+blusys_err_t blusys_pcnt_clear_count(blusys_pcnt_t *pcnt);
+```
+
+Resets the counter to zero.
+
+---
+
+### `blusys_pcnt_get_count`
+
+```c
+blusys_err_t blusys_pcnt_get_count(blusys_pcnt_t *pcnt, int *out_count);
+```
+
+Returns the current counter value.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `out_count` is NULL.
+
+---
+
+### `blusys_pcnt_add_watch_point`
+
+```c
+blusys_err_t blusys_pcnt_add_watch_point(blusys_pcnt_t *pcnt, int count);
+```
+
+Adds a watch-point threshold. The registered callback fires when the counter reaches this value. Must be called while the counter is stopped.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if the counter is running.
+
+---
+
+### `blusys_pcnt_remove_watch_point`
+
+```c
+blusys_err_t blusys_pcnt_remove_watch_point(blusys_pcnt_t *pcnt, int count);
+```
+
+Removes a previously added watch-point. Must be called while the counter is stopped.
+
+---
+
+### `blusys_pcnt_set_callback`
+
+```c
+blusys_err_t blusys_pcnt_set_callback(blusys_pcnt_t *pcnt,
+                                      blusys_pcnt_callback_t callback,
+                                      void *user_ctx);
+```
+
+Registers the ISR callback for watch-point events. Must be called while the counter is stopped.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if the counter is running.
+
+## Lifecycle
+
+1. `blusys_pcnt_open()` — configure pin and edge
+2. `blusys_pcnt_set_callback()` / `blusys_pcnt_add_watch_point()` — configure events (while stopped)
+3. `blusys_pcnt_start()` — begin counting
+4. `blusys_pcnt_get_count()` — read count at any time
+5. `blusys_pcnt_stop()` — pause (optional, for reconfiguration)
+6. `blusys_pcnt_close()` — release
 
 ## Thread Safety
 
-- concurrent calls using the same handle are serialized internally
-- the callback runs outside that handle lock in ISR context
-- do not call `blusys_pcnt_close()` concurrently with other calls using the same handle
+- concurrent calls on the same handle are serialized internally
+- the callback runs outside the handle lock in ISR context
+- do not call `blusys_pcnt_close()` concurrently with other calls on the same handle
 - watch points and callbacks can only be changed while the counter is stopped
 
 ## ISR Notes
@@ -91,18 +181,9 @@ The callback runs when the counter reaches any configured watch point. The retur
 
 ## Limitations
 
-- the public API is limited to one input pin per handle
-- only watch-point callbacks are exposed publicly
-- the count range is limited to the internal hardware range used by the module
-- quadrature and control-signal modes are not exposed yet
-
-## Error Behavior
-
-- invalid pointers, invalid pins, and out-of-range watch points return `BLUSYS_ERR_INVALID_ARG`
-- starting an already running counter returns `BLUSYS_ERR_INVALID_STATE`
-- stopping an already stopped counter returns `BLUSYS_ERR_INVALID_STATE`
-- changing callbacks or watch points while running returns `BLUSYS_ERR_INVALID_STATE`
-- backend allocation and control failures are translated into `blusys_err_t`
+- one input pin per handle
+- only watch-point callbacks are exposed; continuous interrupt on every edge is not
+- quadrature and control-signal modes are not exposed
 
 ## Example App
 

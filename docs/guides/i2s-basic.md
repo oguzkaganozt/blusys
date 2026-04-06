@@ -71,3 +71,8 @@ void app_main(void)
 ## Example App
 
 See `examples/i2s_basic/`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [I2S API Reference](../modules/i2s.md).

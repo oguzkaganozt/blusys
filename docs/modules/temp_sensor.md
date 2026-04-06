@@ -1,62 +1,81 @@
 # Temperature Sensor
 
-## Purpose
+On-chip die temperature sensor. Useful for thermal monitoring and derating decisions. Not an ambient temperature measurement.
 
-The `temp_sensor` module reads the on-chip temperature sensor:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [Temperature Sensor Basics](../guides/temp-sensor-basic.md).
 
-- open the temperature sensor
-- read the current die temperature in degrees Celsius
-- close the handle
+## Target Support
 
-This is the internal silicon temperature, not an ambient measurement. It is useful for thermal monitoring and derating decisions.
+| Target | Supported |
+|--------|-----------|
+| ESP32 | no |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
-## Supported Targets
+On the original ESP32, all public functions return `BLUSYS_ERR_NOT_SUPPORTED`. Use `blusys_target_supports(BLUSYS_FEATURE_TEMP_SENSOR)` to check at runtime.
 
-- ESP32-C3
-- ESP32-S3
+## Types
 
-Not available on the original ESP32 (no on-chip temperature sensor peripheral).
-
-## Quick Start Example
+### `blusys_temp_sensor_t`
 
 ```c
-#include <stdio.h>
-
-#include "blusys/temp_sensor.h"
-
-void app_main(void)
-{
-    blusys_temp_sensor_t *tsens;
-    float celsius;
-
-    if (blusys_temp_sensor_open(&tsens) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_temp_sensor_read_celsius(tsens, &celsius);
-    printf("die temp: %.1f C\n", celsius);
-    blusys_temp_sensor_close(tsens);
-}
+typedef struct blusys_temp_sensor blusys_temp_sensor_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_temp_sensor_open()`.
 
-Temperature sensor is handle-based:
+## Functions
 
-1. call `blusys_temp_sensor_open()` — enables and calibrates the sensor
-2. call `blusys_temp_sensor_read_celsius()` as needed
-3. call `blusys_temp_sensor_close()` when finished
+### `blusys_temp_sensor_open`
 
-## Blocking APIs
+```c
+blusys_err_t blusys_temp_sensor_open(blusys_temp_sensor_t **out_tsens);
+```
 
-- `blusys_temp_sensor_open()`
-- `blusys_temp_sensor_close()`
-- `blusys_temp_sensor_read_celsius()`
+Enables and calibrates the on-chip temperature sensor.
+
+**Parameters:**
+- `out_tsens` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `out_tsens` is NULL, `BLUSYS_ERR_NOT_SUPPORTED` on the original ESP32, translated ESP-IDF error on driver initialization failure.
+
+---
+
+### `blusys_temp_sensor_close`
+
+```c
+blusys_err_t blusys_temp_sensor_close(blusys_temp_sensor_t *tsens);
+```
+
+Disables the sensor and frees the handle.
+
+---
+
+### `blusys_temp_sensor_read_celsius`
+
+```c
+blusys_err_t blusys_temp_sensor_read_celsius(blusys_temp_sensor_t *tsens, float *out_celsius);
+```
+
+Reads the current die temperature in degrees Celsius.
+
+**Parameters:**
+- `tsens` — handle
+- `out_celsius` — output pointer for the temperature value
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `out_celsius` is NULL.
+
+## Lifecycle
+
+1. `blusys_temp_sensor_open()` — enable and calibrate
+2. `blusys_temp_sensor_read_celsius()` — read temperature as needed
+3. `blusys_temp_sensor_close()` — disable and release
 
 ## Thread Safety
 
 - concurrent operations on the same handle are serialized internally
-- do not call `blusys_temp_sensor_close()` concurrently with other calls using the same handle
+- do not call `blusys_temp_sensor_close()` concurrently with other calls on the same handle
 
 ## ISR Notes
 
@@ -66,13 +85,6 @@ No ISR-safe calls are defined for the temperature sensor module.
 
 - reads silicon die temperature, not ambient temperature
 - typical accuracy is ±2 °C after calibration; do not rely on single readings for safety-critical decisions
-- available only on targets with the temperature sensor peripheral: ESP32-C3 and ESP32-S3
-
-## Error Behavior
-
-- null pointer arguments return `BLUSYS_ERR_INVALID_ARG`
-- `BLUSYS_ERR_NOT_SUPPORTED` is returned on the original ESP32
-- driver initialization failures return the translated ESP-IDF error
 
 ## Example App
 

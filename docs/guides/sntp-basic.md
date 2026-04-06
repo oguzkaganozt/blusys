@@ -75,3 +75,8 @@ localtime_r(&now, &local);
 ## Example App
 
 See `examples/sntp_basic/` for a runnable example.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [SNTP API Reference](../modules/sntp.md).

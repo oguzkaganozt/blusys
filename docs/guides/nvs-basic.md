@@ -107,3 +107,8 @@ NVS namespace names are limited to 15 characters. Longer names will cause `blusy
 ## Example App
 
 See `examples/nvs_basic/` for a runnable example that writes integers and a string, commits, reads back, and demonstrates the two-call string pattern.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [NVS API Reference](../modules/nvs.md).

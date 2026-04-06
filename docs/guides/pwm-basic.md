@@ -45,3 +45,8 @@ blusys_pwm_close(pwm);
 See `examples/pwm_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [PWM API Reference](../modules/pwm.md).

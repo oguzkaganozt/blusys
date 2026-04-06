@@ -2,6 +2,9 @@
 
 Embedded HTTP server for handling incoming requests over WiFi.
 
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [HTTP Server Basics](../guides/http-server-basic.md).
+
 ## Target Support
 
 | Target | Supported |

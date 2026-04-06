@@ -1,102 +1,153 @@
 # TWAI
 
-## Purpose
+Classic CAN-style communication using the ESP32's TWAI controller. Supports sending and receiving standard 11-bit frames with an async RX callback.
 
-The `twai` module provides a small classic CAN-style API for sending and receiving standard TWAI frames through the ESP-IDF TWAI node driver.
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [TWAI Basics](../guides/twai-basic.md).
 
-The public API keeps the common path handle-based and hides the underlying ESP-IDF node, frame, and callback types.
+## Target Support
 
-## Supported Targets
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
-- ESP32
-- ESP32-C3
-- ESP32-S3
+## Types
 
-## Quick Start Example
+### `blusys_twai_t`
 
 ```c
-#include "blusys/twai.h"
-
-static bool on_rx(blusys_twai_t *twai, const blusys_twai_frame_t *frame, void *user_ctx)
-{
-    (void) twai;
-    (void) frame;
-    (void) user_ctx;
-    return false;
-}
-
-void app_main(void)
-{
-    blusys_twai_t *twai;
-    blusys_twai_frame_t frame = {
-        .id = 0x123u,
-        .dlc = 2u,
-        .data = {0x11u, 0x22u},
-        .data_len = 2u,
-    };
-
-    if (blusys_twai_open(4, 5, 125000u, &twai) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_twai_set_rx_callback(twai, on_rx, NULL);
-    blusys_twai_start(twai);
-    blusys_twai_write(twai, &frame, 1000);
-    blusys_twai_stop(twai);
-    blusys_twai_close(twai);
-}
+typedef struct blusys_twai blusys_twai_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_twai_open()`.
 
-TWAI is handle-based:
+### `blusys_twai_frame_t`
 
-1. call `blusys_twai_open()`
-2. optionally register `blusys_twai_set_rx_callback()`
-3. call `blusys_twai_start()` to join the bus
-4. call `blusys_twai_write()` to send frames
-5. call `blusys_twai_stop()` when finished with the bus
-6. call `blusys_twai_close()` to release resources
+```c
+typedef struct {
+    uint32_t id;         /* 11-bit standard CAN identifier */
+    bool remote_frame;   /* true for remote frames (RTR bit) */
+    uint8_t dlc;         /* data length code (0–8) */
+    uint8_t data[8];     /* payload bytes */
+    size_t data_len;     /* number of valid bytes in data; 0 for remote frames */
+} blusys_twai_frame_t;
+```
 
-## Frame Model
+### `blusys_twai_rx_callback_t`
 
-- standard identifiers are supported in this first release
-- classic frames only in this first release
-- payload length must be between `0` and `8` bytes
-- `dlc` is explicit so remote frames can carry a classic request length
-- remote frames must use `data_len == 0`
-- CAN FD is intentionally out of scope
+```c
+typedef bool (*blusys_twai_rx_callback_t)(blusys_twai_t *twai,
+                                          const blusys_twai_frame_t *frame,
+                                          void *user_ctx);
+```
 
-## Blocking APIs
+Called in ISR context when a frame is received. Return `true` to request a FreeRTOS yield.
 
-- `blusys_twai_open()`
-- `blusys_twai_close()`
-- `blusys_twai_start()`
-- `blusys_twai_stop()`
-- `blusys_twai_write()`
-- `blusys_twai_set_rx_callback()`
+## Functions
+
+### `blusys_twai_open`
+
+```c
+blusys_err_t blusys_twai_open(int tx_pin,
+                              int rx_pin,
+                              uint32_t bitrate,
+                              blusys_twai_t **out_twai);
+```
+
+Installs the TWAI driver. Does not join the bus — call `blusys_twai_start()` to begin.
+
+**Parameters:**
+- `tx_pin` — GPIO for TWAI TX (connects to transceiver TXD)
+- `rx_pin` — GPIO for TWAI RX (connects to transceiver RXD)
+- `bitrate` — bus bitrate in bits/s (e.g. 125000, 500000, 1000000)
+- `out_twai` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid arguments.
+
+---
+
+### `blusys_twai_close`
+
+```c
+blusys_err_t blusys_twai_close(blusys_twai_t *twai);
+```
+
+Uninstalls the driver and frees the handle. Call `blusys_twai_stop()` first.
+
+---
+
+### `blusys_twai_start`
+
+```c
+blusys_err_t blusys_twai_start(blusys_twai_t *twai);
+```
+
+Joins the CAN bus. After this call, received frames trigger the RX callback and writes are allowed.
+
+---
+
+### `blusys_twai_stop`
+
+```c
+blusys_err_t blusys_twai_stop(blusys_twai_t *twai);
+```
+
+Leaves the bus. No frames are transmitted or received after this call.
+
+---
+
+### `blusys_twai_write`
+
+```c
+blusys_err_t blusys_twai_write(blusys_twai_t *twai,
+                               const blusys_twai_frame_t *frame,
+                               int timeout_ms);
+```
+
+Transmits one frame. Blocks until the frame is sent or the timeout expires.
+
+**Parameters:**
+- `twai` — handle
+- `frame` — frame to send; `id` must be a valid 11-bit value, `dlc` must match `data_len`
+- `timeout_ms` — milliseconds to wait; use `BLUSYS_TIMEOUT_FOREVER` to block indefinitely
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if called before `blusys_twai_start()`, `BLUSYS_ERR_TIMEOUT`, `BLUSYS_ERR_IO` if the backend reports transmit failure, `BLUSYS_ERR_INVALID_ARG` for invalid frame fields.
+
+---
+
+### `blusys_twai_set_rx_callback`
+
+```c
+blusys_err_t blusys_twai_set_rx_callback(blusys_twai_t *twai,
+                                         blusys_twai_rx_callback_t callback,
+                                         void *user_ctx);
+```
+
+Registers the ISR callback for received frames. Pass NULL to clear.
+
+## Lifecycle
+
+1. `blusys_twai_open()` — install driver
+2. `blusys_twai_set_rx_callback()` — register RX handler
+3. `blusys_twai_start()` — join bus
+4. `blusys_twai_write()` — send frames
+5. `blusys_twai_stop()` — leave bus
+6. `blusys_twai_close()` — uninstall
 
 ## Thread Safety
 
-- concurrent calls using the same handle are serialized internally
-- do not call `blusys_twai_close()` concurrently with other calls using the same handle
-- the RX callback runs in ISR context and must stay ISR-safe
+- concurrent calls on the same handle are serialized internally
+- do not call `blusys_twai_close()` concurrently with other calls on the same handle
+- the RX callback runs in ISR context
 
 ## Limitations
 
-- external transceiver hardware is required
-- receive uses a callback; there is no blocking `read()` API yet
-- only classic frames are supported
-- no public filter, loopback, listen-only, self-test, or bus-off recovery API yet
-- no explicit status or error callback API yet
-
-## Error Behavior
-
-- invalid pointers, invalid pins, invalid bitrates, non-standard frame IDs, oversized payloads, invalid `dlc`, and remote frames with data return `BLUSYS_ERR_INVALID_ARG`
-- writing before `blusys_twai_start()` returns `BLUSYS_ERR_INVALID_STATE`
-- timeout while waiting for TX completion returns `BLUSYS_ERR_TIMEOUT`
-- a completed transmit that the backend reports as failed returns `BLUSYS_ERR_IO`
-- backend allocation and control failures are translated into `blusys_err_t`
+- external transceiver hardware is required (the TWAI pins connect to transceiver TXD/RXD, not directly to the bus)
+- receive uses a callback only; no blocking read API
+- only classic standard frames (11-bit ID) are supported; CAN FD is out of scope
+- no filter, loopback, listen-only, or bus-off recovery API
 
 ## Example App
 

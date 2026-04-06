@@ -1,111 +1,197 @@
 # UART
 
-## Purpose
+Blocking serial communication with an optional async callback layer. Fixed line format: 8N1.
 
-The `uart` module provides a blocking handle-based serial API for the common UART setup path, plus a small async callback layer:
+!!! tip "Task Guides"
+    For step-by-step walkthroughs, see [UART Blocking](../guides/uart-loopback.md) or [UART Async](../guides/uart-async.md).
 
-- open a UART port with TX, RX, and baud rate
-- write bytes with a timeout
-- read bytes with a timeout
-- queue one async TX operation
-- receive async RX data through task-context callbacks
-- close the UART handle
+## Target Support
 
-Phase 3 intentionally fixes the line format to 8 data bits, no parity, and 1 stop bit.
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
-## Supported Targets
+## Types
 
-- ESP32
-- ESP32-C3
-- ESP32-S3
-
-## Quick Start Example
+### `blusys_uart_t`
 
 ```c
-#include <stddef.h>
-#include <stdint.h>
-
-#include "blusys/uart.h"
-
-void app_main(void)
-{
-    blusys_uart_t *uart;
-    uint8_t rx_buffer[16];
-    size_t read_size;
-
-    if (blusys_uart_open(1, 21, 20, 115200, &uart) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_uart_write(uart, "ping", 4, 1000);
-    blusys_uart_read(uart, rx_buffer, sizeof(rx_buffer), 1000, &read_size);
-    blusys_uart_close(uart);
-}
+typedef struct blusys_uart blusys_uart_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_uart_open()`.
 
-UART is handle-based:
+### `blusys_uart_tx_callback_t`
 
-1. call `blusys_uart_open()`
-2. use `blusys_uart_write()` and `blusys_uart_read()`
-3. optionally register async TX and RX callbacks
-4. optionally call `blusys_uart_write_async()`
-5. call `blusys_uart_close()` when finished
+```c
+typedef void (*blusys_uart_tx_callback_t)(blusys_uart_t *uart, blusys_err_t status, void *user_ctx);
+```
 
-## Blocking APIs
+Called in task context when an async TX operation completes or fails.
 
-- `blusys_uart_open()`
-- `blusys_uart_close()`
-- `blusys_uart_write()`
-- `blusys_uart_read()`
+### `blusys_uart_rx_callback_t`
 
-## Async APIs
+```c
+typedef void (*blusys_uart_rx_callback_t)(blusys_uart_t *uart,
+                                          const void *data,
+                                          size_t size,
+                                          void *user_ctx);
+```
 
-- `blusys_uart_set_tx_callback()` registers one task-context callback for async TX completion
-- `blusys_uart_set_rx_callback()` registers one task-context callback for async RX data delivery
-- `blusys_uart_write_async()` queues one async TX operation at a time
+Called in task context when received data is available. The data pointer is valid only for the duration of the callback.
 
-RX callbacks receive UART data in task context through an internal worker task. TX callbacks also run in task context after the queued write finishes or fails.
+## Functions
+
+### `blusys_uart_open`
+
+```c
+blusys_err_t blusys_uart_open(int port,
+                              int tx_pin,
+                              int rx_pin,
+                              uint32_t baudrate,
+                              blusys_uart_t **out_uart);
+```
+
+Opens a UART port and installs the driver. Line format is fixed to 8N1.
+
+**Parameters:**
+- `port` — UART port number (0, 1, or 2 depending on target)
+- `tx_pin` — GPIO number for TX
+- `rx_pin` — GPIO number for RX
+- `baudrate` — baud rate in bits per second
+- `out_uart` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid arguments, `BLUSYS_ERR_INVALID_STATE` if the port already has a driver installed.
+
+---
+
+### `blusys_uart_close`
+
+```c
+blusys_err_t blusys_uart_close(blusys_uart_t *uart);
+```
+
+Stops any pending async operation, uninstalls the driver, and frees the handle. Must not be called from within a UART async callback.
+
+---
+
+### `blusys_uart_write`
+
+```c
+blusys_err_t blusys_uart_write(blusys_uart_t *uart, const void *data, size_t size, int timeout_ms);
+```
+
+Writes bytes to the UART. Blocks until all bytes are transmitted or the timeout expires.
+
+**Parameters:**
+- `uart` — handle
+- `data` — buffer to send
+- `size` — number of bytes
+- `timeout_ms` — milliseconds to wait; use `BLUSYS_TIMEOUT_FOREVER` to block indefinitely
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT` if transmit does not complete before the timeout.
+
+---
+
+### `blusys_uart_read`
+
+```c
+blusys_err_t blusys_uart_read(blusys_uart_t *uart,
+                              void *data,
+                              size_t size,
+                              int timeout_ms,
+                              size_t *out_read);
+```
+
+Reads up to `size` bytes. Blocks until at least one byte is received or the timeout expires. Partial reads are reported through `out_read`.
+
+**Parameters:**
+- `uart` — handle
+- `data` — receive buffer
+- `size` — maximum bytes to read
+- `timeout_ms` — milliseconds to wait
+- `out_read` — number of bytes actually received
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT` when fewer than `size` bytes arrive before the timeout (partial count still reported), `BLUSYS_ERR_INVALID_STATE` while an RX callback is registered.
+
+---
+
+### `blusys_uart_flush_rx`
+
+```c
+blusys_err_t blusys_uart_flush_rx(blusys_uart_t *uart);
+```
+
+Discards any data waiting in the RX buffer.
+
+---
+
+### `blusys_uart_set_tx_callback`
+
+```c
+blusys_err_t blusys_uart_set_tx_callback(blusys_uart_t *uart,
+                                         blusys_uart_tx_callback_t callback,
+                                         void *user_ctx);
+```
+
+Registers a task-context callback for async TX completion. Cannot be changed while an async TX is pending.
+
+**Returns:** `BLUSYS_ERR_INVALID_STATE` while an async TX is in progress.
+
+---
+
+### `blusys_uart_set_rx_callback`
+
+```c
+blusys_err_t blusys_uart_set_rx_callback(blusys_uart_t *uart,
+                                         blusys_uart_rx_callback_t callback,
+                                         void *user_ctx);
+```
+
+Registers a task-context callback for async RX data delivery. While an RX callback is active, `blusys_uart_read()` must not be called.
+
+---
+
+### `blusys_uart_write_async`
+
+```c
+blusys_err_t blusys_uart_write_async(blusys_uart_t *uart, const void *data, size_t size);
+```
+
+Queues one async TX operation. Returns immediately; the registered TX callback fires on completion.
+
+**Returns:** `BLUSYS_ERR_INVALID_STATE` if another async TX is already pending.
+
+## Lifecycle
+
+1. `blusys_uart_open()` — install driver
+2. `blusys_uart_write()` / `blusys_uart_read()` — blocking transfers
+3. Optionally register TX/RX callbacks and call `blusys_uart_write_async()`
+4. `blusys_uart_close()` — tear down
 
 ## Thread Safety
 
-- concurrent read and write calls on the same handle are serialized internally
-- different UART handles may be used independently
-- do not call `blusys_uart_close()` concurrently with other calls using the same handle
-- do not call `blusys_uart_close()` from a UART async callback
-- do not call `blusys_uart_set_tx_callback()` or `blusys_uart_set_rx_callback()` from a UART async callback
-- do not change the TX completion callback while an async TX is pending
-- blocking `blusys_uart_read()` is not allowed while an RX callback is registered
-- blocking and async TX cannot overlap on the same handle
+- concurrent read and write on the same handle are serialized internally
+- different handles may be used independently
+- do not call `blusys_uart_close()` concurrently with other calls on the same handle
+- do not call `blusys_uart_close()` or change callbacks from within a UART async callback
+- blocking `blusys_uart_read()` must not overlap with an active RX callback
+- blocking and async TX must not overlap on the same handle
 
 ## ISR Notes
 
-UART callbacks do not run in ISR context.
-The async layer uses an internal task that consumes the ESP-IDF UART event queue.
+UART callbacks run in task context through an internal worker task, not in ISR context.
 
 ## Limitations
 
-- only one async TX operation can be pending per handle
-- RX async delivery is callback-based, not user-buffer-based
-- the line format is fixed to 8N1
-- hardware flow control is not exposed
-- each Blusys UART handle owns one ESP-IDF UART driver instance for one UART port
-- closing the handle cancels any pending async callback delivery
-- `blusys_uart_close()` is not allowed from the UART async callback task
-- callback registration changes are not allowed from the UART async callback task
-
-## Error Behavior
-
-- invalid ports, pins, baud rate, or pointers return `BLUSYS_ERR_INVALID_ARG`
-- trying to open a UART port that already has a driver installed returns `BLUSYS_ERR_INVALID_STATE`
-- `blusys_uart_read()` returns `BLUSYS_ERR_TIMEOUT` when fewer than the requested bytes arrive before the timeout and still reports the partial byte count through `out_read`
-- `blusys_uart_write()` returns `BLUSYS_ERR_TIMEOUT` if transmit completion does not finish before the timeout
-- `blusys_uart_write_async()` returns `BLUSYS_ERR_INVALID_STATE` if another async TX is already pending
-- `blusys_uart_set_tx_callback()` returns `BLUSYS_ERR_INVALID_STATE` while an async TX is pending
-- `blusys_uart_read()` returns `BLUSYS_ERR_INVALID_STATE` while an RX callback is registered
+- one async TX operation can be pending per handle
+- the line format is fixed to 8N1; hardware flow control is not exposed
+- each handle owns one ESP-IDF UART driver instance for one UART port
+- closing the handle cancels pending async callback delivery
 
 ## Example App
 
-See `examples/uart_loopback/`.
-See `examples/uart_async/` for task-context callback usage.
+See `examples/uart_loopback/` for blocking usage.
+See `examples/uart_async/` for async callback usage.

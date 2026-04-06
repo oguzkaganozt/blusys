@@ -1,74 +1,88 @@
 # DAC
 
-## Purpose
+On-chip digital-to-analog converter: write an 8-bit voltage level to a DAC-capable GPIO.
 
-The `dac` module provides a small blocking oneshot output API for the on-chip DAC:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [DAC Basics](../guides/dac-basic.md).
 
-- open one DAC-capable GPIO
-- write an 8-bit output value
-- close the handle when finished
+## Target Support
 
-The first release is intentionally limited to the direct voltage-output path and hides ESP-IDF DAC channel types.
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | no |
+| ESP32-S3 | no |
 
-## Supported Targets
+On ESP32-C3 and ESP32-S3, all public functions return `BLUSYS_ERR_NOT_SUPPORTED`. Use `blusys_target_supports(BLUSYS_FEATURE_DAC)` to check at runtime.
 
-- ESP32
+## Types
 
-On `ESP32-C3` and `ESP32-S3`, the public API is present but returns `BLUSYS_ERR_NOT_SUPPORTED`, and `blusys_target_supports(BLUSYS_FEATURE_DAC)` reports `false`.
-
-## Quick Start Example
+### `blusys_dac_t`
 
 ```c
-#include <stdint.h>
-
-#include "blusys/dac.h"
-
-void app_main(void)
-{
-    blusys_dac_t *dac;
-
-    if (blusys_dac_open(25, &dac) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_dac_write(dac, 128u);
-    blusys_dac_close(dac);
-}
+typedef struct blusys_dac blusys_dac_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_dac_open()`.
 
-DAC is handle-based:
+## Functions
 
-1. call `blusys_dac_open()`
-2. call `blusys_dac_write()` one or more times
-3. call `blusys_dac_close()` when finished
+### `blusys_dac_open`
 
-## Blocking APIs
+```c
+blusys_err_t blusys_dac_open(int pin, blusys_dac_t **out_dac);
+```
 
-- `blusys_dac_open()`
-- `blusys_dac_close()`
-- `blusys_dac_write()`
+Opens one DAC channel. Valid pins on ESP32: GPIO25 (channel 1), GPIO26 (channel 2).
+
+**Parameters:**
+- `pin` — DAC-capable GPIO number
+- `out_dac` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid pins, `BLUSYS_ERR_BUSY` if the channel is already open, `BLUSYS_ERR_NOT_SUPPORTED` on unsupported targets.
+
+---
+
+### `blusys_dac_close`
+
+```c
+blusys_err_t blusys_dac_close(blusys_dac_t *dac);
+```
+
+Releases the DAC channel and frees the handle.
+
+---
+
+### `blusys_dac_write`
+
+```c
+blusys_err_t blusys_dac_write(blusys_dac_t *dac, uint8_t value);
+```
+
+Sets the DAC output to `value`. The output voltage is approximately `value / 255 × VDD`.
+
+**Parameters:**
+- `dac` — handle
+- `value` — 8-bit output value (0 = 0V, 255 = VDD)
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if called after `close` has started.
+
+## Lifecycle
+
+1. `blusys_dac_open()` — claim channel
+2. `blusys_dac_write()` — set output voltage
+3. `blusys_dac_close()` — release channel
 
 ## Thread Safety
 
-- concurrent calls using the same handle are serialized internally
-- do not call `blusys_dac_close()` concurrently with other calls using the same handle
+- concurrent calls on the same handle are serialized internally
+- do not call `blusys_dac_close()` concurrently with other calls on the same handle
 
 ## Limitations
 
-- the first release supports only oneshot voltage output
-- valid public pins are GPIO25 and GPIO26 on ESP32
-- each DAC channel can be opened only once at a time across the whole process
-- cosine generation and continuous DMA output are out of scope for the first release
-
-## Error Behavior
-
-- invalid pointers and non-DAC GPIOs return `BLUSYS_ERR_INVALID_ARG`
-- opening an already-open DAC channel returns `BLUSYS_ERR_BUSY`
-- calling `blusys_dac_write()` after close has started returns `BLUSYS_ERR_INVALID_STATE`
-- unsupported targets return `BLUSYS_ERR_NOT_SUPPORTED`
-- backend allocation and driver failures are translated into `blusys_err_t`
+- valid on GPIO25 and GPIO26 (ESP32 only)
+- each DAC channel can be opened only once at a time
+- only direct oneshot voltage output is supported; cosine generation and continuous DMA output are not exposed
 
 ## Example App
 

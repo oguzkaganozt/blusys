@@ -75,3 +75,8 @@ Pass `mclk_pin = -1` if the microphone does not need a master clock. Some microp
 See `examples/i2s_rx_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [I2S API Reference](../modules/i2s.md).

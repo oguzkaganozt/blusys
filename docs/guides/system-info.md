@@ -48,3 +48,8 @@ The program prints stable diagnostic values such as uptime, reset reason, and he
 See `examples/system_info/` for a fuller example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [System API Reference](../modules/system.md).

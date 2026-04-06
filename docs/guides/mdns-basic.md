@@ -95,3 +95,8 @@ blusys_mdns_txt_item_t txt[] = {
 ## Example App
 
 See `examples/mdns_basic/` for a runnable example.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [mDNS API Reference](../modules/mdns.md).

@@ -111,3 +111,8 @@ Without this call, the bootloader will roll back to the previous firmware on the
 **Firmware URL points to wrong target**: Flashing firmware built for a different chip results in a validation error from the ESP-IDF bootloader.
 
 **Stack overflow during perform()**: `perform()` calls into the ESP-IDF HTTP client and OTA stack. Run it from a task with at least 8 KB of stack.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [OTA API Reference](../modules/ota.md).

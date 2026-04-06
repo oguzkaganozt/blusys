@@ -1,63 +1,110 @@
 # I2C Slave
 
-## Purpose
+Slave-mode I2C: receive bytes from a master and transmit bytes back on request.
 
-The `i2c_slave` module provides a callback-driven slave-mode I2C API:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [I2C Slave](../guides/i2c-slave-basic.md).
 
-- open an I2C slave device with SDA, SCL, 7-bit address, and TX buffer size
-- wait to receive bytes from a master (blocking with timeout)
-- transmit bytes to a master on request (blocking with timeout)
-- close the slave handle
+## Target Support
 
-## Supported Targets
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
-- ESP32
-- ESP32-C3
-- ESP32-S3
+## Types
 
-## Quick Start Example
+### `blusys_i2c_slave_t`
 
 ```c
-#include <stdint.h>
-
-#include "blusys/i2c_slave.h"
-
-void app_main(void)
-{
-    blusys_i2c_slave_t *slave;
-    uint8_t buf[32];
-    size_t received;
-
-    if (blusys_i2c_slave_open(8, 9, 0x55, 128, &slave) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_i2c_slave_receive(slave, buf, sizeof(buf), &received, 5000);
-    blusys_i2c_slave_transmit(slave, buf, received, 5000);
-    blusys_i2c_slave_close(slave);
-}
+typedef struct blusys_i2c_slave blusys_i2c_slave_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_i2c_slave_open()`.
 
-I2C slave is handle-based:
+## Functions
 
-1. call `blusys_i2c_slave_open()` — configures pins, address, and TX buffer
-2. call `blusys_i2c_slave_receive()` to block until a master writes to the device
-3. call `blusys_i2c_slave_transmit()` to queue bytes for the next master read
-4. call `blusys_i2c_slave_close()` when finished
+### `blusys_i2c_slave_open`
 
-## Blocking APIs
+```c
+blusys_err_t blusys_i2c_slave_open(int sda_pin,
+                                    int scl_pin,
+                                    uint16_t addr,
+                                    uint32_t tx_buf_size,
+                                    blusys_i2c_slave_t **out_slave);
+```
 
-- `blusys_i2c_slave_open()`
-- `blusys_i2c_slave_close()`
-- `blusys_i2c_slave_receive()` — blocks until data arrives or timeout expires
-- `blusys_i2c_slave_transmit()` — blocks until bytes are queued or timeout expires
+Opens an I2C slave device. Port selection is automatic.
+
+**Parameters:**
+- `sda_pin` — GPIO for SDA
+- `scl_pin` — GPIO for SCL
+- `addr` — 7-bit slave address
+- `tx_buf_size` — size of the internal TX buffer in bytes; must be greater than zero
+- `out_slave` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid pins, zero buffer size, or NULL pointer.
+
+---
+
+### `blusys_i2c_slave_close`
+
+```c
+blusys_err_t blusys_i2c_slave_close(blusys_i2c_slave_t *slave);
+```
+
+Releases the I2C slave and frees the handle.
+
+---
+
+### `blusys_i2c_slave_receive`
+
+```c
+blusys_err_t blusys_i2c_slave_receive(blusys_i2c_slave_t *slave,
+                                       uint8_t *buf,
+                                       size_t size,
+                                       size_t *bytes_received,
+                                       int timeout_ms);
+```
+
+Blocks until `size` bytes are received from the master or the timeout expires.
+
+**Parameters:**
+- `slave` — handle
+- `buf` — receive buffer
+- `size` — number of bytes to wait for
+- `bytes_received` — actual bytes received
+- `timeout_ms` — milliseconds to wait; use `BLUSYS_TIMEOUT_FOREVER` to block indefinitely
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT` if data does not arrive in time.
+
+---
+
+### `blusys_i2c_slave_transmit`
+
+```c
+blusys_err_t blusys_i2c_slave_transmit(blusys_i2c_slave_t *slave,
+                                        const uint8_t *buf,
+                                        size_t size,
+                                        int timeout_ms);
+```
+
+Queues bytes into the TX buffer for the master to read on the next read transaction. Blocks until the bytes are queued or the timeout expires.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT` on queue failure.
+
+## Lifecycle
+
+1. `blusys_i2c_slave_open()` — configure slave address and buffers
+2. `blusys_i2c_slave_receive()` — block for master writes
+3. `blusys_i2c_slave_transmit()` — queue bytes for master reads
+4. `blusys_i2c_slave_close()` — release
 
 ## Thread Safety
 
 - concurrent operations on the same handle are serialized internally
-- do not call `blusys_i2c_slave_close()` concurrently with other calls using the same handle
+- do not call `blusys_i2c_slave_close()` concurrently with other calls on the same handle
 
 ## ISR Notes
 
@@ -66,15 +113,9 @@ The underlying receive completion is ISR-driven. The public `blusys_i2c_slave_re
 ## Limitations
 
 - only 7-bit addressing is supported
-- port selection is automatic; there is no explicit port parameter
-- uses the ESP-IDF V1 slave driver; the received byte count equals the byte count requested at `receive()` time (the V1 driver does not report a partial count)
+- port selection is automatic; no explicit port parameter
+- uses the ESP-IDF V1 slave driver; the received byte count equals the `size` requested at `receive()` time
 - `tx_buf_size` must be greater than zero
-
-## Error Behavior
-
-- invalid pins, zero buffer size, or null pointers return `BLUSYS_ERR_INVALID_ARG`
-- timeouts waiting for master activity return `BLUSYS_ERR_TIMEOUT`
-- driver initialization failures return the translated ESP-IDF error
 
 ## Example App
 

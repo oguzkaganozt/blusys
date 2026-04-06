@@ -1,21 +1,17 @@
 # NVS
 
-## Purpose
+Persistent key-value storage backed by ESP32 flash. NVS data survives power cycles and soft resets — the standard mechanism for device configuration, calibration data, and runtime state.
 
-The `nvs` module provides persistent key-value storage backed by ESP32 flash:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [NVS Basics](../guides/nvs-basic.md).
 
-- open a named namespace in read-only or read-write mode
-- read and write typed values (integers, strings, blobs)
-- commit writes to flash when ready
-- erase individual keys or the entire namespace
+## Target Support
 
-NVS data survives power cycles and soft resets. It is the standard mechanism for storing device configuration, calibration data, and runtime state on ESP32.
-
-## Supported Targets
-
-- ESP32
-- ESP32-C3
-- ESP32-S3
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
 ## Quick Start Example
 

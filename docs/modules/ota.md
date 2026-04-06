@@ -2,6 +2,9 @@
 
 Over-the-Air firmware update: download a firmware binary from a URL and flash it to the next OTA partition.
 
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [OTA Basics](../guides/ota-basic.md).
+
 ## Target Support
 
 | Target | Supported |

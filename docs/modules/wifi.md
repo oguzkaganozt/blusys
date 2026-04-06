@@ -2,6 +2,9 @@
 
 Station-mode WiFi for connecting the ESP32 to an existing access point.
 
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [WiFi Connect](../guides/wifi-connect.md).
+
 ## Target Support
 
 | Target | Supported |

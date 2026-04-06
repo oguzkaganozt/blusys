@@ -1,69 +1,89 @@
 # Sigma-Delta Modulation
 
-## Purpose
+High-frequency sigma-delta bitstream output on a GPIO. Useful for LED dimming, simple DAC approximation with an RC filter, or any load that accepts a PWM-style bitstream.
 
-The `sdm` module provides a sigma-delta modulation output on a GPIO pin:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [SDM Basics](../guides/sdm-basic.md).
 
-- open an SDM channel on a pin with a sample rate
-- set the pulse density to produce a pseudo-analog output level
-- close the handle
+## Target Support
 
-SDM is useful for driving LEDs, simple DACs with an RC filter, or any load where a PWM-style bit-stream is acceptable.
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
-## Supported Targets
+## Types
 
-- ESP32
-- ESP32-C3
-- ESP32-S3
-
-## Quick Start Example
+### `blusys_sdm_t`
 
 ```c
-#include "blusys/sdm.h"
-
-void app_main(void)
-{
-    blusys_sdm_t *sdm;
-
-    if (blusys_sdm_open(8, 1000000, &sdm) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_sdm_set_density(sdm, 64);   /* ~75% output level */
-    blusys_sdm_close(sdm);
-}
+typedef struct blusys_sdm blusys_sdm_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_sdm_open()`.
 
-SDM is handle-based:
+## Functions
 
-1. call `blusys_sdm_open()` — configures the channel and enables the output
-2. call `blusys_sdm_set_density()` to change the output level
-3. call `blusys_sdm_close()` when finished
+### `blusys_sdm_open`
 
-## Density Scale
+```c
+blusys_err_t blusys_sdm_open(int pin, uint32_t sample_rate_hz, blusys_sdm_t **out_sdm);
+```
 
-The `density` parameter is a signed 8-bit value in the range `[-128, 127]`:
+Opens an SDM channel on the given pin and enables the output immediately.
 
-| density | Approximate output |
-|---------|--------------------|
+**Parameters:**
+- `pin` — GPIO number
+- `sample_rate_hz` — modulator sample rate (e.g. 1000000 for 1 MHz)
+- `out_sdm` — output handle
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid pin, zero sample rate, or NULL pointer.
+
+---
+
+### `blusys_sdm_close`
+
+```c
+blusys_err_t blusys_sdm_close(blusys_sdm_t *sdm);
+```
+
+Disables the SDM output and frees the handle.
+
+---
+
+### `blusys_sdm_set_density`
+
+```c
+blusys_err_t blusys_sdm_set_density(blusys_sdm_t *sdm, int8_t density);
+```
+
+Sets the pulse density, which controls the average output level after low-pass filtering.
+
+**Parameters:**
+- `sdm` — handle
+- `density` — signed 8-bit value in range `[-128, 127]`
+
+**Density scale:**
+
+| `density` | Approximate output |
+|-----------|--------------------|
 | -128 | ~0% (always low) |
 | 0 | ~50% |
 | 127 | ~100% (always high) |
 
-The output voltage after an RC low-pass filter tracks linearly with density. A 4.7 kΩ + 100 nF RC filter is a common choice for audio-frequency analog approximation.
+**Returns:** `BLUSYS_OK`.
 
-## Blocking APIs
+## Lifecycle
 
-- `blusys_sdm_open()`
-- `blusys_sdm_close()`
-- `blusys_sdm_set_density()`
+1. `blusys_sdm_open()` — configure channel, output begins
+2. `blusys_sdm_set_density()` — change output level as needed
+3. `blusys_sdm_close()` — disable output and release
 
 ## Thread Safety
 
 - concurrent operations on the same handle are serialized internally
-- do not call `blusys_sdm_close()` concurrently with other calls using the same handle
+- do not call `blusys_sdm_close()` concurrently with other calls on the same handle
 
 ## ISR Notes
 
@@ -71,14 +91,9 @@ No ISR-safe calls are defined for the SDM module.
 
 ## Limitations
 
-- one channel per handle; each channel occupies one GPIO and one hardware SDM channel slot
-- the output is a high-frequency digital signal; an RC filter is required for analog use
-- SDM is distinct from LEDC PWM — SDM uses fixed frequency with variable duty density; LEDC uses configurable frequency with duty control
-
-## Error Behavior
-
-- invalid pin, zero sample rate, or null pointer return `BLUSYS_ERR_INVALID_ARG`
-- driver initialization failures return the translated ESP-IDF error
+- one channel per handle; each handle occupies one GPIO and one hardware SDM channel slot
+- the output is a high-frequency digital signal; an RC filter is required for analog use (a 4.7 kΩ + 100 nF filter is a common starting point)
+- SDM is distinct from LEDC PWM: SDM uses fixed frequency with variable pulse density; LEDC uses configurable frequency with duty control
 
 ## Example App
 

@@ -155,3 +155,8 @@ After subscribing to a topic and publishing to the same topic, the broker echoes
 ## Example App
 
 See `examples/mqtt_basic/`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [MQTT API Reference](../modules/mqtt.md).

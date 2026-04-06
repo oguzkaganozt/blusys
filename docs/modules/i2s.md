@@ -1,104 +1,212 @@
 # I2S
 
-## Purpose
+Stereo audio streaming over I2S: TX for playback, RX for capture. Fixed to standard Philips mode, 16-bit stereo.
 
-The `i2s` module provides a small blocking playback API for standard-mode I2S transmit on top of the ESP-IDF channel driver.
+!!! tip "Task Guides"
+    For step-by-step walkthroughs, see [I2S TX](../guides/i2s-basic.md) or [I2S RX](../guides/i2s-rx-basic.md).
 
-The first release is intentionally limited to a common subset that works across the supported targets without exposing ESP-IDF channel, slot, or clock types.
+## Target Support
 
-## Supported Targets
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
-- ESP32
-- ESP32-C3
-- ESP32-S3
+## Types
 
-## Quick Start Example
+### `blusys_i2s_tx_t`
 
 ```c
-#include "blusys/i2s.h"
-
-void app_main(void)
-{
-    blusys_i2s_tx_t *i2s;
-    int16_t stereo_samples[] = {12000, 12000, -12000, -12000};
-
-    if (blusys_i2s_tx_open(&(blusys_i2s_tx_config_t) {
-                               .port = 0,
-                               .bclk_pin = 4,
-                               .ws_pin = 5,
-                               .dout_pin = 6,
-                               .mclk_pin = -1,
-                               .sample_rate_hz = 16000u,
-                           },
-                           &i2s) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_i2s_tx_start(i2s);
-    blusys_i2s_tx_write(i2s, stereo_samples, sizeof(stereo_samples), 1000);
-    blusys_i2s_tx_stop(i2s);
-    blusys_i2s_tx_close(i2s);
-}
+typedef struct blusys_i2s_tx blusys_i2s_tx_t;
 ```
 
-## Configuration Model
+Opaque TX handle returned by `blusys_i2s_tx_open()`.
 
-- `port` selects the I2S controller
-- `bclk_pin` drives bit clock
-- `ws_pin` drives word select
-- `dout_pin` drives TX sample data
-- `mclk_pin` is optional and may be set to `-1`
-- `sample_rate_hz` selects the playback sample rate
+### `blusys_i2s_tx_config_t`
 
-## Current Format Limits
+```c
+typedef struct {
+    int port;              /* I2S controller index */
+    int bclk_pin;          /* bit clock GPIO */
+    int ws_pin;            /* word select (LRCLK) GPIO */
+    int dout_pin;          /* data out GPIO */
+    int mclk_pin;          /* master clock GPIO; set to -1 if unused */
+    uint32_t sample_rate_hz; /* audio sample rate (e.g. 44100) */
+} blusys_i2s_tx_config_t;
+```
 
-- standard mode only
-- master mode only
-- TX only
-- Philips format
-- stereo only
-- 16-bit samples only
+### `blusys_i2s_rx_t`
 
-Applications should provide interleaved left and right 16-bit samples in the write buffer.
+```c
+typedef struct blusys_i2s_rx blusys_i2s_rx_t;
+```
 
-## Lifecycle Model
+Opaque RX handle returned by `blusys_i2s_rx_open()`.
 
-I2S TX is handle-based:
+### `blusys_i2s_rx_config_t`
 
-1. call `blusys_i2s_tx_open()`
-2. call `blusys_i2s_tx_start()`
-3. call `blusys_i2s_tx_write()` one or more times
-4. call `blusys_i2s_tx_stop()` when finished
-5. call `blusys_i2s_tx_close()` to release resources
+```c
+typedef struct {
+    int port;              /* I2S controller index */
+    int bclk_pin;          /* bit clock GPIO */
+    int ws_pin;            /* word select (LRCLK) GPIO */
+    int din_pin;           /* data in GPIO */
+    int mclk_pin;          /* master clock GPIO; set to -1 if unused */
+    uint32_t sample_rate_hz; /* audio sample rate */
+} blusys_i2s_rx_config_t;
+```
 
-## Blocking APIs
+## Functions — TX
 
-- `blusys_i2s_tx_open()`
-- `blusys_i2s_tx_close()`
-- `blusys_i2s_tx_start()`
-- `blusys_i2s_tx_stop()`
-- `blusys_i2s_tx_write()`
+### `blusys_i2s_tx_open`
+
+```c
+blusys_err_t blusys_i2s_tx_open(const blusys_i2s_tx_config_t *config,
+                                blusys_i2s_tx_t **out_i2s);
+```
+
+Opens an I2S TX channel. Output is not active until `blusys_i2s_tx_start()`.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid config (NULL, invalid pins, zero sample rate).
+
+---
+
+### `blusys_i2s_tx_close`
+
+```c
+blusys_err_t blusys_i2s_tx_close(blusys_i2s_tx_t *i2s);
+```
+
+Stops and releases the TX channel.
+
+---
+
+### `blusys_i2s_tx_start`
+
+```c
+blusys_err_t blusys_i2s_tx_start(blusys_i2s_tx_t *i2s);
+```
+
+Enables the I2S clock and starts DMA transfer.
+
+---
+
+### `blusys_i2s_tx_stop`
+
+```c
+blusys_err_t blusys_i2s_tx_stop(blusys_i2s_tx_t *i2s);
+```
+
+Stops DMA transfer and disables the clock.
+
+---
+
+### `blusys_i2s_tx_write`
+
+```c
+blusys_err_t blusys_i2s_tx_write(blusys_i2s_tx_t *i2s,
+                                 const void *data,
+                                 size_t size,
+                                 int timeout_ms);
+```
+
+Writes interleaved 16-bit stereo samples. Provide L and R samples alternating: `[L0, R0, L1, R1, ...]`.
+
+**Parameters:**
+- `i2s` — TX handle
+- `data` — sample buffer
+- `size` — buffer size in bytes
+- `timeout_ms` — milliseconds to wait; use `BLUSYS_TIMEOUT_FOREVER` to block indefinitely
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if called before `start()`, `BLUSYS_ERR_TIMEOUT`.
+
+## Functions — RX
+
+### `blusys_i2s_rx_open`
+
+```c
+blusys_err_t blusys_i2s_rx_open(const blusys_i2s_rx_config_t *config,
+                                blusys_i2s_rx_t **out_i2s);
+```
+
+Opens an I2S RX channel. Capture does not begin until `blusys_i2s_rx_start()`.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid config.
+
+---
+
+### `blusys_i2s_rx_close`
+
+```c
+blusys_err_t blusys_i2s_rx_close(blusys_i2s_rx_t *i2s);
+```
+
+Stops and releases the RX channel.
+
+---
+
+### `blusys_i2s_rx_start`
+
+```c
+blusys_err_t blusys_i2s_rx_start(blusys_i2s_rx_t *i2s);
+```
+
+Enables the I2S clock and begins capture.
+
+---
+
+### `blusys_i2s_rx_stop`
+
+```c
+blusys_err_t blusys_i2s_rx_stop(blusys_i2s_rx_t *i2s);
+```
+
+Stops capture and disables the clock.
+
+---
+
+### `blusys_i2s_rx_read`
+
+```c
+blusys_err_t blusys_i2s_rx_read(blusys_i2s_rx_t *i2s,
+                                void *buf,
+                                size_t size,
+                                size_t *bytes_read,
+                                int timeout_ms);
+```
+
+Reads captured audio samples into `buf`. Returns interleaved 16-bit stereo samples.
+
+**Parameters:**
+- `i2s` — RX handle
+- `buf` — destination buffer
+- `size` — buffer size in bytes
+- `bytes_read` — actual bytes received
+- `timeout_ms` — milliseconds to wait
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_TIMEOUT`.
+
+## Lifecycle
+
+**TX:** `open()` → `start()` → `write()` → `stop()` → `close()`
+
+**RX:** `open()` → `start()` → `read()` → `stop()` → `close()`
 
 ## Thread Safety
 
-- concurrent calls using the same handle are serialized internally
-- do not call `blusys_i2s_tx_close()` concurrently with other calls using the same handle
-- there is no async callback API in the first release
+- concurrent calls on the same handle are serialized internally
+- TX and RX handles are independent
+- do not call close concurrently with other calls on the same handle
 
 ## Limitations
 
-- an external I2S DAC or codec is required for useful playback output
-- RX is not part of the first release
-- mono, TDM, PDM, slave mode, and duplex are out of scope for the first release
-- the API does not expose slot width, data width, or advanced clock tuning
-
-## Error Behavior
-
-- invalid pointers, invalid pins, invalid ports, and zero sample rate return `BLUSYS_ERR_INVALID_ARG`
-- writing before `blusys_i2s_tx_start()` returns `BLUSYS_ERR_INVALID_STATE`
-- backend allocation and driver failures are translated into `blusys_err_t`
-- write timeout returns `BLUSYS_ERR_TIMEOUT`
+- format is fixed: Philips standard mode, master mode, stereo, 16-bit samples
+- an external I2S DAC or ADC/microphone is required
+- mono, TDM, PDM, slave mode, and duplex are not supported
+- slot width, data width, and advanced clock tuning are not exposed
 
 ## Example App
 
-See `examples/i2s_basic/`.
+See `examples/i2s_basic/` for TX.
+See `examples/i2s_rx_basic/` for RX.

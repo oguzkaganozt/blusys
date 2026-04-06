@@ -58,3 +58,8 @@ blusys_sleep_enter_deep();                    /* resets on wakeup — does not r
 See `examples/sleep_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [Sleep API Reference](../modules/sleep.md).

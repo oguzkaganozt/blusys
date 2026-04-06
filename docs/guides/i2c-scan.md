@@ -44,3 +44,8 @@ blusys_i2c_master_close(i2c);
 See `examples/i2c_scan/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [I2C Master API Reference](../modules/i2c.md).

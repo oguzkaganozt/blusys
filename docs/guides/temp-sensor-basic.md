@@ -43,3 +43,8 @@ blusys_temp_sensor_close(tsens);
 See `examples/temp_sensor_basic/` for a runnable example.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [Temperature Sensor API Reference](../modules/temp_sensor.md).

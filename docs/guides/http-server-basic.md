@@ -156,3 +156,8 @@ printf("http://%s/\n", ip_info.ip);
 **Starting the server before WiFi is connected**: `open()` will succeed but clients will get connection refused since the network stack is not ready.
 
 **Body larger than available heap**: always check `content_len` before allocating, and add a cap if the endpoint is exposed to untrusted clients.
+
+
+## API Reference
+
+For full type definitions and function signatures, see [HTTP Server API Reference](../modules/http_server.md).

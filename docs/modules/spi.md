@@ -1,84 +1,103 @@
 # SPI Master
 
-## Purpose
+Blocking full-duplex SPI master for single-device transfers. Fixed to SPI mode 0.
 
-The `spi` module provides a blocking full-duplex SPI master API for the common single-device path:
+!!! tip "Task Guide"
+    For a step-by-step walkthrough, see [SPI Loopback](../guides/spi-loopback.md).
 
-- open an SPI bus and one attached device
-- transfer bytes
-- close the SPI handle
+## Target Support
 
-Phase 3 intentionally keeps the device configuration small and fixes the mode to SPI mode 0.
+| Target | Supported |
+|--------|-----------|
+| ESP32 | yes |
+| ESP32-C3 | yes |
+| ESP32-S3 | yes |
 
-## Supported Targets
+## Types
 
-- ESP32
-- ESP32-C3
-- ESP32-S3
-
-## Quick Start Example
+### `blusys_spi_t`
 
 ```c
-#include <stdint.h>
-
-#include "blusys/spi.h"
-
-void app_main(void)
-{
-    blusys_spi_t *spi;
-    uint8_t tx_data[2] = {0xaa, 0x55};
-    uint8_t rx_data[2] = {0};
-
-    if (blusys_spi_open(0, 4, 6, 5, 7, 1000000, &spi) != BLUSYS_OK) {
-        return;
-    }
-
-    blusys_spi_transfer(spi, tx_data, rx_data, sizeof(tx_data));
-    blusys_spi_close(spi);
-}
+typedef struct blusys_spi blusys_spi_t;
 ```
 
-## Lifecycle Model
+Opaque handle returned by `blusys_spi_open()`. Owns both the SPI bus and one attached device.
 
-SPI is handle-based:
+## Functions
 
-1. call `blusys_spi_open()`
-2. use `blusys_spi_transfer()`
-3. call `blusys_spi_close()` when finished
+### `blusys_spi_open`
 
-The handle owns both the SPI bus initialization and one attached SPI device.
+```c
+blusys_err_t blusys_spi_open(int bus,
+                             int sclk_pin,
+                             int mosi_pin,
+                             int miso_pin,
+                             int cs_pin,
+                             uint32_t freq_hz,
+                             blusys_spi_t **out_spi);
+```
 
-## Blocking APIs
+Initializes an SPI bus and registers one device on it. SPI mode 0 is used.
 
-- `blusys_spi_open()`
-- `blusys_spi_close()`
-- `blusys_spi_transfer()`
+**Parameters:**
+- `bus` — SPI bus index (target-dependent; typically 0 or 1)
+- `sclk_pin` — GPIO for clock
+- `mosi_pin` — GPIO for MOSI
+- `miso_pin` — GPIO for MISO; pass `-1` if not used
+- `cs_pin` — GPIO for chip select
+- `freq_hz` — bus clock frequency
+- `out_spi` — output handle
 
-## Async APIs
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid arguments, `BLUSYS_ERR_INVALID_STATE` if the bus is already in use.
 
-None in Phase 3.
+---
+
+### `blusys_spi_close`
+
+```c
+blusys_err_t blusys_spi_close(blusys_spi_t *spi);
+```
+
+Removes the attached device, frees the bus, and releases the handle.
+
+---
+
+### `blusys_spi_transfer`
+
+```c
+blusys_err_t blusys_spi_transfer(blusys_spi_t *spi,
+                                 const void *tx_data,
+                                 void *rx_data,
+                                 size_t size);
+```
+
+Performs a full-duplex transfer. `tx_data` and `rx_data` may point to the same buffer for in-place exchange. Pass NULL for `rx_data` if received data is not needed.
+
+**Parameters:**
+- `spi` — handle
+- `tx_data` — data to send; must not be NULL
+- `rx_data` — buffer for received data; may be NULL
+- `size` — number of bytes to transfer
+
+**Returns:** `BLUSYS_OK`, translated ESP-IDF error on transfer failure.
+
+## Lifecycle
+
+1. `blusys_spi_open()` — initialize bus and device
+2. `blusys_spi_transfer()` — exchange bytes
+3. `blusys_spi_close()` — release
 
 ## Thread Safety
 
 - concurrent transfers on the same handle are serialized internally
-- different SPI handles may be used independently when they use different SPI buses
-- do not call `blusys_spi_close()` concurrently with other calls using the same handle
-
-## ISR Notes
-
-Phase 3 does not define ISR-safe SPI calls.
+- different handles may be used independently when they use different SPI buses
+- do not call `blusys_spi_close()` concurrently with other calls on the same handle
 
 ## Limitations
 
-- SPI mode 0 is fixed in Phase 3
-- one Blusys SPI handle owns one SPI bus and one chip-select line
-- advanced queueing and multi-device bus sharing are intentionally deferred
-
-## Error Behavior
-
-- invalid bus indices, pins, frequency, or pointers return `BLUSYS_ERR_INVALID_ARG`
-- trying to open an SPI bus that is already owned elsewhere returns `BLUSYS_ERR_INVALID_STATE`
-- transfer failures reported by the backend are translated into `blusys_err_t`
+- SPI mode 0 is fixed
+- one handle owns one bus and one chip-select line
+- multi-device bus sharing and advanced queueing are not exposed
 
 ## Example App
 
