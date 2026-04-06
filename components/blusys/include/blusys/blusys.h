@@ -7,8 +7,8 @@ extern "C" {
 
 #include "blusys/adc.h"
 #include "blusys/ble_gatt.h"
-#include "blusys/button.h"
 #include "blusys/bluetooth.h"
+#include "blusys/button.h"
 #include "blusys/console.h"
 #include "blusys/dac.h"
 #include "blusys/error.h"

@@ -177,7 +177,7 @@ blusys_err_t blusys_wifi_prov_open(const blusys_wifi_prov_config_t *config,
     } else {
 #endif
         mgr_cfg.scheme               = wifi_prov_scheme_softap;
-        mgr_cfg.scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE;
+        mgr_cfg.scheme_event_handler = (wifi_prov_event_handler_t)WIFI_PROV_EVENT_HANDLER_NONE;
 #if CONFIG_BT_NIMBLE_ENABLED
     }
 #endif
@@ -288,9 +288,10 @@ blusys_err_t blusys_wifi_prov_start(blusys_wifi_prov_t *prov)
                                                           prov->service_name,
                                                           service_key);
     if (esp_err != ESP_OK) {
-        blusys_lock_take(&prov->lock, BLUSYS_LOCK_WAIT_FOREVER);
-        prov->running = false;
-        blusys_lock_give(&prov->lock);
+        if (blusys_lock_take(&prov->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+            prov->running = false;
+            blusys_lock_give(&prov->lock);
+        }
         return blusys_translate_esp_err(esp_err);
     }
 

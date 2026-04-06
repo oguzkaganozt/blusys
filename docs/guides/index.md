@@ -12,7 +12,7 @@ Pick a peripheral category to get started.
 
     GPIO, UART, I2C, SPI — the building blocks of embedded communication.
 
-    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [UART (Blocking)](uart-loopback.md) · [UART (Async)](uart-async.md) · [I2C Master](i2c-scan.md) · [I2C Slave](i2c-slave-basic.md) · [SPI Master](spi-loopback.md) · [SPI Slave](spi-slave-basic.md)
+    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [Button](button-basic.md) · [LED Strip](led-strip-basic.md) · [UART (Blocking)](uart-loopback.md) · [UART (Async)](uart-async.md) · [I2C Master](i2c-scan.md) · [I2C Slave](i2c-slave-basic.md) · [SPI Master](spi-loopback.md) · [SPI Slave](spi-slave-basic.md)
 
 -   :material-sine-wave:{ .lg .middle } **Analog**
 
@@ -52,7 +52,7 @@ Pick a peripheral category to get started.
 
     Runtime info, interactive console, persistent storage, sleep modes, and watchdog.
 
-    [:octicons-arrow-right-24: System Info](system-info.md) · [Console](console-basic.md) · [NVS](nvs-basic.md) · [Filesystem](fs-basic.md) · [FAT Filesystem](fatfs-basic.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md)
+    [:octicons-arrow-right-24: System Info](system-info.md) · [Console](console-basic.md) · [NVS](nvs-basic.md) · [Filesystem](fs-basic.md) · [FAT Filesystem](fatfs-basic.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md) · [Power Management](power-mgmt-basic.md)
 
 -   :material-wifi:{ .lg .middle } **Networking**
 

@@ -87,7 +87,7 @@ Registers a command. Must be called after `blusys_console_open()` and before `bl
 
 **Parameters:**
 - `console` — handle returned by `blusys_console_open()`
-- `cmd` — command descriptor; all three fields (`command`, `help`, `handler`) must be non-NULL
+- `cmd` — command descriptor; `command` and `handler` must be non-NULL; `help` may be NULL
 
 **Returns:** `BLUSYS_ERR_INVALID_STATE` if `blusys_console_start()` has already been called.
 
