@@ -127,8 +127,8 @@ The build target must match the connected board. ESP-IDF v5.5+ is required and a
 
 ## Project Status
 
-`v3.0.0` is released.
-Full HAL peripheral coverage and connectivity stack are complete: 35 modules covering core peripherals, symmetric counterparts, system services, WiFi/HTTP/MQTT networking, Bluetooth/BLE, and storage.
-`V4` (advanced peripherals and ecosystem helpers) is in progress — shipped so far: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`.
+`v4.0.0` is released.
+Full HAL peripheral coverage, connectivity stack, and production essentials are complete: 44 modules covering core peripherals, symmetric counterparts, system services, WiFi/HTTP/MQTT networking, Bluetooth/BLE, storage, and ecosystem helpers.
+Standalone CLI tooling with `blusys` command: install once, create projects anywhere, auto-detect ESP-IDF.
 
 Detailed implementation tracking remains in `PROGRESS.md`.
