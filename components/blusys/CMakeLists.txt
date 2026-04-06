@@ -1,6 +1,7 @@
 set(blusys_sources
     src/common/adc.c
     src/common/ble_gatt.c
+    src/common/button.c
     src/common/dac.c
     src/common/error.c
     src/common/espnow.c

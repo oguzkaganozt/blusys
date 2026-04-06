@@ -1,0 +1,21 @@
+menu "Blusys Button Basic Example"
+
+config BLUSYS_BUTTON_PIN
+    int "Button GPIO pin"
+    range 0 48
+    default 16 if IDF_TARGET_ESP32
+    default 2 if IDF_TARGET_ESP32C3
+    default 5 if IDF_TARGET_ESP32S3
+    help
+        GPIO pin connected to the button. Wire the other side to GND and rely
+        on the internal pull-up (active_low = true).
+
+config BLUSYS_BUTTON_LONG_PRESS_MS
+    int "Long-press threshold (ms)"
+    range 200 5000
+    default 1000
+    help
+        Duration in milliseconds after which a held button fires a LONG_PRESS
+        event. Set to 0 in code to disable long-press detection.
+
+endmenu
