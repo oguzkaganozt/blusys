@@ -12,7 +12,7 @@ Pick a peripheral category to get started.
 
     GPIO, UART, I2C, SPI — the building blocks of embedded communication.
 
-    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [UART](uart-loopback.md) · [I2C](i2c-scan.md) · [SPI](spi-loopback.md)
+    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [UART (Blocking)](uart-loopback.md) · [UART (Async)](uart-async.md) · [I2C Master](i2c-scan.md) · [I2C Slave](i2c-slave-basic.md) · [SPI Master](spi-loopback.md) · [SPI Slave](spi-slave-basic.md)
 
 -   :material-sine-wave:{ .lg .middle } **Analog**
 
@@ -28,7 +28,7 @@ Pick a peripheral category to get started.
 
     General-purpose timers, pulse counting, RMT pulse sequences, and motor PWM.
 
-    [:octicons-arrow-right-24: Timer](timer-basic.md) · [PCNT](pcnt-basic.md) · [RMT](rmt-basic.md) · [MCPWM](mcpwm-basic.md)
+    [:octicons-arrow-right-24: Timer](timer-basic.md) · [PCNT](pcnt-basic.md) · [RMT TX](rmt-basic.md) · [RMT RX](rmt-rx-basic.md) · [MCPWM](mcpwm-basic.md)
 
 -   :material-transit-connection-variant:{ .lg .middle } **Bus**
 
@@ -36,7 +36,7 @@ Pick a peripheral category to get started.
 
     TWAI/CAN frames, I2S audio, and SD/MMC block access.
 
-    [:octicons-arrow-right-24: TWAI](twai-basic.md) · [I2S](i2s-basic.md) · [SD/MMC](sdmmc-basic.md)
+    [:octicons-arrow-right-24: TWAI](twai-basic.md) · [I2S TX](i2s-basic.md) · [I2S RX](i2s-rx-basic.md) · [SD/MMC](sdmmc-basic.md)
 
 -   :material-thermometer:{ .lg .middle } **Sensors**
 
@@ -60,7 +60,7 @@ Pick a peripheral category to get started.
 
     WiFi, HTTP, MQTT, OTA updates, SNTP time sync, mDNS discovery, BLE, BLE GATT, and ESP-NOW.
 
-    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [HTTP](http-basic.md) · [MQTT](mqtt-basic.md) · [OTA](ota-basic.md) · [Bluetooth](bluetooth-basic.md) · [BLE GATT](ble_gatt-basic.md) · [ESP-NOW](espnow-basic.md)
+    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [HTTP Client](http-basic.md) · [HTTP Server](http-server-basic.md) · [MQTT](mqtt-basic.md) · [OTA](ota-basic.md) · [SNTP](sntp-basic.md) · [mDNS](mdns-basic.md) · [Bluetooth](bluetooth-basic.md) · [BLE GATT](ble_gatt-basic.md) · [ESP-NOW](espnow-basic.md)
 
 -   :material-test-tube:{ .lg .middle } **Testing**
 
@@ -68,6 +68,6 @@ Pick a peripheral category to get started.
 
     Hardware smoke tests, concurrency stress tests, and validation report templates.
 
-    [:octicons-arrow-right-24: Smoke Tests](hardware-smoke-tests.md) · [Concurrency](concurrency-tests.md)
+    [:octicons-arrow-right-24: Smoke Tests](hardware-smoke-tests.md) · [Concurrency](concurrency-tests.md) · [Validation Template](hardware-validation-report-template.md)
 
 </div>

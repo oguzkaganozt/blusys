@@ -1,6 +1,6 @@
 # Blusys HAL
 
-A simplified C hardware abstraction layer for ESP32 devices, built on top of ESP-IDF v5.5. Blusys exposes a smaller, more stable API surface than raw ESP-IDF so your application code stays clean across hardware revisions.
+A simplified C hardware abstraction layer for ESP32 devices, built on top of ESP-IDF v5.5.4. Blusys exposes a smaller, more stable API surface than raw ESP-IDF so your application code stays clean across hardware revisions.
 
 <div class="grid cards" markdown>
 

@@ -35,7 +35,7 @@ typedef struct {
 } blusys_http_server_route_t;
 ```
 
-A single URI/method binding. The routes array must remain valid for the lifetime of the server handle (the pointer is not copied).
+A single URI/method binding. The routes array is copied during `open()`, so the caller need not keep it alive after `open()` returns.
 
 `blusys_http_method_t` is defined in `blusys/http_client.h` and includes `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `HEAD`.
 

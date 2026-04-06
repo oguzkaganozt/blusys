@@ -5,7 +5,7 @@ Run an embedded HTTP server on an ESP32 that responds to incoming requests over 
 ## Prerequisites
 
 - WiFi station connected (see [WiFi guide](wifi-connect.md))
-- ESP-IDF v5.5 environment sourced
+- ESP-IDF v5.5.4 environment sourced
 
 ## Minimal Example
 
@@ -151,7 +151,7 @@ printf("http://%s/\n", ip_info.ip);
 
 **Calling `resp_send()` twice**: only the first send takes effect; the second returns an error from the underlying httpd stack.
 
-**Routes array on the stack**: the `routes` array must remain valid for the server's lifetime. Declare it `static` or at file scope.
+**NULL handler in a route**: every route must have a non-NULL `handler`. A NULL handler causes undefined behavior when the URI is matched.
 
 **Starting the server before WiFi is connected**: `open()` will succeed but clients will get connection refused since the network stack is not ready.
 

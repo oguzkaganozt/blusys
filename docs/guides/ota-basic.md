@@ -5,7 +5,7 @@ Download a firmware binary from an HTTP server and flash it over WiFi.
 ## Prerequisites
 
 - WiFi station connected (see [WiFi guide](wifi-connect.md))
-- ESP-IDF v5.5 environment sourced
+- ESP-IDF v5.5.4 environment sourced
 - Partition table with OTA support (see below)
 
 ## Partition Table

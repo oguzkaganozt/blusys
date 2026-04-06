@@ -33,6 +33,8 @@ Application
 - stateless pin API: `gpio`
 - handle-based master/TX APIs: `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`, `rmt`, `i2s`, `twai`, `pcnt`, `dac`, `sdm`, `mcpwm`, `touch`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`
 - handle-based slave/RX counterparts: `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
+- networking: `wifi`, `http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `bluetooth`, `ble_gatt`, `espnow`
+- storage and system: `nvs`, `fs`
 
 Symmetric pairs expose the same peripheral in both directions under separate handles:
 
@@ -53,15 +55,14 @@ Lifecycle verbs stay explicit where relevant:
 
 ## Target Policy
 
-The v1 API is limited to the common subset of `esp32`, `esp32c3`, and `esp32s3`.
+The API targets the common subset of `esp32`, `esp32c3`, and `esp32s3`. Modules not available on all three targets (e.g. `pcnt`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `mcpwm`) use SOC capability guards and return `BLUSYS_ERR_NOT_SUPPORTED` on unsupported hardware. See [Compatibility](target-matrix.md) for the full matrix.
 
 Keep these out of the common API:
 
-- advanced I2S modes
-- touch sensor behavior beyond the shipped polling subset
-- DAC modes beyond the shipped oneshot subset
+- advanced I2S modes beyond standard TX/RX
+- touch sensor behavior beyond polling
+- DAC modes beyond oneshot output
 - LP peripheral special cases
-- storage-specific abstractions
 
 ## Documentation Contract
 
