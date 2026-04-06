@@ -100,6 +100,7 @@ nav:
           - OTA: guides/ota-basic.md
           - SNTP: guides/sntp-basic.md
           - mDNS: guides/mdns-basic.md
+          - Bluetooth: guides/bluetooth-basic.md
       - Testing:
           - Hardware Smoke Tests: guides/hardware-smoke-tests.md
           - Concurrency Tests: guides/concurrency-tests.md
@@ -143,6 +144,7 @@ nav:
           - OTA: modules/ota.md
           - SNTP: modules/sntp.md
           - mDNS: modules/mdns.md
+          - Bluetooth: modules/bluetooth.md
   - Project:
       - Architecture: architecture.md
       - Vision: vision.md

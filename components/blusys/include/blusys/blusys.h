@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "blusys/adc.h"
+#include "blusys/bluetooth.h"
 #include "blusys/dac.h"
 #include "blusys/error.h"
 #include "blusys/gpio.h"
