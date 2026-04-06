@@ -11,6 +11,7 @@ set(blusys_sources
     src/common/i2c_slave.c
     src/common/i2s.c
     src/common/i2s_rx.c
+    src/common/led_strip.c
     src/common/mcpwm.c
     src/common/pcnt.c
     src/common/pwm.c
