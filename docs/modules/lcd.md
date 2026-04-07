@@ -1,6 +1,6 @@
 # LCD
 
-SPI and I2C display driver supporting ST7789, SSD1306, and NT35510 panels via ESP-IDF's `esp_lcd`.
+SPI and I2C display driver supporting ST7789, ST7735, SSD1306, and NT35510 panels via ESP-IDF's `esp_lcd`.
 
 !!! tip "Task Guide"
     For a step-by-step walkthrough, see [LCD Basic](../guides/lcd-basic.md).
@@ -30,6 +30,7 @@ typedef enum {
     BLUSYS_LCD_DRIVER_ST7789  = 0,
     BLUSYS_LCD_DRIVER_SSD1306 = 1,
     BLUSYS_LCD_DRIVER_NT35510 = 2,
+    BLUSYS_LCD_DRIVER_ST7735  = 3,
 } blusys_lcd_driver_t;
 ```
 
@@ -45,6 +46,8 @@ typedef struct {
     int      rst_pin;   /* -1 if not connected */
     int      bl_pin;    /* Backlight GPIO, -1 if not used */
     uint32_t pclk_hz;
+    int      x_offset;  /* GRAM column offset (default 0) */
+    int      y_offset;  /* GRAM row offset (default 0) */
 } blusys_lcd_spi_config_t;
 ```
 
@@ -77,7 +80,7 @@ typedef struct {
 } blusys_lcd_config_t;
 ```
 
-Use the `spi` union member for ST7789 and NT35510 drivers. Use the `i2c` union member for the SSD1306 driver.
+Use the `spi` union member for ST7789, ST7735, and NT35510 drivers. Use the `i2c` union member for the SSD1306 driver.
 
 ## Functions
 
@@ -212,4 +215,4 @@ All functions are thread-safe via an internal mutex. Note that `blusys_lcd_draw_
 
 ## Example App
 
-See `examples/lcd_basic/`.
+See `examples/lcd_basic/` (ST7789) and `examples/lcd_st7735_basic/` (ST7735R 128x160).

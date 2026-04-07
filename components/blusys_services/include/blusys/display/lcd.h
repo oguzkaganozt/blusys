@@ -16,6 +16,7 @@ typedef enum {
     BLUSYS_LCD_DRIVER_ST7789  = 0,
     BLUSYS_LCD_DRIVER_SSD1306 = 1,
     BLUSYS_LCD_DRIVER_NT35510 = 2,
+    BLUSYS_LCD_DRIVER_ST7735  = 3,
 } blusys_lcd_driver_t;
 
 typedef struct {
@@ -27,6 +28,8 @@ typedef struct {
     int      rst_pin;   /* -1 if not connected */
     int      bl_pin;    /* Backlight GPIO, -1 if not used */
     uint32_t pclk_hz;
+    int      x_offset;  /* GRAM column offset (default 0) */
+    int      y_offset;  /* GRAM row offset (default 0) */
 } blusys_lcd_spi_config_t;
 
 typedef struct {

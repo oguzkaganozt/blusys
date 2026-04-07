@@ -127,7 +127,8 @@ static blusys_err_t blusys_lcd_open_spi(const blusys_lcd_config_t *config,
         .bits_per_pixel = config->bits_per_pixel,
     };
 
-    if (config->driver == BLUSYS_LCD_DRIVER_ST7789) {
+    if (config->driver == BLUSYS_LCD_DRIVER_ST7789 ||
+        config->driver == BLUSYS_LCD_DRIVER_ST7735) {
         esp_err = esp_lcd_new_panel_st7789(lcd->io_handle, &panel_cfg,
                                            &lcd->panel_handle);
     } else {
@@ -223,6 +224,7 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
     switch (config->driver) {
     case BLUSYS_LCD_DRIVER_ST7789:
     case BLUSYS_LCD_DRIVER_NT35510:
+    case BLUSYS_LCD_DRIVER_ST7735:
         if (!blusys_lcd_is_valid_spi_bus(config->spi.bus) ||
             !GPIO_IS_VALID_OUTPUT_GPIO(config->spi.sclk_pin) ||
             !GPIO_IS_VALID_OUTPUT_GPIO(config->spi.mosi_pin) ||
@@ -260,7 +262,8 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
     }
 
     if ((config->driver == BLUSYS_LCD_DRIVER_ST7789) ||
-        (config->driver == BLUSYS_LCD_DRIVER_NT35510)) {
+        (config->driver == BLUSYS_LCD_DRIVER_NT35510) ||
+        (config->driver == BLUSYS_LCD_DRIVER_ST7735)) {
         lcd->bl_pin = config->spi.bl_pin;
         err = blusys_lcd_open_spi(config, lcd);
     } else {
@@ -275,6 +278,15 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
     esp_err = esp_lcd_panel_reset(lcd->panel_handle);
     if (esp_err == ESP_OK) {
         esp_err = esp_lcd_panel_init(lcd->panel_handle);
+    }
+    if (esp_err == ESP_OK && config->driver != BLUSYS_LCD_DRIVER_SSD1306 &&
+        (config->spi.x_offset || config->spi.y_offset)) {
+        esp_err = esp_lcd_panel_set_gap(lcd->panel_handle,
+                                        config->spi.x_offset,
+                                        config->spi.y_offset);
+    }
+    if (esp_err == ESP_OK && config->driver == BLUSYS_LCD_DRIVER_ST7735) {
+        esp_err = esp_lcd_panel_invert_color(lcd->panel_handle, true);
     }
     if (esp_err == ESP_OK) {
         esp_err = esp_lcd_panel_disp_on_off(lcd->panel_handle, true);
