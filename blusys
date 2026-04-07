@@ -27,6 +27,11 @@ if [[ -f "$BLUSYS_CONFIG_FILE" ]]; then
                     export IDF_PATH="$value"
                 fi
                 ;;
+            QEMU_PATH)
+                if [[ -z "${QEMU_PATH:-}" ]]; then
+                    export QEMU_PATH="$value"
+                fi
+                ;;
         esac
     done < "$BLUSYS_CONFIG_FILE"
 fi
@@ -162,6 +167,45 @@ blusys_find_idf_path() {
     printf '  2. Source export.sh: source /path/to/esp-idf/export.sh\n' >&2
     printf '  3. Standard install: https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/\n' >&2
     printf '     (installs to ~/.espressif/ which blusys auto-detects)\n' >&2
+    return 1
+}
+
+blusys_find_qemu() {
+    # Priority 1: QEMU_PATH env var
+    if [[ -n "${QEMU_PATH:-}" ]]; then
+        if [[ -x "$QEMU_PATH/qemu-system-xtensa" || -x "$QEMU_PATH/qemu-system-riscv32" ]]; then
+            printf '%s\n' "$QEMU_PATH"
+            return 0
+        fi
+    fi
+
+    # Priority 2: qemu-system-xtensa already in PATH
+    if command -v qemu-system-xtensa &>/dev/null; then
+        printf '%s\n' "$(dirname "$(command -v qemu-system-xtensa)")"
+        return 0
+    fi
+
+    # Priority 3: Scan ~/.espressif/tools/qemu-*/
+    local latest_tag="" latest_path=""
+    for candidate_dir in "$HOME"/.espressif/tools/qemu-*/; do
+        [[ -d "$candidate_dir" ]] || continue
+        if [[ -x "$candidate_dir/qemu-system-xtensa" || -x "$candidate_dir/qemu-system-riscv32" ]]; then
+            local tag
+            tag="$(basename "$candidate_dir")"
+            if [[ -z "$latest_tag" ]] || [[ "$tag" > "$latest_tag" ]]; then
+                latest_tag="$tag"
+                latest_path="$candidate_dir"
+            fi
+        fi
+    done
+
+    if [[ -n "$latest_path" ]]; then
+        printf '%s\n' "${latest_path%/}"
+        return 0
+    fi
+
+    printf 'error: Espressif QEMU not found.\n' >&2
+    printf 'Install it with: blusys install-qemu\n' >&2
     return 1
 }
 
@@ -363,6 +407,8 @@ Commands:
   fullclean        Remove build directories for all targets
   example          Run a command on a bundled example
   build-examples   Build all examples for all targets
+  qemu             Build and run project in QEMU emulator
+  install-qemu     Download and install Espressif QEMU
   config-idf       Select default ESP-IDF version
   version          Show blusys and ESP-IDF version info
   update           Self-update blusys via git pull
@@ -432,9 +478,10 @@ blusys_help_fullclean() {
 blusys_help_example() {
     printf 'Usage: blusys example [name] [command] [args...]\n'
     printf '\nRun a command on a bundled example.\n'
-    printf '  blusys example                      list available examples\n'
-    printf '  blusys example smoke build esp32s3   build the smoke example\n'
+    printf '  blusys example                           list available examples\n'
+    printf '  blusys example smoke build esp32s3        build the smoke example\n'
     printf '  blusys example smoke run /dev/ttyACM0 esp32s3\n'
+    printf '  blusys example smoke qemu esp32           run smoke in QEMU\n'
     printf '\nIf no command is given, defaults to build.\n'
 }
 
@@ -457,6 +504,19 @@ blusys_help_config_idf() {
     printf 'Usage: blusys config-idf\n'
     printf '\nSelect the default ESP-IDF version from detected installations.\n'
     printf 'Saved to %s\n' "${XDG_CONFIG_HOME:-\$HOME/.config}/blusys/config"
+}
+
+blusys_help_qemu() {
+    printf 'Usage: blusys qemu [project] [esp32|esp32c3|esp32s3]\n'
+    printf '\nBuild and launch project in QEMU emulator. Defaults to cwd.\n'
+    printf 'Networking enabled via OpenCores Ethernet (not WiFi).\n'
+    printf 'Press Ctrl+A, X to exit.\n'
+}
+
+blusys_help_install_qemu() {
+    printf 'Usage: blusys install-qemu\n'
+    printf '\nDownload pre-built Espressif QEMU from GitHub releases.\n'
+    printf 'Installs to ~/.espressif/tools/qemu-<version>/\n'
 }
 
 # ── Subcommands ──────────────────────────────────────────────────────────────
@@ -563,6 +623,11 @@ cmd_version() {
         fi
     else
         printf 'ESP-IDF: not found\n'
+    fi
+
+    local qemu_path
+    if qemu_path="$(blusys_find_qemu 2>/dev/null)"; then
+        printf 'QEMU path: %s\n' "$qemu_path"
     fi
 
     if [[ -f "$BLUSYS_CONFIG_FILE" ]]; then
@@ -832,12 +897,152 @@ cmd_example() {
         erase)          cmd_erase "$example_path" "$@" ;;
         clean)          cmd_clean "$example_path" "$@" ;;
         fullclean)      cmd_fullclean "$example_path" ;;
+        qemu)           cmd_qemu "$example_path" "$@" ;;
         *)
             printf 'error: unknown command: %s\n' "$subcmd" >&2
             blusys_help_example
             exit 1
             ;;
     esac
+}
+
+cmd_install_qemu() {
+    if [[ $# -gt 0 ]]; then
+        blusys_help_install_qemu
+        exit 1
+    fi
+
+    local arch os
+    arch="$(uname -m)"
+    os="$(uname -s)"
+
+    if [[ "$os" != "Linux" && "$os" != "Darwin" ]]; then
+        printf 'error: unsupported OS: %s\n' "$os" >&2
+        exit 1
+    fi
+
+    case "$arch" in
+        x86_64|aarch64) ;;
+        arm64) arch="aarch64" ;;
+        *)
+            printf 'error: unsupported architecture: %s\n' "$arch" >&2
+            exit 1
+            ;;
+    esac
+
+    local platform
+    if [[ "$os" == "Linux" ]]; then
+        platform="${arch}-linux-gnu"
+    else
+        platform="${arch}-apple-darwin"
+    fi
+
+    # Get latest release tag
+    local tag
+    printf 'Fetching latest Espressif QEMU release...\n'
+    if command -v gh &>/dev/null; then
+        tag="$(gh api repos/espressif/qemu/releases/latest --jq '.tag_name' 2>/dev/null)"
+    else
+        tag="$(curl -fsSL "https://api.github.com/repos/espressif/qemu/releases/latest" \
+            | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
+    fi
+
+    if [[ -z "$tag" ]]; then
+        printf 'error: could not fetch latest QEMU release tag\n' >&2
+        exit 1
+    fi
+
+    printf 'Latest release: %s\n' "$tag"
+
+    # Strip leading 'v' for version string in asset name
+    local ver="${tag#v}"
+    local install_dir="$HOME/.espressif/tools/qemu-${tag}"
+    mkdir -p "$install_dir"
+
+    local tmp_dir
+    tmp_dir="$(mktemp -d)"
+    trap 'rm -rf "$tmp_dir"' EXIT
+
+    local base_url="https://github.com/espressif/qemu/releases/download/${tag}"
+
+    for cpu in xtensa riscv32; do
+        local asset="qemu-${cpu}-softmmu-esp_develop_${ver}-${platform}.tar.xz"
+        local url="${base_url}/${asset}"
+        printf 'Downloading %s...\n' "$asset"
+        if ! curl -fL --progress-bar -o "$tmp_dir/$asset" "$url"; then
+            printf 'error: failed to download %s\n' "$url" >&2
+            exit 1
+        fi
+        printf 'Extracting %s...\n' "$asset"
+        tar -xf "$tmp_dir/$asset" -C "$install_dir" --strip-components=1
+    done
+
+    # Save QEMU_PATH to config
+    mkdir -p "$BLUSYS_CONFIG_DIR"
+    if [[ -f "$BLUSYS_CONFIG_FILE" ]]; then
+        grep -v '^QEMU_PATH=' "$BLUSYS_CONFIG_FILE" > "$BLUSYS_CONFIG_FILE.tmp" || true
+        mv "$BLUSYS_CONFIG_FILE.tmp" "$BLUSYS_CONFIG_FILE"
+    fi
+    printf 'QEMU_PATH=%s\n' "$install_dir" >> "$BLUSYS_CONFIG_FILE"
+    export QEMU_PATH="$install_dir"
+
+    printf '\nDone. QEMU installed to: %s\n' "$install_dir"
+    printf 'Saved: QEMU_PATH=%s\n' "$install_dir"
+}
+
+cmd_qemu() {
+    if [[ $# -gt 2 ]]; then
+        blusys_help_qemu
+        exit 1
+    fi
+
+    blusys_setup_no_port "$@"
+    blusys_setup_idf_env
+
+    local qemu_dir
+    qemu_dir="$(blusys_find_qemu)" || exit 1
+
+    # Select binary and machine flags based on target
+    local qemu_bin machine timer_driver extra_flags=""
+    case "$TARGET" in
+        esp32)
+            qemu_bin="$qemu_dir/qemu-system-xtensa"
+            machine="esp32"
+            timer_driver="timer.esp32.timg"
+            ;;
+        esp32s3)
+            qemu_bin="$qemu_dir/qemu-system-xtensa"
+            machine="esp32s3"
+            timer_driver="timer.esp32c3.timg"
+            ;;
+        esp32c3)
+            qemu_bin="$qemu_dir/qemu-system-riscv32"
+            machine="esp32c3"
+            timer_driver="timer.esp32c3.timg"
+            extra_flags="-icount 3"
+            ;;
+    esac
+
+    blusys_print_info
+    printf 'QEMU:      %s\n' "$qemu_bin"
+
+    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$TARGET" "${SDKCONFIG_ARGS[@]}"
+    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" build
+
+    printf 'Creating flash image...\n'
+    esptool.py --chip "$TARGET" merge_bin --fill-flash-size 4MB \
+        -o "$BUILD_DIR/flash_image.bin" \
+        @"$BUILD_DIR/flash_args"
+
+    printf 'Launching QEMU (press Ctrl+A, X to exit)...\n'
+    # shellcheck disable=SC2086
+    "$qemu_bin" \
+        -nographic \
+        -machine "$machine" \
+        -drive "file=$BUILD_DIR/flash_image.bin,if=mtd,format=raw" \
+        -nic "user,model=open_eth" \
+        -global "driver=$timer_driver,property=wdt_disable,value=true" \
+        $extra_flags
 }
 
 cmd_build_examples() {
@@ -931,6 +1136,8 @@ main() {
         fullclean)      shift; cmd_fullclean "$@" ;;
         example)        shift; cmd_example "$@" ;;
         build-examples) shift; cmd_build_examples "$@" ;;
+        qemu)           shift; cmd_qemu "$@" ;;
+        install-qemu)   shift; cmd_install_qemu "$@" ;;
         config-idf)     shift; cmd_config_idf "$@" ;;
         version|-v|--version) shift; cmd_version "$@" ;;
         update)         shift; cmd_update "$@" ;;

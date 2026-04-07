@@ -1,9 +1,9 @@
 # Bash completion for blusys
 # Auto-loaded from ~/.local/share/bash-completion/completions/blusys
 
-_blusys_commands="create build flash monitor run config menuconfig size erase clean fullclean example build-examples config-idf version update help"
+_blusys_commands="create build flash monitor run config menuconfig size erase clean fullclean example build-examples qemu install-qemu config-idf version update help"
 _blusys_targets="esp32 esp32c3 esp32s3"
-_blusys_example_commands="build flash monitor run config menuconfig size erase clean fullclean"
+_blusys_example_commands="build flash monitor run config menuconfig size erase clean fullclean qemu"
 
 _blusys_complete_ports() {
     local ports=()
@@ -56,7 +56,7 @@ _blusys() {
             ;;
 
         # Commands with [project] [target]
-        build|config|menuconfig|size|clean)
+        build|config|menuconfig|size|clean|qemu)
             local nargs=$((cword - 1))
             if [[ $nargs -eq 1 ]]; then
                 # Could be project or target
@@ -105,7 +105,7 @@ _blusys() {
                 # Complete targets and ports based on the subcommand
                 local subcmd="${words[3]}"
                 case "$subcmd" in
-                    build|config|menuconfig|size|clean)
+                    build|config|menuconfig|size|clean|qemu)
                         COMPREPLY=($(compgen -W "$_blusys_targets" -- "$cur"))
                         ;;
                     flash|monitor|run|erase)
@@ -131,7 +131,7 @@ _blusys() {
             ;;
 
         # No completions for these
-        build-examples|config-idf|version|update)
+        build-examples|install-qemu|config-idf|version|update)
             ;;
     esac
 }
