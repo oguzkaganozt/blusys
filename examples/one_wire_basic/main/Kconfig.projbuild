@@ -1,0 +1,14 @@
+menu "Blusys 1-Wire Basic Example"
+
+config BLUSYS_ONE_WIRE_BASIC_PIN
+    int "1-Wire bus GPIO pin"
+    range 0 48
+    default 4 if IDF_TARGET_ESP32
+    default 3 if IDF_TARGET_ESP32C3
+    default 4 if IDF_TARGET_ESP32S3
+    help
+        GPIO connected to the 1-Wire bus data line.
+        Connect a 4.7 kΩ pull-up resistor from this pin to 3.3 V.
+        All standard output-capable GPIOs support the required open-drain mode.
+
+endmenu

@@ -9,6 +9,7 @@ set(blusys_sources
     src/common/i2s_rx.c
     src/common/mcpwm.c
     src/common/nvs.c
+    src/common/one_wire.c
     src/common/pcnt.c
     src/common/pwm.c
     src/common/rmt.c

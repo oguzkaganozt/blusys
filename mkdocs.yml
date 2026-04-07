@@ -65,6 +65,7 @@ nav:
           - Button: guides/button-basic.md
           - Encoder: guides/encoder-basic.md
           - Buzzer: guides/buzzer-basic.md
+          - 1-Wire: guides/one-wire-basic.md
           - LED Strip: guides/led-strip-basic.md
           - UART (Blocking): guides/uart-loopback.md
           - UART (Async): guides/uart-async.md
@@ -126,6 +127,7 @@ nav:
           - Button: modules/button.md
           - Encoder: modules/encoder.md
           - Buzzer: modules/buzzer.md
+          - 1-Wire: modules/one_wire.md
           - LED Strip: modules/led_strip.md
           - UART: modules/uart.md
           - I2C Master: modules/i2c.md
