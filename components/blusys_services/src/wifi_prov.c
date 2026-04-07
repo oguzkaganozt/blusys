@@ -20,9 +20,9 @@
 #include "wifi_provisioning/scheme_ble.h"
 #endif
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_nvs_init.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_nvs_init.h"
 
 struct blusys_wifi_prov {
     blusys_wifi_prov_transport_t  transport;

@@ -9,9 +9,9 @@
 
 #include "esp_http_client.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_timeout.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_timeout.h"
 
 #define BODY_BUF_INITIAL_CAP 512u
 

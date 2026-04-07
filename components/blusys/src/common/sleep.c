@@ -1,6 +1,6 @@
 #include "blusys/sleep.h"
 
-#include "blusys_esp_err.h"
+#include "blusys/internal/blusys_esp_err.h"
 
 #include "esp_sleep.h"
 

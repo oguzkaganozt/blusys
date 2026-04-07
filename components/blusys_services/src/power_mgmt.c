@@ -1,6 +1,6 @@
 #include "blusys/power_mgmt.h"
 
-#include "blusys_esp_err.h"
+#include "blusys/internal/blusys_esp_err.h"
 
 #ifdef CONFIG_PM_ENABLE
 

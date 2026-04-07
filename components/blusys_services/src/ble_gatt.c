@@ -18,10 +18,10 @@
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_nvs_init.h"
-#include "blusys_timeout.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_nvs_init.h"
+#include "blusys/internal/blusys_timeout.h"
 
 #define GATT_SYNC_BIT BIT0
 

@@ -10,9 +10,9 @@
 
 #if SOC_TWAI_SUPPORTED
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_timeout.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_timeout.h"
 
 #include "driver/gpio.h"
 #include "esp_attr.h"

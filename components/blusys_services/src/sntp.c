@@ -12,9 +12,9 @@
 #include "esp_netif_sntp.h"
 #include "esp_sntp.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_timeout.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_timeout.h"
 
 struct blusys_sntp {
     blusys_lock_t           lock;

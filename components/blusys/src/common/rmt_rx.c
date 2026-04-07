@@ -8,9 +8,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_timeout.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_timeout.h"
 
 #include "driver/gpio.h"
 #include "driver/rmt_common.h"

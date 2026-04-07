@@ -7,8 +7,8 @@
 
 #include "esp_spiffs.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
 
 #define BLUSYS_FS_MAX_PATH     128
 #define BLUSYS_FS_DEFAULT_MAX_FILES 5

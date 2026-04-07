@@ -12,9 +12,9 @@
 #include "esp_now.h"
 #include "esp_wifi.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_nvs_init.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_nvs_init.h"
 
 #define ESPNOW_MAX_DATA_LEN ESP_NOW_MAX_DATA_LEN  /* 250 bytes */
 

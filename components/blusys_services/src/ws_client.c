@@ -16,9 +16,9 @@
 #include "esp_transport_ssl.h"
 #include "esp_transport_ws.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_timeout.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_timeout.h"
 
 #define WS_RECV_BUF_SIZE   1024
 #define WS_RECV_TASK_STACK 4096

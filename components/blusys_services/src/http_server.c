@@ -9,7 +9,7 @@
 
 #include "esp_http_server.h"
 
-#include "blusys_esp_err.h"
+#include "blusys/internal/blusys_esp_err.h"
 
 struct blusys_http_server {
     httpd_handle_t                esp_handle;

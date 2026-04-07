@@ -10,8 +10,8 @@
 #include "mdns.h"
 #include "esp_netif.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
 
 struct blusys_mdns {
     blusys_lock_t lock;

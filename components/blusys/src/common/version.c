@@ -1,6 +1,6 @@
 #include "blusys/version.h"
 
-#include "blusys_internal.h"
+#include "blusys/internal/blusys_internal.h"
 
 uint32_t blusys_version_packed(void)
 {

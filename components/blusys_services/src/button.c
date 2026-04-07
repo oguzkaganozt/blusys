@@ -6,8 +6,8 @@
 #include "freertos/task.h"
 #include "esp_timer.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
 #include "blusys/gpio.h"
 
 #define BUTTON_DEFAULT_DEBOUNCE_MS 50u

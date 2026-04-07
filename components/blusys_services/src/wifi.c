@@ -16,9 +16,9 @@
 #include "esp_wifi_types.h"
 #include "lwip/ip4_addr.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_nvs_init.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_nvs_init.h"
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1

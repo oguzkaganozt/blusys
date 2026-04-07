@@ -4,7 +4,7 @@
 #include "nvs_flash.h"
 
 #include "blusys/error.h"
-#include "blusys_esp_err.h"
+#include "blusys/internal/blusys_esp_err.h"
 
 /**
  * Shared NVS initialization used by wifi, espnow, and ble_gatt.

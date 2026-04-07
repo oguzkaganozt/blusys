@@ -593,12 +593,12 @@ CMAKE
     cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
 idf_component_register(
     SRCS "app_main.c"
-    REQUIRES blusys
+    REQUIRES blusys_services
 )
 CMAKE
 
     cat > "$target_dir/main/app_main.c" <<'CSRC'
-#include "blusys/blusys.h"
+#include "blusys/blusys_all.h"
 
 void app_main(void)
 {

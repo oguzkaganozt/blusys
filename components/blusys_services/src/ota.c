@@ -11,7 +11,7 @@
 #include "esp_ota_ops.h"
 
 #include "blusys/system.h"
-#include "blusys_esp_err.h"
+#include "blusys/internal/blusys_esp_err.h"
 
 #define DEFAULT_TIMEOUT_MS 30000
 

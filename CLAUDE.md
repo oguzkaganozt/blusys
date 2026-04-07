@@ -49,17 +49,35 @@ The site uses MkDocs Material with navigation tabs: **Home**, **Guides**, **API 
 
 ## Code Architecture
 
-### Layer Model
+### Two-Component Architecture
+
+The codebase is split into two ESP-IDF components:
+
+- **`components/blusys/`** — HAL layer. Thin wrappers over ESP-IDF hardware drivers (GPIO, UART, SPI, I2C, ADC, timers, etc.). No dependency on the services layer.
+- **`components/blusys_services/`** — Services layer. Higher-level modules: networking (WiFi, MQTT, HTTP, OTA), Bluetooth (BT classic, BLE GATT), external devices (LCD, LED strip, button), storage (filesystem, FATFS), and system services (console, power management).
+
+Services depend on HAL (`REQUIRES blusys` in CMakeLists.txt). HAL never depends on services.
 
 ```
 Application
-  → Blusys Public API     (components/blusys/include/blusys/*.h)
-  → Module Implementation (components/blusys/src/common/*.c)
-  → Internal Utilities    (components/blusys/src/internal/)
+  → Services API          (components/blusys_services/include/blusys/*.h)
+  → Service Impl          (components/blusys_services/src/*.c)
+  → HAL Public API        (components/blusys/include/blusys/*.h)
+  → HAL Implementation    (components/blusys/src/common/*.c)
+  → Internal Utilities    (components/blusys/include/blusys/internal/)
   → Target Capabilities   (components/blusys/src/targets/esp32*/target_caps.c)
   → ESP-IDF Drivers
   → Hardware
 ```
+
+**HAL modules:** gpio, uart, i2c, i2c_slave, spi, spi_slave, adc, dac, pwm, mcpwm, timer, pcnt, rmt, rmt_rx, i2s, i2s_rx, sdm, twai, wdt, sleep, temp_sensor, touch, sdmmc, sd_spi, nvs, system, error, target, version.
+
+**Service modules:** wifi, mqtt, http_client, http_server, ota, sntp, mdns, ws_client, espnow, wifi_prov, bluetooth, ble_gatt, lcd, led_strip, button, fs, fatfs, console, power_mgmt.
+
+**Umbrella headers:**
+- `blusys/blusys.h` — includes all HAL modules
+- `blusys/blusys_services.h` — includes all service modules
+- `blusys/blusys_all.h` — includes both
 
 ### Key API Conventions
 
@@ -70,9 +88,11 @@ Application
 - No ESP-IDF types, handles, or macros in public headers.
 - No `#ifdef` for target differences in public or common code — use `blusys_target_supports(feature)` or the SOC guard pattern (see below).
 
-### Internal Utilities (`src/internal/`)
+### Internal Utilities (`include/blusys/internal/`)
 
-- `blusys_lock.h` / `blusys_lock_freertos.c` — FreeRTOS mutex used by all stateful modules.
+These headers are public (usable by both `blusys` and `blusys_services`) but are implementation details, not user-facing API. Include them as `#include "blusys/internal/blusys_lock.h"`.
+
+- `blusys_lock.h` / `blusys_lock_freertos.c` (`src/internal/`) — FreeRTOS mutex used by all stateful modules.
 - `blusys_esp_err.h` — `blusys_translate_esp_err(esp_err_t)` maps ESP errors to `blusys_err_t`.
 - `blusys_timeout.h` — timeout conversion helpers.
 - `blusys_target_caps.h` — `BLUSYS_FEATURE_MASK(feature)` macro and `BLUSYS_BASE_FEATURE_MASK`; per-target feature bitmasks.
@@ -113,50 +133,64 @@ Modules not available on all targets use a SOC capability guard (see `temp_senso
 #endif
 ```
 
-V3 connectivity modules (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`) use `SOC_WIFI_SUPPORTED` as their guard. `bluetooth` and `ble_gatt` use `CONFIG_BT_NIMBLE_ENABLED` (set via menuconfig) as their guard — they require NimBLE to be enabled in the project's sdkconfig. — they are not gated by a per-target `FEATURE_MASK` entry but by Wi-Fi hardware availability. They also require `blusys_wifi_connect()` to be called first at the application level. The `mdns` module additionally depends on the `espressif/mdns` managed component — projects that use mDNS must declare this dependency in their own `main/idf_component.yml`. See `examples/mdns_basic/main/idf_component.yml` as reference. The blusys CMakeLists.txt detects the component at build time and defines `BLUSYS_HAS_MDNS` when present.
+V3 connectivity modules (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`) use `SOC_WIFI_SUPPORTED` as their guard. `bluetooth` and `ble_gatt` use `CONFIG_BT_NIMBLE_ENABLED` (set via menuconfig) as their guard — they require NimBLE to be enabled in the project's sdkconfig. — they are not gated by a per-target `FEATURE_MASK` entry but by Wi-Fi hardware availability. They also require `blusys_wifi_connect()` to be called first at the application level. The `mdns` module additionally depends on the `espressif/mdns` managed component — projects that use mDNS must declare this dependency in their own `main/idf_component.yml`. See `examples/mdns_basic/main/idf_component.yml` as reference. The `blusys_services` CMakeLists.txt detects the component at build time and defines `BLUSYS_HAS_MDNS` when present.
 
 ### Examples
 
 Each example is a standalone ESP-IDF project:
 - `main/<name>_main.c` — entry point
-- `main/CMakeLists.txt` — `idf_component_register(SRCS "..." REQUIRES blusys)`
+- `main/CMakeLists.txt` — `idf_component_register(SRCS "..." REQUIRES blusys)` (or `REQUIRES blusys_services` for service modules)
 - `main/Kconfig.projbuild` — menuconfig options (must be in `main/`, not project root)
 - `CMakeLists.txt` — sets `EXTRA_COMPONENT_DIRS` to `../../components`
 - `sdkconfig.esp32c3` / `sdkconfig.esp32s3` — optional per-target defaults
 
 ## Adding a New Module
 
-### 1. Public header — `include/blusys/<module>.h`
+First decide which component the module belongs to:
+- **HAL** (`components/blusys/`) — direct hardware abstraction (GPIO, bus protocols, timers, ADC, etc.)
+- **Services** (`components/blusys_services/`) — higher-level: networking, Bluetooth, external devices, storage abstractions, system services
+
+### 1. Public header
+- **HAL:** `components/blusys/include/blusys/<module>.h`
+- **Services:** `components/blusys_services/include/blusys/<module>.h`
 - Opaque handle: `typedef struct blusys_<module> blusys_<module>_t;`
 - All functions return `blusys_err_t`
 - No ESP-IDF types
 
-### 2. Implementation — `src/common/<module>.c`
+### 2. Implementation
+- **HAL:** `components/blusys/src/common/<module>.c`
+- **Services:** `components/blusys_services/src/<module>.c`
 - Filename is `<module>.c` (no `blusys_` prefix)
 - `#include "soc/soc_caps.h"` + SOC guard if not universally supported
 - Use `blusys_translate_esp_err()`, `blusys_lock_*`, `calloc`/`free` pattern
+- Internal utilities: `#include "blusys/internal/blusys_lock.h"` (etc.)
 - Always check the return value of `blusys_lock_take()` — even in `close()` and cleanup paths
-- See `temp_sensor.c` (simple), `uart.c` (async/callback), or `wifi.c` (event-group connect) as reference
+- See `temp_sensor.c` (simple HAL), `uart.c` (async/callback HAL), or `wifi.c` (event-group service) as reference
 
-### 3. Register source and dependencies — `CMakeLists.txt`
-- Add `src/common/<module>.c` to `blusys_sources`
-- Add any new ESP-IDF component to `REQUIRES`
+### 3. Register source and dependencies
+- **HAL:** Add to `blusys_sources` in `components/blusys/CMakeLists.txt`
+- **Services:** Add to `blusys_services_sources` in `components/blusys_services/CMakeLists.txt`
+- Add any new ESP-IDF component to `REQUIRES` in the appropriate CMakeLists.txt
 
-### 4. Feature flag — `include/blusys/target.h`
+### 4. Feature flag — `components/blusys/include/blusys/target.h`
 - Add `BLUSYS_FEATURE_<MODULE>` to `blusys_feature_t` enum, before `BLUSYS_FEATURE_COUNT`
+- Feature flags always go in the HAL component (they describe hardware capability)
 
-### 5. Capability mask — `src/internal/blusys_target_caps.h`
+### 5. Capability mask — `components/blusys/include/blusys/internal/blusys_target_caps.h`
 - Add `#define BLUSYS_<MODULE>_FEATURE_MASK BLUSYS_FEATURE_MASK(BLUSYS_FEATURE_<MODULE>)`
 - Add to `BLUSYS_BASE_FEATURE_MASK` if all three targets support it; otherwise leave separate
 
 ### 6. Per-target caps — `src/targets/esp32/target_caps.c`, `esp32c3/`, `esp32s3/`
 - Add the new mask to `.feature_mask` in whichever targets support the module
 
-### 7. Umbrella header — `include/blusys/blusys.h`
-- Add `#include "blusys/<module>.h"` in alphabetical order
+### 7. Umbrella header
+- **HAL:** Add to `components/blusys/include/blusys/blusys.h`
+- **Services:** Add to `components/blusys_services/include/blusys/blusys_services.h`
 
 ### 8. Example — `examples/<module>_basic/`
 - Follow the structure described in the Examples section above
+- **HAL examples:** `REQUIRES blusys` in `main/CMakeLists.txt`
+- **Service examples:** `REQUIRES blusys_services` in `main/CMakeLists.txt`
 - `Kconfig.projbuild` belongs in `main/`, not the project root
 
 ### 9. Docs

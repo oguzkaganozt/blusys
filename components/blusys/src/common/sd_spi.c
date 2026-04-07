@@ -13,8 +13,8 @@
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
 
 #define BLUSYS_SD_SPI_MAX_PATH         256
 #define BLUSYS_SD_SPI_DEFAULT_MAX_FILES  5

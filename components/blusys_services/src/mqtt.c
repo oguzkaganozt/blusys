@@ -12,9 +12,9 @@
 
 #include "mqtt_client.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_timeout.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_timeout.h"
 
 #define MQTT_CONNECTED_BIT    BIT0
 #define MQTT_DISCONNECTED_BIT BIT1

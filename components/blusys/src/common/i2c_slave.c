@@ -8,9 +8,9 @@
 
 #if SOC_I2C_SUPPORT_SLAVE
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_timeout.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_timeout.h"
 
 #include "driver/gpio.h"
 #include "driver/i2c_slave.h"

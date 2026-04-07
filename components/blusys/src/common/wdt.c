@@ -1,6 +1,6 @@
 #include "blusys/wdt.h"
 
-#include "blusys_esp_err.h"
+#include "blusys/internal/blusys_esp_err.h"
 
 #include "esp_task_wdt.h"
 

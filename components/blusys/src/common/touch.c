@@ -10,8 +10,8 @@
 
 #include "soc/touch_sensor_channel.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
 
 #include "driver/touch_sens.h"
 #include "freertos/FreeRTOS.h"

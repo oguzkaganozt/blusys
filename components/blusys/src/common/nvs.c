@@ -5,9 +5,9 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
-#include "blusys_nvs_init.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
+#include "blusys/internal/blusys_nvs_init.h"
 
 struct blusys_nvs {
     nvs_handle_t      handle;

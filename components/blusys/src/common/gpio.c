@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "blusys_esp_err.h"
+#include "blusys/internal/blusys_esp_err.h"
 
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"

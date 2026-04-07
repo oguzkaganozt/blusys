@@ -1,6 +1,6 @@
 #include "blusys/target.h"
 
-#include "blusys_target_caps.h"
+#include "blusys/internal/blusys_target_caps.h"
 
 blusys_target_t blusys_target_get(void)
 {

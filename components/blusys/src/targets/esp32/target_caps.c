@@ -1,4 +1,4 @@
-#include "blusys_target_caps.h"
+#include "blusys/internal/blusys_target_caps.h"
 
 const blusys_target_caps_t *blusys_target_caps_get(void)
 {

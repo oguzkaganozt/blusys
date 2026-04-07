@@ -6,8 +6,8 @@
 
 #if SOC_TEMP_SENSOR_SUPPORTED
 
-#include "blusys_esp_err.h"
-#include "blusys_lock.h"
+#include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_lock.h"
 
 #include "driver/temperature_sensor.h"
 

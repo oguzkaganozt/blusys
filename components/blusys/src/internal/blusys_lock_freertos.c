@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "blusys_lock.h"
+#include "blusys/internal/blusys_lock.h"
 
 blusys_err_t blusys_lock_init(blusys_lock_t *lock)
 {
