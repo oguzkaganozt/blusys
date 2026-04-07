@@ -1,4 +1,4 @@
-#include "blusys/mdns.h"
+#include "blusys/connectivity/mdns.h"
 
 #include <stdlib.h>
 #include <string.h>

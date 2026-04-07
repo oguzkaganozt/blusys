@@ -1,4 +1,4 @@
-#include "blusys/mqtt.h"
+#include "blusys/protocol/mqtt.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -1,4 +1,4 @@
-#include "blusys/espnow.h"
+#include "blusys/connectivity/espnow.h"
 
 #include <stdlib.h>
 #include <string.h>

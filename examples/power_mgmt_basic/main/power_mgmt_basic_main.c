@@ -3,7 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "blusys/power_mgmt.h"
+#include "blusys/system/power_mgmt.h"
 #include "blusys/target.h"
 
 #define PM_MAX_FREQ_MHZ 80

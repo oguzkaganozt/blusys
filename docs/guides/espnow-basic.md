@@ -15,7 +15,7 @@ You want two (or more) ESP32 devices to exchange short messages directly over Wi
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "blusys/espnow.h"
+#include "blusys/connectivity/espnow.h"
 
 static const uint8_t BROADCAST[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
 

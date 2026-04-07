@@ -12,7 +12,7 @@ Pick a peripheral category to get started.
 
     GPIO, UART, I2C, SPI — the building blocks of embedded communication.
 
-    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [Button](button-basic.md) · [Encoder](encoder-basic.md) · [LED Strip](led-strip-basic.md) · [UART (Blocking)](uart-loopback.md) · [UART (Async)](uart-async.md) · [I2C Master](i2c-scan.md) · [I2C Slave](i2c-slave-basic.md) · [SPI Master](spi-loopback.md) · [SPI Slave](spi-slave-basic.md)
+    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [Button](button-basic.md) · [Encoder](encoder-basic.md) · [Buzzer](buzzer-basic.md) · [1-Wire](one-wire-basic.md) · [LED Strip](led-strip-basic.md) · [UART (Blocking)](uart-loopback.md) · [UART (Async)](uart-async.md) · [I2C Master](i2c-scan.md) · [I2C Slave](i2c-slave-basic.md) · [SPI Master](spi-loopback.md) · [SPI Slave](spi-slave-basic.md)
 
 -   :material-sine-wave:{ .lg .middle } **Analog**
 

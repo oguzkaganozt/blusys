@@ -13,7 +13,7 @@ You want to drive a WS2812B (NeoPixel) LED strip from an ESP32 without writing l
 ## Minimal Example
 
 ```c
-#include "blusys/led_strip.h"
+#include "blusys/display/led_strip.h"
 
 void app_main(void)
 {

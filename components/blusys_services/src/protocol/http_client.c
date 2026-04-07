@@ -1,4 +1,4 @@
-#include "blusys/http_client.h"
+#include "blusys/protocol/http_client.h"
 
 #include <stdlib.h>
 #include <string.h>

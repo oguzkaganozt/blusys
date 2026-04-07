@@ -16,7 +16,7 @@ A passive piezo buzzer produces sound when driven by a PWM signal — the freque
 ## Minimal Example
 
 ```c
-#include "blusys/buzzer.h"
+#include "blusys/actuator/buzzer.h"
 
 static const blusys_buzzer_note_t s_jingle[] = {
     { .freq_hz = 262, .duration_ms = 200 },  /* C4 */

@@ -2,7 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
-#include "blusys/bluetooth.h"
+#include "blusys/connectivity/bluetooth.h"
 
 static void scan_cb(const blusys_bluetooth_scan_result_t *result, void *user_ctx)
 {

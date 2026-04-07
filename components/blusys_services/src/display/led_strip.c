@@ -1,4 +1,4 @@
-#include "blusys/led_strip.h"
+#include "blusys/display/led_strip.h"
 
 #include "soc/soc_caps.h"
 

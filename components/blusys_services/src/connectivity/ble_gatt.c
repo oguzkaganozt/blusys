@@ -1,4 +1,4 @@
-#include "blusys/ble_gatt.h"
+#include "blusys/connectivity/ble_gatt.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -1,4 +1,4 @@
-#include "blusys/button.h"
+#include "blusys/input/button.h"
 
 #include <stdlib.h>
 

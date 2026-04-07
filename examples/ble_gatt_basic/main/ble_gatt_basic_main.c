@@ -5,7 +5,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "blusys/ble_gatt.h"
+#include "blusys/connectivity/ble_gatt.h"
 
 /*
  * Custom GATT service with two characteristics:

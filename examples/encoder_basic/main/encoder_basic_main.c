@@ -5,7 +5,7 @@
 #include "sdkconfig.h"
 
 #include "blusys/blusys.h"
-#include "blusys/encoder.h"
+#include "blusys/input/encoder.h"
 
 static const char *event_name(blusys_encoder_event_t event)
 {

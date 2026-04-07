@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Blusys HAL** is a simplified C Hardware Abstraction Layer for ESP32 devices, built on top of ESP-IDF v5.5.4. It exposes a smaller, more stable API surface than raw ESP-IDF. Supported targets: **ESP32**, **ESP32-C3**, and **ESP32-S3**. Current release: `v4.0.0`.
+**Blusys HAL** is a simplified C Hardware Abstraction Layer for ESP32 devices, built on top of ESP-IDF v5.5.4. It exposes a smaller, more stable API surface than raw ESP-IDF. Supported targets: **ESP32**, **ESP32-C3**, and **ESP32-S3**. Current release: `v5.0.0`.
 
 ## Build and Flash Commands
 
@@ -54,14 +54,14 @@ The site uses MkDocs Material with navigation tabs: **Home**, **Guides**, **API 
 The codebase is split into two ESP-IDF components:
 
 - **`components/blusys/`** — HAL layer. Thin wrappers over ESP-IDF hardware drivers (GPIO, UART, SPI, I2C, ADC, timers, etc.). No dependency on the services layer.
-- **`components/blusys_services/`** — Services layer. Higher-level modules: networking (WiFi, MQTT, HTTP, OTA), Bluetooth (BT classic, BLE GATT), external devices (LCD, LED strip, button), storage (filesystem, FATFS), and system services (console, power management).
+- **`components/blusys_services/`** — Services layer. Organized into 7 categories: display (LCD, LED strip), input (button, encoder), sensor, actuator (buzzer), connectivity (WiFi, Bluetooth, BLE GATT, ESP-NOW, mDNS), protocol (MQTT, HTTP, WebSocket), and system (filesystem, FATFS, console, power management, SNTP, OTA).
 
 Services depend on HAL (`REQUIRES blusys` in CMakeLists.txt). HAL never depends on services.
 
 ```
 Application
-  → Services API          (components/blusys_services/include/blusys/*.h)
-  → Service Impl          (components/blusys_services/src/*.c)
+  → Services API          (components/blusys_services/include/blusys/<category>/*.h)
+  → Service Impl          (components/blusys_services/src/<category>/*.c)
   → HAL Public API        (components/blusys/include/blusys/*.h)
   → HAL Implementation    (components/blusys/src/common/*.c)
   → Internal Utilities    (components/blusys/include/blusys/internal/)
@@ -72,7 +72,14 @@ Application
 
 **HAL modules:** gpio, uart, i2c, i2c_slave, spi, spi_slave, adc, dac, pwm, mcpwm, timer, pcnt, rmt, rmt_rx, i2s, i2s_rx, sdm, twai, wdt, sleep, temp_sensor, touch, sdmmc, sd_spi, nvs, system, error, target, version.
 
-**Service modules:** wifi, mqtt, http_client, http_server, ota, sntp, mdns, ws_client, espnow, wifi_prov, bluetooth, ble_gatt, lcd, led_strip, button, fs, fatfs, console, power_mgmt.
+**Service modules** (by category):
+- **display:** lcd, led_strip
+- **input:** button, encoder
+- **sensor:** *(placeholder)*
+- **actuator:** buzzer
+- **connectivity:** wifi, wifi_prov, espnow, bluetooth, ble_gatt, mdns
+- **protocol:** mqtt, http_client, http_server, ws_client
+- **system:** fs, fatfs, console, power_mgmt, sntp, ota
 
 **Umbrella headers:**
 - `blusys/blusys.h` — includes all HAL modules
@@ -148,18 +155,18 @@ Each example is a standalone ESP-IDF project:
 
 First decide which component the module belongs to:
 - **HAL** (`components/blusys/`) — direct hardware abstraction (GPIO, bus protocols, timers, ADC, etc.)
-- **Services** (`components/blusys_services/`) — higher-level: networking, Bluetooth, external devices, storage abstractions, system services
+- **Services** (`components/blusys_services/`) — higher-level modules in one of 7 categories: display, input, sensor, actuator, connectivity, protocol, system
 
 ### 1. Public header
 - **HAL:** `components/blusys/include/blusys/<module>.h`
-- **Services:** `components/blusys_services/include/blusys/<module>.h`
+- **Services:** `components/blusys_services/include/blusys/<category>/<module>.h`
 - Opaque handle: `typedef struct blusys_<module> blusys_<module>_t;`
 - All functions return `blusys_err_t`
 - No ESP-IDF types
 
 ### 2. Implementation
 - **HAL:** `components/blusys/src/common/<module>.c`
-- **Services:** `components/blusys_services/src/<module>.c`
+- **Services:** `components/blusys_services/src/<category>/<module>.c`
 - Filename is `<module>.c` (no `blusys_` prefix)
 - `#include "soc/soc_caps.h"` + SOC guard if not universally supported
 - Use `blusys_translate_esp_err()`, `blusys_lock_*`, `calloc`/`free` pattern

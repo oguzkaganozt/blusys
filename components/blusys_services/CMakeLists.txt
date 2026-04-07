@@ -1,25 +1,31 @@
 set(blusys_services_sources
-    src/ble_gatt.c
-    src/bluetooth.c
-    src/button.c
-    src/buzzer.c
-    src/console.c
-    src/encoder.c
-    src/espnow.c
-    src/fatfs.c
-    src/fs.c
-    src/http_client.c
-    src/http_server.c
-    src/lcd.c
-    src/led_strip.c
-    src/mdns.c
-    src/mqtt.c
-    src/ota.c
-    src/power_mgmt.c
-    src/sntp.c
-    src/wifi.c
-    src/wifi_prov.c
-    src/ws_client.c
+    # display
+    src/display/lcd.c
+    src/display/led_strip.c
+    # input
+    src/input/button.c
+    src/input/encoder.c
+    # actuator
+    src/actuator/buzzer.c
+    # connectivity
+    src/connectivity/ble_gatt.c
+    src/connectivity/bluetooth.c
+    src/connectivity/espnow.c
+    src/connectivity/mdns.c
+    src/connectivity/wifi.c
+    src/connectivity/wifi_prov.c
+    # protocol
+    src/protocol/http_client.c
+    src/protocol/http_server.c
+    src/protocol/mqtt.c
+    src/protocol/ws_client.c
+    # system
+    src/system/console.c
+    src/system/fatfs.c
+    src/system/fs.c
+    src/system/ota.c
+    src/system/power_mgmt.c
+    src/system/sntp.c
 )
 
 idf_component_register(

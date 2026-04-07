@@ -5,27 +5,38 @@
 extern "C" {
 #endif
 
-#include "blusys/ble_gatt.h"
-#include "blusys/bluetooth.h"
-#include "blusys/button.h"
-#include "blusys/buzzer.h"
-#include "blusys/console.h"
-#include "blusys/encoder.h"
-#include "blusys/espnow.h"
-#include "blusys/fatfs.h"
-#include "blusys/fs.h"
-#include "blusys/http_client.h"
-#include "blusys/http_server.h"
-#include "blusys/lcd.h"
-#include "blusys/led_strip.h"
-#include "blusys/mdns.h"
-#include "blusys/mqtt.h"
-#include "blusys/ota.h"
-#include "blusys/power_mgmt.h"
-#include "blusys/sntp.h"
-#include "blusys/wifi.h"
-#include "blusys/wifi_prov.h"
-#include "blusys/ws_client.h"
+/* display */
+#include "blusys/display/lcd.h"
+#include "blusys/display/led_strip.h"
+
+/* input */
+#include "blusys/input/button.h"
+#include "blusys/input/encoder.h"
+
+/* actuator */
+#include "blusys/actuator/buzzer.h"
+
+/* connectivity */
+#include "blusys/connectivity/ble_gatt.h"
+#include "blusys/connectivity/bluetooth.h"
+#include "blusys/connectivity/espnow.h"
+#include "blusys/connectivity/mdns.h"
+#include "blusys/connectivity/wifi.h"
+#include "blusys/connectivity/wifi_prov.h"
+
+/* protocol */
+#include "blusys/protocol/http_client.h"
+#include "blusys/protocol/http_server.h"
+#include "blusys/protocol/mqtt.h"
+#include "blusys/protocol/ws_client.h"
+
+/* system */
+#include "blusys/system/console.h"
+#include "blusys/system/fatfs.h"
+#include "blusys/system/fs.h"
+#include "blusys/system/ota.h"
+#include "blusys/system/power_mgmt.h"
+#include "blusys/system/sntp.h"
 
 #ifdef __cplusplus
 }

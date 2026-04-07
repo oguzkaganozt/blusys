@@ -14,7 +14,7 @@ encoder without dealing with quadrature decoding, debouncing, or ISR management.
 
 ```c
 #include "blusys/blusys.h"
-#include "blusys/encoder.h"
+#include "blusys/input/encoder.h"
 
 static void on_event(blusys_encoder_t *enc, blusys_encoder_event_t event,
                       int position, void *ctx)

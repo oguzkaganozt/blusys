@@ -14,7 +14,7 @@ You want the ESP32 to act as a BLE peripheral — exposing readable/writable cha
 
 ```c
 #include <string.h>
-#include "blusys/ble_gatt.h"
+#include "blusys/connectivity/ble_gatt.h"
 
 /* Service UUID: 12345678-1234-1234-1234-1234567890ab (little-endian) */
 static const uint8_t SVC_UUID[16] = {

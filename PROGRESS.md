@@ -88,6 +88,7 @@ Advanced connectivity and peripherals.
 
 ## Recent Work
 
+- restructured `blusys_services` into 7 categories: display, input, sensor, actuator, connectivity, protocol, system — headers now at `blusys/<category>/<module>.h`
 - added `buzzer` service module: PWM-driven passive piezo, single-tone and sequence playback, all three targets
 - split codebase into two-component architecture: `components/blusys/` (HAL) and `components/blusys_services/` (Services)
 - promoted internal utilities to `include/blusys/internal/` for cross-component sharing
@@ -136,26 +137,12 @@ Advanced connectivity and peripherals.
 
 ### Services Public API (`components/blusys_services/`)
 
-- `blusys_wifi_*`
-- `blusys_http_client_*`
-- `blusys_mqtt_*`
-- `blusys_http_server_*`
-- `blusys_ota_*`
-- `blusys_sntp_*`
-- `blusys_mdns_*`
-- `blusys_ws_client_*`
-- `blusys_espnow_*`
-- `blusys_wifi_prov_*`
-- `blusys_bluetooth_*`
-- `blusys_ble_gatt_*`
-- `blusys_lcd_*`
-- `blusys_led_strip_*`
-- `blusys_button_*`
-- `blusys_buzzer_*`
-- `blusys_fs_*`
-- `blusys_fatfs_*`
-- `blusys_console_*`
-- `blusys_pm_*`
+**display:** `blusys_lcd_*`, `blusys_led_strip_*`
+**input:** `blusys_button_*`, `blusys_encoder_*`
+**actuator:** `blusys_buzzer_*`
+**connectivity:** `blusys_wifi_*`, `blusys_wifi_prov_*`, `blusys_espnow_*`, `blusys_bluetooth_*`, `blusys_ble_gatt_*`, `blusys_mdns_*`
+**protocol:** `blusys_mqtt_*`, `blusys_http_client_*`, `blusys_http_server_*`, `blusys_ws_client_*`
+**system:** `blusys_fs_*`, `blusys_fatfs_*`, `blusys_console_*`, `blusys_pm_*`, `blusys_sntp_*`, `blusys_ota_*`
 
 ### Internal Infrastructure
 

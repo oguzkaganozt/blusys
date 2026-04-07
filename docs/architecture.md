@@ -15,8 +15,8 @@ Services depend on HAL (`REQUIRES blusys` in CMakeLists.txt). HAL never depends 
 
 ```text
 Application
-  → Services API            (components/blusys_services/include/blusys/*.h)
-  → Service Implementation  (components/blusys_services/src/*.c)
+  → Services API            (components/blusys_services/include/blusys/<category>/*.h)
+  → Service Implementation  (components/blusys_services/src/<category>/*.c)
   → HAL Public API          (components/blusys/include/blusys/*.h)
   → HAL Implementation      (components/blusys/src/common/*.c)
   → Internal Utilities      (components/blusys/include/blusys/internal/)
@@ -46,11 +46,15 @@ Umbrella header: `#include "blusys/blusys.h"`
 
 ## Services Modules (`components/blusys_services/`)
 
-- networking: `wifi`, `http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `ws_client`, `espnow`, `wifi_prov`
-- bluetooth: `bluetooth`, `ble_gatt`
-- external devices: `lcd`, `led_strip`, `button`
-- storage: `fs`, `fatfs`
-- system services: `console`, `power_mgmt`
+Services are organized into 7 categories, each with its own subdirectory under `include/blusys/` and `src/`:
+
+- display: `lcd`, `led_strip`
+- input: `button`, `encoder`
+- sensor: *(placeholder for upcoming modules)*
+- actuator: `buzzer`
+- connectivity: `wifi`, `wifi_prov`, `espnow`, `bluetooth`, `ble_gatt`, `mdns`
+- protocol: `mqtt`, `http_client`, `http_server`, `ws_client`
+- system: `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`
 
 Umbrella header: `#include "blusys/blusys_services.h"`
 

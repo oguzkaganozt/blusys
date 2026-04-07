@@ -1,4 +1,4 @@
-#include "blusys/bluetooth.h"
+#include "blusys/connectivity/bluetooth.h"
 
 #include <stdlib.h>
 #include <string.h>

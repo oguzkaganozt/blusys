@@ -37,7 +37,7 @@ typedef struct {
 
 A single URI/method binding. The routes array is copied during `open()`, so the caller need not keep it alive after `open()` returns.
 
-`blusys_http_method_t` is defined in `blusys/http_client.h` and includes `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `HEAD`.
+`blusys_http_method_t` is defined in `blusys/protocol/http_client.h` and includes `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `HEAD`.
 
 ### `blusys_http_server_config_t`
 

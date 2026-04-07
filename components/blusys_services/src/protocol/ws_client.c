@@ -1,4 +1,4 @@
-#include "blusys/ws_client.h"
+#include "blusys/protocol/ws_client.h"
 
 #include <stdlib.h>
 #include <string.h>

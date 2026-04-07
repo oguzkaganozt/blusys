@@ -1,4 +1,4 @@
-#include "blusys/wifi.h"
+#include "blusys/connectivity/wifi.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -1,4 +1,4 @@
-#include "blusys/console.h"
+#include "blusys/system/console.h"
 
 #include <stdlib.h>
 

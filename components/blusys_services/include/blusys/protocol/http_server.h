@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 #include "blusys/error.h"
-#include "blusys/http_client.h" /* for blusys_http_method_t */
+#include "blusys/protocol/http_client.h" /* for blusys_http_method_t */
 
 #ifdef __cplusplus
 extern "C" {

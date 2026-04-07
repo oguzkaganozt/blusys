@@ -1,4 +1,4 @@
-#include "blusys/sntp.h"
+#include "blusys/system/sntp.h"
 
 #include <stdlib.h>
 #include <string.h>

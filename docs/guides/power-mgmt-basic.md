@@ -12,7 +12,7 @@ You want to reduce power consumption during idle periods by enabling CPU frequen
 ## Minimal Example
 
 ```c
-#include "blusys/power_mgmt.h"
+#include "blusys/system/power_mgmt.h"
 
 /* Configure frequency scaling and automatic light sleep at startup */
 blusys_pm_config_t cfg = {

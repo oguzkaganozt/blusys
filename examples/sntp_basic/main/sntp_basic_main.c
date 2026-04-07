@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
-#include "blusys/wifi.h"
-#include "blusys/sntp.h"
+#include "blusys/connectivity/wifi.h"
+#include "blusys/system/sntp.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 
