@@ -67,6 +67,8 @@ blusys_err_t blusys_fatfs_unmount(blusys_fatfs_t *fatfs);
 
 Flushes all open files, unregisters the partition from the VFS layer, releases the wear-levelling handle, and frees the handle. After this call the handle is invalid.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `fatfs` is NULL.
+
 ---
 
 ### `blusys_fatfs_write`
@@ -228,3 +230,7 @@ All operations on a handle are serialised with an internal mutex. Concurrent cal
 - The `listdir` callback must not call back into the same `blusys_fatfs_t` handle — the mutex is already held.
 - If `CONFIG_FATFS_LFN_NONE` is set in sdkconfig, filenames longer than 8.3 format are silently truncated. Enable `CONFIG_FATFS_LFN_HEAP` or `CONFIG_FATFS_LFN_STACK` via menuconfig to use long filenames.
 - Maximum simultaneously open files is bounded by `max_files` in the config (default 5).
+
+## Example App
+
+See `examples/fatfs_basic/`.

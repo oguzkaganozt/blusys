@@ -41,5 +41,5 @@ A simplified C hardware abstraction layer for ESP32 devices, built on top of ESP
 See [Compatibility](target-matrix.md) for the full per-module support matrix.
 
 !!! info "Current Release"
-    **v3.0.0** — all core, analog, timer, bus, sensor, system, and networking modules are available.
+    **v4.0.0** — all core, analog, timer, bus, sensor, system, and networking modules are available.
     See [Roadmap](roadmap.md) for what's planned next.

@@ -54,6 +54,8 @@ blusys_err_t blusys_pwm_close(blusys_pwm_t *pwm);
 
 Stops the output, releases the timer and channel, and frees the handle.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `pwm` is NULL.
+
 ---
 
 ### `blusys_pwm_set_frequency`
@@ -91,6 +93,8 @@ blusys_err_t blusys_pwm_start(blusys_pwm_t *pwm);
 
 Enables PWM output on the pin.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `pwm` is NULL.
+
 ---
 
 ### `blusys_pwm_stop`
@@ -100,6 +104,8 @@ blusys_err_t blusys_pwm_stop(blusys_pwm_t *pwm);
 ```
 
 Disables PWM output without releasing the handle. The pin goes idle. Call `blusys_pwm_start()` to resume.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `pwm` is NULL.
 
 ## Lifecycle
 

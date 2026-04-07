@@ -2,6 +2,10 @@
 
 Run an embedded HTTP server on an ESP32 that responds to incoming requests over WiFi.
 
+## Problem Statement
+
+You want to expose an HTTP endpoint from an ESP32 so that other devices on the local network can retrieve data or send commands over WiFi.
+
 ## Prerequisites
 
 - WiFi station connected (see [WiFi guide](wifi-connect.md))
@@ -157,6 +161,9 @@ printf("http://%s/\n", ip_info.ip);
 
 **Body larger than available heap**: always check `content_len` before allocating, and add a cap if the endpoint is exposed to untrusted clients.
 
+## Example App
+
+See `examples/http_server_basic/`.
 
 ## API Reference
 

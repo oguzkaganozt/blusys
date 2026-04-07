@@ -67,6 +67,8 @@ blusys_err_t blusys_spi_slave_close(blusys_spi_slave_t *slave);
 
 Deinitializes the SPI slave and frees the handle.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `slave` is NULL.
+
 ---
 
 ### `blusys_spi_slave_transfer`

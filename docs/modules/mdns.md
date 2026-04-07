@@ -85,6 +85,8 @@ blusys_err_t blusys_mdns_close(blusys_mdns_t *mdns);
 
 Stops the mDNS responder, removes all advertised services, and frees the handle.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `mdns` is NULL.
+
 ---
 
 ### `blusys_mdns_add_service`
@@ -124,6 +126,14 @@ blusys_err_t blusys_mdns_remove_service(blusys_mdns_t *mdns,
 
 Removes a previously advertised service.
 
+**Parameters:**
+
+- `mdns` — handle
+- `service_type` — service type string (e.g. `"_http"`, `"_mqtt"`)
+- `proto` — `BLUSYS_MDNS_PROTO_TCP` or `BLUSYS_MDNS_PROTO_UDP`
+
+**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_ARG` if `mdns` or `service_type` is NULL.
+
 ---
 
 ### `blusys_mdns_query`
@@ -150,3 +160,24 @@ Discovers services of the given type on the local network. Blocks until at least
 - `out_count` — number of results found
 
 **Returns:** `BLUSYS_OK` on success (even if `*out_count` is 0).
+
+## Lifecycle
+
+1. `blusys_mdns_open()` — start responder
+2. `blusys_mdns_add_service()` — advertise services (optional, repeatable)
+3. `blusys_mdns_query()` — discover peers (optional)
+4. `blusys_mdns_remove_service()` — stop advertising a service (optional)
+5. `blusys_mdns_close()` — stop responder and free resources
+
+## Thread Safety
+
+All functions are serialized with an internal mutex. Concurrent calls on the same handle are safe.
+
+## Limitations
+
+- WiFi must be connected before calling `blusys_mdns_open()`.
+- This module requires the `espressif/mdns` managed component. Projects using mDNS must declare it as a dependency in `main/idf_component.yml`. See `examples/mdns_basic/main/idf_component.yml` as reference.
+
+## Example App
+
+See `examples/mdns_basic/`.

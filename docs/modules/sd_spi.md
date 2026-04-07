@@ -222,3 +222,7 @@ All operations on a handle are serialised with an internal mutex. Concurrent cal
 - The `listdir` callback must not call back into the same `blusys_sd_spi_t` handle — the mutex is already held.
 - `format_if_mount_failed = true` will erase all card contents; use only during development.
 - SPI bus speed is capped at 20 MHz for reliable SD communication over longer wires. Reduce `freq_hz` if you observe CRC errors.
+
+## Example App
+
+See `examples/sd_spi_basic/`.

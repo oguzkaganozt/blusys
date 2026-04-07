@@ -56,6 +56,8 @@ blusys_err_t blusys_i2c_slave_close(blusys_i2c_slave_t *slave);
 
 Releases the I2C slave and frees the handle.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `slave` is NULL.
+
 ---
 
 ### `blusys_i2c_slave_receive`

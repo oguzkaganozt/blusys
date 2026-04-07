@@ -75,6 +75,8 @@ blusys_err_t blusys_uart_close(blusys_uart_t *uart);
 
 Stops any pending async operation, uninstalls the driver, and frees the handle. Must not be called from within a UART async callback.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `uart` is NULL, `BLUSYS_ERR_INVALID_STATE` if called from within a UART callback.
+
 ---
 
 ### `blusys_uart_write`
@@ -126,6 +128,8 @@ blusys_err_t blusys_uart_flush_rx(blusys_uart_t *uart);
 
 Discards any data waiting in the RX buffer.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `uart` is NULL, `BLUSYS_ERR_INVALID_STATE` if an RX callback is registered or the handle is closing.
+
 ---
 
 ### `blusys_uart_set_tx_callback`
@@ -151,6 +155,8 @@ blusys_err_t blusys_uart_set_rx_callback(blusys_uart_t *uart,
 ```
 
 Registers a task-context callback for async RX data delivery. While an RX callback is active, `blusys_uart_read()` must not be called.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `uart` is NULL, `BLUSYS_ERR_INVALID_STATE` if the handle is closing.
 
 ---
 

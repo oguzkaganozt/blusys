@@ -15,6 +15,14 @@ SPI and I2C display driver supporting ST7789, SSD1306, and NT35510 panels via ES
 
 ## Types
 
+### `blusys_lcd_t`
+
+```c
+typedef struct blusys_lcd blusys_lcd_t;
+```
+
+Opaque handle returned by `blusys_lcd_open()`.
+
 ### `blusys_lcd_driver_t`
 
 ```c
@@ -201,3 +209,7 @@ All functions are thread-safe via an internal mutex. Note that `blusys_lcd_draw_
 - The LCD module takes exclusive ownership of the SPI or I2C bus. Do not use the same bus index with `blusys_spi_open()` or `blusys_i2c_open()`.
 - Backlight control is GPIO on/off only (not PWM dimming).
 - Coordinates passed to `blusys_lcd_draw_bitmap()` must be within the panel dimensions; no automatic clipping is performed.
+
+## Example App
+
+See `examples/lcd_basic/`.

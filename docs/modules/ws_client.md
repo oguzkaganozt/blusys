@@ -115,7 +115,9 @@ Connects to the server. Blocks until the TCP connection and WebSocket handshake 
 blusys_err_t blusys_ws_client_disconnect(blusys_ws_client_t *handle);
 ```
 
-Closes the transport and waits for the receive task to finish. Returns `BLUSYS_OK` immediately if not connected.
+Closes the transport and waits for the receive task to finish.
+
+**Returns:** `BLUSYS_OK` (immediately if not connected).
 
 ---
 

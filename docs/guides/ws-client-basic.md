@@ -2,6 +2,10 @@
 
 Open a full-duplex WebSocket connection, send messages, and receive replies in a callback.
 
+## Problem Statement
+
+You want to establish a persistent, full-duplex connection from an ESP32 to a WebSocket server so that either side can send messages at any time without polling.
+
 ## Prerequisites
 
 - A WiFi-capable board: ESP32, ESP32-C3, or ESP32-S3

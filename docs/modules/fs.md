@@ -56,6 +56,8 @@ blusys_err_t blusys_fs_unmount(blusys_fs_t *fs);
 
 Unregisters the SPIFFS partition from the VFS layer and frees the handle. After this call the handle is invalid and all open files are flushed and closed.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `fs` is NULL.
+
 ---
 
 ### `blusys_fs_write`
@@ -170,3 +172,7 @@ All operations on a handle are serialised with an internal mutex. Concurrent cal
 - File paths passed to blusys_fs functions are limited to 63 characters.
 - SPIFFS is not wear-levelled; avoid high-frequency writes to the same file. Use the `nvs` module for frequently updated key-value data.
 - Only one SPIFFS partition may be mounted at a time via this module. Multiple partitions require direct use of ESP-IDF SPIFFS APIs.
+
+## Example App
+
+See `examples/fs_basic/`.

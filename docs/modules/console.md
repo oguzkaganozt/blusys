@@ -74,6 +74,8 @@ blusys_err_t blusys_console_close(blusys_console_t *console);
 
 Stops the REPL task and frees all resources. The handle is invalid after this call.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `console` is NULL.
+
 ---
 
 ### `blusys_console_register_cmd`
@@ -89,7 +91,7 @@ Registers a command. Must be called after `blusys_console_open()` and before `bl
 - `console` — handle returned by `blusys_console_open()`
 - `cmd` — command descriptor; `command` and `handler` must be non-NULL; `help` may be NULL
 
-**Returns:** `BLUSYS_ERR_INVALID_STATE` if `blusys_console_start()` has already been called.
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if any required field is NULL, `BLUSYS_ERR_INVALID_STATE` if `blusys_console_start()` has already been called.
 
 ---
 
@@ -128,3 +130,7 @@ blusys_console_close()          ← stops task, frees handle
 - Only one console instance is supported at a time (ESP-IDF `esp_console` is a singleton internally).
 - Commands cannot be unregistered after `blusys_console_start()`.
 - There is no built-in argument parsing — handlers receive raw `argc`/`argv` and must parse flags themselves.
+
+## Example App
+
+See `examples/console_basic/`.

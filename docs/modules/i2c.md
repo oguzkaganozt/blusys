@@ -64,6 +64,8 @@ blusys_err_t blusys_i2c_master_close(blusys_i2c_master_t *i2c);
 
 Releases the I2C bus and frees the handle.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `i2c` is NULL.
+
 ---
 
 ### `blusys_i2c_master_probe`

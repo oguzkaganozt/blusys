@@ -69,6 +69,8 @@ blusys_err_t blusys_led_strip_close(blusys_led_strip_t *strip);
 
 Disables and deletes the RMT channel and encoders, then frees the handle and pixel buffer.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `strip` is NULL.
+
 ---
 
 ### `blusys_led_strip_set_pixel`
@@ -113,6 +115,8 @@ blusys_err_t blusys_led_strip_clear(blusys_led_strip_t *strip, int timeout_ms);
 ```
 
 Sets all pixels to off (0, 0, 0) and calls `blusys_led_strip_refresh()`.
+
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `strip` is NULL, `BLUSYS_ERR_TIMEOUT` if the transmit does not complete in time.
 
 ---
 

@@ -2,6 +2,10 @@
 
 Connect an ESP32 to an MQTT broker, subscribe to a topic, and publish messages.
 
+## Problem Statement
+
+You want to exchange messages between an ESP32 and other devices or services using the MQTT publish-subscribe protocol over WiFi.
+
 ## Prerequisites
 
 - A WiFi-capable board: ESP32, ESP32-C3, or ESP32-S3

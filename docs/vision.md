@@ -20,4 +20,4 @@ Blusys HAL exists to make common ESP32 peripheral work simpler than using raw ES
 - board support helpers inside the core HAL
 - wrapping every ESP-IDF feature
 - exposing internal HAL or LL details publicly
-- Ethernet, USB, LCD, or eFuse abstraction (see [Roadmap](roadmap.md) for future plans)
+- Ethernet, USB, or eFuse abstraction (see [Roadmap](roadmap.md) for future plans)

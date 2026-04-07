@@ -2,6 +2,10 @@
 
 Download a firmware binary from an HTTP server and flash it over WiFi.
 
+## Problem Statement
+
+You want to update the firmware on a deployed ESP32 wirelessly, without physically connecting a flash cable, by downloading a new binary from a server.
+
 ## Prerequisites
 
 - WiFi station connected (see [WiFi guide](wifi-connect.md))
@@ -112,6 +116,9 @@ Without this call, the bootloader will roll back to the previous firmware on the
 
 **Stack overflow during perform()**: `perform()` calls into the ESP-IDF HTTP client and OTA stack. Run it from a task with at least 8 KB of stack.
 
+## Example App
+
+See `examples/ota_basic/`.
 
 ## API Reference
 

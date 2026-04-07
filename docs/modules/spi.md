@@ -60,6 +60,8 @@ blusys_err_t blusys_spi_close(blusys_spi_t *spi);
 
 Removes the attached device, frees the bus, and releases the handle.
 
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if `spi` is NULL.
+
 ---
 
 ### `blusys_spi_transfer`
