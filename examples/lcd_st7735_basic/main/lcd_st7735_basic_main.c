@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "blusys/blusys_services.h"
+#include "blusys/blusys_all.h"
 #include "sdkconfig.h"
 
 #include "freertos/FreeRTOS.h"
