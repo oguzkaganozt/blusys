@@ -15,6 +15,7 @@ This is the single source of truth for both roadmap and implementation progress.
 - overall status: `in_progress`
 - last completed milestone: `V4`
 - next target milestone: `V5`
+- current release: `v5.0.0`
 - open blockers: none
 
 ## Roadmap
@@ -25,15 +26,15 @@ This is the single source of truth for both roadmap and implementation progress.
 - core modules: `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`
 - async support and validation work
 - `v1.0.0` release
-- first `V2` items: `pcnt`, `rmt`
-- full `V2`: `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`
-- symmetric counterparts: `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
+- full `V2`: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
 - `v2.0.0` release
 - full `V3`: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt`
 - `v3.0.0` release
 - full `V4`: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`
 - standalone `blusys` CLI with install-once workflow, IDF auto-detection, tab completion
 - `v4.0.0` release
+- V5 early work: `encoder`, `buzzer`, `one_wire`, services restructure into 7 categories, docs HAL/Services split
+- `v5.0.0` release
 
 ### V2
 
@@ -59,19 +60,21 @@ Production essentials and standalone CLI.
 
 ### V5
 
-Advanced connectivity and peripherals.
+Advanced peripherals, sensor drivers, and architecture improvements.
 
-- status: `not_started`
-- implementation order:
-  1. `gpio_expander` — I2C/SPI-based port expanders
-  2. `ana_cmpr` — analog signal comparison (C3, S3 only)
-  3. `efuse` — one-time programmable memory reading
-  4. `ethernet` — wired networking (SPI W5500, or native EMAC on ESP32)
-  5. `ulp` — ultra low power coprocessor programming (ESP32, S3 only)
-  6. `wifi_mesh` — lightweight mesh networking via `esp_mesh_lite`
-  7. `usb_hid` — USB HID (S3 USB-OTG) and BLE HID (all targets)
-  8. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
-  9. `local_ctrl` — local device control over BLE/WiFi
+- status: `in_progress`
+- done: `encoder`, `buzzer`, `one_wire`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages)
+- planned:
+  1. first sensor driver (TBD)
+  2. `gpio_expander` — I2C/SPI-based port expanders
+  3. `ana_cmpr` — analog signal comparison (C3, S3 only)
+  4. `efuse` — one-time programmable memory reading
+  5. `ethernet` — wired networking (SPI W5500, or native EMAC on ESP32)
+  6. `ulp` — ultra low power coprocessor programming (ESP32, S3 only)
+  7. `wifi_mesh` — lightweight mesh networking via `esp_mesh_lite`
+  8. `usb_hid` — USB HID (S3 USB-OTG) and BLE HID (all targets)
+  9. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
+  10. `local_ctrl` — local device control over BLE/WiFi
 
 ## Milestones
 
@@ -80,26 +83,19 @@ Advanced connectivity and peripherals.
 | Foundation | completed | project setup, component skeleton, target plumbing, smoke app |
 | Core Modules | completed | `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer` |
 | Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
-| Release | completed | `v1.0.0` |
+| V1 Release | completed | `v1.0.0` |
 | V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
 | V3 | completed | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt` — released `v3.0.0` |
 | V4 | completed | `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`, standalone CLI — released `v4.0.0` |
-| V5 | not_started | `gpio_expander`, `ana_cmpr`, `efuse`, `ethernet`, `ulp`, `wifi_mesh`, `usb_hid`, `camera`, `local_ctrl` |
+| V5 | in_progress | `encoder`, `buzzer`, `one_wire`, services restructure, docs overhaul — released `v5.0.0` |
 
 ## Recent Work
 
-- restructured `blusys_services` into 7 categories: display, input, sensor, actuator, connectivity, protocol, system — headers now at `blusys/<category>/<module>.h`
-- added `buzzer` service module: PWM-driven passive piezo, single-tone and sequence playback, all three targets
-- split codebase into two-component architecture: `components/blusys/` (HAL) and `components/blusys_services/` (Services)
-- promoted internal utilities to `include/blusys/internal/` for cross-component sharing
-- new umbrella headers: `blusys/blusys_services.h`, `blusys/blusys_all.h`
-- released `v4.0.0`
-- V4 modules: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`
-- standalone `blusys` CLI — install once, create projects anywhere, IDF auto-detection
-- `install.sh` for zero-config setup via `~/.local/bin` symlink
-- `config-idf` for interactive ESP-IDF version selection
-- `example` command for running bundled examples from anywhere
-- bash tab completion for all commands, targets, ports, and example names
+- restructured docs nav into HAL/Services split, consolidated project pages from 8 to 3
+- restructured `blusys_services` into 7 categories: display, input, sensor, actuator, connectivity, protocol, system
+- added `one_wire` HAL module: Dallas/Maxim 1-Wire protocol
+- added `buzzer` service module: PWM-driven passive piezo, single-tone and sequence playback
+- added `encoder` service module: EC11-style rotary encoders with PCNT hardware acceleration
 
 ## Current Technical State
 
@@ -134,6 +130,7 @@ Advanced connectivity and peripherals.
 - `blusys_sdm_*`
 - `blusys_nvs_*`
 - `blusys_sd_spi_*`
+- `blusys_one_wire_*`
 
 ### Services Public API (`components/blusys_services/`)
 
@@ -147,6 +144,7 @@ Advanced connectivity and peripherals.
 ### Internal Infrastructure
 
 - two-component architecture: HAL (`blusys`) and Services (`blusys_services`)
+- services organized into 7 categories with subdirectory layout
 - target-specific source selection in component CMake
 - target capability reporting for shipped public modules
 - shared lock abstraction for handle-based modules (`include/blusys/internal/`)
@@ -158,6 +156,7 @@ Advanced connectivity and peripherals.
 - `v2.0.0` release validation completed
 - `v3.0.0` release validation completed
 - `v4.0.0` release validation completed
+- `v5.0.0` release validation completed
 - `mkdocs build --strict` passes
 
 ## Environment Notes
@@ -168,4 +167,5 @@ Advanced connectivity and peripherals.
 
 ## Next Actions
 
-1. Begin `V5` — advanced connectivity and peripherals
+1. Implement first sensor service driver
+2. Continue V5 planned modules

@@ -2,61 +2,62 @@
 
 ## Supported Targets
 
-Blusys supports these targets:
+| Target | Status |
+|--------|--------|
+| ESP32 | :material-check-circle:{ .green } Supported |
+| ESP32-C3 | :material-check-circle:{ .green } Supported |
+| ESP32-S3 | :material-check-circle:{ .green } Supported |
 
-- `esp32`
-- `esp32c3`
-- `esp32s3`
+## Module Support
 
-## Module Support Matrix
+All modules below are available on **all three targets** unless marked otherwise.
 
-All modules listed under **All Targets** are available on ESP32, ESP32-C3, and ESP32-S3. Modules in the **Target-Specific** table are only available on the indicated targets.
+### HAL
 
-### All Targets
+| Category | Modules | Notes |
+|----------|---------|-------|
+| **I/O & Communication** | `gpio`, `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave`, `twai`, `i2s`, `i2s_rx`, `rmt`, `rmt_rx`, `one_wire` | `touch` — ESP32, S3 only |
+| **Analog** | `adc`, `sdm`, `pwm` | `dac` — ESP32 only |
+| **Timers & Counters** | `timer` | `pcnt`, `mcpwm` — ESP32, S3 only |
+| **Storage** | `nvs`, `sd_spi` | `sdmmc` — ESP32, S3 only |
+| **Device** | `system`, `sleep`, `wdt` | `temp_sensor` — C3, S3 only |
 
-These modules are in the base feature mask and work on every supported target:
+### Services
 
 | Category | Modules |
 |----------|---------|
-| Core Peripherals | `gpio`, `button`, `led_strip`, `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave` |
-| Analog | `adc`, `sdm`, `pwm` |
-| Timers & Counters | `timer`, `rmt`, `rmt_rx` |
-| Bus | `twai`, `i2s`, `i2s_rx`, `lcd` |
-| System | `system`, `target`, `version`, `error`, `nvs`, `fs`, `fatfs`, `sd_spi`, `console`, `wdt`, `sleep`, `power_mgmt` |
-| Networking | `wifi`, `wifi_prov`, `http_client`, `http_server`, `mqtt`, `ws_client`, `ota`, `sntp`, `mdns`, `bluetooth`, `ble_gatt`, `espnow` |
+| **Display** | `lcd`, `led_strip` |
+| **Input** | `button`, `encoder` |
+| **Actuator** | `buzzer` |
+| **Connectivity** | `wifi`, `wifi_prov`, `espnow`, `bluetooth`, `ble_gatt`, `mdns` |
+| **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
+| **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota` |
 
-### Target-Specific Modules
+All service modules are available on all targets.
+
+### Target-Specific Summary
 
 | Module | ESP32 | ESP32-C3 | ESP32-S3 |
 |--------|:-----:|:--------:|:--------:|
-| `pcnt` | yes | — | yes |
-| `touch` | yes | — | yes |
-| `dac` | yes | — | — |
-| `sdmmc` | yes | — | yes |
-| `temp_sensor` | — | yes | yes |
-| `mcpwm` | yes | — | yes |
+| `pcnt` | :material-check:{ .green } | — | :material-check:{ .green } |
+| `touch` | :material-check:{ .green } | — | :material-check:{ .green } |
+| `dac` | :material-check:{ .green } | — | — |
+| `sdmmc` | :material-check:{ .green } | — | :material-check:{ .green } |
+| `temp_sensor` | — | :material-check:{ .green } | :material-check:{ .green } |
+| `mcpwm` | :material-check:{ .green } | — | :material-check:{ .green } |
 
-## Compatibility Rules
+Unsupported modules return `BLUSYS_ERR_NOT_SUPPORTED` at runtime. Use `blusys_target_supports()` to check before calling.
 
-- The public API is the same across supported targets
-- Application code should not need target-specific `#ifdef` logic for normal use
-- Target-specific implementation details stay internal to the library
-- Unsupported modules return `BLUSYS_ERR_NOT_SUPPORTED` at runtime; use `blusys_target_supports()` to check before calling
+## Requirements
 
-## Practical Notes
+- **ESP-IDF v5.5+** — auto-detected by `blusys` CLI
+- **`bluetooth`/`ble_gatt`** — require NimBLE enabled via `CONFIG_BT_NIMBLE_ENABLED` in sdkconfig
+- **Networking modules** (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`) — require WiFi connected first
+- **`mdns`** — additionally requires `espressif/mdns` managed component in the project's `idf_component.yml`
 
-- Some examples use board-dependent pin defaults, so check `menuconfig` when needed
-- Runtime behavior can still differ because boards expose different safe pins and wiring constraints
-- Thread-safety rules are defined in task terms, not CPU-core terms
-- `bluetooth` and `ble_gatt` require NimBLE enabled via `CONFIG_BT_NIMBLE_ENABLED` in sdkconfig
-- Networking modules (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`) require WiFi to be connected first
-- `mdns` additionally requires the `espressif/mdns` managed component in the project's `idf_component.yml`
+## Intentionally Out of Scope
 
-## Intentionally Limited Scope
-
-These are intentionally not part of the current public surface:
-
-- Advanced I2S feature sets beyond standard TX/RX
-- Touch sensor support beyond polling
-- DAC support beyond oneshot output
-- LP peripheral variants
+- Advanced I2S modes beyond standard TX/RX
+- Touch sensor behavior beyond polling
+- DAC modes beyond oneshot output
+- LP peripheral special cases
