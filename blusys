@@ -954,8 +954,10 @@ cmd_install_qemu() {
 
     printf 'Latest release: %s\n' "$tag"
 
-    # Strip leading 'v' for version string in asset name
-    local ver="${tag#v}"
+    # Extract version string for asset name from tag
+    # Tag format: "esp-develop-9.2.2-20250817" → asset needs "9.2.2_20250817"
+    local ver="${tag#esp-develop-}"  # strip "esp-develop-" prefix
+    ver="${ver//-/_}"                 # replace remaining dashes with underscores
     local install_dir="$HOME/.espressif/tools/qemu-${tag}"
     mkdir -p "$install_dir"
 
