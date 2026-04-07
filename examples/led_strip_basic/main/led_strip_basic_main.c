@@ -25,6 +25,7 @@ void app_main(void)
     const blusys_led_strip_config_t config = {
         .pin       = LED_STRIP_PIN,
         .led_count = LED_STRIP_LED_COUNT,
+        .type      = BLUSYS_LED_STRIP_WS2812B,
     };
 
     err = blusys_led_strip_open(&config, &strip);
