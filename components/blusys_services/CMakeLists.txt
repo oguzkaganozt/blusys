@@ -2,6 +2,7 @@ set(blusys_services_sources
     # display
     src/display/lcd.c
     src/display/led_strip.c
+    src/display/seven_seg.c
     # input
     src/input/button.c
     src/input/encoder.c

@@ -8,6 +8,7 @@ extern "C" {
 /* display */
 #include "blusys/display/lcd.h"
 #include "blusys/display/led_strip.h"
+#include "blusys/display/seven_seg.h"
 
 /* input */
 #include "blusys/input/button.h"
