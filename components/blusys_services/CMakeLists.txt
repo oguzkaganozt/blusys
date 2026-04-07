@@ -3,6 +3,7 @@ set(blusys_services_sources
     src/bluetooth.c
     src/button.c
     src/console.c
+    src/encoder.c
     src/espnow.c
     src/fatfs.c
     src/fs.c

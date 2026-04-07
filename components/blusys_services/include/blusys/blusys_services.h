@@ -9,6 +9,7 @@ extern "C" {
 #include "blusys/bluetooth.h"
 #include "blusys/button.h"
 #include "blusys/console.h"
+#include "blusys/encoder.h"
 #include "blusys/espnow.h"
 #include "blusys/fatfs.h"
 #include "blusys/fs.h"

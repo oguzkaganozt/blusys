@@ -8,7 +8,7 @@ Every Blusys module is documented with the same structure: **Types** (config str
 
     ---
 
-    [:octicons-arrow-right-24: GPIO](gpio.md) · [Button](button.md) · [LED Strip](led_strip.md) · [UART](uart.md) · [I2C Master](i2c.md) · [I2C Slave](i2c_slave.md) · [SPI Master](spi.md) · [SPI Slave](spi_slave.md)
+    [:octicons-arrow-right-24: GPIO](gpio.md) · [Button](button.md) · [Encoder](encoder.md) · [LED Strip](led_strip.md) · [UART](uart.md) · [I2C Master](i2c.md) · [I2C Slave](i2c_slave.md) · [SPI Master](spi.md) · [SPI Slave](spi_slave.md)
 
 -   :material-sine-wave:{ .lg .middle } **Analog**
 
