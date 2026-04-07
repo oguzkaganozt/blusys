@@ -1,0 +1,184 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "components/**"
+      - "examples/**"
+      - "blusys"
+      - "scripts/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    paths:
+      - "components/**"
+      - "examples/**"
+      - "blusys"
+      - "scripts/**"
+      - ".github/workflows/ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IDF_CCACHE_ENABLE: "1"
+
+jobs:
+  # ── Tier 1: Compilation Gate ────────────────────────────────────────────────
+  build:
+    name: "Build (${{ matrix.target }})"
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5.4
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [esp32, esp32c3, esp32s3]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
+          restore-keys: |
+            ccache-${{ matrix.target }}-
+
+      - name: Build all examples
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TARGET="${{ matrix.target }}"
+          pass=0
+          fail=0
+          failed_list=""
+
+          for cmakelists in examples/*/CMakeLists.txt; do
+              example_dir="$(dirname "$cmakelists")"
+              example_name="$(basename "$example_dir")"
+              build_dir="$example_dir/build-$TARGET"
+
+              # Compute sdkconfig args (mirrors blusys_sdkconfig_args)
+              sdkconfig_args=("-DSDKCONFIG=$build_dir/sdkconfig")
+              defaults=""
+              [ -f "$example_dir/sdkconfig.defaults" ] && defaults="$example_dir/sdkconfig.defaults"
+              if [ -f "$example_dir/sdkconfig.$TARGET" ]; then
+                  if [ -n "$defaults" ]; then
+                      defaults="$defaults;$example_dir/sdkconfig.$TARGET"
+                  else
+                      defaults="$example_dir/sdkconfig.$TARGET"
+                  fi
+              fi
+              [ -n "$defaults" ] && sdkconfig_args+=("-DSDKCONFIG_DEFAULTS=$defaults")
+
+              printf '::group::Build %s for %s\n' "$example_name" "$TARGET"
+
+              # set-target (skip if already configured)
+              if [ ! -f "$build_dir/CMakeCache.txt" ]; then
+                  idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" set-target "$TARGET"
+              fi
+
+              if idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" build; then
+                  printf 'OK\n'
+                  ((pass++)) || true
+              else
+                  printf '::error::Build failed: %s / %s\n' "$example_name" "$TARGET"
+                  failed_list="$failed_list $example_name"
+                  ((fail++)) || true
+              fi
+
+              printf '::endgroup::\n'
+          done
+
+          printf '\n=== Build Results for %s ===\n' "$TARGET"
+          printf 'Pass: %d  Fail: %d  Total: %d\n' "$pass" "$fail" "$((pass + fail))"
+          if [ "$fail" -gt 0 ]; then
+              printf 'Failed:%s\n' "$failed_list"
+              exit 1
+          fi
+
+      - name: ccache stats
+        if: always()
+        run: ccache -s 2>/dev/null || true
+
+  # ── Tier 2: QEMU Smoke Tests ───────────────────────────────────────────────
+  qemu:
+    name: "QEMU smoke (${{ matrix.target }})"
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5.4
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [esp32, esp32c3, esp32s3]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
+          restore-keys: |
+            ccache-${{ matrix.target }}-
+
+      - name: Restore QEMU tools
+        id: qemu-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.espressif/tools/qemu-*
+          key: qemu-tools-idf-v5.5.4
+
+      - name: Install QEMU
+        if: steps.qemu-cache.outputs.cache-hit != 'true'
+        run: python $IDF_PATH/tools/idf_tools.py --non-interactive install qemu-xtensa qemu-riscv32
+
+      - name: Export QEMU to PATH
+        run: |
+          eval "$(python $IDF_PATH/tools/idf_tools.py export)"
+          echo "PATH=$PATH" >> "$GITHUB_ENV"
+          qemu-system-xtensa --version
+          qemu-system-riscv32 --version
+
+      - name: Run QEMU smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/qemu-test.sh
+
+          TARGET="${{ matrix.target }}"
+          pass=0
+          fail=0
+
+          run_test() {
+              local example="$1" timeout="$2" pattern="$3"
+
+              printf '::group::QEMU %s / %s\n' "$example" "$TARGET"
+              if scripts/qemu-test.sh "examples/$example" "$TARGET" "$timeout" "$pattern"; then
+                  ((pass++)) || true
+              else
+                  printf '::error::QEMU test failed: %s / %s\n' "$example" "$TARGET"
+                  ((fail++)) || true
+              fi
+              printf '::endgroup::\n'
+          }
+
+          run_test smoke              15 "status_ok_string: OK"
+          run_test system_info        15 "free_heap_bytes:"
+          run_test timer_basic        30 "callback_swap_result: ok"
+          run_test nvs_basic          20 "Done\\."
+          run_test wdt_basic          30 "wdt_deinit: ok"
+          run_test concurrency_timer  30 "concurrent_result: ok"
+
+          printf '\n=== QEMU Results for %s ===\n' "$TARGET"
+          printf 'Pass: %d  Fail: %d  Total: %d\n' "$pass" "$fail" "$((pass + fail))"
+          [ "$fail" -gt 0 ] && exit 1 || exit 0
