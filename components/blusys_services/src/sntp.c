@@ -17,23 +17,33 @@
 #include "blusys/internal/blusys_timeout.h"
 
 struct blusys_sntp {
-    blusys_lock_t           lock;
     blusys_sntp_sync_cb_t   sync_cb;
     void                   *user_ctx;
 };
 
+static portMUX_TYPE   s_sntp_init_lock = portMUX_INITIALIZER_UNLOCKED;
 static blusys_lock_t  s_sntp_global_lock;
 static bool           s_sntp_global_lock_inited;
 static blusys_sntp_t *s_active_handle;
 
 static blusys_err_t ensure_global_lock(void)
 {
+    if (s_sntp_global_lock_inited) {
+        return BLUSYS_OK;
+    }
+    blusys_lock_t new_lock;
+    blusys_err_t err = blusys_lock_init(&new_lock);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+    portENTER_CRITICAL(&s_sntp_init_lock);
     if (!s_sntp_global_lock_inited) {
-        blusys_err_t err = blusys_lock_init(&s_sntp_global_lock);
-        if (err != BLUSYS_OK) {
-            return err;
-        }
+        s_sntp_global_lock = new_lock;
         s_sntp_global_lock_inited = true;
+        portEXIT_CRITICAL(&s_sntp_init_lock);
+    } else {
+        portEXIT_CRITICAL(&s_sntp_init_lock);
+        blusys_lock_deinit(&new_lock);
     }
     return BLUSYS_OK;
 }
@@ -80,13 +90,6 @@ blusys_err_t blusys_sntp_open(const blusys_sntp_config_t *config, blusys_sntp_t 
         return BLUSYS_ERR_NO_MEM;
     }
 
-    blusys_err_t err = blusys_lock_init(&h->lock);
-    if (err != BLUSYS_OK) {
-        blusys_lock_give(&s_sntp_global_lock);
-        free(h);
-        return err;
-    }
-
     h->sync_cb  = config->sync_cb;
     h->user_ctx = config->user_ctx;
 
@@ -109,7 +112,6 @@ blusys_err_t blusys_sntp_open(const blusys_sntp_config_t *config, blusys_sntp_t 
     if (esp_err != ESP_OK) {
         s_active_handle = NULL;
         blusys_lock_give(&s_sntp_global_lock);
-        blusys_lock_deinit(&h->lock);
         free(h);
         return blusys_translate_esp_err(esp_err);
     }
@@ -134,7 +136,6 @@ blusys_err_t blusys_sntp_close(blusys_sntp_t *sntp)
     s_active_handle = NULL;
     blusys_lock_give(&s_sntp_global_lock);
 
-    blusys_lock_deinit(&sntp->lock);
     free(sntp);
     return BLUSYS_OK;
 }
@@ -145,16 +146,9 @@ blusys_err_t blusys_sntp_sync(blusys_sntp_t *sntp, int timeout_ms)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    blusys_err_t err = blusys_lock_take(&sntp->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
     TickType_t ticks = blusys_timeout_ms_to_ticks(timeout_ms);
 
     esp_err_t esp_err = esp_netif_sntp_sync_wait(ticks);
-
-    blusys_lock_give(&sntp->lock);
 
     if (esp_err == ESP_OK) {
         return BLUSYS_OK;

@@ -27,18 +27,29 @@ struct blusys_espnow {
 };
 
 /* ESP-NOW callbacks have no user-data pointer; use a static handle ref. */
+static portMUX_TYPE     s_espnow_init_lock = portMUX_INITIALIZER_UNLOCKED;
 static blusys_lock_t    s_espnow_global_lock;
 static bool             s_espnow_global_lock_inited;
 static blusys_espnow_t *s_handle;
 
 static blusys_err_t ensure_global_lock(void)
 {
+    if (s_espnow_global_lock_inited) {
+        return BLUSYS_OK;
+    }
+    blusys_lock_t new_lock;
+    blusys_err_t err = blusys_lock_init(&new_lock);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+    portENTER_CRITICAL(&s_espnow_init_lock);
     if (!s_espnow_global_lock_inited) {
-        blusys_err_t err = blusys_lock_init(&s_espnow_global_lock);
-        if (err != BLUSYS_OK) {
-            return err;
-        }
+        s_espnow_global_lock = new_lock;
         s_espnow_global_lock_inited = true;
+        portEXIT_CRITICAL(&s_espnow_init_lock);
+    } else {
+        portEXIT_CRITICAL(&s_espnow_init_lock);
+        blusys_lock_deinit(&new_lock);
     }
     return BLUSYS_OK;
 }

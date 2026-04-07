@@ -166,7 +166,12 @@ blusys_err_t blusys_sdmmc_close(blusys_sdmmc_t *sdmmc)
         return err;
     }
 
-    sdmmc_host_deinit();
+    esp_err = sdmmc_host_deinit();
+    if (esp_err != ESP_OK) {
+        sdmmc->closing = false;
+        blusys_lock_give(&sdmmc->lock);
+        return blusys_translate_esp_err(esp_err);
+    }
 
     free(sdmmc->card);
     sdmmc->card = NULL;
