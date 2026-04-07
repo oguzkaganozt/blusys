@@ -171,10 +171,24 @@ blusys_find_idf_path() {
 }
 
 blusys_find_qemu() {
+    local dir
+
+    # Helper: return the directory that contains the QEMU binaries,
+    # checking both the directory itself and its bin/ subdirectory.
+    _qemu_bin_dir() {
+        local base="$1"
+        for dir in "$base/bin" "$base"; do
+            if [[ -x "$dir/qemu-system-xtensa" || -x "$dir/qemu-system-riscv32" ]]; then
+                printf '%s\n' "$dir"
+                return 0
+            fi
+        done
+        return 1
+    }
+
     # Priority 1: QEMU_PATH env var
     if [[ -n "${QEMU_PATH:-}" ]]; then
-        if [[ -x "$QEMU_PATH/qemu-system-xtensa" || -x "$QEMU_PATH/qemu-system-riscv32" ]]; then
-            printf '%s\n' "$QEMU_PATH"
+        if _qemu_bin_dir "$QEMU_PATH"; then
             return 0
         fi
     fi
@@ -189,18 +203,18 @@ blusys_find_qemu() {
     local latest_tag="" latest_path=""
     for candidate_dir in "$HOME"/.espressif/tools/qemu-*/; do
         [[ -d "$candidate_dir" ]] || continue
-        if [[ -x "$candidate_dir/qemu-system-xtensa" || -x "$candidate_dir/qemu-system-riscv32" ]]; then
-            local tag
-            tag="$(basename "$candidate_dir")"
-            if [[ -z "$latest_tag" ]] || [[ "$tag" > "$latest_tag" ]]; then
-                latest_tag="$tag"
-                latest_path="$candidate_dir"
-            fi
+        local found
+        found="$(_qemu_bin_dir "${candidate_dir%/}")" || continue
+        local tag
+        tag="$(basename "${candidate_dir%/}")"
+        if [[ -z "$latest_tag" ]] || [[ "$tag" > "$latest_tag" ]]; then
+            latest_tag="$tag"
+            latest_path="$found"
         fi
     done
 
     if [[ -n "$latest_path" ]]; then
-        printf '%s\n' "${latest_path%/}"
+        printf '%s\n' "$latest_path"
         return 0
     fi
 
@@ -250,13 +264,14 @@ blusys_setup_idf_env() {
         return 0
     fi
 
-    local idf_path
-    idf_path="$(blusys_find_idf_path)" || return 1
+    local _idf_path
+    _idf_path="$(blusys_find_idf_path)" || return 1
 
     # shellcheck source=/dev/null
-    source "$idf_path/export.sh"
+    source "$_idf_path/export.sh"
+    # export.sh does "unset idf_path" — use a private name to avoid the clash
 
-    blusys_check_idf_version "$idf_path"
+    blusys_check_idf_version "$_idf_path"
 }
 
 blusys_set_target_if_needed() {
@@ -961,9 +976,8 @@ cmd_install_qemu() {
     local install_dir="$HOME/.espressif/tools/qemu-${tag}"
     mkdir -p "$install_dir"
 
-    local tmp_dir
     tmp_dir="$(mktemp -d)"
-    trap 'rm -rf "$tmp_dir"' EXIT
+    trap 'rm -rf "${tmp_dir:-}"' EXIT
 
     local base_url="https://github.com/espressif/qemu/releases/download/${tag}"
 
@@ -1032,9 +1046,10 @@ cmd_qemu() {
     idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" build
 
     printf 'Creating flash image...\n'
-    esptool.py --chip "$TARGET" merge_bin --fill-flash-size 4MB \
+    # flash_args contains relative paths — must run from BUILD_DIR
+    (cd "$BUILD_DIR" && esptool.py --chip "$TARGET" merge_bin --fill-flash-size 4MB \
         -o "$BUILD_DIR/flash_image.bin" \
-        @"$BUILD_DIR/flash_args"
+        @flash_args)
 
     printf 'Launching QEMU (press Ctrl+A, X to exit)...\n'
     # shellcheck disable=SC2086
