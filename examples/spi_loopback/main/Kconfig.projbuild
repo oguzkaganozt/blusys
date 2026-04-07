@@ -37,7 +37,7 @@ config BLUSYS_SPI_LOOPBACK_MISO_PIN
 config BLUSYS_SPI_LOOPBACK_CS_PIN
     int "CS GPIO pin"
     range 0 48
-    default 25 if IDF_TARGET_ESP32
+    default 5 if IDF_TARGET_ESP32
     default 7 if IDF_TARGET_ESP32C3
     default 10 if IDF_TARGET_ESP32S3
     help

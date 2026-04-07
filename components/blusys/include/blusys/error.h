@@ -14,6 +14,7 @@ typedef enum {
     BLUSYS_ERR_BUSY,
     BLUSYS_ERR_NO_MEM,
     BLUSYS_ERR_IO,
+    BLUSYS_ERR_NOT_FOUND,
     BLUSYS_ERR_INTERNAL,
 } blusys_err_t;
 

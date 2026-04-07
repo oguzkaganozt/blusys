@@ -22,6 +22,7 @@ static inline blusys_err_t blusys_translate_esp_err(esp_err_t err)
     case ESP_ERR_NO_MEM:
         return BLUSYS_ERR_NO_MEM;
     case ESP_ERR_NOT_FOUND:
+        return BLUSYS_ERR_NOT_FOUND;
     case ESP_ERR_INVALID_RESPONSE:
     case ESP_FAIL:
         return BLUSYS_ERR_IO;
