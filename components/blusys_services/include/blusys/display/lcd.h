@@ -66,6 +66,8 @@ blusys_err_t blusys_lcd_mirror(blusys_lcd_t *lcd, bool mirror_x, bool mirror_y);
 blusys_err_t blusys_lcd_swap_xy(blusys_lcd_t *lcd, bool swap);
 blusys_err_t blusys_lcd_invert_colors(blusys_lcd_t *lcd, bool invert);
 blusys_err_t blusys_lcd_set_brightness(blusys_lcd_t *lcd, int percent);
+blusys_err_t blusys_lcd_get_dimensions(blusys_lcd_t *lcd,
+                                       uint32_t *width, uint32_t *height);
 
 #ifdef __cplusplus
 }

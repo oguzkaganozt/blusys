@@ -28,6 +28,8 @@ struct blusys_lcd {
     spi_host_device_t         spi_host;
     i2c_master_bus_handle_t   i2c_bus;
     bool                      spi_bus_owned;
+    uint32_t                  width;
+    uint32_t                  height;
 };
 
 static bool blusys_lcd_is_valid_spi_bus(int bus)
@@ -254,6 +256,8 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
 
     lcd->driver = config->driver;
     lcd->bl_pin = -1;
+    lcd->width  = config->width;
+    lcd->height = config->height;
 
     err = blusys_lock_init(&lcd->lock);
     if (err != BLUSYS_OK) {
@@ -489,5 +493,20 @@ blusys_err_t blusys_lcd_set_brightness(blusys_lcd_t *lcd, int percent)
     }
 
     blusys_lock_give(&lcd->lock);
+    return BLUSYS_OK;
+}
+
+blusys_err_t blusys_lcd_get_dimensions(blusys_lcd_t *lcd,
+                                       uint32_t *width, uint32_t *height)
+{
+    if (lcd == NULL || (width == NULL && height == NULL)) {
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+    if (width != NULL) {
+        *width = lcd->width;
+    }
+    if (height != NULL) {
+        *height = lcd->height;
+    }
     return BLUSYS_OK;
 }

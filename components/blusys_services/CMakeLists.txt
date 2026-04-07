@@ -3,6 +3,7 @@ set(blusys_services_sources
     src/display/lcd.c
     src/display/led_strip.c
     src/display/seven_seg.c
+    src/display/ui.c
     # input
     src/input/button.c
     src/input/encoder.c
@@ -46,4 +47,13 @@ if("mdns" IN_LIST build_components)
     idf_component_get_property(mdns_lib mdns COMPONENT_LIB)
     target_link_libraries(${COMPONENT_LIB} PUBLIC ${mdns_lib})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_MDNS=1)
+endif()
+
+# Optional managed component: lvgl/lvgl
+# Only available when the project declares lvgl/lvgl in its idf_component.yml.
+# The component registers as "lvgl__lvgl" in the build system.
+if("lvgl__lvgl" IN_LIST build_components)
+    idf_component_get_property(lvgl_lib lvgl__lvgl COMPONENT_LIB)
+    target_link_libraries(${COMPONENT_LIB} PUBLIC ${lvgl_lib})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_LVGL=1)
 endif()
