@@ -8,6 +8,7 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 
 #include "blusys/internal/blusys_esp_err.h"
 
@@ -15,13 +16,16 @@
 #define UI_DEFAULT_TASK_STACK     8192
 #define UI_DEFAULT_BUF_LINES      20
 
+static blusys_ui_t *s_active_handle;
+
 struct blusys_ui {
-    blusys_lcd_t   *lcd;
-    lv_display_t   *disp;
-    void           *buf1;
-    void           *buf2;
-    TaskHandle_t    task;
-    volatile bool   running;
+    blusys_lcd_t      *lcd;
+    lv_display_t      *disp;
+    void              *buf1;
+    void              *buf2;
+    TaskHandle_t       task;
+    SemaphoreHandle_t  done_sem;
+    volatile bool      running;
 };
 
 /* ------------------------------------------------------------------ */
@@ -78,6 +82,7 @@ static void render_task(void *arg)
         vTaskDelay(pdMS_TO_TICKS(ms));
     }
 
+    xSemaphoreGive(ui->done_sem);
     vTaskDelete(NULL);
 }
 
@@ -89,6 +94,10 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
 {
     if (config == NULL || config->lcd == NULL || out_ui == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
+    }
+
+    if (s_active_handle != NULL) {
+        return BLUSYS_ERR_INVALID_STATE;
     }
 
     uint32_t width = 0, height = 0;
@@ -103,6 +112,12 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
     }
     ui->lcd = config->lcd;
 
+    ui->done_sem = xSemaphoreCreateBinary();
+    if (ui->done_sem == NULL) {
+        free(ui);
+        return BLUSYS_ERR_NO_MEM;
+    }
+
     /* LVGL core init */
     lv_init();
     lv_tick_set_cb(tick_get_cb);
@@ -110,22 +125,18 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
     /* Create display */
     ui->disp = lv_display_create((int32_t)width, (int32_t)height);
     if (ui->disp == NULL) {
+        lv_deinit();
+        vSemaphoreDelete(ui->done_sem);
         free(ui);
         return BLUSYS_ERR_NO_MEM;
     }
     lv_display_set_user_data(ui->disp, ui);
     lv_display_set_flush_cb(ui->disp, flush_cb);
 
-    /* Allocate draw buffer.
-     * LVGL v9 internally computes stride = width * bytes_per_pixel (for RGB565).
-     * lv_display_set_buffers() divides buf_size by stride to get buffer height.
-     * We must match that: stride * buf_lines = buf_bytes. */
-    uint32_t buf_lines = config->buf_size > 0
-                         ? config->buf_size / width
+    /* Allocate draw buffers */
+    uint32_t buf_lines = config->buf_lines > 0
+                         ? config->buf_lines
                          : UI_DEFAULT_BUF_LINES;
-    if (buf_lines < 1) {
-        buf_lines = 1;
-    }
     lv_color_format_t cf = lv_display_get_color_format(ui->disp);
     uint32_t stride = lv_draw_buf_width_to_stride(width, cf);
     uint32_t buf_bytes = stride * buf_lines;
@@ -136,6 +147,8 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
         free(ui->buf1);
         free(ui->buf2);
         lv_display_delete(ui->disp);
+        lv_deinit();
+        vSemaphoreDelete(ui->done_sem);
         free(ui);
         return BLUSYS_ERR_NO_MEM;
     }
@@ -155,11 +168,15 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
                                  ui, (UBaseType_t)prio, &ui->task);
     if (ret != pdPASS) {
         free(ui->buf1);
+        free(ui->buf2);
         lv_display_delete(ui->disp);
+        lv_deinit();
+        vSemaphoreDelete(ui->done_sem);
         free(ui);
         return BLUSYS_ERR_NO_MEM;
     }
 
+    s_active_handle = ui;
     *out_ui = ui;
     return BLUSYS_OK;
 }
@@ -170,25 +187,29 @@ blusys_err_t blusys_ui_close(blusys_ui_t *ui)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    /* Stop render task */
+    /* Signal render task to stop and wait for it to exit */
     ui->running = false;
-    /* Give the task time to exit */
-    vTaskDelay(pdMS_TO_TICKS(100));
+    xSemaphoreTake(ui->done_sem, portMAX_DELAY);
 
+    lv_lock();
     lv_display_delete(ui->disp);
+    lv_unlock();
+
     free(ui->buf1);
     free(ui->buf2);
     lv_deinit();
+
+    vSemaphoreDelete(ui->done_sem);
+    s_active_handle = NULL;
     free(ui);
     return BLUSYS_OK;
 }
 
-blusys_err_t blusys_ui_lock(blusys_ui_t *ui, int timeout_ms)
+blusys_err_t blusys_ui_lock(blusys_ui_t *ui)
 {
     if (ui == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
     }
-    (void)timeout_ms;
     lv_lock();
     return BLUSYS_OK;
 }
@@ -218,10 +239,9 @@ blusys_err_t blusys_ui_close(blusys_ui_t *ui)
     return BLUSYS_ERR_NOT_SUPPORTED;
 }
 
-blusys_err_t blusys_ui_lock(blusys_ui_t *ui, int timeout_ms)
+blusys_err_t blusys_ui_lock(blusys_ui_t *ui)
 {
     (void)ui;
-    (void)timeout_ms;
     return BLUSYS_ERR_NOT_SUPPORTED;
 }
 

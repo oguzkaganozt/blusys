@@ -61,7 +61,7 @@ void app_main(void)
     printf("ui_open: ok\n");
 
     /* 3. Create LVGL widgets — lock required for thread safety */
-    blusys_ui_lock(ui, -1);
+    blusys_ui_lock(ui);
 
     lv_obj_t *scr = lv_screen_active();
     lv_obj_set_style_bg_color(scr, lv_color_black(), 0);
