@@ -91,6 +91,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 
 ## Recent Work
 
+- added `seven_seg` display service: GPIO, 74HC595 shift-register, and MAX7219 SPI drivers; up to 8 digits, software multiplexing for GPIO/HC595, hardware multiplexing for MAX7219
 - restructured docs nav into HAL/Services split, consolidated project pages from 8 to 3
 - restructured `blusys_services` into 7 categories: display, input, sensor, actuator, connectivity, protocol, system
 - added `one_wire` HAL module: Dallas/Maxim 1-Wire protocol
@@ -134,7 +135,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 
 ### Services Public API (`components/blusys_services/`)
 
-**display:** `blusys_lcd_*`, `blusys_led_strip_*`
+**display:** `blusys_lcd_*`, `blusys_led_strip_*`, `blusys_seven_seg_*`
 **input:** `blusys_button_*`, `blusys_encoder_*`
 **actuator:** `blusys_buzzer_*`
 **connectivity:** `blusys_wifi_*`, `blusys_wifi_prov_*`, `blusys_espnow_*`, `blusys_bluetooth_*`, `blusys_ble_gatt_*`, `blusys_mdns_*`
@@ -158,6 +159,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - `v4.0.0` release validation completed
 - `v5.0.0` release validation completed
 - `mkdocs build --strict` passes
+- `seven_seg` module: pending hardware smoke test (GPIO, 74HC595, MAX7219)
 
 ## Environment Notes
 
