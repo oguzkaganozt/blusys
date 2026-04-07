@@ -41,6 +41,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up ESP-IDF environment
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          echo "PATH=$PATH" >> "$GITHUB_ENV"
+          idf.py --version
+
       - name: Restore ccache
         uses: actions/cache@v4
         with:
@@ -122,6 +129,13 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Set up ESP-IDF environment
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          echo "PATH=$PATH" >> "$GITHUB_ENV"
+          idf.py --version
 
       - name: Restore ccache
         uses: actions/cache@v4
