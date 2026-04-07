@@ -12,7 +12,7 @@
 #   2 = build error
 set -euo pipefail
 
-EXAMPLE_DIR="$1"
+EXAMPLE_DIR="$(realpath "$1")"
 TARGET="$2"
 TIMEOUT="${3:-30}"
 EXPECT_PATTERN="$4"

@@ -59,7 +59,7 @@ jobs:
       - name: Build all examples
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
 
           TARGET="${{ matrix.target }}"
           pass=0
@@ -67,7 +67,7 @@ jobs:
           failed_list=""
 
           for cmakelists in examples/*/CMakeLists.txt; do
-              example_dir="$(dirname "$cmakelists")"
+              example_dir="$(realpath "$(dirname "$cmakelists")")"
               example_name="$(basename "$example_dir")"
               build_dir="$example_dir/build-$TARGET"
 
@@ -86,12 +86,15 @@ jobs:
 
               printf '::group::Build %s for %s\n' "$example_name" "$TARGET"
 
-              # set-target (skip if already configured)
+              # set-target + build; count failures but keep going
+              build_ok=true
               if [ ! -f "$build_dir/CMakeCache.txt" ]; then
-                  idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" set-target "$TARGET"
+                  if ! idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" set-target "$TARGET"; then
+                      build_ok=false
+                  fi
               fi
 
-              if idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" build; then
+              if $build_ok && idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" build; then
                   printf 'OK\n'
                   ((pass++)) || true
               else
