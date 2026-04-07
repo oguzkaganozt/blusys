@@ -13,7 +13,7 @@ Read these first before changing API or project status:
 - `README.md`
 - `PROGRESS.md`
 - `docs/architecture.md`
-- `docs/api-design-rules.md`
+- `docs/guidelines.md`
 - `docs/roadmap.md`
 
 Trust scripts and CMake over prose if they disagree.

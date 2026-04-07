@@ -2,17 +2,19 @@
 
 Each guide walks through one specific use case: problem statement, wiring prerequisites, a minimal runnable example, and common mistakes to avoid.
 
-Pick a peripheral category to get started.
+## HAL
+
+Direct hardware access — use these when you need low-level control over ESP32 peripherals.
 
 <div class="grid cards" markdown>
 
--   :material-chip:{ .lg .middle } **Core Peripherals**
+-   :material-cable-data:{ .lg .middle } **I/O & Communication**
 
     ---
 
-    GPIO, UART, I2C, SPI — the building blocks of embedded communication.
+    GPIO, serial buses, and communication protocols.
 
-    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [Button](button-basic.md) · [Encoder](encoder-basic.md) · [Buzzer](buzzer-basic.md) · [1-Wire](one-wire-basic.md) · [LED Strip](led-strip-basic.md) · [UART (Blocking)](uart-loopback.md) · [UART (Async)](uart-async.md) · [I2C Master](i2c-scan.md) · [I2C Slave](i2c-slave-basic.md) · [SPI Master](spi-loopback.md) · [SPI Slave](spi-slave-basic.md)
+    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [UART (Blocking)](uart-loopback.md) · [UART (Async)](uart-async.md) · [I2C Master](i2c-scan.md) · [I2C Slave](i2c-slave-basic.md) · [SPI Master](spi-loopback.md) · [SPI Slave](spi-slave-basic.md) · [TWAI](twai-basic.md) · [I2S TX](i2s-basic.md) · [I2S RX](i2s-rx-basic.md) · [1-Wire](one-wire-basic.md) · [Touch](touch-basic.md) · [RMT TX](rmt-basic.md) · [RMT RX](rmt-rx-basic.md)
 
 -   :material-sine-wave:{ .lg .middle } **Analog**
 
@@ -26,41 +28,87 @@ Pick a peripheral category to get started.
 
     ---
 
-    General-purpose timers, pulse counting, RMT pulse sequences, and motor PWM.
+    General-purpose timers, pulse counting, and motor PWM.
 
-    [:octicons-arrow-right-24: Timer](timer-basic.md) · [PCNT](pcnt-basic.md) · [RMT TX](rmt-basic.md) · [RMT RX](rmt-rx-basic.md) · [MCPWM](mcpwm-basic.md)
+    [:octicons-arrow-right-24: Timer](timer-basic.md) · [PCNT](pcnt-basic.md) · [MCPWM](mcpwm-basic.md)
 
--   :material-transit-connection-variant:{ .lg .middle } **Bus**
-
-    ---
-
-    TWAI/CAN frames, I2S audio, and SD card access over SDMMC or SPI.
-
-    [:octicons-arrow-right-24: TWAI](twai-basic.md) · [I2S TX](i2s-basic.md) · [I2S RX](i2s-rx-basic.md) · [SD/MMC](sdmmc-basic.md) · [SD over SPI](sd-spi-basic.md) · [LCD](lcd-basic.md)
-
--   :material-thermometer:{ .lg .middle } **Sensors**
+-   :material-database:{ .lg .middle } **Storage**
 
     ---
 
-    Capacitive touch and on-chip die temperature.
+    Non-volatile key-value storage and SD card access.
 
-    [:octicons-arrow-right-24: Touch](touch-basic.md) · [Temperature](temp-sensor-basic.md)
+    [:octicons-arrow-right-24: NVS](nvs-basic.md) · [SD/MMC](sdmmc-basic.md) · [SD over SPI](sd-spi-basic.md)
+
+-   :material-chip:{ .lg .middle } **Device**
+
+    ---
+
+    Chip info, sleep modes, watchdog, and on-chip temperature.
+
+    [:octicons-arrow-right-24: System Info](system-info.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md) · [Temperature](temp-sensor-basic.md)
+
+</div>
+
+## Services
+
+Application building blocks — use these for common tasks so you can focus on your business logic.
+
+<div class="grid cards" markdown>
+
+-   :material-monitor:{ .lg .middle } **Display**
+
+    ---
+
+    LCD panels and addressable LED strips.
+
+    [:octicons-arrow-right-24: LCD](lcd-basic.md) · [LED Strip](led-strip-basic.md)
+
+-   :material-gesture-tap-button:{ .lg .middle } **Input**
+
+    ---
+
+    Debounced buttons and rotary encoders.
+
+    [:octicons-arrow-right-24: Button](button-basic.md) · [Encoder](encoder-basic.md)
+
+-   :material-volume-high:{ .lg .middle } **Actuator**
+
+    ---
+
+    Buzzers, speakers, and motor drivers.
+
+    [:octicons-arrow-right-24: Buzzer](buzzer-basic.md)
+
+-   :material-wifi:{ .lg .middle } **Connectivity**
+
+    ---
+
+    WiFi, Bluetooth, BLE, ESP-NOW, and network discovery.
+
+    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [WiFi Provisioning](wifi-prov-basic.md) · [ESP-NOW](espnow-basic.md) · [Bluetooth](bluetooth-basic.md) · [BLE GATT](ble_gatt-basic.md) · [mDNS](mdns-basic.md)
+
+-   :material-swap-vertical:{ .lg .middle } **Protocol**
+
+    ---
+
+    HTTP, MQTT, and WebSocket application protocols.
+
+    [:octicons-arrow-right-24: HTTP Client](http-basic.md) · [HTTP Server](http-server-basic.md) · [MQTT](mqtt-basic.md) · [WebSocket Client](ws-client-basic.md)
 
 -   :material-cog:{ .lg .middle } **System**
 
     ---
 
-    Runtime info, interactive console, persistent storage, sleep modes, and watchdog.
+    Console, filesystem, power management, time sync, and OTA updates.
 
-    [:octicons-arrow-right-24: System Info](system-info.md) · [Console](console-basic.md) · [NVS](nvs-basic.md) · [Filesystem](fs-basic.md) · [FAT Filesystem](fatfs-basic.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md) · [Power Management](power-mgmt-basic.md)
+    [:octicons-arrow-right-24: Console](console-basic.md) · [Filesystem](fs-basic.md) · [FAT Filesystem](fatfs-basic.md) · [Power Management](power-mgmt-basic.md) · [SNTP](sntp-basic.md) · [OTA](ota-basic.md)
 
--   :material-wifi:{ .lg .middle } **Networking**
+</div>
 
-    ---
+## Testing
 
-    WiFi, HTTP, MQTT, WebSocket, OTA updates, SNTP time sync, mDNS discovery, BLE, BLE GATT, and ESP-NOW.
-
-    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [WiFi Provisioning](wifi-prov-basic.md) · [HTTP Client](http-basic.md) · [HTTP Server](http-server-basic.md) · [MQTT](mqtt-basic.md) · [WebSocket Client](ws-client-basic.md) · [OTA](ota-basic.md) · [SNTP](sntp-basic.md) · [mDNS](mdns-basic.md) · [Bluetooth](bluetooth-basic.md) · [BLE GATT](ble_gatt-basic.md) · [ESP-NOW](espnow-basic.md)
+<div class="grid cards" markdown>
 
 -   :material-test-tube:{ .lg .middle } **Testing**
 

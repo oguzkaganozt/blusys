@@ -2,13 +2,17 @@
 
 Every Blusys module is documented with the same structure: **Types** (config structs and enums), **Functions** (full signatures, parameters, and return values), **Lifecycle**, **Thread Safety**, **Limitations**, and an **Example App** pointer.
 
+## HAL
+
+Direct hardware abstraction — thin wrappers over ESP-IDF drivers.
+
 <div class="grid cards" markdown>
 
--   :material-chip:{ .lg .middle } **Core Peripherals**
+-   :material-cable-data:{ .lg .middle } **I/O & Communication**
 
     ---
 
-    [:octicons-arrow-right-24: GPIO](gpio.md) · [Button](button.md) · [Encoder](encoder.md) · [Buzzer](buzzer.md) · [1-Wire](one_wire.md) · [LED Strip](led_strip.md) · [UART](uart.md) · [I2C Master](i2c.md) · [I2C Slave](i2c_slave.md) · [SPI Master](spi.md) · [SPI Slave](spi_slave.md)
+    [:octicons-arrow-right-24: GPIO](gpio.md) · [UART](uart.md) · [I2C Master](i2c.md) · [I2C Slave](i2c_slave.md) · [SPI Master](spi.md) · [SPI Slave](spi_slave.md) · [TWAI](twai.md) · [I2S](i2s.md) · [1-Wire](one_wire.md) · [Touch](touch.md) · [RMT](rmt.md)
 
 -   :material-sine-wave:{ .lg .middle } **Analog**
 
@@ -20,30 +24,62 @@ Every Blusys module is documented with the same structure: **Types** (config str
 
     ---
 
-    [:octicons-arrow-right-24: Timer](timer.md) · [PCNT](pcnt.md) · [RMT](rmt.md) · [MCPWM](mcpwm.md)
+    [:octicons-arrow-right-24: Timer](timer.md) · [PCNT](pcnt.md) · [MCPWM](mcpwm.md)
 
--   :material-transit-connection-variant:{ .lg .middle } **Bus**
-
-    ---
-
-    [:octicons-arrow-right-24: TWAI](twai.md) · [I2S](i2s.md) · [SD/MMC](sdmmc.md) · [SD over SPI](sd_spi.md) · [LCD](lcd.md)
-
--   :material-thermometer:{ .lg .middle } **Sensors**
+-   :material-database:{ .lg .middle } **Storage**
 
     ---
 
-    [:octicons-arrow-right-24: Touch](touch.md) · [Temperature](temp_sensor.md)
+    [:octicons-arrow-right-24: NVS](nvs.md) · [SD/MMC](sdmmc.md) · [SD over SPI](sd_spi.md)
+
+-   :material-chip:{ .lg .middle } **Device**
+
+    ---
+
+    [:octicons-arrow-right-24: System](system.md) · [Sleep](sleep.md) · [Watchdog](wdt.md) · [Temperature](temp_sensor.md)
+
+</div>
+
+## Services
+
+Application building blocks — higher-level modules for common tasks.
+
+<div class="grid cards" markdown>
+
+-   :material-monitor:{ .lg .middle } **Display**
+
+    ---
+
+    [:octicons-arrow-right-24: LCD](lcd.md) · [LED Strip](led_strip.md)
+
+-   :material-gesture-tap-button:{ .lg .middle } **Input**
+
+    ---
+
+    [:octicons-arrow-right-24: Button](button.md) · [Encoder](encoder.md)
+
+-   :material-volume-high:{ .lg .middle } **Actuator**
+
+    ---
+
+    [:octicons-arrow-right-24: Buzzer](buzzer.md)
+
+-   :material-wifi:{ .lg .middle } **Connectivity**
+
+    ---
+
+    [:octicons-arrow-right-24: WiFi](wifi.md) · [WiFi Provisioning](wifi_prov.md) · [ESP-NOW](espnow.md) · [Bluetooth](bluetooth.md) · [BLE GATT](ble_gatt.md) · [mDNS](mdns.md)
+
+-   :material-swap-vertical:{ .lg .middle } **Protocol**
+
+    ---
+
+    [:octicons-arrow-right-24: HTTP Client](http_client.md) · [HTTP Server](http_server.md) · [MQTT](mqtt.md) · [WebSocket Client](ws_client.md)
 
 -   :material-cog:{ .lg .middle } **System**
 
     ---
 
-    [:octicons-arrow-right-24: System](system.md) · [Console](console.md) · [NVS](nvs.md) · [Filesystem](fs.md) · [FAT Filesystem](fatfs.md) · [Sleep](sleep.md) · [Watchdog](wdt.md) · [Power Management](power_mgmt.md)
-
--   :material-wifi:{ .lg .middle } **Networking**
-
-    ---
-
-    [:octicons-arrow-right-24: WiFi](wifi.md) · [WiFi Provisioning](wifi_prov.md) · [HTTP Client](http_client.md) · [HTTP Server](http_server.md) · [MQTT](mqtt.md) · [WebSocket Client](ws_client.md) · [OTA](ota.md) · [SNTP](sntp.md) · [mDNS](mdns.md) · [Bluetooth](bluetooth.md) · [BLE GATT](ble_gatt.md) · [ESP-NOW](espnow.md)
+    [:octicons-arrow-right-24: Console](console.md) · [Filesystem](fs.md) · [FAT Filesystem](fatfs.md) · [Power Management](power_mgmt.md) · [SNTP](sntp.md) · [OTA](ota.md)
 
 </div>

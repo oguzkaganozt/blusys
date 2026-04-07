@@ -1,6 +1,17 @@
 # Architecture
 
-Blusys is organized as two ESP-IDF components that share the `blusys/` header namespace. The HAL layer wraps hardware drivers; the Services layer builds on the HAL to provide networking, Bluetooth, external device, and system service abstractions.
+Blusys is organized as two ESP-IDF components that share the `blusys/` header namespace. The HAL layer wraps hardware drivers; the Services layer builds on the HAL to provide higher-level application building blocks.
+
+## Guiding Principles
+
+- keep the public API small and readable
+- support one shared API across `esp32`, `esp32c3`, and `esp32s3`
+- hide target-specific and ESP-IDF-specific details internally
+- keep docs task-first and reference pages short
+
+**Success means:** users can complete common tasks from Blusys docs first, examples build on all supported targets, and normal application code does not need target-specific `#ifdef` logic.
+
+**Non-goals:** board support helpers inside the core HAL, wrapping every ESP-IDF feature, exposing internal HAL or LL details publicly.
 
 ## Two-Component Structure
 
@@ -30,7 +41,6 @@ Application
 - public headers are application-facing
 - internal code may depend on ESP-IDF details
 - target-specific behavior stays behind internal boundaries
-- the public API should stay usable without reading ESP-IDF docs for common tasks
 - HAL modules never depend on Services modules
 - internal utilities live in `include/blusys/internal/` and are shared by both components
 
@@ -99,20 +109,4 @@ Lifecycle verbs stay explicit where relevant:
 
 ## Target Policy
 
-The API targets the common subset of `esp32`, `esp32c3`, and `esp32s3`. Modules not available on all three targets (e.g. `pcnt`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `mcpwm`) use SOC capability guards and return `BLUSYS_ERR_NOT_SUPPORTED` on unsupported hardware. See [Compatibility](target-matrix.md) for the full matrix.
-
-Keep these out of the common API:
-
-- advanced I2S modes beyond standard TX/RX
-- touch sensor behavior beyond polling
-- DAC modes beyond oneshot output
-- LP peripheral special cases
-
-## Documentation Contract
-
-Every public module should ship with:
-
-- one example
-- one task guide
-- one reference page
-- documented target support and limitations
+The API targets the common subset of `esp32`, `esp32c3`, and `esp32s3`. Modules not available on all three targets use SOC capability guards and return `BLUSYS_ERR_NOT_SUPPORTED` on unsupported hardware. See [Compatibility](target-matrix.md) for the full matrix.

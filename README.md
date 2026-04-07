@@ -90,7 +90,7 @@ The build target must match the connected board. ESP-IDF v5.5+ is required and a
 - Getting started: `docs/guides/getting-started.md`
 - Examples and task guides: `docs/guides/`
 - API reference: `docs/modules/`
-- Contributor guidance: `docs/contributing.md`
+- Guidelines: `docs/guidelines.md`
 
 ## Examples
 

@@ -60,127 +60,134 @@ nav:
       - Compatibility: target-matrix.md
   - Guides:
       - guides/index.md
-      - Core Peripherals:
-          - GPIO: guides/gpio-basic.md
-          - Button: guides/button-basic.md
-          - Encoder: guides/encoder-basic.md
-          - Buzzer: guides/buzzer-basic.md
-          - 1-Wire: guides/one-wire-basic.md
-          - LED Strip: guides/led-strip-basic.md
-          - UART (Blocking): guides/uart-loopback.md
-          - UART (Async): guides/uart-async.md
-          - I2C Master: guides/i2c-scan.md
-          - I2C Slave: guides/i2c-slave-basic.md
-          - SPI Master: guides/spi-loopback.md
-          - SPI Slave: guides/spi-slave-basic.md
-      - Analog:
-          - ADC: guides/adc-basic.md
-          - DAC: guides/dac-basic.md
-          - SDM: guides/sdm-basic.md
-          - PWM: guides/pwm-basic.md
-      - Timers & Counters:
-          - Timer: guides/timer-basic.md
-          - PCNT: guides/pcnt-basic.md
-          - RMT TX: guides/rmt-basic.md
-          - RMT RX: guides/rmt-rx-basic.md
-          - MCPWM: guides/mcpwm-basic.md
-      - Bus:
-          - TWAI: guides/twai-basic.md
-          - I2S TX: guides/i2s-basic.md
-          - I2S RX: guides/i2s-rx-basic.md
-          - SD/MMC: guides/sdmmc-basic.md
-          - SD over SPI: guides/sd-spi-basic.md
-          - LCD: guides/lcd-basic.md
-      - Sensors:
-          - Touch: guides/touch-basic.md
-          - Temperature: guides/temp-sensor-basic.md
-      - System:
-          - System Info: guides/system-info.md
-          - Console: guides/console-basic.md
-          - NVS: guides/nvs-basic.md
-          - Filesystem: guides/fs-basic.md
-          - FAT Filesystem: guides/fatfs-basic.md
-          - Sleep: guides/sleep-basic.md
-          - Watchdog: guides/wdt-basic.md
-          - Power Management: guides/power-mgmt-basic.md
-      - Networking:
-          - WiFi: guides/wifi-connect.md
-          - HTTP Client: guides/http-basic.md
-          - HTTP Server: guides/http-server-basic.md
-          - MQTT: guides/mqtt-basic.md
-          - OTA: guides/ota-basic.md
-          - SNTP: guides/sntp-basic.md
-          - mDNS: guides/mdns-basic.md
-          - Bluetooth: guides/bluetooth-basic.md
-          - BLE GATT: guides/ble_gatt-basic.md
-          - ESP-NOW: guides/espnow-basic.md
-          - WebSocket Client: guides/ws-client-basic.md
-          - WiFi Provisioning: guides/wifi-prov-basic.md
+      - HAL:
+          - I/O & Communication:
+              - GPIO: guides/gpio-basic.md
+              - UART (Blocking): guides/uart-loopback.md
+              - UART (Async): guides/uart-async.md
+              - I2C Master: guides/i2c-scan.md
+              - I2C Slave: guides/i2c-slave-basic.md
+              - SPI Master: guides/spi-loopback.md
+              - SPI Slave: guides/spi-slave-basic.md
+              - TWAI: guides/twai-basic.md
+              - I2S TX: guides/i2s-basic.md
+              - I2S RX: guides/i2s-rx-basic.md
+              - 1-Wire: guides/one-wire-basic.md
+              - Touch: guides/touch-basic.md
+              - RMT TX: guides/rmt-basic.md
+              - RMT RX: guides/rmt-rx-basic.md
+          - Analog:
+              - ADC: guides/adc-basic.md
+              - DAC: guides/dac-basic.md
+              - SDM: guides/sdm-basic.md
+              - PWM: guides/pwm-basic.md
+          - Timers & Counters:
+              - Timer: guides/timer-basic.md
+              - PCNT: guides/pcnt-basic.md
+              - MCPWM: guides/mcpwm-basic.md
+          - Storage:
+              - NVS: guides/nvs-basic.md
+              - SD/MMC: guides/sdmmc-basic.md
+              - SD over SPI: guides/sd-spi-basic.md
+          - Device:
+              - System Info: guides/system-info.md
+              - Sleep: guides/sleep-basic.md
+              - Watchdog: guides/wdt-basic.md
+              - Temperature: guides/temp-sensor-basic.md
+      - Services:
+          - Display:
+              - LCD: guides/lcd-basic.md
+              - LED Strip: guides/led-strip-basic.md
+          - Input:
+              - Button: guides/button-basic.md
+              - Encoder: guides/encoder-basic.md
+          - Actuator:
+              - Buzzer: guides/buzzer-basic.md
+          - Connectivity:
+              - WiFi: guides/wifi-connect.md
+              - WiFi Provisioning: guides/wifi-prov-basic.md
+              - ESP-NOW: guides/espnow-basic.md
+              - Bluetooth: guides/bluetooth-basic.md
+              - BLE GATT: guides/ble_gatt-basic.md
+              - mDNS: guides/mdns-basic.md
+          - Protocol:
+              - HTTP Client: guides/http-basic.md
+              - HTTP Server: guides/http-server-basic.md
+              - MQTT: guides/mqtt-basic.md
+              - WebSocket Client: guides/ws-client-basic.md
+          - System:
+              - Console: guides/console-basic.md
+              - Filesystem: guides/fs-basic.md
+              - FAT Filesystem: guides/fatfs-basic.md
+              - Power Management: guides/power-mgmt-basic.md
+              - SNTP: guides/sntp-basic.md
+              - OTA: guides/ota-basic.md
       - Testing:
           - Hardware Smoke Tests: guides/hardware-smoke-tests.md
           - Concurrency Tests: guides/concurrency-tests.md
           - Validation Template: guides/hardware-validation-report-template.md
   - API Reference:
       - modules/index.md
-      - Core Peripherals:
-          - GPIO: modules/gpio.md
-          - Button: modules/button.md
-          - Encoder: modules/encoder.md
-          - Buzzer: modules/buzzer.md
-          - 1-Wire: modules/one_wire.md
-          - LED Strip: modules/led_strip.md
-          - UART: modules/uart.md
-          - I2C Master: modules/i2c.md
-          - I2C Slave: modules/i2c_slave.md
-          - SPI Master: modules/spi.md
-          - SPI Slave: modules/spi_slave.md
-      - Analog:
-          - ADC: modules/adc.md
-          - DAC: modules/dac.md
-          - SDM: modules/sdm.md
-          - PWM: modules/pwm.md
-      - Timers & Counters:
-          - Timer: modules/timer.md
-          - PCNT: modules/pcnt.md
-          - RMT: modules/rmt.md
-          - MCPWM: modules/mcpwm.md
-      - Bus:
-          - TWAI: modules/twai.md
-          - I2S: modules/i2s.md
-          - SD/MMC: modules/sdmmc.md
-          - SD over SPI: modules/sd_spi.md
-          - LCD: modules/lcd.md
-      - Sensors:
-          - Touch: modules/touch.md
-          - Temperature: modules/temp_sensor.md
-      - System:
-          - System: modules/system.md
-          - Console: modules/console.md
-          - NVS: modules/nvs.md
-          - Filesystem: modules/fs.md
-          - FAT Filesystem: modules/fatfs.md
-          - Sleep: modules/sleep.md
-          - Watchdog: modules/wdt.md
-          - Power Management: modules/power_mgmt.md
-      - Networking:
-          - WiFi: modules/wifi.md
-          - HTTP Client: modules/http_client.md
-          - HTTP Server: modules/http_server.md
-          - MQTT: modules/mqtt.md
-          - OTA: modules/ota.md
-          - SNTP: modules/sntp.md
-          - mDNS: modules/mdns.md
-          - Bluetooth: modules/bluetooth.md
-          - BLE GATT: modules/ble_gatt.md
-          - ESP-NOW: modules/espnow.md
-          - WebSocket Client: modules/ws_client.md
-          - WiFi Provisioning: modules/wifi_prov.md
+      - HAL:
+          - I/O & Communication:
+              - GPIO: modules/gpio.md
+              - UART: modules/uart.md
+              - I2C Master: modules/i2c.md
+              - I2C Slave: modules/i2c_slave.md
+              - SPI Master: modules/spi.md
+              - SPI Slave: modules/spi_slave.md
+              - TWAI: modules/twai.md
+              - I2S: modules/i2s.md
+              - 1-Wire: modules/one_wire.md
+              - Touch: modules/touch.md
+              - RMT: modules/rmt.md
+          - Analog:
+              - ADC: modules/adc.md
+              - DAC: modules/dac.md
+              - SDM: modules/sdm.md
+              - PWM: modules/pwm.md
+          - Timers & Counters:
+              - Timer: modules/timer.md
+              - PCNT: modules/pcnt.md
+              - MCPWM: modules/mcpwm.md
+          - Storage:
+              - NVS: modules/nvs.md
+              - SD/MMC: modules/sdmmc.md
+              - SD over SPI: modules/sd_spi.md
+          - Device:
+              - System: modules/system.md
+              - Sleep: modules/sleep.md
+              - Watchdog: modules/wdt.md
+              - Temperature: modules/temp_sensor.md
+      - Services:
+          - Display:
+              - LCD: modules/lcd.md
+              - LED Strip: modules/led_strip.md
+          - Input:
+              - Button: modules/button.md
+              - Encoder: modules/encoder.md
+          - Actuator:
+              - Buzzer: modules/buzzer.md
+          - Connectivity:
+              - WiFi: modules/wifi.md
+              - WiFi Provisioning: modules/wifi_prov.md
+              - ESP-NOW: modules/espnow.md
+              - Bluetooth: modules/bluetooth.md
+              - BLE GATT: modules/ble_gatt.md
+              - mDNS: modules/mdns.md
+          - Protocol:
+              - HTTP Client: modules/http_client.md
+              - HTTP Server: modules/http_server.md
+              - MQTT: modules/mqtt.md
+              - WebSocket Client: modules/ws_client.md
+          - System:
+              - Console: modules/console.md
+              - Filesystem: modules/fs.md
+              - FAT Filesystem: modules/fatfs.md
+              - Power Management: modules/power_mgmt.md
+              - SNTP: modules/sntp.md
+              - OTA: modules/ota.md
   - Project:
       - Architecture: architecture.md
-      - Vision: vision.md
-      - API Design Rules: api-design-rules.md
-      - Contributing: contributing.md
-      - Development Workflow: development-workflow.md
-      - Testing Strategy: testing-strategy.md
-      - Documentation Standards: documentation-standards.md
+      - Guidelines: guidelines.md
       - Roadmap: roadmap.md
