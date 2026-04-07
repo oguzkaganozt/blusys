@@ -36,6 +36,7 @@ This is the single source of truth for both roadmap and implementation progress.
 - V5 early work: `encoder`, `buzzer`, `one_wire`, services restructure into 7 categories, docs HAL/Services split
 - `v5.0.0` release
 - LCD: add ST7735R driver support with GRAM offset configuration
+- LCD: add SSD1306 128x32 I2C OLED example and docs
 
 ### V2
 

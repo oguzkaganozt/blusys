@@ -113,16 +113,62 @@ void app_main(void)
 
 Color inversion is applied automatically for the ST7735 driver during `blusys_lcd_open()`.
 
+## SSD1306 I2C OLED (128x32) Example
+
+For a 0.91" 128x32 monochrome OLED, use `BLUSYS_LCD_DRIVER_SSD1306` with the `.i2c` union member. The pixel format is 1 bit per pixel — each byte represents 8 vertical pixels, MSB at the bottom:
+
+```c
+#include "blusys/blusys_all.h"
+
+#define LCD_WIDTH  128
+#define LCD_HEIGHT 32
+
+static uint8_t framebuf[LCD_WIDTH * LCD_HEIGHT / 8];
+
+void app_main(void)
+{
+    blusys_lcd_t *lcd;
+
+    blusys_lcd_config_t config = {
+        .driver         = BLUSYS_LCD_DRIVER_SSD1306,
+        .width          = LCD_WIDTH,
+        .height         = LCD_HEIGHT,
+        .bits_per_pixel = 1,
+        .bgr_order      = false,
+        .i2c = {
+            .port     = 0,
+            .sda_pin  = 1,
+            .scl_pin  = 2,
+            .dev_addr = 0x3C,
+            .rst_pin  = -1,
+            .freq_hz  = 400000,
+        },
+    };
+
+    blusys_lcd_open(&config, &lcd);
+
+    /* fill all pixels on (white) */
+    memset(framebuf, 0xFF, sizeof(framebuf));
+    blusys_lcd_draw_bitmap(lcd, 0, 0, LCD_WIDTH, LCD_HEIGHT, framebuf);
+
+    blusys_lcd_close(lcd);
+}
+```
+
+Common I2C addresses are `0x3C` (default) and `0x3D`. Check the silkscreen or datasheet for your module. For a 128x64 display, change `LCD_HEIGHT` to `64`.
+
 ## Common Mistakes
 
 - **Wrong DC pin** — the Data/Command pin must be a valid output GPIO and correctly wired; swapping it with another signal produces a blank or garbled screen
 - **BGR vs RGB** — if colors appear swapped (red shows as blue), set `bgr_order = true`
 - **SPI bus conflict** — `blusys_lcd_open()` takes exclusive ownership of the SPI bus; do not call `blusys_spi_open()` on the same bus index
+- **I2C bus conflict** — `blusys_lcd_open()` takes exclusive ownership of the I2C bus; do not call `blusys_i2c_open()` on the same port
+- **Wrong I2C address** — SSD1306 modules use either `0x3C` or `0x3D`; if the screen stays blank, try the other address
 - **Missing reset wiring** — some panels require the RST line to be connected; if the display stays blank, wire RST and set `rst_pin` to the correct GPIO
 
 ## Example App
 
-See `examples/lcd_basic/` (ST7789) and `examples/lcd_st7735_basic/` (ST7735R 128x160) for runnable examples with per-target configurable pins.
+See `examples/lcd_basic/` (ST7789), `examples/lcd_st7735_basic/` (ST7735R 128x160), and `examples/lcd_ssd1306_basic/` (SSD1306 128x32 I2C OLED) for runnable examples with per-target configurable pins.
 
 Build and run it with the helper scripts or use the pattern shown in `guides/getting-started.md`.
 
