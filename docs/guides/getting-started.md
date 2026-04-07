@@ -83,6 +83,16 @@ blusys update
 - run `blusys version` to check your detected ESP-IDF
 - if ESP-IDF is not auto-detected, set `export IDF_PATH=/path/to/esp-idf`
 
+## ESP-IDF Documentation
+
+The ESP-IDF offline docs are included with your ESP-IDF installation at:
+
+```
+~/.espressif/frameworks/esp-idf-v5.5.4/docs/en/
+```
+
+Online docs are available at [docs.espressif.com/projects/esp-idf/en/v5.5.4](https://docs.espressif.com/projects/esp-idf/en/v5.5.4/).
+
 ## Next Steps
 
 - read a task guide in `guides/`
