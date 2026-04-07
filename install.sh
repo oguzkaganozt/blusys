@@ -20,7 +20,7 @@ mkdir -p "$LINK_DIR"
 
 # Create or update symlink
 if [[ -L "$LINK_PATH" ]]; then
-    existing="$(readlink -f "$LINK_PATH")"
+    existing="$(readlink -f "$LINK_PATH" 2>/dev/null || true)"
     if [[ "$existing" = "$BLUSYS_BIN" ]]; then
         printf 'blusys is already installed at %s\n' "$LINK_PATH"
         printf 'blusys path: %s\n' "$BLUSYS_DIR"
