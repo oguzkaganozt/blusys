@@ -88,6 +88,7 @@ Advanced connectivity and peripherals.
 
 ## Recent Work
 
+- added `buzzer` service module: PWM-driven passive piezo, single-tone and sequence playback, all three targets
 - split codebase into two-component architecture: `components/blusys/` (HAL) and `components/blusys_services/` (Services)
 - promoted internal utilities to `include/blusys/internal/` for cross-component sharing
 - new umbrella headers: `blusys/blusys_services.h`, `blusys/blusys_all.h`
@@ -150,6 +151,7 @@ Advanced connectivity and peripherals.
 - `blusys_lcd_*`
 - `blusys_led_strip_*`
 - `blusys_button_*`
+- `blusys_buzzer_*`
 - `blusys_fs_*`
 - `blusys_fatfs_*`
 - `blusys_console_*`

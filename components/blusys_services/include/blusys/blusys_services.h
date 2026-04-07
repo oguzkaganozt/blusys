@@ -8,6 +8,7 @@ extern "C" {
 #include "blusys/ble_gatt.h"
 #include "blusys/bluetooth.h"
 #include "blusys/button.h"
+#include "blusys/buzzer.h"
 #include "blusys/console.h"
 #include "blusys/encoder.h"
 #include "blusys/espnow.h"
