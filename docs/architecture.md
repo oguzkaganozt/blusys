@@ -1,16 +1,28 @@
 # Architecture
 
-Blusys keeps one public API and hides ESP-IDF and target-specific details behind internal layers.
+Blusys is organized as two ESP-IDF components that share the `blusys/` header namespace. The HAL layer wraps hardware drivers; the Services layer builds on the HAL to provide networking, Bluetooth, external device, and system service abstractions.
+
+## Two-Component Structure
+
+```text
+components/blusys/            — HAL (hardware abstraction)
+components/blusys_services/   — Services (protocols, devices, system services)
+```
+
+Services depend on HAL (`REQUIRES blusys` in CMakeLists.txt). HAL never depends on Services.
 
 ## Layer Model
 
 ```text
 Application
--> blusys public API
--> module implementation
--> ESP-IDF port layer
--> ESP-IDF drivers
--> ESP32 / ESP32-C3 / ESP32-S3
+  → Services API            (components/blusys_services/include/blusys/*.h)
+  → Service Implementation  (components/blusys_services/src/*.c)
+  → HAL Public API          (components/blusys/include/blusys/*.h)
+  → HAL Implementation      (components/blusys/src/common/*.c)
+  → Internal Utilities      (components/blusys/include/blusys/internal/)
+  → Target Capabilities     (components/blusys/src/targets/esp32*/target_caps.c)
+  → ESP-IDF Drivers
+  → ESP32 / ESP32-C3 / ESP32-S3
 ```
 
 ## Core Rules
@@ -19,22 +31,32 @@ Application
 - internal code may depend on ESP-IDF details
 - target-specific behavior stays behind internal boundaries
 - the public API should stay usable without reading ESP-IDF docs for common tasks
+- HAL modules never depend on Services modules
+- internal utilities live in `include/blusys/internal/` and are shared by both components
 
-## Internal Structure
+## HAL Modules (`components/blusys/`)
 
-- public API layer: exported `blusys_` headers only
-- module layer: validation, lifecycle, concurrency, and error translation
-- port layer: thin ESP-IDF bindings and `esp_err_t` translation
-- target layer: capability and per-target adjustments
-
-## Public API Shape
-
-- foundational modules: `version`, `error`, `target`, `system`
+- foundational: `version`, `error`, `target`, `system`
 - stateless pin API: `gpio`
 - handle-based master/TX APIs: `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`, `rmt`, `i2s`, `twai`, `pcnt`, `dac`, `sdm`, `mcpwm`, `touch`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`
 - handle-based slave/RX counterparts: `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
-- networking: `wifi`, `http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `bluetooth`, `ble_gatt`, `espnow`
-- storage and system: `nvs`, `fs`
+- storage: `nvs`, `sd_spi`
+
+Umbrella header: `#include "blusys/blusys.h"`
+
+## Services Modules (`components/blusys_services/`)
+
+- networking: `wifi`, `http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `ws_client`, `espnow`, `wifi_prov`
+- bluetooth: `bluetooth`, `ble_gatt`
+- external devices: `lcd`, `led_strip`, `button`
+- storage: `fs`, `fatfs`
+- system services: `console`, `power_mgmt`
+
+Umbrella header: `#include "blusys/blusys_services.h"`
+
+Combined umbrella: `#include "blusys/blusys_all.h"`
+
+## Symmetric Pairs
 
 Symmetric pairs expose the same peripheral in both directions under separate handles:
 
@@ -42,6 +64,24 @@ Symmetric pairs expose the same peripheral in both directions under separate han
 - SPI: `blusys_spi_*` (master) and `blusys_spi_slave_*`
 - I2S: `blusys_i2s_tx_*` and `blusys_i2s_rx_*`
 - RMT: `blusys_rmt_*` (TX) and `blusys_rmt_rx_*`
+
+## CMakeLists.txt Usage
+
+HAL-only examples:
+
+```cmake
+idf_component_register(SRCS "main.c" REQUIRES blusys)
+```
+
+Examples that use any service module:
+
+```cmake
+idf_component_register(SRCS "main.c" REQUIRES blusys_services)
+```
+
+Both components are auto-discovered via `EXTRA_COMPONENT_DIRS ../../components` in the project-level CMakeLists.txt.
+
+## Lifecycle Verbs
 
 Lifecycle verbs stay explicit where relevant:
 

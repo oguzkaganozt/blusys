@@ -13,7 +13,7 @@ You want to attach a live CLI to a running ESP32 firmware so that you can query 
 ## Minimal Example
 
 ```c
-#include "blusys/blusys.h"
+#include "blusys/blusys_all.h"
 
 static int cmd_hello(int argc, char **argv)
 {

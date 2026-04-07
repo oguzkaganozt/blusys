@@ -13,7 +13,7 @@ You want to persist data across reboots without using NVS key-value storage — 
 ## Minimal Example
 
 ```c
-#include "blusys/blusys.h"
+#include "blusys/blusys_all.h"
 
 blusys_fs_t *fs = NULL;
 blusys_fs_config_t config = {

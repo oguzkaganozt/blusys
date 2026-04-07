@@ -10,20 +10,33 @@ It provides a smaller API than raw ESP-IDF for common embedded tasks while keepi
 - `esp32c3`
 - `esp32s3`
 
-## Included Modules
+## Architecture
 
-- foundation: `version`, `error`, `target`
-- system: `system`
+The codebase is split into two ESP-IDF components:
+
+- **`components/blusys/`** — HAL layer (hardware abstraction)
+- **`components/blusys_services/`** — Services layer (networking, Bluetooth, devices, storage, system services)
+
+Services depend on HAL. HAL never depends on Services.
+
+## HAL Modules (`blusys`)
+
+- foundation: `version`, `error`, `target`, `system`
 - digital IO: `gpio`
 - communication: `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave`, `twai`
 - audio: `i2s` (TX and RX)
 - timing and analog: `pwm`, `adc`, `timer`, `pcnt`, `rmt` (TX and RX), `touch`, `dac`, `mcpwm`, `sdm`
-- storage: `sdmmc`
+- storage: `sdmmc`, `sd_spi`, `nvs`
 - sensors: `temp_sensor`
-- system services: `wdt`, `sleep`
-- connectivity: `wifi`, `http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`
+- system: `wdt`, `sleep`
+
+## Services Modules (`blusys_services`)
+
+- networking: `wifi`, `http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `ws_client`, `espnow`, `wifi_prov`
 - bluetooth: `bluetooth`, `ble_gatt`
-- storage: `fs`, `nvs`
+- external devices: `lcd`, `led_strip`, `button`
+- storage: `fs`, `fatfs`
+- system services: `console`, `power_mgmt`
 
 Target notes:
 - `pcnt` is available on `esp32` and `esp32s3`; `esp32c3` reports it as unsupported
@@ -112,7 +125,7 @@ The build target must match the connected board. ESP-IDF v5.5+ is required and a
 - `examples/spi_slave_basic/`
 - `examples/i2s_rx_basic/`
 - `examples/rmt_rx_basic/`
-- `examples/wifi_basic/`
+- `examples/wifi_connect/`
 - `examples/nvs_basic/`
 - `examples/http_client_basic/`
 - `examples/http_server_basic/`
@@ -124,11 +137,20 @@ The build target must match the connected board. ESP-IDF v5.5+ is required and a
 - `examples/fs_basic/`
 - `examples/espnow_basic/`
 - `examples/ble_gatt_basic/`
+- `examples/button_basic/`
+- `examples/led_strip_basic/`
+- `examples/console_basic/`
+- `examples/fatfs_basic/`
+- `examples/sd_spi_basic/`
+- `examples/power_mgmt_basic/`
+- `examples/ws_client_basic/`
+- `examples/wifi_prov_basic/`
+- `examples/lcd_basic/`
 
 ## Project Status
 
 `v4.0.0` is released.
-Full HAL peripheral coverage, connectivity stack, and production essentials are complete: 44 modules covering core peripherals, symmetric counterparts, system services, WiFi/HTTP/MQTT networking, Bluetooth/BLE, storage, and ecosystem helpers.
+Full HAL peripheral coverage, connectivity stack, and production essentials are complete: 48 modules split across HAL and Services layers, covering core peripherals, symmetric counterparts, system services, WiFi/HTTP/MQTT networking, Bluetooth/BLE, storage, and ecosystem helpers.
 Standalone CLI tooling with `blusys` command: install once, create projects anywhere, auto-detect ESP-IDF.
 
 Detailed implementation tracking remains in `PROGRESS.md`.

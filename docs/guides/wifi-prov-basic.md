@@ -15,7 +15,7 @@ You want to ship a device without hard-coded WiFi credentials. At first boot the
 ```c
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
-#include "blusys/blusys.h"
+#include "blusys/blusys_all.h"
 
 #define PROV_DONE_BIT BIT0
 

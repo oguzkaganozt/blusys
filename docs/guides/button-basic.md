@@ -16,7 +16,7 @@ events instead.
 ## Minimal Example
 
 ```c
-#include "blusys/blusys.h"
+#include "blusys/blusys_all.h"
 
 static void on_button(blusys_button_t *btn, blusys_button_event_t event, void *ctx)
 {

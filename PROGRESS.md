@@ -88,6 +88,9 @@ Advanced connectivity and peripherals.
 
 ## Recent Work
 
+- split codebase into two-component architecture: `components/blusys/` (HAL) and `components/blusys_services/` (Services)
+- promoted internal utilities to `include/blusys/internal/` for cross-component sharing
+- new umbrella headers: `blusys/blusys_services.h`, `blusys/blusys_all.h`
 - released `v4.0.0`
 - V4 modules: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`
 - standalone `blusys` CLI — install once, create projects anywhere, IDF auto-detection
@@ -98,7 +101,7 @@ Advanced connectivity and peripherals.
 
 ## Current Technical State
 
-Public API currently exists for:
+### HAL Public API (`components/blusys/`)
 
 - `blusys_version_*`
 - `blusys_err_string()`
@@ -127,33 +130,37 @@ Public API currently exists for:
 - `blusys_sleep_*`
 - `blusys_mcpwm_*`
 - `blusys_sdm_*`
-- `blusys_wifi_*`
 - `blusys_nvs_*`
+- `blusys_sd_spi_*`
+
+### Services Public API (`components/blusys_services/`)
+
+- `blusys_wifi_*`
 - `blusys_http_client_*`
 - `blusys_mqtt_*`
 - `blusys_http_server_*`
 - `blusys_ota_*`
 - `blusys_sntp_*`
 - `blusys_mdns_*`
-- `blusys_bluetooth_*`
-- `blusys_fs_*`
-- `blusys_espnow_*`
-- `blusys_ble_gatt_*`
-- `blusys_button_*`
-- `blusys_led_strip_*`
-- `blusys_console_*`
-- `blusys_fatfs_*`
-- `blusys_sd_spi_*`
-- `blusys_pm_*`
 - `blusys_ws_client_*`
+- `blusys_espnow_*`
 - `blusys_wifi_prov_*`
+- `blusys_bluetooth_*`
+- `blusys_ble_gatt_*`
 - `blusys_lcd_*`
+- `blusys_led_strip_*`
+- `blusys_button_*`
+- `blusys_fs_*`
+- `blusys_fatfs_*`
+- `blusys_console_*`
+- `blusys_pm_*`
 
-Internal infrastructure currently exists for:
+### Internal Infrastructure
 
+- two-component architecture: HAL (`blusys`) and Services (`blusys_services`)
 - target-specific source selection in component CMake
 - target capability reporting for shipped public modules
-- shared lock abstraction for handle-based modules
+- shared lock abstraction for handle-based modules (`include/blusys/internal/`)
 - shared timeout and ESP-IDF error translation helpers
 
 ## Validation Snapshot

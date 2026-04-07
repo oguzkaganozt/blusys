@@ -1,5 +1,41 @@
 # Changelog
 
+## Unreleased
+
+Architecture restructuring.
+
+- split single `components/blusys/` into two components: `components/blusys/` (HAL) and `components/blusys_services/` (Services)
+- HAL layer: 29 hardware abstraction modules (gpio, uart, spi, i2c, adc, timers, etc.)
+- Services layer: 19 higher-level modules (wifi, mqtt, http, bluetooth, lcd, led_strip, etc.)
+- promoted internal utilities from `src/internal/` to `include/blusys/internal/` for cross-component sharing
+- new umbrella headers: `blusys/blusys_services.h` (services only), `blusys/blusys_all.h` (both layers)
+- `blusys/blusys.h` now includes only HAL modules
+- service examples use `REQUIRES blusys_services` in CMakeLists.txt; HAL-only examples remain `REQUIRES blusys`
+- no public API changes — user `#include` paths are unchanged
+
+## v4.0.0
+
+Production essentials and standalone CLI release.
+
+Included in `v4.0.0`:
+
+- all modules from `v3.0.0`
+- external devices: `button` (GPIO-based debounced button), `led_strip` (addressable LED strip via RMT), `lcd` (SPI/I2C LCD panel driver)
+- storage: `fatfs` (FAT filesystem on SD/SPI flash), `sd_spi` (SD card over SPI bus)
+- system services: `console` (interactive UART console with command registration), `power_mgmt` (dynamic frequency scaling and light sleep)
+- connectivity: `ws_client` (WebSocket client), `wifi_prov` (WiFi provisioning via BLE or SoftAP)
+- standalone `blusys` CLI: install once via `install.sh`, create projects anywhere, IDF auto-detection
+- `config-idf` for interactive ESP-IDF version selection
+- bash tab completion for all commands, targets, ports, and example names
+- all 9 new modules available on all three targets
+- buildable examples for all new modules
+- full API reference and task guide documentation
+
+Validation summary:
+
+- all V4 examples build for `esp32`, `esp32c3`, `esp32s3`
+- `mkdocs build --strict` passes
+
 ## v3.0.0
 
 Connectivity and system services release.

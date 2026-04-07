@@ -12,7 +12,7 @@ You want to drive an SPI-connected LCD panel (such as the ST7789) to display gra
 ## Minimal Example
 
 ```c
-#include "blusys/blusys.h"
+#include "blusys/blusys_all.h"
 
 static uint16_t row_buf[240];
 

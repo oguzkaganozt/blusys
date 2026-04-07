@@ -13,7 +13,7 @@ You want a filesystem on internal flash that supports subdirectories, long filen
 ## Minimal Example
 
 ```c
-#include "blusys/blusys.h"
+#include "blusys/blusys_all.h"
 
 blusys_fatfs_t *fs = NULL;
 blusys_fatfs_config_t config = {

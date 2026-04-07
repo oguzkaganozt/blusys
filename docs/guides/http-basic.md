@@ -14,7 +14,7 @@ You want to fetch data from a REST API or web server over WiFi and process the r
 
 ```c
 #include <stdlib.h>
-#include "blusys/blusys.h"
+#include "blusys/blusys_all.h"
 
 /* 1. Connect to WiFi first */
 blusys_wifi_t *wifi;
