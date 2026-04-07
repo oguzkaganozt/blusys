@@ -15,6 +15,9 @@ extern "C" {
 #include "blusys/input/button.h"
 #include "blusys/input/encoder.h"
 
+/* sensor */
+#include "blusys/sensor/dht.h"
+
 /* actuator */
 #include "blusys/actuator/buzzer.h"
 

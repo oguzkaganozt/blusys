@@ -102,6 +102,8 @@ nav:
           - Input:
               - Button: guides/button-basic.md
               - Encoder: guides/encoder-basic.md
+          - Sensor:
+              - DHT: guides/dht-basic.md
           - Actuator:
               - Buzzer: guides/buzzer-basic.md
           - Connectivity:
@@ -168,6 +170,8 @@ nav:
           - Input:
               - Button: modules/button.md
               - Encoder: modules/encoder.md
+          - Sensor:
+              - DHT: modules/dht.md
           - Actuator:
               - Buzzer: modules/buzzer.md
           - Connectivity:

@@ -58,6 +58,12 @@ Application building blocks — higher-level modules for common tasks.
 
     [:octicons-arrow-right-24: Button](button.md) · [Encoder](encoder.md)
 
+-   :material-thermometer:{ .lg .middle } **Sensor**
+
+    ---
+
+    [:octicons-arrow-right-24: DHT](dht.md)
+
 -   :material-volume-high:{ .lg .middle } **Actuator**
 
     ---

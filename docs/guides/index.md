@@ -72,6 +72,14 @@ Application building blocks — use these for common tasks so you can focus on y
 
     [:octicons-arrow-right-24: Button](button-basic.md) · [Encoder](encoder-basic.md)
 
+-   :material-thermometer:{ .lg .middle } **Sensor**
+
+    ---
+
+    Temperature, humidity, and environmental sensors.
+
+    [:octicons-arrow-right-24: DHT](dht-basic.md)
+
 -   :material-volume-high:{ .lg .middle } **Actuator**
 
     ---

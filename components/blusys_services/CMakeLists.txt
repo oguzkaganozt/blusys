@@ -7,6 +7,8 @@ set(blusys_services_sources
     # input
     src/input/button.c
     src/input/encoder.c
+    # sensor
+    src/sensor/dht.c
     # actuator
     src/actuator/buzzer.c
     # connectivity

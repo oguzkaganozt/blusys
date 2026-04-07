@@ -65,9 +65,8 @@ Production essentials and standalone CLI.
 Advanced peripherals, sensor drivers, and architecture improvements.
 
 - status: `in_progress`
-- done: `encoder`, `buzzer`, `one_wire`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages)
+- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages)
 - planned:
-  1. first sensor driver (TBD)
   2. `gpio_expander` — I2C/SPI-based port expanders
   3. `ana_cmpr` — analog signal comparison (C3, S3 only)
   4. `efuse` — one-time programmable memory reading
@@ -93,6 +92,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 
 ## Recent Work
 
+- added `dht` sensor service: DHT11/DHT22 temperature and humidity via RMT, with rate-limiting and checksum validation
 - added `seven_seg` display service: GPIO, 74HC595 shift-register, and MAX7219 SPI drivers; up to 8 digits, software multiplexing for GPIO/HC595, hardware multiplexing for MAX7219
 - restructured docs nav into HAL/Services split, consolidated project pages from 8 to 3
 - restructured `blusys_services` into 7 categories: display, input, sensor, actuator, connectivity, protocol, system
@@ -139,6 +139,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 
 **display:** `blusys_lcd_*`, `blusys_led_strip_*`, `blusys_seven_seg_*`
 **input:** `blusys_button_*`, `blusys_encoder_*`
+**sensor:** `blusys_dht_*`
 **actuator:** `blusys_buzzer_*`
 **connectivity:** `blusys_wifi_*`, `blusys_wifi_prov_*`, `blusys_espnow_*`, `blusys_bluetooth_*`, `blusys_ble_gatt_*`, `blusys_mdns_*`
 **protocol:** `blusys_mqtt_*`, `blusys_http_client_*`, `blusys_http_server_*`, `blusys_ws_client_*`
@@ -162,6 +163,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - `v5.0.0` release validation completed
 - `mkdocs build --strict` passes
 - `seven_seg` module: pending hardware smoke test (GPIO, 74HC595, MAX7219)
+- `dht` module: pending hardware smoke test (DHT11, DHT22)
 
 ## Environment Notes
 
@@ -171,5 +173,5 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 
 ## Next Actions
 
-1. Implement first sensor service driver
-2. Continue V5 planned modules
+1. Hardware smoke test `dht` module (DHT11, DHT22)
+2. Continue V5 planned modules (`gpio_expander`, `ana_cmpr`, `efuse`, …)

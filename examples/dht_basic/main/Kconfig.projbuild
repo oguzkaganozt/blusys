@@ -1,0 +1,27 @@
+menu "Blusys DHT Basic Example"
+
+config BLUSYS_DHT_BASIC_PIN
+    int "DHT data GPIO pin"
+    range 0 48
+    default 4  if IDF_TARGET_ESP32
+    default 3  if IDF_TARGET_ESP32C3
+    default 4  if IDF_TARGET_ESP32S3
+    help
+        GPIO pin connected to the DHT sensor data line.
+        An external 4.7 kOhm pull-up resistor to 3.3 V is required.
+
+choice BLUSYS_DHT_BASIC_TYPE
+    prompt "DHT sensor type"
+    default BLUSYS_DHT_BASIC_TYPE_DHT22
+    help
+        Select the DHT sensor model connected to the board.
+
+config BLUSYS_DHT_BASIC_TYPE_DHT11
+    bool "DHT11"
+
+config BLUSYS_DHT_BASIC_TYPE_DHT22
+    bool "DHT22 / AM2302"
+
+endchoice
+
+endmenu
