@@ -20,6 +20,7 @@
 #include "esp_attr.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "freertos/task.h"
 
 /* ──────────────────────────────────────────────── Timing constants (1 µs/tick) */
@@ -58,7 +59,7 @@ static const rmt_transmit_config_t s_dht_tx_cfg = {
 
 struct blusys_dht {
     blusys_dht_type_t    type;
-    bool                 closing;
+    volatile bool        closing;
 
     rmt_channel_handle_t tx_channel;
     rmt_encoder_handle_t tx_encoder;
@@ -71,6 +72,7 @@ struct blusys_dht {
     blusys_dht_reading_t last_reading;
 
     blusys_lock_t        lock;
+    SemaphoreHandle_t    read_done_sem; /* taken while a read is in progress; close() waits on it */
 };
 
 /* ──────────────────────────────────────────────────── ISR callback */
@@ -204,6 +206,15 @@ blusys_err_t blusys_dht_open(const blusys_dht_config_t *config,
         return err;
     }
 
+    dht->read_done_sem = xSemaphoreCreateBinary();
+    if (dht->read_done_sem == NULL) {
+        blusys_lock_deinit(&dht->lock);
+        free(dht->rx_sym_buf);
+        free(dht);
+        return BLUSYS_ERR_NO_MEM;
+    }
+    xSemaphoreGive(dht->read_done_sem); /* idle — no read in progress */
+
     /* TX channel: open-drain, idle HIGH — allows sensor to pull bus LOW */
     esp_err = rmt_new_tx_channel(&(rmt_tx_channel_config_t) {
         .gpio_num           = (gpio_num_t) config->pin,
@@ -277,6 +288,7 @@ fail_tx_encoder:
 fail_tx_channel:
     rmt_del_channel(dht->tx_channel);
 fail_lock:
+    vSemaphoreDelete(dht->read_done_sem);
     blusys_lock_deinit(&dht->lock);
     free(dht->rx_sym_buf);
     free(dht);
@@ -298,6 +310,8 @@ blusys_err_t blusys_dht_close(blusys_dht_t *dht)
 
     dht->closing = true;
 
+    /* Disabling the RX channel aborts any pending receive and may wake a
+     * blocked blusys_dht_read() via the ISR done callback. */
     rmt_disable(dht->rx_channel);
     rmt_del_channel(dht->rx_channel);
     rmt_disable(dht->tx_channel);
@@ -305,6 +319,14 @@ blusys_err_t blusys_dht_close(blusys_dht_t *dht)
     rmt_del_channel(dht->tx_channel);
 
     blusys_lock_give(&dht->lock);
+
+    /* Wait for any in-progress read to finish using the handle.  The read task
+     * gives read_done_sem before it returns, so this blocks until it is safe
+     * to free the buffers.  If no read was in progress the semaphore is
+     * already in the "given" state and this returns immediately. */
+    xSemaphoreTake(dht->read_done_sem, portMAX_DELAY);
+    vSemaphoreDelete(dht->read_done_sem);
+
     blusys_lock_deinit(&dht->lock);
     free(dht->rx_sym_buf);
     free(dht);
@@ -386,6 +408,12 @@ blusys_err_t blusys_dht_read(blusys_dht_t *dht,
         return blusys_translate_esp_err(esp_err);
     }
 
+    /* Mark read in progress before releasing the lock.  xSemaphoreTake with
+     * timeout 0 always succeeds here: the waiting_task != NULL check above
+     * serialises concurrent reads, and closing == false was verified above so
+     * close() has not yet taken the semaphore. */
+    xSemaphoreTake(dht->read_done_sem, 0);
+
     /* Release lock before blocking — ISR notifies via task notification */
     blusys_lock_give(&dht->lock);
 
@@ -393,15 +421,19 @@ blusys_err_t blusys_dht_read(blusys_dht_t *dht,
     uint32_t val = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(DHT_RX_TIMEOUT_MS));
     if (val == 0u) {
         dht->waiting_task = NULL;
-        /* Abort the armed RX channel so the next read starts clean */
-        rmt_disable(dht->rx_channel);
-        rmt_enable(dht->rx_channel);
+        /* Only reset the channel if close() has not already deleted it */
+        if (!dht->closing) {
+            rmt_disable(dht->rx_channel);
+            rmt_enable(dht->rx_channel);
+        }
+        xSemaphoreGive(dht->read_done_sem);
         return BLUSYS_ERR_TIMEOUT;
     }
 
     /* Decode the captured symbols */
     err = dht_decode(dht->rx_sym_buf, dht->rx_sym_count, data);
     if (err != BLUSYS_OK) {
+        xSemaphoreGive(dht->read_done_sem);
         return err;
     }
 
@@ -412,6 +444,7 @@ blusys_err_t blusys_dht_read(blusys_dht_t *dht,
     dht->last_reading = *out_reading;
     dht->last_read_us = esp_timer_get_time();
 
+    xSemaphoreGive(dht->read_done_sem);
     return BLUSYS_OK;
 }
 

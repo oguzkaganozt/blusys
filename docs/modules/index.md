@@ -50,7 +50,7 @@ Application building blocks — higher-level modules for common tasks.
 
     ---
 
-    [:octicons-arrow-right-24: LCD](lcd.md) · [LED Strip](led_strip.md) · [7-Segment](seven_seg.md)
+    [:octicons-arrow-right-24: LCD](lcd.md) · [LED Strip](led_strip.md) · [7-Segment](seven_seg.md) · [UI (LVGL)](ui.md)
 
 -   :material-gesture-tap-button:{ .lg .middle } **Input**
 

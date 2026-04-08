@@ -102,6 +102,7 @@ nav:
               - LCD: guides/lcd-basic.md
               - LED Strip: guides/led-strip-basic.md
               - 7-Segment: guides/seven-seg-basic.md
+              - UI (LVGL): guides/ui-basic.md
           - Input:
               - Button: guides/button-basic.md
               - Encoder: guides/encoder-basic.md
@@ -174,6 +175,7 @@ nav:
               - LCD: modules/lcd.md
               - LED Strip: modules/led_strip.md
               - 7-Segment: modules/seven_seg.md
+              - UI (LVGL): modules/ui.md
           - Input:
               - Button: modules/button.md
               - Encoder: modules/encoder.md

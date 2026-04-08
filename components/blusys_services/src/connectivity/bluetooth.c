@@ -33,7 +33,32 @@ struct blusys_bluetooth {
     bool                         scanning;
 };
 
+static portMUX_TYPE        s_bt_init_lock = portMUX_INITIALIZER_UNLOCKED;
+static blusys_lock_t       s_bt_global_lock;
+static bool                s_bt_global_lock_inited;
 static blusys_bluetooth_t *s_active_handle;
+
+static blusys_err_t ensure_global_lock(void)
+{
+    if (s_bt_global_lock_inited) {
+        return BLUSYS_OK;
+    }
+    blusys_lock_t new_lock;
+    blusys_err_t err = blusys_lock_init(&new_lock);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+    portENTER_CRITICAL(&s_bt_init_lock);
+    if (!s_bt_global_lock_inited) {
+        s_bt_global_lock        = new_lock;
+        s_bt_global_lock_inited = true;
+        portEXIT_CRITICAL(&s_bt_init_lock);
+    } else {
+        portEXIT_CRITICAL(&s_bt_init_lock);
+        blusys_lock_deinit(&new_lock);
+    }
+    return BLUSYS_OK;
+}
 
 static void ble_host_task(void *param)
 {
@@ -44,17 +69,27 @@ static void ble_host_task(void *param)
 
 static void on_ble_sync(void)
 {
-    if (s_active_handle) {
-        xEventGroupSetBits(s_active_handle->sync_event, BT_SYNC_BIT);
+    if (blusys_lock_take(&s_bt_global_lock, 0) != BLUSYS_OK) {
+        return;
     }
+    blusys_bluetooth_t *h = s_active_handle;
+    if (h) {
+        xEventGroupSetBits(h->sync_event, BT_SYNC_BIT);
+    }
+    blusys_lock_give(&s_bt_global_lock);
 }
 
 static void on_ble_reset(int reason)
 {
     (void)reason;
-    if (s_active_handle) {
-        xEventGroupClearBits(s_active_handle->sync_event, BT_SYNC_BIT);
+    if (blusys_lock_take(&s_bt_global_lock, 0) != BLUSYS_OK) {
+        return;
     }
+    blusys_bluetooth_t *h = s_active_handle;
+    if (h) {
+        xEventGroupClearBits(h->sync_event, BT_SYNC_BIT);
+    }
+    blusys_lock_give(&s_bt_global_lock);
 }
 
 static int gap_event_cb(struct ble_gap_event *event, void *arg)
@@ -72,7 +107,12 @@ static int disc_event_cb(struct ble_gap_event *event, void *arg)
         return 0;
     }
 
+    if (blusys_lock_take(&s_bt_global_lock, 0) != BLUSYS_OK) {
+        return 0;
+    }
     blusys_bluetooth_t *h = s_active_handle;
+    blusys_lock_give(&s_bt_global_lock);
+
     if (!h || !h->scan_cb) {
         return 0;
     }
@@ -102,29 +142,47 @@ blusys_err_t blusys_bluetooth_open(const blusys_bluetooth_config_t *config,
         return BLUSYS_ERR_INVALID_ARG;
     }
 
+    blusys_err_t err = ensure_global_lock();
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+
+    err = blusys_lock_take(&s_bt_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+
     if (s_active_handle != NULL) {
+        blusys_lock_give(&s_bt_global_lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
     blusys_bluetooth_t *h = calloc(1, sizeof(*h));
     if (h == NULL) {
+        blusys_lock_give(&s_bt_global_lock);
         return BLUSYS_ERR_NO_MEM;
     }
 
-    blusys_err_t err = blusys_lock_init(&h->lock);
+    err = blusys_lock_init(&h->lock);
     if (err != BLUSYS_OK) {
+        blusys_lock_give(&s_bt_global_lock);
         free(h);
         return err;
     }
 
     h->sync_event = xEventGroupCreate();
     if (h->sync_event == NULL) {
-        err = BLUSYS_ERR_NO_MEM;
-        goto fail_event;
+        blusys_lock_deinit(&h->lock);
+        blusys_lock_give(&s_bt_global_lock);
+        free(h);
+        return BLUSYS_ERR_NO_MEM;
     }
 
     strncpy(h->device_name, config->device_name, sizeof(h->device_name) - 1);
+
+    /* Publish handle before releasing lock so callbacks see it immediately */
     s_active_handle = h;
+    blusys_lock_give(&s_bt_global_lock);
 
     /* NVS is required by the BT controller for RF calibration data */
     err = blusys_nvs_ensure_init();
@@ -159,9 +217,11 @@ fail_nimble:
     nimble_port_stop();
     nimble_port_deinit();
 fail_hci:
-    s_active_handle = NULL;
+    if (blusys_lock_take(&s_bt_global_lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+        s_active_handle = NULL;
+        blusys_lock_give(&s_bt_global_lock);
+    }
     vEventGroupDelete(h->sync_event);
-fail_event:
     blusys_lock_deinit(&h->lock);
     free(h);
     return err;
@@ -173,7 +233,21 @@ blusys_err_t blusys_bluetooth_close(blusys_bluetooth_t *bt)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    blusys_err_t err = blusys_lock_take(&bt->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    blusys_err_t err = blusys_lock_take(&s_bt_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+    if (s_active_handle != bt) {
+        blusys_lock_give(&s_bt_global_lock);
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+    /* Clear immediately so concurrent close() calls fail fast and a new
+     * open() cannot start until nimble_port_deinit() completes — see
+     * the analogous pattern in usb_host.c. */
+    s_active_handle = NULL;
+    blusys_lock_give(&s_bt_global_lock);
+
+    err = blusys_lock_take(&bt->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
@@ -195,7 +269,6 @@ blusys_err_t blusys_bluetooth_close(blusys_bluetooth_t *bt)
     nimble_port_stop();
     nimble_port_deinit();
 
-    s_active_handle = NULL;
     vEventGroupDelete(bt->sync_event);
     blusys_lock_deinit(&bt->lock);
     free(bt);

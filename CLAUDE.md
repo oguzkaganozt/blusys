@@ -54,7 +54,7 @@ The site uses MkDocs Material with navigation tabs: **Home**, **Guides**, **API 
 The codebase is split into two ESP-IDF components:
 
 - **`components/blusys/`** — HAL layer. Thin wrappers over ESP-IDF hardware drivers (GPIO, UART, SPI, I2C, ADC, timers, etc.). No dependency on the services layer.
-- **`components/blusys_services/`** — Services layer. Organized into 7 categories: display (LCD, LED strip), input (button, encoder), sensor, actuator (buzzer), connectivity (WiFi, Bluetooth, BLE GATT, ESP-NOW, mDNS), protocol (MQTT, HTTP, WebSocket), and system (filesystem, FATFS, console, power management, SNTP, OTA).
+- **`components/blusys_services/`** — Services layer. Organized into 7 categories: display (LCD, LED strip, seven_seg, ui), input (button, encoder, usb_hid), sensor (dht), actuator (buzzer), connectivity (WiFi, Bluetooth, BLE GATT, ESP-NOW, mDNS), protocol (MQTT, HTTP, WebSocket), and system (filesystem, FATFS, console, power management, SNTP, OTA).
 
 Services depend on HAL (`REQUIRES blusys` in CMakeLists.txt). HAL never depends on services.
 
@@ -70,12 +70,12 @@ Application
   → Hardware
 ```
 
-**HAL modules:** gpio, uart, i2c, i2c_slave, spi, spi_slave, adc, dac, pwm, mcpwm, timer, pcnt, rmt, rmt_rx, i2s, i2s_rx, sdm, twai, wdt, sleep, temp_sensor, touch, sdmmc, sd_spi, nvs, system, error, target, version.
+**HAL modules:** gpio, gpio_expander, uart, i2c, i2c_slave, spi, spi_slave, adc, dac, pwm, mcpwm, timer, pcnt, rmt, rmt_rx, i2s, i2s_rx, sdm, twai, wdt, sleep, temp_sensor, touch, sdmmc, sd_spi, nvs, one_wire, usb_host, usb_device, system, error, target, version.
 
 **Service modules** (by category):
-- **display:** lcd, led_strip
-- **input:** button, encoder
-- **sensor:** *(placeholder)*
+- **display:** lcd, led_strip, seven_seg, ui
+- **input:** button, encoder, usb_hid
+- **sensor:** dht
 - **actuator:** buzzer
 - **connectivity:** wifi, wifi_prov, espnow, bluetooth, ble_gatt, mdns
 - **protocol:** mqtt, http_client, http_server, ws_client
@@ -119,8 +119,10 @@ Modules in `BLUSYS_BASE_FEATURE_MASK` are available on all three targets. Target
 | `sdmmc`      | ✓     |          | ✓        |
 | `temp_sensor`|       | ✓        | ✓        |
 | `mcpwm`      | ✓     |          | ✓        |
+| `usb_host`   |       |          | ✓        |
+| `usb_device` |       |          | ✓        |
 
-All other modules (gpio, uart, i2c, spi, pwm, adc, timer, rmt, twai, i2s, wdt, sleep, sdm, i2c_slave, spi_slave, i2s_rx, rmt_rx, wifi, nvs, http_client, mqtt, http_server, ota, sntp, mdns, bluetooth, fs, espnow, ble_gatt, button, led_strip, console, fatfs, sd_spi, power_mgmt, ws_client, wifi_prov, lcd) are in `BLUSYS_BASE_FEATURE_MASK` and available on all targets.
+All other modules (gpio, gpio_expander, uart, i2c, spi, pwm, adc, timer, rmt, twai, i2s, wdt, sleep, sdm, i2c_slave, spi_slave, i2s_rx, rmt_rx, one_wire, wifi, nvs, http_client, mqtt, http_server, ota, sntp, mdns, bluetooth, fs, espnow, ble_gatt, button, led_strip, console, fatfs, sd_spi, power_mgmt, ws_client, wifi_prov, lcd, encoder, buzzer, seven_seg, dht, usb_hid) are in `BLUSYS_BASE_FEATURE_MASK` and available on all targets.
 
 **Combined headers:** `i2s.h` declares both `blusys_i2s_tx_*` and `blusys_i2s_rx_*`. `rmt.h` declares both `blusys_rmt_*` (TX) and `blusys_rmt_rx_*`. Their implementations live in separate `.c` files (`i2s.c` / `i2s_rx.c`, `rmt.c` / `rmt_rx.c`).
 

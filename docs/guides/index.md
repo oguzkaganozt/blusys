@@ -62,7 +62,7 @@ Application building blocks — use these for common tasks so you can focus on y
 
     LCD panels, addressable LED strips, and 7-segment displays.
 
-    [:octicons-arrow-right-24: LCD](lcd-basic.md) · [LED Strip](led-strip-basic.md) · [7-Segment](seven-seg-basic.md)
+    [:octicons-arrow-right-24: LCD](lcd-basic.md) · [LED Strip](led-strip-basic.md) · [7-Segment](seven-seg-basic.md) · [UI (LVGL)](ui-basic.md)
 
 -   :material-gesture-tap-button:{ .lg .middle } **Input**
 
