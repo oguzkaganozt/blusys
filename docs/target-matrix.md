@@ -63,6 +63,14 @@ Unsupported modules return `BLUSYS_ERR_NOT_SUPPORTED` at runtime. Use `blusys_ta
 - **`ui`** — additionally requires `espressif/lvgl` managed component in the project's `idf_component.yml`
 - **`ulp`** — additionally requires `CONFIG_ULP_COPROC_ENABLED=y`, `CONFIG_ULP_COPROC_TYPE_FSM=y`, and reserved ULP RTC memory in sdkconfig
 
+## Deferred Modules
+
+These modules are planned but deferred because they are not supported on any current Blusys target.
+
+| Module | Required Hardware | Supported Chips (ESP-IDF) | Status |
+|--------|-------------------|---------------------------|--------|
+| `ana_cmpr` | Analog comparator (`SOC_ANA_CMPR_SUPPORTED`) | ESP32-C5, ESP32-H2, ESP32-P4, ESP32-C61 | Deferred — revisit when a supported target is added |
+
 ## Intentionally Out of Scope
 
 - Advanced I2S modes beyond standard TX/RX

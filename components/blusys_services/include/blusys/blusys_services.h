@@ -28,6 +28,7 @@ extern "C" {
 #include "blusys/connectivity/espnow.h"
 #include "blusys/connectivity/mdns.h"
 #include "blusys/connectivity/wifi.h"
+#include "blusys/connectivity/wifi_mesh.h"
 #include "blusys/connectivity/wifi_prov.h"
 
 /* protocol */

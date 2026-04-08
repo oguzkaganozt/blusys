@@ -92,9 +92,9 @@ Application building blocks — use these for common tasks so you can focus on y
 
     ---
 
-    WiFi, Bluetooth, BLE, ESP-NOW, and network discovery.
+    WiFi, Bluetooth, BLE, ESP-NOW, mesh networking, and network discovery.
 
-    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [WiFi Provisioning](wifi-prov-basic.md) · [ESP-NOW](espnow-basic.md) · [Bluetooth](bluetooth-basic.md) · [BLE GATT](ble_gatt-basic.md) · [mDNS](mdns-basic.md)
+    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [WiFi Provisioning](wifi-prov-basic.md) · [WiFi Mesh](wifi-mesh-basic.md) · [ESP-NOW](espnow-basic.md) · [Bluetooth](bluetooth-basic.md) · [BLE GATT](ble_gatt-basic.md) · [mDNS](mdns-basic.md)
 
 -   :material-swap-vertical:{ .lg .middle } **Protocol**
 

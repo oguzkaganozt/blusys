@@ -65,12 +65,12 @@ Production essentials and standalone CLI.
 Advanced peripherals, sensor drivers, and architecture improvements.
 
 - status: `in_progress`
-- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages), `usb_host`, `usb_device`, `usb_hid`, `gpio_expander`, `efuse`, `ulp`
+- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages), `usb_host`, `usb_device`, `usb_hid`, `gpio_expander`, `efuse`, `ulp`, `wifi_mesh`
 - planned:
-  1. `ana_cmpr` — analog signal comparison (C3, S3 only)
-  2. `ethernet` — wired networking (SPI W5500, or native EMAC on ESP32)
-  3. `wifi_mesh` — lightweight mesh networking via `esp_mesh_lite`
-  4. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
+  1. `ethernet` — wired networking (SPI W5500, or native EMAC on ESP32)
+  2. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
+- deferred:
+  - `ana_cmpr` — deferred: `SOC_ANA_CMPR_SUPPORTED` is not set for ESP32, ESP32-C3, or ESP32-S3; supported only on ESP32-C5, ESP32-H2, ESP32-P4, ESP32-C61; revisit when a supported target is added to Blusys
 
 ## Milestones
 
@@ -87,6 +87,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 
 ## Recent Work
 
+- added `wifi_mesh` connectivity service: self-organizing multi-hop mesh via ESP-IDF `esp_mesh`; singleton pattern, event callbacks (started, stopped, parent/child connect/disconnect, got_ip), blocking send/recv API with MAC addressing, `is_root()` and `get_layer()` helpers; gated by `SOC_WIFI_SUPPORTED`
 - added `usb_host` HAL module: USB OTG host lifecycle and device enumeration (ESP32-S3 only); singleton pattern, daemon + client FreeRTOS tasks, VID/PID connect/disconnect callback
 - added `usb_device` HAL module: USB device mode via TinyUSB (optional managed component); CDC ACM echo and HID report send; SOC guard + BLUSYS_HAS_TINYUSB compile-time guard
 - added `usb_hid` service module: HID input with dual transport — USB OTG host via `usb_host_hid` (S3 only) and BLE HOGP central via NimBLE (all targets); boot-protocol keyboard/mouse parsing, raw report fallback, BLE device name filter
@@ -148,7 +149,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 **input:** `blusys_button_*`, `blusys_encoder_*`, `blusys_usb_hid_*`
 **sensor:** `blusys_dht_*`
 **actuator:** `blusys_buzzer_*`
-**connectivity:** `blusys_wifi_*`, `blusys_wifi_prov_*`, `blusys_espnow_*`, `blusys_bluetooth_*`, `blusys_ble_gatt_*`, `blusys_mdns_*`
+**connectivity:** `blusys_wifi_*`, `blusys_wifi_prov_*`, `blusys_wifi_mesh_*`, `blusys_espnow_*`, `blusys_bluetooth_*`, `blusys_ble_gatt_*`, `blusys_mdns_*`
 **protocol:** `blusys_mqtt_*`, `blusys_http_client_*`, `blusys_http_server_*`, `blusys_ws_client_*`
 **system:** `blusys_fs_*`, `blusys_fatfs_*`, `blusys_console_*`, `blusys_pm_*`, `blusys_sntp_*`, `blusys_ota_*`, `blusys_local_ctrl_*`
 
@@ -177,6 +178,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - `efuse` module: pending hardware smoke test (identity and security-state spot-check)
 - `ulp` module: pending hardware smoke test (ESP32 and ESP32-S3, GPIO level wake)
 - `local_ctrl` module: pending hardware smoke test (browser UI, action endpoints, WiFi reconnect behavior)
+- `wifi_mesh` module: pending hardware smoke test (two-node mesh, root election, layer reporting)
 
 ## Environment Notes
 
@@ -190,4 +192,4 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 2. Hardware smoke test `gpio_expander` module (PCF8574, MCP23017)
 3. Hardware smoke test `efuse` module (compare MAC/security state with board tooling)
 4. Hardware smoke test `ulp` module (ESP32, ESP32-S3)
-5. Continue V5 planned modules (`ana_cmpr`, `ethernet`, …)
+5. Continue V5 planned modules (`ethernet`, …)

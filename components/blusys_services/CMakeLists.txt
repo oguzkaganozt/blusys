@@ -18,6 +18,7 @@ set(blusys_services_sources
     src/connectivity/espnow.c
     src/connectivity/mdns.c
     src/connectivity/wifi.c
+    src/connectivity/wifi_mesh.c
     src/connectivity/wifi_prov.c
     # protocol
     src/protocol/http_client.c

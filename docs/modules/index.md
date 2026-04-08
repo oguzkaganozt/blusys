@@ -74,7 +74,7 @@ Application building blocks — higher-level modules for common tasks.
 
     ---
 
-    [:octicons-arrow-right-24: WiFi](wifi.md) · [WiFi Provisioning](wifi_prov.md) · [ESP-NOW](espnow.md) · [Bluetooth](bluetooth.md) · [BLE GATT](ble_gatt.md) · [mDNS](mdns.md)
+    [:octicons-arrow-right-24: WiFi](wifi.md) · [WiFi Provisioning](wifi_prov.md) · [WiFi Mesh](wifi_mesh.md) · [ESP-NOW](espnow.md) · [Bluetooth](bluetooth.md) · [BLE GATT](ble_gatt.md) · [mDNS](mdns.md)
 
 -   :material-swap-vertical:{ .lg .middle } **Protocol**
 

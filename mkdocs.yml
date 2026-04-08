@@ -116,6 +116,7 @@ nav:
           - Connectivity:
               - WiFi: guides/wifi-connect.md
               - WiFi Provisioning: guides/wifi-prov-basic.md
+              - WiFi Mesh: guides/wifi-mesh-basic.md
               - ESP-NOW: guides/espnow-basic.md
               - Bluetooth: guides/bluetooth-basic.md
               - BLE GATT: guides/ble_gatt-basic.md
@@ -192,6 +193,7 @@ nav:
           - Connectivity:
               - WiFi: modules/wifi.md
               - WiFi Provisioning: modules/wifi_prov.md
+              - WiFi Mesh: modules/wifi_mesh.md
               - ESP-NOW: modules/espnow.md
               - Bluetooth: modules/bluetooth.md
               - BLE GATT: modules/ble_gatt.md

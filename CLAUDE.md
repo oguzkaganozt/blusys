@@ -122,6 +122,12 @@ Modules in `BLUSYS_BASE_FEATURE_MASK` are available on all three targets. Target
 | `usb_host`   |       |          | ✓        |
 | `usb_device` |       |          | ✓        |
 
+**Deferred modules (not supported on any current target):**
+
+| Module       | Reason |
+|--------------|--------|
+| `ana_cmpr`   | `SOC_ANA_CMPR_SUPPORTED` is false for ESP32, ESP32-C3, and ESP32-S3; only available on ESP32-C5, ESP32-H2, ESP32-P4, ESP32-C61 |
+
 All other modules (gpio, gpio_expander, uart, i2c, spi, pwm, adc, timer, rmt, twai, i2s, wdt, sleep, sdm, i2c_slave, spi_slave, i2s_rx, rmt_rx, one_wire, wifi, nvs, http_client, mqtt, http_server, ota, sntp, mdns, bluetooth, fs, espnow, ble_gatt, button, led_strip, console, fatfs, sd_spi, power_mgmt, ws_client, wifi_prov, lcd, encoder, buzzer, seven_seg, dht, usb_hid) are in `BLUSYS_BASE_FEATURE_MASK` and available on all targets.
 
 **Combined headers:** `i2s.h` declares both `blusys_i2s_tx_*` and `blusys_i2s_rx_*`. `rmt.h` declares both `blusys_rmt_*` (TX) and `blusys_rmt_rx_*`. Their implementations live in separate `.c` files (`i2s.c` / `i2s_rx.c`, `rmt.c` / `rmt_rx.c`).
