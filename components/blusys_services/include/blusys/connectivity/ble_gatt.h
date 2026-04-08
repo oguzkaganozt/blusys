@@ -99,7 +99,7 @@ typedef struct {
  * @param config    Server configuration. Must remain valid for the lifetime of the handle.
  * @param out_handle Receives the allocated handle on success.
  * @return BLUSYS_OK on success, BLUSYS_ERR_INVALID_ARG for invalid configuration,
- *         BLUSYS_ERR_INVALID_STATE if already open,
+ *         BLUSYS_ERR_INVALID_STATE if already open or another BLE-owning module is already open,
  *         BLUSYS_ERR_NO_MEM, BLUSYS_ERR_TIMEOUT, or BLUSYS_ERR_INTERNAL on failure.
  */
 blusys_err_t blusys_ble_gatt_open(const blusys_ble_gatt_config_t *config,

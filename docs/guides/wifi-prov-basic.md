@@ -35,11 +35,6 @@ void app_main(void)
 {
     s_done = xEventGroupCreate();
 
-    if (blusys_wifi_prov_is_provisioned()) {
-        printf("Already provisioned.\n");
-        return;
-    }
-
     blusys_wifi_prov_t *prov;
     blusys_wifi_prov_config_t cfg = {
         .transport    = BLUSYS_WIFI_PROV_TRANSPORT_BLE,
@@ -48,6 +43,13 @@ void app_main(void)
         .on_event     = on_event,
     };
     blusys_wifi_prov_open(&cfg, &prov);
+
+    /* is_provisioned() requires the manager to be initialized — call after open() */
+    if (blusys_wifi_prov_is_provisioned()) {
+        printf("Already provisioned.\n");
+        blusys_wifi_prov_close(prov);
+        return;
+    }
 
     char qr[256];
     blusys_wifi_prov_get_qr_payload(prov, qr, sizeof(qr));
@@ -64,7 +66,7 @@ void app_main(void)
 
 ## APIs Used
 
-- `blusys_wifi_prov_is_provisioned()` — checks NVS for stored credentials; no handle required
+- `blusys_wifi_prov_is_provisioned()` — queries the provisioning manager for stored credentials; requires the manager to be initialized (call after `open()`)
 - `blusys_wifi_prov_open()` — initializes the WiFi stack and provisioning manager
 - `blusys_wifi_prov_get_qr_payload()` — writes the JSON payload for the mobile app QR scanner
 - `blusys_wifi_prov_start()` — starts advertising / starts the SoftAP

@@ -128,7 +128,7 @@ The `examples/ble_gatt_basic/` example provides `sdkconfig.defaults` with these 
 
 ## Common Mistakes
 
-- **Forgetting `val_handle_out`** — if a characteristic has `F_NOTIFY` set, `val_handle_out` must point to a valid `uint16_t`. If it is NULL, the characteristic handle is not recorded and `blusys_ble_gatt_notify()` will produce incorrect results.
+- **Forgetting `val_handle_out`** — if a characteristic has `F_NOTIFY` set, `val_handle_out` must point to a valid `uint16_t`. If it is NULL, `blusys_ble_gatt_open()` returns `BLUSYS_ERR_INVALID_ARG`.
 - **Wrong UUID byte order** — the most common mistake. The `uuid[16]` array is little-endian: `uuid[0]` is the LSB of the last UUID group, not the first. Use the conversion method above.
 - **Calling `close()` from a callback** — `read_cb`, `write_cb`, and `conn_cb` run from the NimBLE host task. Calling `blusys_ble_gatt_close()` from within them will deadlock. Signal a FreeRTOS task or event group instead.
 - **Using another BLE-owning service at the same time** — `blusys_ble_gatt`, `blusys_bluetooth`, BLE `blusys_usb_hid`, and BLE `blusys_wifi_prov` are mutually exclusive.

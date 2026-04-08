@@ -196,6 +196,25 @@ Controls the backlight. The current implementation uses GPIO on/off: any `percen
 
 - `percent` — 0 to 100
 
+---
+
+### `blusys_lcd_get_dimensions`
+
+```c
+blusys_err_t blusys_lcd_get_dimensions(blusys_lcd_t *lcd,
+                                       uint32_t *width, uint32_t *height);
+```
+
+Returns the panel dimensions configured at open time. Either `width` or `height` may be NULL if only one dimension is needed.
+
+**Parameters:**
+
+- `lcd` — handle returned by `blusys_lcd_open()`
+- `width` — receives the panel width in pixels; may be NULL
+- `height` — receives the panel height in pixels; may be NULL
+
+**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_ARG` if `lcd` is NULL or both `width` and `height` are NULL.
+
 ## Lifecycle
 
 1. Fill a `blusys_lcd_config_t` with driver type, dimensions, and transport pins

@@ -168,7 +168,7 @@ blusys_err_t blusys_wifi_prov_reset(void);
 
 Clears stored WiFi provisioning credentials via the ESP-IDF provisioning manager. After the manager is initialized again, `blusys_wifi_prov_is_provisioned()` returns `false`.
 
-**Returns:** `BLUSYS_OK` on success.
+**Returns:** `BLUSYS_OK` on success, or a translated ESP-IDF error on failure.
 
 ## Lifecycle
 
