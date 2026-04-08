@@ -13,6 +13,7 @@
 #include "soc/soc_caps.h"
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
+#include "driver/spi_common.h"
 #include "driver/i2c_master.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_interface.h"
@@ -82,15 +83,12 @@ static blusys_st7735_panel_t *blusys_st7735_from_panel(esp_lcd_panel_t *panel)
 
 static int blusys_st7735_effective_x_gap(const blusys_st7735_panel_t *panel)
 {
-    /* ST7735 modules commonly keep their column/row start offsets attached to
-     * the unswapped glass axes, so MV rotation needs the configured gaps to
-     * swap with the logical axes during address-window setup. */
-    return (panel->madctl_val & LCD_CMD_MV_BIT) ? panel->y_gap : panel->x_gap;
+    return panel->x_gap;
 }
 
 static int blusys_st7735_effective_y_gap(const blusys_st7735_panel_t *panel)
 {
-    return (panel->madctl_val & LCD_CMD_MV_BIT) ? panel->x_gap : panel->y_gap;
+    return panel->y_gap;
 }
 
 static esp_err_t blusys_st7735_panel_del(esp_lcd_panel_t *panel)
@@ -224,43 +222,77 @@ static esp_err_t blusys_st7735_panel_draw_bitmap(esp_lcd_panel_t *panel,
     esp_err_t esp_err;
     int x_gap = blusys_st7735_effective_x_gap(st7735);
     int y_gap = blusys_st7735_effective_y_gap(st7735);
-    size_t len;
+    size_t row_bytes;
+    size_t max_rows_per_tx;
+    const uint8_t *src = color_data;
 
     x_start += x_gap;
     x_end += x_gap;
     y_start += y_gap;
     y_end += y_gap;
 
-    esp_err = esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_COLMOD,
-                                        &st7735->colmod_val, 1);
-    if (esp_err != ESP_OK) {
-        return esp_err;
+    row_bytes = (size_t)(x_end - x_start) * st7735->fb_bits_per_pixel / 8u;
+    max_rows_per_tx = row_bytes > 0u ? (size_t)(SPI_MAX_DMA_LEN / row_bytes) : 0u;
+    if (max_rows_per_tx == 0u) {
+        max_rows_per_tx = 1u;
     }
 
-    esp_err = esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_CASET, (uint8_t[]) {
-        (x_start >> 8) & 0xFF,
-        x_start & 0xFF,
-        ((x_end - 1) >> 8) & 0xFF,
-        (x_end - 1) & 0xFF,
-    }, 4);
-    if (esp_err != ESP_OK) {
-        return esp_err;
+    /* Large ST7735 bitmap writes on esp32c3 become unreliable once the SPI
+     * master has to chain multiple DMA descriptors for a single RAMWR burst.
+     * Split them into row-aligned chunks that stay within one SPI DMA block,
+     * which keeps LVGL's fast band flush path correct while remaining much
+     * faster than one-row writes. */
+    for (int row = 0; row < (y_end - y_start); row += (int)max_rows_per_tx) {
+        int chunk_rows = (y_end - y_start) - row;
+        size_t len;
+
+        if (chunk_rows > (int)max_rows_per_tx) {
+            chunk_rows = (int)max_rows_per_tx;
+        }
+
+        /* Re-assert the pixel format on every draw. This looks redundant because
+         * COLMOD is also set in panel_init, but the earlier investigation showed
+         * that without it the ST7735 will occasionally drop back to a different
+         * pixel format mid-session, producing sheared/corrupted output when
+         * several bitmap writes arrive back-to-back (e.g. from the LVGL flush
+         * callback). Do not remove. */
+        esp_err = esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_COLMOD,
+                                            &st7735->colmod_val, 1);
+        if (esp_err != ESP_OK) {
+            return esp_err;
+        }
+
+        esp_err = esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_CASET, (uint8_t[]) {
+            (x_start >> 8) & 0xFF,
+            x_start & 0xFF,
+            ((x_end - 1) >> 8) & 0xFF,
+            (x_end - 1) & 0xFF,
+        }, 4);
+        if (esp_err != ESP_OK) {
+            return esp_err;
+        }
+
+        esp_err = esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_RASET, (uint8_t[]) {
+            ((y_start + row) >> 8) & 0xFF,
+            (y_start + row) & 0xFF,
+            ((y_start + row + chunk_rows - 1) >> 8) & 0xFF,
+            (y_start + row + chunk_rows - 1) & 0xFF,
+        }, 4);
+        if (esp_err != ESP_OK) {
+            return esp_err;
+        }
+
+        len = row_bytes * (size_t)chunk_rows;
+
+        esp_err = esp_lcd_panel_io_tx_color(io_handle, LCD_CMD_RAMWR, src, len);
+        if (esp_err != ESP_OK) {
+            return esp_err;
+        }
+
+        src += len;
     }
 
-    esp_err = esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_RASET, (uint8_t[]) {
-        (y_start >> 8) & 0xFF,
-        y_start & 0xFF,
-        ((y_end - 1) >> 8) & 0xFF,
-        (y_end - 1) & 0xFF,
-    }, 4);
-    if (esp_err != ESP_OK) {
-        return esp_err;
-    }
-
-    len = (size_t)(x_end - x_start) * (size_t)(y_end - y_start) *
-          st7735->fb_bits_per_pixel / 8u;
-
-    return esp_lcd_panel_io_tx_color(io_handle, LCD_CMD_RAMWR, color_data, len);
+    return ESP_OK;
 }
 
 static esp_err_t blusys_st7735_panel_invert_color(esp_lcd_panel_t *panel,
@@ -480,6 +512,13 @@ static blusys_err_t blusys_lcd_open_spi(const blusys_lcd_config_t *config,
     esp_err_t esp_err;
     blusys_err_t err;
     spi_host_device_t host = blusys_lcd_spi_bus_to_host(config->spi.bus);
+    /* Size the SPI bus so a full-frame transfer fits for small panels (e.g.
+     * ST7735 160x128 = 40 KB) while still keeping at least the legacy 80-line
+     * budget for taller displays. This is what lets the LVGL flush callback
+     * push a whole dirty area in a single DMA transaction instead of slicing
+     * it into per-row writes. */
+    uint32_t xfer_lines = config->height > 80u ? config->height : 80u;
+    uint32_t xfer_bytes = (config->width * xfer_lines * config->bits_per_pixel + 7u) / 8u;
 
     spi_bus_config_t bus_cfg = {
         .mosi_io_num   = config->spi.mosi_pin,
@@ -487,7 +526,7 @@ static blusys_err_t blusys_lcd_open_spi(const blusys_lcd_config_t *config,
         .sclk_io_num   = config->spi.sclk_pin,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = (int)((config->width * 80u * config->bits_per_pixel + 7u) / 8u),
+        .max_transfer_sz = (int)xfer_bytes,
     };
 
     esp_err = spi_bus_initialize(host, &bus_cfg, SPI_DMA_CH_AUTO);
