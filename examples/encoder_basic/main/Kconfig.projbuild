@@ -4,21 +4,21 @@ config BLUSYS_ENCODER_BASIC_CLK_PIN
     int "Encoder CLK (A) GPIO pin"
     range 0 48
     default 16 if IDF_TARGET_ESP32
-    default 2 if IDF_TARGET_ESP32C3
+    default 1 if IDF_TARGET_ESP32C3
     default 5 if IDF_TARGET_ESP32S3
 
 config BLUSYS_ENCODER_BASIC_DT_PIN
     int "Encoder DT (B) GPIO pin"
     range 0 48
     default 17 if IDF_TARGET_ESP32
-    default 3 if IDF_TARGET_ESP32C3
+    default 0 if IDF_TARGET_ESP32C3
     default 6 if IDF_TARGET_ESP32S3
 
 config BLUSYS_ENCODER_BASIC_SW_PIN
     int "Encoder SW (button) GPIO pin (-1 to disable)"
     range -1 48
     default 18 if IDF_TARGET_ESP32
-    default 4 if IDF_TARGET_ESP32C3
+    default -1 if IDF_TARGET_ESP32C3
     default 7 if IDF_TARGET_ESP32S3
 
 endmenu

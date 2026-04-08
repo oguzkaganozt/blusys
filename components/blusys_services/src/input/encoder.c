@@ -386,11 +386,27 @@ static blusys_err_t encoder_gpio_init(blusys_encoder_t *enc)
         return err;
     }
 
+    err = blusys_gpio_set_interrupt(enc->dt_pin, BLUSYS_GPIO_INTERRUPT_ANY_EDGE);
+    if (err != BLUSYS_OK) {
+        blusys_gpio_set_callback(enc->clk_pin, NULL, NULL);
+        blusys_gpio_set_interrupt(enc->clk_pin, BLUSYS_GPIO_INTERRUPT_DISABLED);
+        return err;
+    }
+
+    err = blusys_gpio_set_callback(enc->dt_pin, encoder_gpio_isr_cb, enc);
+    if (err != BLUSYS_OK) {
+        blusys_gpio_set_interrupt(enc->dt_pin, BLUSYS_GPIO_INTERRUPT_DISABLED);
+        blusys_gpio_set_callback(enc->clk_pin, NULL, NULL);
+        blusys_gpio_set_interrupt(enc->clk_pin, BLUSYS_GPIO_INTERRUPT_DISABLED);
+        return err;
+    }
+
     return BLUSYS_OK;
 }
 
 static void encoder_gpio_deinit(blusys_encoder_t *enc)
 {
+    blusys_gpio_set_callback(enc->dt_pin, NULL, NULL);
     blusys_gpio_set_callback(enc->clk_pin, NULL, NULL);
 }
 

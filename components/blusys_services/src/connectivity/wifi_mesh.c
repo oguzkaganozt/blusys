@@ -103,7 +103,7 @@ static void mesh_event_handler(void *arg, esp_event_base_t base,
         case MESH_EVENT_PARENT_DISCONNECTED: {
             const mesh_event_disconnected_t *evt = (const mesh_event_disconnected_t *)data;
             if (evt != NULL) {
-                memcpy(info.peer.addr, evt->disconnected.bssid, 6);
+                memcpy(info.peer.addr, evt->bssid, 6);
             }
             emit_event(h, BLUSYS_WIFI_MESH_EVENT_PARENT_DISCONNECTED, &info);
             break;
@@ -112,7 +112,7 @@ static void mesh_event_handler(void *arg, esp_event_base_t base,
         case MESH_EVENT_CHILD_CONNECTED: {
             const mesh_event_child_connected_t *evt = (const mesh_event_child_connected_t *)data;
             if (evt != NULL) {
-                memcpy(info.peer.addr, evt->child_connected.mac, 6);
+                memcpy(info.peer.addr, evt->mac, 6);
             }
             emit_event(h, BLUSYS_WIFI_MESH_EVENT_CHILD_CONNECTED, &info);
             break;
@@ -121,7 +121,7 @@ static void mesh_event_handler(void *arg, esp_event_base_t base,
         case MESH_EVENT_CHILD_DISCONNECTED: {
             const mesh_event_child_disconnected_t *evt = (const mesh_event_child_disconnected_t *)data;
             if (evt != NULL) {
-                memcpy(info.peer.addr, evt->child_disconnected.mac, 6);
+                memcpy(info.peer.addr, evt->mac, 6);
             }
             emit_event(h, BLUSYS_WIFI_MESH_EVENT_CHILD_DISCONNECTED, &info);
             break;
@@ -406,7 +406,7 @@ blusys_err_t blusys_wifi_mesh_recv(blusys_wifi_mesh_t *handle,
     };
 
     int flag = 0;
-    int block_ms = (timeout_ms < 0) ? MESH_TIMEOUT_WAIT_FOREVER : timeout_ms;
+    int block_ms = (timeout_ms < 0) ? (int)portMAX_DELAY : timeout_ms;
 
     esp_err_t esp_err = esp_mesh_recv(&mfrom, &mdata, block_ms, &flag, NULL, 0);
     if (esp_err == ESP_OK) {
@@ -432,8 +432,8 @@ blusys_err_t blusys_wifi_mesh_get_layer(blusys_wifi_mesh_t *handle, int *out_lay
     if ((handle == NULL) || (out_layer == NULL)) {
         return BLUSYS_ERR_INVALID_ARG;
     }
-    esp_err_t esp_err = esp_mesh_get_layer(out_layer);
-    return blusys_translate_esp_err(esp_err);
+    *out_layer = esp_mesh_get_layer();
+    return BLUSYS_OK;
 }
 
 #else /* !SOC_WIFI_SUPPORTED */
