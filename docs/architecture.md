@@ -48,9 +48,10 @@ Application
 
 - foundational: `version`, `error`, `target`, `system`
 - stateless pin API: `gpio`
-- handle-based master/TX APIs: `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`, `rmt`, `i2s`, `twai`, `pcnt`, `dac`, `sdm`, `mcpwm`, `touch`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`
+- handle-based master/TX APIs: `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`, `rmt`, `i2s`, `twai`, `pcnt`, `dac`, `sdm`, `mcpwm`, `touch`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `usb_host`, `usb_device`
 - handle-based slave/RX counterparts: `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
 - storage: `nvs`, `sd_spi`
+- external bus-backed peripherals: `one_wire`, `gpio_expander`
 
 Umbrella header: `#include "blusys/blusys.h"`
 
@@ -58,9 +59,9 @@ Umbrella header: `#include "blusys/blusys.h"`
 
 Services are organized into 7 categories, each with its own subdirectory under `include/blusys/` and `src/`:
 
-- display: `lcd`, `led_strip`
-- input: `button`, `encoder`
-- sensor: *(placeholder for upcoming modules)*
+- display: `lcd`, `led_strip`, `seven_seg`, `ui`
+- input: `button`, `encoder`, `usb_hid`
+- sensor: `dht`
 - actuator: `buzzer`
 - connectivity: `wifi`, `wifi_prov`, `espnow`, `bluetooth`, `ble_gatt`, `mdns`
 - protocol: `mqtt`, `http_client`, `http_server`, `ws_client`

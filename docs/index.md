@@ -41,5 +41,5 @@ A simplified C hardware abstraction layer for ESP32 devices, built on top of ESP
 See [Compatibility](target-matrix.md) for the full per-module support matrix.
 
 !!! info "Current Release"
-    **v4.0.0** — all core, analog, timer, bus, sensor, system, and networking modules are available.
+    **v5.0.0** — 51 modules across HAL and Services, standalone `blusys` CLI, and full docs site.
     See [Roadmap](roadmap.md) for what's planned next.

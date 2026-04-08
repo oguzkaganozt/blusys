@@ -142,7 +142,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 
 ### Services Public API (`components/blusys_services/`)
 
-**display:** `blusys_lcd_*`, `blusys_led_strip_*`, `blusys_seven_seg_*`
+**display:** `blusys_lcd_*`, `blusys_led_strip_*`, `blusys_seven_seg_*`, `blusys_ui_*`
 **input:** `blusys_button_*`, `blusys_encoder_*`, `blusys_usb_hid_*`
 **sensor:** `blusys_dht_*`
 **actuator:** `blusys_buzzer_*`

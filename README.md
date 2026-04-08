@@ -35,7 +35,7 @@ Application
 
 | Category | Modules |
 |---|---|
-| **I/O & Communication** | `gpio`, `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave`, `twai`, `i2s`, `rmt`, `1-wire`, `touch` |
+| **I/O & Communication** | `gpio`, `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave`, `twai`, `i2s`, `i2s_rx`, `rmt`, `rmt_rx`, `one_wire`, `gpio_expander`, `touch`, `usb_host`, `usb_device` |
 | **Analog** | `adc`, `dac`, `sdm`, `pwm` |
 | **Timers & Counters** | `timer`, `pcnt`, `mcpwm` |
 | **Storage** | `nvs`, `sdmmc`, `sd_spi` |
@@ -45,8 +45,9 @@ Application
 
 | Category | Modules |
 |---|---|
-| **Display** | `lcd`, `led_strip` |
-| **Input** | `button`, `encoder` |
+| **Display** | `lcd`, `led_strip`, `seven_seg`, `ui` |
+| **Input** | `button`, `encoder`, `usb_hid` |
+| **Sensor** | `dht` |
 | **Actuator** | `buzzer` |
 | **Connectivity** | `wifi`, `wifi_prov`, `espnow`, `bluetooth`, `ble_gatt`, `mdns` |
 | **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
@@ -81,7 +82,7 @@ mkdocs serve
 
 ## Project Status
 
-**v5.0.0** — 48 modules across HAL and Services, standalone `blusys` CLI, full docs site. See [`PROGRESS.md`](PROGRESS.md) for detailed tracking.
+**v5.0.0** — 51 modules across HAL and Services, standalone `blusys` CLI, full docs site. See [`PROGRESS.md`](PROGRESS.md) for detailed tracking.
 
 ## License
 
