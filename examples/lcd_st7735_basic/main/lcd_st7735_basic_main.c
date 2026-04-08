@@ -9,12 +9,16 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+/* Fallback defaults must be 0 for bool Kconfig symbols, because "not set" in
+ * menuconfig leaves the symbol undefined rather than defining it to 0. If the
+ * fallback defaulted to 1, selecting portrait orientation in menuconfig would
+ * be silently ignored and the example would still compile as landscape. */
 #ifndef CONFIG_BLUSYS_LCD_ST7735_SWAP_XY
-#define CONFIG_BLUSYS_LCD_ST7735_SWAP_XY 1
+#define CONFIG_BLUSYS_LCD_ST7735_SWAP_XY 0
 #endif
 
 #ifndef CONFIG_BLUSYS_LCD_ST7735_MIRROR_X
-#define CONFIG_BLUSYS_LCD_ST7735_MIRROR_X 1
+#define CONFIG_BLUSYS_LCD_ST7735_MIRROR_X 0
 #endif
 
 #ifndef CONFIG_BLUSYS_LCD_ST7735_MIRROR_Y

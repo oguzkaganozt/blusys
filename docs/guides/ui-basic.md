@@ -68,7 +68,7 @@ void app_main(void)
 
 For common 128x160 ST7735 portrait modules, `swap_xy = true` and `mirror_x = true` is a good starting point. When `swap_xy = true`, set `width` and `height` to the logical rotated size (`160x128` here). If text is mirrored or black/white are inverted on your module, adjust `mirror_x`, `mirror_y`, or `invert_color`.
 
-For small SPI TFTs such as 128x160 ST7735 panels, keep `full_refresh = false` unless you have hardware-validated the full-screen path on your module. The default partial mode is still the only hardware-validated safe path at the moment. It flushes LVGL output conservatively row-by-row, which is slower on full-screen redraws but avoids the corruption seen with the current accelerated path experiments.
+For small SPI TFTs such as 128x160 ST7735 panels, keep `full_refresh = false` unless you have hardware-validated the full-screen path on your module. The default partial mode is the recommended path: it copies each LVGL flush area into a DMA-safe scratch buffer and sends it to the LCD in packed multi-row bands, which avoids the corruption seen when DMAing directly from LVGL-owned buffers.
 
 ## APIs Used
 

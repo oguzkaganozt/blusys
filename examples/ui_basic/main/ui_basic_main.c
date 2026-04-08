@@ -2,17 +2,13 @@
 
 #include "blusys/blusys_all.h"
 #include "lvgl.h"
-#include "sdkconfig.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 /* Kconfig `bool` symbols are #defined to 1 when selected and undefined when
- * not. These fallback guards let the example build even if the Kconfig symbol
- * is missing entirely — they MUST default to 0 so that "not set" in menuconfig
- * round-trips to 0 in C, matching the user's intent. A previous version of
- * this file defaulted SWAP_XY/MIRROR_X to 1, which silently overrode any
- * attempt to select portrait orientation. */
+ * not. These fallback guards must default to 0 so that "not set" in menuconfig
+ * round-trips to 0 in C, matching the user's intent. */
 #ifndef CONFIG_BLUSYS_UI_SWAP_XY
 #define CONFIG_BLUSYS_UI_SWAP_XY 0
 #endif
@@ -45,10 +41,10 @@
 #define CONFIG_BLUSYS_UI_BUF_LINES 20
 #endif
 
-#if !defined(CONFIG_BLUSYS_UI_DIAG_SCENE_LABEL_ONLY) && \
-    !defined(CONFIG_BLUSYS_UI_DIAG_SCENE_FRAME_ONLY) && \
-    !defined(CONFIG_BLUSYS_UI_DIAG_SCENE_FULL)
-#define CONFIG_BLUSYS_UI_DIAG_SCENE_FULL 1
+#if !defined(CONFIG_BLUSYS_UI_SCENE_LABEL_ONLY) && \
+    !defined(CONFIG_BLUSYS_UI_SCENE_FRAME_ONLY) && \
+    !defined(CONFIG_BLUSYS_UI_SCENE_FULL)
+#define CONFIG_BLUSYS_UI_SCENE_FULL 1
 #endif
 
 #if CONFIG_BLUSYS_UI_SWAP_XY
@@ -97,32 +93,6 @@ static void create_debug_overlay(lv_obj_t *scr)
                       lv_palette_main(LV_PALETTE_YELLOW));
 }
 
-static const char *scene_name(void)
-{
-#if defined(CONFIG_BLUSYS_UI_DIAG_SCENE_LABEL_ONLY)
-    return "label_only";
-#elif defined(CONFIG_BLUSYS_UI_DIAG_SCENE_FRAME_ONLY)
-    return "frame_only";
-#else
-    return "full";
-#endif
-}
-
-static const char *flush_strategy_name(void)
-{
-#if defined(CONFIG_BLUSYS_UI_DIAG_FLUSH_ROW_PACKED)
-    return "row_packed";
-#elif defined(CONFIG_BLUSYS_UI_DIAG_FLUSH_BAND_STRIDE)
-    return "band_stride";
-#elif defined(CONFIG_BLUSYS_UI_DIAG_FLUSH_BAND_PACKED)
-    return "band_packed";
-#elif defined(CONFIG_BLUSYS_UI_DIAG_FLUSH_DIRECT_PACKED)
-    return "direct_packed";
-#else
-    return "row_stride";
-#endif
-}
-
 void app_main(void)
 {
     blusys_lcd_t *lcd = NULL;
@@ -131,8 +101,6 @@ void app_main(void)
 
     printf("blusys ui_basic\n");
     printf("target: %s\n", blusys_target_name());
-    printf("scene: %s\n", scene_name());
-    printf("flush_strategy: %s\n", flush_strategy_name());
     printf("buf_lines: %d\n", CONFIG_BLUSYS_UI_BUF_LINES);
 
     /* 1. Open the LCD (hardware init) */
@@ -198,11 +166,11 @@ void app_main(void)
     lv_obj_set_style_bg_color(scr, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
 
-#if defined(CONFIG_BLUSYS_UI_DIAG_SCENE_FRAME_ONLY) || defined(CONFIG_BLUSYS_UI_DIAG_SCENE_FULL)
+#if defined(CONFIG_BLUSYS_UI_SCENE_FRAME_ONLY) || defined(CONFIG_BLUSYS_UI_SCENE_FULL)
     create_debug_overlay(scr);
 #endif
 
-#if defined(CONFIG_BLUSYS_UI_DIAG_SCENE_LABEL_ONLY) || defined(CONFIG_BLUSYS_UI_DIAG_SCENE_FULL)
+#if defined(CONFIG_BLUSYS_UI_SCENE_LABEL_ONLY) || defined(CONFIG_BLUSYS_UI_SCENE_FULL)
     lv_obj_t *label = lv_label_create(scr);
     lv_label_set_text(label, "BluPanda");
     lv_obj_set_style_text_color(label, lv_color_white(), 0);

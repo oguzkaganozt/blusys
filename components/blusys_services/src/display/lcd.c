@@ -292,6 +292,17 @@ static esp_err_t blusys_st7735_panel_draw_bitmap(esp_lcd_panel_t *panel,
         src += len;
     }
 
+    /* Final sync transaction: acquiring the SPI bus here waits for the last
+     * async RAMWR DMA to finish, ensuring all color_done callbacks have fired
+     * before this function returns.  Without this, callers that reuse the
+     * source buffer (e.g. the LVGL flush scratch buffer) on the very next
+     * call can corrupt the tail of a multi-chunk transfer. */
+    esp_err = esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_COLMOD,
+                                        &st7735->colmod_val, 1);
+    if (esp_err != ESP_OK) {
+        return esp_err;
+    }
+
     return ESP_OK;
 }
 
@@ -823,11 +834,6 @@ blusys_err_t blusys_lcd_draw_bitmap(blusys_lcd_t *lcd,
         return err;
     }
 
-    if (lcd->wait_color_trans_done && (lcd->color_done_sem != NULL)) {
-        while (xSemaphoreTake(lcd->color_done_sem, 0) == pdTRUE) {
-        }
-    }
-
     esp_err = esp_lcd_panel_draw_bitmap(lcd->panel_handle,
                                         x_start, y_start,
                                         x_end, y_end,
@@ -838,6 +844,8 @@ blusys_err_t blusys_lcd_draw_bitmap(blusys_lcd_t *lcd,
         if (xSemaphoreTake(lcd->color_done_sem, portMAX_DELAY) != pdTRUE) {
             err = BLUSYS_ERR_TIMEOUT;
         } else {
+            /* Drain callbacks from any remaining chunks in a multi-chunk transfer. */
+            while (xSemaphoreTake(lcd->color_done_sem, 0) == pdTRUE) {}
             err = BLUSYS_OK;
         }
     } else {

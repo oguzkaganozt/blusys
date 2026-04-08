@@ -45,7 +45,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
                              blusys_ui_t **out_ui);
 ```
 
-Initialises LVGL, allocates draw buffers, registers the LCD flush callback, and starts the render task. By default the UI uses two partial buffers of `buf_lines` rows each and flushes them conservatively row-by-row. When `full_refresh = true`, it allocates one full-screen render buffer plus a temporary band buffer. That full-screen SPI path is still experimental.
+Initialises LVGL, allocates draw buffers, registers the LCD flush callback, and starts the render task. By default the UI uses two partial buffers of `buf_lines` rows each, copies each LVGL flush area into a DMA-safe scratch buffer, and pushes it to the LCD in packed multi-row bands. When `full_refresh = true`, it allocates one full-screen render buffer but still flushes through the same scratch-buffer band path. That full-screen SPI path is still experimental.
 
 | Parameter | Description |
 | --- | --- |
@@ -96,9 +96,9 @@ The render task calls `lv_timer_handler()` in a loop. All other tasks must brack
 
 - Only one UI instance at a time (singleton).
 - Requires `espressif/lvgl` managed component.
-- The flush callback byte-swaps RGB565 pixels for SPI LCD compatibility. If your LCD driver handles byte order natively, this swap is redundant but harmless.
+- The flush callback byte-swaps RGB565 pixels in its temporary scratch buffer for SPI LCD compatibility.
 - Draw buffer size is `buf_lines × stride` bytes, allocated twice (double buffering). For a 320-pixel-wide display at 20 lines, each buffer is 320 × 20 × 2 = 12 800 bytes (25 600 bytes total).
-- When `full_refresh` is enabled, `buf_lines` is ignored and the UI allocates one screen-sized render buffer plus a temporary flush band buffer. This uses more RAM and should be treated as experimental on SPI LCDs until validated on your panel.
+- When `full_refresh` is enabled, `buf_lines` is ignored and the UI allocates one screen-sized render buffer plus the same temporary flush band buffer. This uses more RAM and should be treated as experimental on SPI LCDs until validated on your panel.
 
 ## Example App
 

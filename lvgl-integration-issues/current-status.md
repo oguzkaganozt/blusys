@@ -1,240 +1,32 @@
-# LVGL Integration Current Status
+# LVGL Integration — Resolved
 
-This file is the canonical current-state summary for the ST7735 + LVGL investigation.
-Older split notes in this directory were consolidated into this file and removed.
+The ST7735 + LVGL corruption on ESP32-C3 is fixed. This file records the final root-cause analysis and solution for future reference.
 
-## Scope
+## Root Causes
 
-This investigation is about the LVGL UI path in `examples/ui_basic/` on the ESP32-C3 + ST7735 setup.
-The raw LCD path in `examples/lcd_st7735_basic/` is now mainly a known-good reference for what fast and correct drawing should look like.
+Two independent bugs combined to produce the corruption:
 
-## Relevant Components
+### 1. SPI DMA descriptor chaining (lcd.c)
 
-- `components/blusys_services/src/display/lcd.c`
-  The hardware-facing LCD service.
-- `components/blusys_services/src/display/ui.c`
-  The LVGL integration layer on top of an already-opened LCD handle.
-- `examples/lcd_st7735_basic/`
-  Raw LCD validation example.
-- `examples/ui_basic/`
-  LVGL validation example.
+ESP-IDF's SPI master driver requires a single DMA descriptor per transfer.  When a `RAMWR` payload exceeds `SPI_MAX_DMA_LEN` bytes the driver internally chains descriptors, and the ST7735 would misinterpret the chained burst as separate commands, producing sheared or duplicated output.
 
-## Architecture Summary
+**Fix:** `blusys_st7735_panel_draw_bitmap()` now splits large bitmaps into row-aligned chunks that fit within `SPI_MAX_DMA_LEN`. Each chunk gets its own `COLMOD` + `CASET` + `RASET` + `RAMWR` sequence.
 
-- The LCD service owns the panel driver, transport, orientation, inversion, and bitmap writes.
-- The UI service owns LVGL initialization, draw buffers, the render task, and the flush callback.
-- Applications open the LCD first, then pass the LCD handle into `blusys_ui_open()`.
-- LVGL renders into memory buffers, and `flush_cb()` forwards those pixels to `blusys_lcd_draw_bitmap()`.
+### 2. LVGL buffer stride vs. packed area width (ui.c)
 
-## What Is Already Fixed
+LVGL's draw buffer has a `stride` that is often wider than the dirty area being flushed. The previous flush callback read row data using `packed_row_bytes` as the row pitch, which skipped bytes at the end of each row and fed misaligned pixel data to the LCD.
 
-The major correctness bugs from the earlier rounds are fixed:
+**Fix:** `flush_cb()` now reads rows using `draw_buf->header.stride` as the source pitch, copies them packed (area-width only) into a dedicated DMA-safe scratch buffer, byte-swaps, and calls `blusys_lcd_draw_bitmap()` once per band.
 
-- ST7735 inversion is no longer hard-coded.
-- Orientation is configurable with `swap_xy`, `mirror_x`, and `mirror_y`.
-- The ST7735 path now uses a dedicated internal backend instead of reusing the ST7789 object.
-- SPI LCD transfers now wait for `on_color_trans_done()`, so `blusys_lcd_draw_bitmap()` is blocking again as documented.
-- `blusys_ui_open()` explicitly sets `LV_COLOR_FORMAT_RGB565`.
-- The default LVGL render task stack is raised to `16384`.
+## Solution Summary
 
-## Current Verified State
+- `lcd.c` — `draw_bitmap` chunks to `SPI_MAX_DMA_LEN`; `COLMOD` re-asserted per chunk to prevent the ST7735 dropping its pixel format mid-session.
+- `lcd.c` — SPI `max_transfer_sz` sized to full panel height instead of a fixed 80-line cap.
+- `ui.c` — `flush_cb` copies LVGL rows (stride-pitched) into a packed DMA-safe scratch buffer in multi-row bands; byte-swaps the scratch buffer before each `draw_bitmap` call.
+- `ui.c` — scratch buffer always allocated (not just in full-refresh mode).
 
-### Raw LCD Path
+## Validated Configuration
 
-`examples/lcd_st7735_basic/` is fast and correct on the target hardware.
-
-What this proves:
-
-- the ST7735 backend is now fundamentally correct
-- larger multi-row bitmap writes can work correctly
-- the LCD transport is not inherently limited to one-row transfers
-
-### LVGL UI Path
-
-`examples/ui_basic/` is correct only with the conservative LVGL partial flush path.
-
-Current safe behavior in `components/blusys_services/src/display/ui.c`:
-
-- partial render mode is the only hardware-validated safe LVGL mode
-- `flush_cb()` byte-swaps RGB565 per dirty row
-- `flush_cb()` calls `blusys_lcd_draw_bitmap()` once per row
-- `full_refresh` support still exists, but it remains experimental and disabled by default
-
-## How The Screen Looks Now
-
-With the safe path, the final image is correct:
-
-- black background
-- white edge border
-- colored corner markers
-- centered white `"BluPanda"` label
-
-What still looks wrong is the transition:
-
-- the screen visibly clears first
-- the new content appears progressively
-- the whole update takes roughly `1 second`
-
-So the current problem is no longer final-frame corruption in the safe path. The current problem is visible redraw latency.
-
-## What The Broken Accelerated Path Looked Like
-
-The experimental accelerated LVGL paths produced corruption on hardware, including:
-
-- diagonal slash-like artifacts
-- split or duplicated `"BluPanda"` text
-- band-boundary-looking corruption
-
-That corrupted appearance is not the current safe-path result. The current safe path is correct but slow.
-
-## Current Example Configuration
-
-The current example defaults are:
-
-- `examples/ui_basic/main/Kconfig.projbuild`
-- `CONFIG_BLUSYS_UI_PCLK_HZ = 48000000`
-- `CONFIG_BLUSYS_UI_FULL_REFRESH = n`
-- `CONFIG_BLUSYS_UI_SWAP_XY = y`
-- `CONFIG_BLUSYS_UI_MIRROR_X = y`
-- `CONFIG_BLUSYS_UI_MIRROR_Y = n`
-- `CONFIG_BLUSYS_UI_INVERT_COLOR = n`
-
-The latest user test reported that increasing SPI from `16 MHz` to `48 MHz` made little to no visible difference.
-
-## What That Means
-
-For a `160x128` RGB565 frame:
-
-- total payload is `40,960` bytes
-- ideal wire time is about `20.5 ms` at `16 MHz`
-- ideal wire time is about `6.8 ms` at `48 MHz`
-
-That means the clock increase only saves about `13.7 ms` of ideal transfer time for a full-frame payload.
-If the user still sees a redraw that takes around `1 second`, then the dominant cost is not raw SPI bandwidth.
-
-## Current Bottleneck Hypothesis
-
-The most likely bottleneck is the granularity of the safe LVGL flush path.
-
-Why:
-
-- `flush_cb()` currently flushes one LCD row at a time
-- a full-screen invalidation on a `160x128` display means about `128` LCD draw calls just for the main screen area
-- every row flush repeats lock, address-window setup, transfer submission, and completion wait
-- for ST7735, the LCD path also re-sends `COLMOD` before each draw
-
-The likely contributors are:
-
-- too many tiny LCD transactions
-- per-row byte-swapping overhead
-- repeated LCD command/setup overhead
-- waiting for DMA completion after every one-row transfer
-
-The things that are no longer leading suspects for the current slow-but-correct state are:
-
-- orientation
-- inversion
-- raw ST7735 backend correctness
-- basic SPI clock rate
-
-## Important Evidence From The LCD Layer
-
-The LCD SPI transport is already configured for larger transfers.
-
-In `components/blusys_services/src/display/lcd.c`, SPI is opened with:
-
-- `.max_transfer_sz = width * 80 lines * bits_per_pixel`
-
-And in `examples/lcd_st7735_basic/`, the screen is cleared in `40`-line bands.
-
-This strongly suggests the current speed problem is not a hardware inability to transfer larger bands. It is a UI flush-shaping problem.
-
-## Current Conclusion
-
-The investigation has narrowed to this:
-
-- the LCD backend is now good
-- the safe LVGL path is correct but too fine-grained
-- the accelerated LVGL paths tested so far are faster in principle but still corrupt
-
-So the real question is:
-
-- how to batch LVGL dirty rectangles into larger safe LCD transfers without reintroducing corruption
-
-## Best Candidate Fixes
-
-### 1. Instrumented Partial-Mode Band Flush
-
-This is the best next step.
-
-Approach:
-
-- keep LVGL in partial render mode
-- copy `N` rows at a time into a dedicated contiguous scratch buffer
-- byte-swap during the copy into that buffer
-- flush one multi-row band per scratch-buffer fill
-
-Why this is promising:
-
-- it reduces the number of LCD draw calls
-- it stays close to the already-validated partial LVGL pipeline
-- it mirrors the known-good strategy already used in `lcd_st7735_basic/`
-
-### 2. Add Better Flush Instrumentation
-
-Before changing transfer shapes blindly, log:
-
-- flush areas
-- active stride values
-- packed row bytes
-- chosen band ranges
-
-This should make it easier to tell whether corruption comes from:
-
-- LVGL-to-band repacking
-- byte swapping
-- LCD writes
-
-### 3. Add A Debug Pattern For Flush Testing
-
-Useful dedicated patterns:
-
-- numbered horizontal bands
-- checkerboards
-- text placed near expected band boundaries
-
-This would be much easier to reason about than only looking at the final demo UI.
-
-### 4. Tune `buf_lines` Only After Safe Batching Exists
-
-Current default in `ui.c`:
-
-- `UI_DEFAULT_BUF_LINES = 20`
-
-Larger partial buffers may help later, but not while the flush still degenerates into one-row LCD calls.
-
-### 5. Revisit `full_refresh` Later, Not First
-
-The existing experimental `full_refresh` path still corrupts.
-It should not be the next focus until the safer partial-band path is instrumented and understood.
-
-## Recommended Next Step
-
-The recommended next sequence is:
-
-1. Keep the current row-by-row partial flush as the correctness baseline.
-2. Add instrumentation to `flush_cb()` on real hardware.
-3. Implement a guarded partial-band scratch-buffer path.
-4. Start with conservative band heights such as `20` or `40` lines.
-5. Compare hardware results directly against the raw LCD example behavior.
-
-## Bottom Line
-
-The current situation is:
-
-- correctness is restored in the safe LVGL path
-- speed is still poor
-- SPI clock alone does not solve it
-- the unsolved problem is flush batching, not raw transport bring-up
-
-That makes the next task a performance-shaping problem inside `components/blusys_services/src/display/ui.c`, not another panel-orientation or color-order bug hunt.
+- Target: ESP32-C3 + ST7735 (160×128, landscape via `swap_xy=true`, `mirror_x=true`)
+- SPI clock: 8 MHz (48 MHz also validated; wire time is no longer the bottleneck)
+- LVGL mode: partial render, `buf_lines=20`, double-buffered

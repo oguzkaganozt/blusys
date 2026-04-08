@@ -74,44 +74,19 @@ config BLUSYS_UI_INVERT_COLOR
     bool "Invert colors"
     default n
 
-choice BLUSYS_UI_DIAG_SCENE
-    prompt "UI diagnostic scene"
-    default BLUSYS_UI_DIAG_SCENE_FULL
+choice BLUSYS_UI_SCENE
+    prompt "UI scene"
+    default BLUSYS_UI_SCENE_FULL
 
-config BLUSYS_UI_DIAG_SCENE_LABEL_ONLY
+config BLUSYS_UI_SCENE_LABEL_ONLY
     bool "Label only"
 
-config BLUSYS_UI_DIAG_SCENE_FRAME_ONLY
+config BLUSYS_UI_SCENE_FRAME_ONLY
     bool "Frame only"
 
-config BLUSYS_UI_DIAG_SCENE_FULL
+config BLUSYS_UI_SCENE_FULL
     bool "Frame + label"
 
 endchoice
-
-choice BLUSYS_UI_DIAG_FLUSH_STRATEGY
-    prompt "LVGL flush diagnostic strategy"
-    default BLUSYS_UI_DIAG_FLUSH_ROW_STRIDE
-
-config BLUSYS_UI_DIAG_FLUSH_ROW_STRIDE
-    bool "Row-by-row using draw buffer stride"
-
-config BLUSYS_UI_DIAG_FLUSH_ROW_PACKED
-    bool "Row-by-row assuming packed rows"
-
-config BLUSYS_UI_DIAG_FLUSH_BAND_STRIDE
-    bool "Scratch-band flush using draw buffer stride"
-
-config BLUSYS_UI_DIAG_FLUSH_BAND_PACKED
-    bool "Scratch-band flush assuming packed rows"
-
-config BLUSYS_UI_DIAG_FLUSH_DIRECT_PACKED
-    bool "One direct area flush assuming packed rows"
-
-endchoice
-
-config BLUSYS_UI_DIAG_LOG_FLUSH
-    bool "Log LVGL flush diagnostics"
-    default y
 
 endmenu
