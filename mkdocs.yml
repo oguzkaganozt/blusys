@@ -95,6 +95,7 @@ nav:
               - Sleep: guides/sleep-basic.md
               - Watchdog: guides/wdt-basic.md
               - Temperature: guides/temp-sensor-basic.md
+              - eFuse: guides/efuse-basic.md
               - USB Host: guides/usb-host-basic.md
               - USB Device: guides/usb-device-basic.md
       - Services:
@@ -168,6 +169,7 @@ nav:
               - Sleep: modules/sleep.md
               - Watchdog: modules/wdt.md
               - Temperature: modules/temp_sensor.md
+              - eFuse: modules/efuse.md
               - USB Host: modules/usb_host.md
               - USB Device: modules/usb_device.md
       - Services:

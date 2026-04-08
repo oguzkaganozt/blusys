@@ -1,6 +1,7 @@
 set(blusys_sources
     src/common/adc.c
     src/common/dac.c
+    src/common/efuse.c
     src/common/error.c
     src/common/gpio.c
     src/common/gpio_expander.c
@@ -48,11 +49,11 @@ endif()
 idf_component_register(
     SRCS ${blusys_sources}
     INCLUDE_DIRS include
-    REQUIRES freertos esp_adc esp_driver_dac esp_driver_gpio esp_driver_gptimer
+    REQUIRES freertos efuse esp_adc esp_driver_dac esp_driver_gpio esp_driver_gptimer
              esp_driver_i2c esp_driver_i2s esp_driver_ledc esp_driver_mcpwm
              esp_driver_pcnt esp_driver_rmt esp_driver_sdm esp_driver_sdmmc
              esp_driver_sdspi esp_driver_spi esp_driver_touch_sens esp_driver_tsens esp_driver_twai
-             esp_driver_uart esp_system esp_timer fatfs nvs_flash sdmmc usb
+             esp_driver_uart esp_hw_support esp_system esp_timer bootloader_support fatfs nvs_flash sdmmc usb
 )
 
 # Optional managed component: espressif/esp_tinyusb

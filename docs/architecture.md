@@ -46,7 +46,7 @@ Application
 
 ## HAL Modules (`components/blusys/`)
 
-- foundational: `version`, `error`, `target`, `system`
+- foundational: `version`, `error`, `target`, `system`, `efuse`
 - stateless pin API: `gpio`
 - handle-based master/TX APIs: `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`, `rmt`, `i2s`, `twai`, `pcnt`, `dac`, `sdm`, `mcpwm`, `touch`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `usb_host`, `usb_device`
 - handle-based slave/RX counterparts: `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`

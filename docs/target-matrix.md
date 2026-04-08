@@ -20,7 +20,7 @@ All modules below are available on **all three targets** unless marked otherwise
 | **Analog** | `adc`, `sdm`, `pwm` | `dac` — ESP32 only |
 | **Timers & Counters** | `timer` | `pcnt`, `mcpwm` — ESP32, S3 only |
 | **Storage** | `nvs`, `sd_spi` | `sdmmc` — ESP32, S3 only |
-| **Device** | `system`, `sleep`, `wdt` | `temp_sensor` — C3, S3 only |
+| **Device** | `system`, `sleep`, `wdt`, `efuse` | `temp_sensor` — C3, S3 only |
 
 ### Services
 

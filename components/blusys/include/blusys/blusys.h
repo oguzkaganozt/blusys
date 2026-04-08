@@ -7,6 +7,7 @@ extern "C" {
 
 #include "blusys/adc.h"
 #include "blusys/dac.h"
+#include "blusys/efuse.h"
 #include "blusys/error.h"
 #include "blusys/gpio.h"
 #include "blusys/gpio_expander.h"

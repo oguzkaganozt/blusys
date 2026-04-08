@@ -46,7 +46,7 @@ Direct hardware access — use these when you need low-level control over ESP32 
 
     Chip info, sleep modes, watchdog, and on-chip temperature.
 
-    [:octicons-arrow-right-24: System Info](system-info.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md) · [Temperature](temp-sensor-basic.md) · [USB Host](usb-host-basic.md) · [USB Device](usb-device-basic.md)
+    [:octicons-arrow-right-24: System Info](system-info.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md) · [Temperature](temp-sensor-basic.md) · [eFuse](efuse-basic.md) · [USB Host](usb-host-basic.md) · [USB Device](usb-device-basic.md)
 
 </div>
 

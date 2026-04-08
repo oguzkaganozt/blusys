@@ -36,7 +36,7 @@ Direct hardware abstraction — thin wrappers over ESP-IDF drivers.
 
     ---
 
-    [:octicons-arrow-right-24: System](system.md) · [Sleep](sleep.md) · [Watchdog](wdt.md) · [Temperature](temp_sensor.md) · [USB Host](usb_host.md) · [USB Device](usb_device.md)
+    [:octicons-arrow-right-24: System](system.md) · [Sleep](sleep.md) · [Watchdog](wdt.md) · [Temperature](temp_sensor.md) · [eFuse](efuse.md) · [USB Host](usb_host.md) · [USB Device](usb_device.md)
 
 </div>
 
