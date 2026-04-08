@@ -19,7 +19,7 @@ HID input service with dual-transport support: USB OTG host (ESP32-S3, via `espr
     Add `espressif/usb_host_hid: "~1.1.0"` to your project's `main/idf_component.yml`. See `examples/usb_hid_basic/main/idf_component.yml`.
 
 !!! note "BLE transport"
-    Enable NimBLE in menuconfig: `Component config → Bluetooth → NimBLE`. Requires NVS (initialized automatically).
+    Enable `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_CENTRAL=y`, and `CONFIG_BT_NIMBLE_ROLE_OBSERVER=y`. Requires NVS (initialized automatically).
 
 ## Types
 
@@ -166,7 +166,7 @@ Terminates the transport (disconnects BLE or uninstalls USB host/HID driver) and
 - Raw report `data` pointer is valid only during the callback — copy if needed
 - Boot-protocol parsing heuristic: 8-byte reports are treated as keyboards, 3–4-byte reports as mice, shorter reports as raw
 - BLE transport initiates a new scan after each disconnect; `ble_device_name` filter applies to every reconnect attempt
-- `blusys_usb_hid` with BLE transport cannot be used simultaneously with `blusys_ble_gatt` — both initialize the NimBLE stack
+- BLE transport cannot be used simultaneously with `blusys_bluetooth`, `blusys_ble_gatt`, or BLE transport `blusys_wifi_prov`
 
 ## Example App
 

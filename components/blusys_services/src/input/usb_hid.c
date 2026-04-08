@@ -42,6 +42,7 @@
 #include "host/ble_uuid.h"
 #include "os/os_mbuf.h"
 
+#include "blusys/internal/blusys_bt_stack.h"
 #include "blusys/internal/blusys_nvs_init.h"
 #endif
 
@@ -67,9 +68,12 @@ struct ble_hid_ctx {
     uint16_t hid_svc_start;
     uint16_t hid_svc_end;
     uint16_t report_chr_handles[BLE_HID_MAX_REPORT_CHRS];
+    uint16_t report_chr_end_handles[BLE_HID_MAX_REPORT_CHRS];
     uint16_t cccd_handles[BLE_HID_MAX_REPORT_CHRS];
     int      num_report_chrs;
+    int      discover_idx;
     int      subscribe_idx;
+    int      last_report_idx;
 };
 #endif /* HAS_BLE_TRANSPORT */
 
@@ -87,6 +91,7 @@ struct blusys_usb_hid {
 
 #if HAS_BLE_TRANSPORT
     char                       ble_device_name[64];
+    uint8_t                    ble_own_addr_type;
     EventGroupHandle_t         ble_sync_event;
     struct ble_hid_ctx         ble_ctx;
     bool                       ble_connected;
@@ -275,13 +280,14 @@ static void ble_hid_host_task(void *arg)
 }
 
 /* Forward declarations */
-static void ble_hid_start_scan(blusys_usb_hid_t *h);
+static int  ble_hid_start_scan(blusys_usb_hid_t *h);
+static void ble_hid_discover_next_cccd(blusys_usb_hid_t *h);
 static void ble_hid_subscribe_next(blusys_usb_hid_t *h);
 static int  ble_hid_gap_event(struct ble_gap_event *event, void *arg);
 
 static void on_ble_hid_sync(void)
 {
-    if (blusys_lock_take(&s_hid_global_lock, 0) != BLUSYS_OK) {
+    if (blusys_lock_take(&s_hid_global_lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
         return;
     }
     blusys_usb_hid_t *h = s_usb_hid_handle;
@@ -289,22 +295,12 @@ static void on_ble_hid_sync(void)
         xEventGroupSetBits(h->ble_sync_event, BLE_HID_SYNC_BIT);
     }
     blusys_lock_give(&s_hid_global_lock);
-
-    /* Start scanning after sync */
-    if (blusys_lock_take(&s_hid_global_lock, 0) != BLUSYS_OK) {
-        return;
-    }
-    h = s_usb_hid_handle;
-    blusys_lock_give(&s_hid_global_lock);
-    if (h != NULL) {
-        ble_hid_start_scan(h);
-    }
 }
 
 static void on_ble_hid_reset(int reason)
 {
     (void)reason;
-    if (blusys_lock_take(&s_hid_global_lock, 0) != BLUSYS_OK) {
+    if (blusys_lock_take(&s_hid_global_lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
         return;
     }
     blusys_usb_hid_t *h = s_usb_hid_handle;
@@ -314,10 +310,10 @@ static void on_ble_hid_reset(int reason)
     blusys_lock_give(&s_hid_global_lock);
 }
 
-static void ble_hid_start_scan(blusys_usb_hid_t *h)
+static int ble_hid_start_scan(blusys_usb_hid_t *h)
 {
     if (h->stopping) {
-        return;
+        return 0;
     }
 
     struct ble_gap_disc_params disc_params = {
@@ -327,8 +323,8 @@ static void ble_hid_start_scan(blusys_usb_hid_t *h)
         .limited       = 0,
         .passive       = 0,
     };
-    ble_gap_disc(BLE_OWN_ADDR_PUBLIC, BLE_HS_FOREVER, &disc_params,
-                 ble_hid_gap_event, h);
+    return ble_gap_disc(h->ble_own_addr_type, BLE_HS_FOREVER, &disc_params,
+                        ble_hid_gap_event, h);
 }
 
 /* Check advertisement data for HID service UUID (0x1812) */
@@ -363,13 +359,20 @@ static int ble_hid_chr_disc_cb(uint16_t conn_handle,
     blusys_usb_hid_t *h = (blusys_usb_hid_t *)arg;
 
     if (error->status == BLE_HS_EDONE) {
-        /* Start subscribing to report characteristics */
+        /* Discover the CCCD for each report characteristic before subscribing. */
+        h->ble_ctx.discover_idx = 0;
         h->ble_ctx.subscribe_idx = 0;
-        ble_hid_subscribe_next(h);
+        ble_hid_discover_next_cccd(h);
         return 0;
     }
     if (error->status != 0) {
         return 0;
+    }
+
+    if (h->ble_ctx.last_report_idx >= 0) {
+        h->ble_ctx.report_chr_end_handles[h->ble_ctx.last_report_idx] =
+            chr->def_handle - 1;
+        h->ble_ctx.last_report_idx = -1;
     }
 
     uint16_t uuid16 = ble_uuid_u16(&chr->uuid.u);
@@ -379,11 +382,68 @@ static int ble_hid_chr_disc_cb(uint16_t conn_handle,
     if (is_report && h->ble_ctx.num_report_chrs < BLE_HID_MAX_REPORT_CHRS) {
         int idx = h->ble_ctx.num_report_chrs++;
         h->ble_ctx.report_chr_handles[idx] = chr->val_handle;
-        /* CCCD is the first descriptor after the characteristic value */
-        h->ble_ctx.cccd_handles[idx] = chr->val_handle + 1;
+        h->ble_ctx.report_chr_end_handles[idx] = h->ble_ctx.hid_svc_end;
+        h->ble_ctx.last_report_idx = idx;
     }
     (void)conn_handle;
     return 0;
+}
+
+static int ble_hid_dsc_disc_cb(uint16_t conn_handle,
+                                const struct ble_gatt_error *error,
+                                uint16_t chr_val_handle,
+                                const struct ble_gatt_dsc *dsc,
+                                void *arg)
+{
+    blusys_usb_hid_t *h = (blusys_usb_hid_t *)arg;
+    int idx = h->ble_ctx.discover_idx;
+
+    if (error->status == BLE_HS_EDONE) {
+        h->ble_ctx.discover_idx++;
+        ble_hid_discover_next_cccd(h);
+        return 0;
+    }
+    if (error->status != 0) {
+        h->ble_ctx.discover_idx++;
+        ble_hid_discover_next_cccd(h);
+        return 0;
+    }
+
+    if (idx >= 0 && idx < h->ble_ctx.num_report_chrs &&
+        ble_uuid_u16(&dsc->uuid.u) == BLE_CCCD_UUID16) {
+        h->ble_ctx.cccd_handles[idx] = dsc->handle;
+    }
+
+    (void)conn_handle;
+    (void)chr_val_handle;
+    return 0;
+}
+
+static void ble_hid_discover_next_cccd(blusys_usb_hid_t *h)
+{
+    while (h->ble_ctx.discover_idx < h->ble_ctx.num_report_chrs) {
+        int idx = h->ble_ctx.discover_idx;
+        uint16_t start_handle = h->ble_ctx.report_chr_handles[idx];
+        uint16_t end_handle = h->ble_ctx.report_chr_end_handles[idx];
+
+        if (end_handle <= start_handle) {
+            h->ble_ctx.discover_idx++;
+            continue;
+        }
+
+        int rc = ble_gattc_disc_all_dscs(h->ble_ctx.conn_handle,
+                                          start_handle,
+                                          end_handle,
+                                          ble_hid_dsc_disc_cb,
+                                          h);
+        if (rc == 0) {
+            return;
+        }
+
+        h->ble_ctx.discover_idx++;
+    }
+
+    ble_hid_subscribe_next(h);
 }
 
 static int ble_hid_svc_disc_cb(uint16_t conn_handle,
@@ -430,7 +490,10 @@ static void ble_hid_subscribe_next(blusys_usb_hid_t *h)
     while (h->ble_ctx.subscribe_idx < h->ble_ctx.num_report_chrs) {
         int      idx         = h->ble_ctx.subscribe_idx++;
         uint16_t cccd_handle = h->ble_ctx.cccd_handles[idx];
-        uint16_t cccd_val    = htole16(BLE_GATT_CHR_NOTIFY);
+        if (cccd_handle == 0) {
+            continue;
+        }
+        uint16_t cccd_val    = htole16(0x0001);
         int rc = ble_gattc_write_flat(h->ble_ctx.conn_handle, cccd_handle,
                                        &cccd_val, sizeof(cccd_val),
                                        ble_hid_subscribe_cb, h);
@@ -481,8 +544,9 @@ static int ble_hid_gap_event(struct ble_gap_event *event, void *arg)
         ble_gap_disc_cancel();
         memset(&h->ble_ctx, 0, sizeof(h->ble_ctx));
         h->ble_ctx.conn_handle = BLE_HS_CONN_HANDLE_NONE;
+        h->ble_ctx.last_report_idx = -1;
 
-        ble_gap_connect(BLE_OWN_ADDR_PUBLIC, &event->disc.addr,
+        ble_gap_connect(h->ble_own_addr_type, &event->disc.addr,
                         BLE_HS_FOREVER, NULL, ble_hid_gap_event, h);
         break;
     }
@@ -566,9 +630,16 @@ static blusys_err_t ble_transport_open(blusys_usb_hid_t *h,
         return err;
     }
 
+    err = blusys_bt_stack_acquire(BLUSYS_BT_STACK_OWNER_USB_HID_BLE);
+    if (err != BLUSYS_OK) {
+        vEventGroupDelete(h->ble_sync_event);
+        return err;
+    }
+
     esp_err = nimble_port_init();
     if (esp_err != ESP_OK) {
         vEventGroupDelete(h->ble_sync_event);
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_USB_HID_BLE);
         return blusys_translate_esp_err(esp_err);
     }
 
@@ -584,7 +655,26 @@ static blusys_err_t ble_transport_open(blusys_usb_hid_t *h,
         nimble_port_stop();
         nimble_port_deinit();
         vEventGroupDelete(h->ble_sync_event);
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_USB_HID_BLE);
         return BLUSYS_ERR_TIMEOUT;
+    }
+
+    int rc = ble_hs_id_infer_auto(0, &h->ble_own_addr_type);
+    if (rc != 0) {
+        nimble_port_stop();
+        nimble_port_deinit();
+        vEventGroupDelete(h->ble_sync_event);
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_USB_HID_BLE);
+        return BLUSYS_ERR_INTERNAL;
+    }
+
+    rc = ble_hid_start_scan(h);
+    if (rc != 0) {
+        nimble_port_stop();
+        nimble_port_deinit();
+        vEventGroupDelete(h->ble_sync_event);
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_USB_HID_BLE);
+        return BLUSYS_ERR_INTERNAL;
     }
 
     return BLUSYS_OK;
@@ -603,6 +693,7 @@ static blusys_err_t ble_transport_close(blusys_usb_hid_t *h)
     nimble_port_stop();
     nimble_port_deinit();
     vEventGroupDelete(h->ble_sync_event);
+    blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_USB_HID_BLE);
     return BLUSYS_OK;
 }
 

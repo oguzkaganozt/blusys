@@ -8,7 +8,7 @@ You want to ship a device without hard-coded WiFi credentials. At first boot the
 
 - A supported board (ESP32, ESP32-C3, or ESP32-S3)
 - [ESP BLE Provisioning](https://apps.apple.com/app/esp-ble-provisioning/id1473590141) or [ESP SoftAP Provisioning](https://apps.apple.com/app/esp-softap-provisioning/id1474040630) mobile app
-- For BLE transport: `CONFIG_BT_NIMBLE_ENABLED` enabled in menuconfig (**Component config → Bluetooth → NimBLE**)
+- For BLE transport: `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y`, and `CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y`
 
 ## Minimal Example
 
@@ -125,7 +125,7 @@ blusys_wifi_prov_reset();
 
 ## Expected Runtime Behavior
 
-- `open()` initializes the WiFi stack but no RF activity starts until `start()`.
+- `open()` initializes the WiFi stack and provisioning manager.
 - `start()` begins advertising; `STARTED` event fires when the service is ready.
 - `CREDENTIALS_RECEIVED` fires immediately after the app sends the SSID and password.
 - ESP-IDF's provisioning manager validates the credentials by attempting a WiFi connection.
@@ -134,8 +134,9 @@ blusys_wifi_prov_reset();
 
 ## Common Mistakes
 
-- Calling `blusys_wifi_prov_is_provisioned()` before the WiFi driver is started returns `false` even if credentials exist — call it after `open()`, or start the WiFi driver separately first.
-- Forgetting `CONFIG_BT_NIMBLE_ENABLED` when using BLE transport — `open()` returns `BLUSYS_ERR_NOT_SUPPORTED`.
+- Calling `blusys_wifi_prov_is_provisioned()` before `open()` returns `false` because the provisioning manager is not initialized yet — call it after `open()`.
+- Forgetting the BLE transport requirements (`CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y`, and `CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y`) — `open()` returns `BLUSYS_ERR_NOT_SUPPORTED`.
+- Opening BLE provisioning while `blusys_bluetooth`, `blusys_ble_gatt`, or BLE `blusys_usb_hid` is already open — `open()` returns `BLUSYS_ERR_INVALID_STATE`.
 - Using a 5 GHz SSID — the ESP32 radio supports 2.4 GHz only.
 - Not calling `close()` after provisioning — the WiFi stack and NVS partition are not released.
 

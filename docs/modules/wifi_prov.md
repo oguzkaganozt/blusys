@@ -13,7 +13,7 @@ BLE or SoftAP-based runtime WiFi credential provisioning with NVS persistence.
 | ESP32-C3 | yes |
 | ESP32-S3 | yes |
 
-BLE transport requires `CONFIG_BT_NIMBLE_ENABLED` in the project sdkconfig. SoftAP transport works on all targets unconditionally.
+BLE transport requires `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y`, and `CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y` in the project sdkconfig. SoftAP transport works on all targets unconditionally.
 
 ## Types
 
@@ -88,7 +88,7 @@ Calls `nvs_flash_init()`, `esp_netif_init()`, and `esp_event_loop_create_default
 - `config` — service configuration (required); `service_name` and `on_event` must be non-NULL
 - `out_prov` — output handle
 
-**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_STATE` if an instance is already open, `BLUSYS_ERR_NOT_SUPPORTED` if BLE transport is requested but `CONFIG_BT_NIMBLE_ENABLED` is not set, `BLUSYS_ERR_NO_MEM` on allocation failure.
+**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_STATE` if an instance is already open or another BLE-owning module already holds the BLE stack, `BLUSYS_ERR_NOT_SUPPORTED` if BLE transport is requested but `CONFIG_BT_NIMBLE_ENABLED` is not set, `BLUSYS_ERR_NO_MEM` on allocation failure.
 
 ---
 
@@ -154,7 +154,7 @@ Example output:
 bool blusys_wifi_prov_is_provisioned(void);
 ```
 
-Reads the stored WiFi STA configuration from NVS. No provisioning handle required. Call this at boot to decide whether to skip provisioning.
+Queries the ESP-IDF provisioning manager for stored credentials. Call this after `blusys_wifi_prov_open()` or after your application has initialized the provisioning manager separately.
 
 **Returns:** `true` if credentials are stored, `false` otherwise.
 
@@ -166,7 +166,7 @@ Reads the stored WiFi STA configuration from NVS. No provisioning handle require
 blusys_err_t blusys_wifi_prov_reset(void);
 ```
 
-Erases stored WiFi credentials from NVS, restoring the WiFi driver to factory defaults. After this call `blusys_wifi_prov_is_provisioned()` returns `false`.
+Clears stored WiFi provisioning credentials via the ESP-IDF provisioning manager. After the manager is initialized again, `blusys_wifi_prov_is_provisioned()` returns `false`.
 
 **Returns:** `BLUSYS_OK` on success.
 
@@ -185,11 +185,11 @@ blusys_wifi_prov_close()
 
 ## Thread Safety
 
-All handle-based functions are protected by a FreeRTOS mutex. `blusys_wifi_prov_is_provisioned()` and `blusys_wifi_prov_reset()` are stateless helpers that call `esp_wifi_*` directly and are safe to call from any task.
+All handle-based functions are protected by a FreeRTOS mutex. `blusys_wifi_prov_is_provisioned()` and `blusys_wifi_prov_reset()` are stateless helpers around the ESP-IDF provisioning manager and are safe to call from any task once the manager has been initialized.
 
 ## Limitations
 
 - Only one provisioning instance may be open at a time.
-- BLE transport requires NimBLE (`CONFIG_BT_NIMBLE_ENABLED`). Enable it via menuconfig: **Component config → Bluetooth → NimBLE**.
+- BLE transport requires `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y`, and `CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y`.
+- BLE transport cannot be used simultaneously with `blusys_bluetooth`, `blusys_ble_gatt`, or BLE `blusys_usb_hid`.
 - 2.4 GHz networks only.
-- `is_provisioned()` reads stored STA config; it will return `true` for credentials set via `blusys_wifi_open()` as well, not just via the provisioning flow.

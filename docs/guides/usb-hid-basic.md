@@ -20,7 +20,7 @@ dependencies:
 **BLE transport (all targets):**
 
 - Hardware: a BLE HID peripheral (wireless keyboard, mouse, or gamepad)
-- Enable NimBLE in menuconfig: `Component config → Bluetooth → NimBLE - BLE stack`
+- For BLE transport, enable `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_CENTRAL=y`, and `CONFIG_BT_NIMBLE_ROLE_OBSERVER=y`
 - No managed component dependency
 
 ## Minimal Example
@@ -80,8 +80,8 @@ blusys_usb_hid_close(hid);
 ## Common Mistakes
 
 - Requesting `BLUSYS_USB_HID_TRANSPORT_USB` on a non-S3 target — returns `BLUSYS_ERR_NOT_SUPPORTED`
-- Requesting `BLUSYS_USB_HID_TRANSPORT_BLE` without enabling NimBLE in menuconfig — returns `BLUSYS_ERR_NOT_SUPPORTED`
-- Using `blusys_usb_hid` (BLE) alongside `blusys_ble_gatt` — both initialize NimBLE and conflict
+- Requesting `BLUSYS_USB_HID_TRANSPORT_BLE` without enabling `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_CENTRAL=y`, and `CONFIG_BT_NIMBLE_ROLE_OBSERVER=y` — returns `BLUSYS_ERR_NOT_SUPPORTED`
+- Using BLE `blusys_usb_hid` alongside `blusys_bluetooth`, `blusys_ble_gatt`, or BLE `blusys_wifi_prov` — only one BLE-owning service may be open at a time
 - Retaining the `raw.data` pointer after the callback returns — it is stack-allocated and invalid after the call
 
 ## Example App

@@ -15,19 +15,24 @@
 #include "nimble/nimble_port_freertos.h"
 #include "host/ble_hs.h"
 #include "host/ble_gatt.h"
+#include "os/os_mbuf.h"
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 
+#include "blusys/internal/blusys_bt_stack.h"
 #include "blusys/internal/blusys_esp_err.h"
 #include "blusys/internal/blusys_lock.h"
 #include "blusys/internal/blusys_nvs_init.h"
 #include "blusys/internal/blusys_timeout.h"
 
 #define GATT_SYNC_BIT BIT0
+#define GATT_IDLE_BIT BIT1
+#define GATT_VALUE_BUF_LEN 512u
 
 struct blusys_ble_gatt {
     blusys_lock_t                    lock;
     char                             device_name[32];
+    uint8_t                          own_addr_type;
     EventGroupHandle_t               sync_event;
     /* NimBLE service table — allocated on open, freed on close */
     struct ble_gatt_svc_def         *nimble_svcs;
@@ -38,6 +43,9 @@ struct blusys_ble_gatt {
     /* Connection event callback */
     blusys_ble_gatt_conn_cb_t        conn_cb;
     void                            *conn_user_ctx;
+    bool                             closing;
+    bool                             ready;
+    uint32_t                         callback_depth;
 };
 
 static portMUX_TYPE       s_gatt_init_lock = portMUX_INITIALIZER_UNLOCKED;
@@ -71,18 +79,36 @@ static blusys_err_t ensure_global_lock(void)
 static int gap_event_cb(struct ble_gap_event *event, void *arg);
 
 /* ── Advertising helper ───────────────────────────────────────── */
-static void start_advertising(void)
+static void gatt_callback_enter_locked(blusys_ble_gatt_t *h)
 {
-    if (blusys_lock_take(&s_gatt_global_lock, 0) != BLUSYS_OK) {
+    if (h->callback_depth++ == 0) {
+        xEventGroupClearBits(h->sync_event, GATT_IDLE_BIT);
+    }
+}
+
+static void gatt_callback_exit_locked(blusys_ble_gatt_t *h)
+{
+    if (h->callback_depth == 0) {
         return;
+    }
+    if (--h->callback_depth == 0) {
+        xEventGroupSetBits(h->sync_event, GATT_IDLE_BIT);
+    }
+}
+
+static blusys_err_t start_advertising(void)
+{
+    if (blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
+        return BLUSYS_ERR_INTERNAL;
     }
     blusys_ble_gatt_t *h = s_gatt_handle;
     if (!h) {
         blusys_lock_give(&s_gatt_global_lock);
-        return;
+        return BLUSYS_ERR_INVALID_STATE;
     }
     /* Copy what we need, then release the global lock before BLE calls */
     char name_copy[32];
+    uint8_t own_addr_type = h->own_addr_type;
     memcpy(name_copy, h->device_name, sizeof(name_copy));
     blusys_lock_give(&s_gatt_global_lock);
 
@@ -92,14 +118,18 @@ static void start_advertising(void)
     fields.name             = (uint8_t *)name_copy;
     fields.name_len         = (uint8_t)strlen(name_copy);
     fields.name_is_complete = 1;
-    ble_gap_adv_set_fields(&fields);
+    int rc = ble_gap_adv_set_fields(&fields);
+    if (rc != 0) {
+        return BLUSYS_ERR_INTERNAL;
+    }
 
     struct ble_gap_adv_params adv_params;
     memset(&adv_params, 0, sizeof(adv_params));
     adv_params.conn_mode = BLE_GAP_CONN_MODE_UND;
     adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
-    ble_gap_adv_start(BLE_OWN_ADDR_PUBLIC, NULL, BLE_HS_FOREVER,
-                      &adv_params, gap_event_cb, NULL);
+    rc = ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER,
+                           &adv_params, gap_event_cb, NULL);
+    return rc == 0 ? BLUSYS_OK : BLUSYS_ERR_INTERNAL;
 }
 
 /* ── NimBLE host task and sync/reset callbacks ────────────────── */
@@ -112,35 +142,60 @@ static void ble_gatt_host_task(void *param)
 
 static void on_gatt_sync(void)
 {
-    if (blusys_lock_take(&s_gatt_global_lock, 0) != BLUSYS_OK) {
+    if (blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
         return;
     }
     blusys_ble_gatt_t *h = s_gatt_handle;
-    if (h) {
-        xEventGroupSetBits(h->sync_event, GATT_SYNC_BIT);
+    if (h == NULL) {
+        blusys_lock_give(&s_gatt_global_lock);
+        return;
+    }
+    if (blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
+        blusys_lock_give(&s_gatt_global_lock);
+        return;
     }
     blusys_lock_give(&s_gatt_global_lock);
-    start_advertising();
+
+    bool restart = false;
+    if (!h->closing) {
+        xEventGroupSetBits(h->sync_event, GATT_SYNC_BIT);
+        restart = h->ready;
+    }
+    blusys_lock_give(&h->lock);
+
+    if (restart) {
+        start_advertising();
+    }
 }
 
 static void on_gatt_reset(int reason)
 {
     (void)reason;
-    if (blusys_lock_take(&s_gatt_global_lock, 0) != BLUSYS_OK) {
+    if (blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
         return;
     }
     blusys_ble_gatt_t *h = s_gatt_handle;
-    if (h) {
-        xEventGroupClearBits(h->sync_event, GATT_SYNC_BIT);
+    if (h == NULL) {
+        blusys_lock_give(&s_gatt_global_lock);
+        return;
+    }
+    if (blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
+        blusys_lock_give(&s_gatt_global_lock);
+        return;
     }
     blusys_lock_give(&s_gatt_global_lock);
+
+    if (!h->closing) {
+        xEventGroupClearBits(h->sync_event, GATT_SYNC_BIT);
+    }
+    blusys_lock_give(&h->lock);
 }
 
 /* ── GAP event callback ───────────────────────────────────────── */
 static int gap_event_cb(struct ble_gap_event *event, void *arg)
 {
     (void)arg;
-    if (blusys_lock_take(&s_gatt_global_lock, 0) != BLUSYS_OK) {
+    if (blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
         return 0;
     }
     blusys_ble_gatt_t *h = s_gatt_handle;
@@ -148,36 +203,66 @@ static int gap_event_cb(struct ble_gap_event *event, void *arg)
         blusys_lock_give(&s_gatt_global_lock);
         return 0;
     }
+    if (blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
+        blusys_lock_give(&s_gatt_global_lock);
+        return 0;
+    }
+    blusys_lock_give(&s_gatt_global_lock);
+
+    if (h->closing) {
+        blusys_lock_give(&h->lock);
+        return 0;
+    }
+
+    blusys_ble_gatt_conn_cb_t conn_cb = h->conn_cb;
+    void *conn_user_ctx = h->conn_user_ctx;
+    bool invoke_conn_cb = false;
+    bool connected = false;
+    uint16_t conn_handle = 0;
+    bool restart_advertising = false;
 
     switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
-        if (h->conn_cb) {
-            h->conn_cb(event->connect.conn_handle,
-                       event->connect.status == 0,
-                       h->conn_user_ctx);
+        if (conn_cb != NULL) {
+            invoke_conn_cb = true;
+            connected = event->connect.status == 0;
+            conn_handle = event->connect.conn_handle;
+            gatt_callback_enter_locked(h);
         }
-        blusys_lock_give(&s_gatt_global_lock);
         if (event->connect.status != 0) {
-            /* Connection failed — restart advertising */
-            start_advertising();
+            restart_advertising = true;
         }
-        return 0;
+        break;
 
     case BLE_GAP_EVENT_DISCONNECT:
-        if (h->conn_cb) {
-            h->conn_cb(event->disconnect.conn.conn_handle,
-                       false,
-                       h->conn_user_ctx);
+        if (conn_cb != NULL) {
+            invoke_conn_cb = true;
+            connected = false;
+            conn_handle = event->disconnect.conn.conn_handle;
+            gatt_callback_enter_locked(h);
         }
-        blusys_lock_give(&s_gatt_global_lock);
-        /* Restart advertising so the next client can connect */
-        start_advertising();
-        return 0;
+        restart_advertising = true;
+        break;
 
     default:
         break;
     }
-    blusys_lock_give(&s_gatt_global_lock);
+
+    blusys_lock_give(&h->lock);
+
+    if (invoke_conn_cb) {
+        conn_cb(conn_handle, connected, conn_user_ctx);
+        if (blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+            gatt_callback_exit_locked(h);
+            blusys_lock_give(&h->lock);
+        }
+    }
+
+    if (restart_advertising) {
+        /* Restart advertising so the next client can connect. */
+        start_advertising();
+    }
+
     return 0;
 }
 
@@ -186,7 +271,7 @@ static int internal_access_cb(uint16_t conn_handle, uint16_t attr_handle,
                                struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     (void)attr_handle;
-    if (blusys_lock_take(&s_gatt_global_lock, 0) != BLUSYS_OK) {
+    if (blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
         return BLE_ATT_ERR_UNLIKELY;
     }
     blusys_ble_gatt_t *h = s_gatt_handle;
@@ -194,29 +279,63 @@ static int internal_access_cb(uint16_t conn_handle, uint16_t attr_handle,
         blusys_lock_give(&s_gatt_global_lock);
         return BLE_ATT_ERR_UNLIKELY;
     }
-
-    size_t idx = (size_t)(uintptr_t)arg;
-    if (idx >= h->chr_map_len || !h->chr_map[idx]) {
+    if (blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) != BLUSYS_OK) {
         blusys_lock_give(&s_gatt_global_lock);
         return BLE_ATT_ERR_UNLIKELY;
     }
-    const blusys_ble_gatt_chr_def_t *chr = h->chr_map[idx];
     blusys_lock_give(&s_gatt_global_lock);
 
+    if (h->closing) {
+        blusys_lock_give(&h->lock);
+        return BLE_ATT_ERR_UNLIKELY;
+    }
+
+    size_t idx = (size_t)(uintptr_t)arg;
+    if (idx >= h->chr_map_len || !h->chr_map[idx]) {
+        blusys_lock_give(&h->lock);
+        return BLE_ATT_ERR_UNLIKELY;
+    }
+    const blusys_ble_gatt_chr_def_t *chr = h->chr_map[idx];
+    uint8_t uuid[16];
+    memcpy(uuid, chr->uuid, sizeof(uuid));
+    blusys_ble_gatt_read_cb_t read_cb = chr->read_cb;
+    blusys_ble_gatt_write_cb_t write_cb = chr->write_cb;
+    void *user_ctx = chr->user_ctx;
+    bool invokes_user_cb = false;
+
+    if ((ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR && read_cb != NULL) ||
+        (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR && write_cb != NULL)) {
+        invokes_user_cb = true;
+        gatt_callback_enter_locked(h);
+    }
+    blusys_lock_give(&h->lock);
+
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) {
-        if (!chr->read_cb) {
+        if (!read_cb) {
             return BLE_ATT_ERR_READ_NOT_PERMITTED;
         }
-        uint8_t *buf = malloc(512);
+        uint8_t *buf = malloc(GATT_VALUE_BUF_LEN);
         if (buf == NULL) {
+            if (invokes_user_cb && blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+                gatt_callback_exit_locked(h);
+                blusys_lock_give(&h->lock);
+            }
             return BLE_ATT_ERR_INSUFFICIENT_RES;
         }
         size_t out_len = 0;
-        int rc = chr->read_cb(conn_handle, chr->uuid, buf, 512,
-                               &out_len, chr->user_ctx);
+        int rc = read_cb(conn_handle, uuid, buf, GATT_VALUE_BUF_LEN,
+                         &out_len, user_ctx);
+        if (invokes_user_cb && blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+            gatt_callback_exit_locked(h);
+            blusys_lock_give(&h->lock);
+        }
         if (rc != 0) {
             free(buf);
             return rc;
+        }
+        if (out_len > GATT_VALUE_BUF_LEN) {
+            free(buf);
+            return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
         }
         rc = os_mbuf_append(ctxt->om, buf, out_len) == 0
              ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
@@ -225,17 +344,39 @@ static int internal_access_cb(uint16_t conn_handle, uint16_t attr_handle,
     }
 
     if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
-        if (!chr->write_cb) {
+        if (!write_cb) {
             return BLE_ATT_ERR_WRITE_NOT_PERMITTED;
         }
-        uint8_t *buf = malloc(512);
+        size_t in_len = OS_MBUF_PKTLEN(ctxt->om);
+        if (in_len > GATT_VALUE_BUF_LEN) {
+            if (invokes_user_cb && blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+                gatt_callback_exit_locked(h);
+                blusys_lock_give(&h->lock);
+            }
+            return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+        }
+        uint8_t *buf = malloc(in_len == 0 ? 1 : in_len);
         if (buf == NULL) {
+            if (invokes_user_cb && blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+                gatt_callback_exit_locked(h);
+                blusys_lock_give(&h->lock);
+            }
             return BLE_ATT_ERR_INSUFFICIENT_RES;
         }
         uint16_t copied = 0;
-        ble_hs_mbuf_to_flat(ctxt->om, buf, 512, &copied);
-        int rc = chr->write_cb(conn_handle, chr->uuid, buf, (size_t)copied,
-                                chr->user_ctx);
+        int rc = ble_hs_mbuf_to_flat(ctxt->om, buf, in_len, &copied);
+        if (rc != 0) {
+            rc = BLE_ATT_ERR_UNLIKELY;
+        } else if (copied != in_len) {
+            rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+        }
+        if (rc == 0) {
+            rc = write_cb(conn_handle, uuid, buf, in_len, user_ctx);
+        }
+        if (invokes_user_cb && blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+            gatt_callback_exit_locked(h);
+            blusys_lock_give(&h->lock);
+        }
         free(buf);
         return rc;
     }
@@ -268,31 +409,61 @@ blusys_err_t blusys_ble_gatt_open(const blusys_ble_gatt_config_t *config,
         out_handle == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
     }
+    if (strlen(config->device_name) > 29) {
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+    for (size_t i = 0; i < config->svc_count; i++) {
+        const blusys_ble_gatt_svc_def_t *svc = &config->services[i];
+        if (svc->characteristics == NULL || svc->chr_count == 0) {
+            return BLUSYS_ERR_INVALID_ARG;
+        }
+        for (size_t j = 0; j < svc->chr_count; j++) {
+            const blusys_ble_gatt_chr_def_t *chr = &svc->characteristics[j];
+            if ((chr->flags & BLUSYS_BLE_GATT_CHR_F_READ) && chr->read_cb == NULL) {
+                return BLUSYS_ERR_INVALID_ARG;
+            }
+            if ((chr->flags & BLUSYS_BLE_GATT_CHR_F_WRITE) && chr->write_cb == NULL) {
+                return BLUSYS_ERR_INVALID_ARG;
+            }
+            if ((chr->flags & BLUSYS_BLE_GATT_CHR_F_NOTIFY) && chr->val_handle_out == NULL) {
+                return BLUSYS_ERR_INVALID_ARG;
+            }
+        }
+    }
 
     blusys_err_t gerr = ensure_global_lock();
     if (gerr != BLUSYS_OK) {
         return gerr;
     }
 
+    gerr = blusys_bt_stack_acquire(BLUSYS_BT_STACK_OWNER_BLE_GATT);
+    if (gerr != BLUSYS_OK) {
+        return gerr;
+    }
+
     gerr = blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (gerr != BLUSYS_OK) {
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_BLE_GATT);
         return gerr;
     }
 
     if (s_gatt_handle != NULL) {
         blusys_lock_give(&s_gatt_global_lock);
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_BLE_GATT);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
     blusys_ble_gatt_t *h = calloc(1, sizeof(*h));
     if (h == NULL) {
         blusys_lock_give(&s_gatt_global_lock);
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_BLE_GATT);
         return BLUSYS_ERR_NO_MEM;
     }
 
     blusys_err_t err = blusys_lock_init(&h->lock);
     if (err != BLUSYS_OK) {
         blusys_lock_give(&s_gatt_global_lock);
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_BLE_GATT);
         free(h);
         return err;
     }
@@ -302,6 +473,7 @@ blusys_err_t blusys_ble_gatt_open(const blusys_ble_gatt_config_t *config,
         err = BLUSYS_ERR_NO_MEM;
         goto fail_lock;
     }
+    xEventGroupSetBits(h->sync_event, GATT_IDLE_BIT);
 
     strncpy(h->device_name, config->device_name, sizeof(h->device_name) - 1);
     h->conn_cb       = config->conn_cb;
@@ -419,6 +591,22 @@ blusys_err_t blusys_ble_gatt_open(const blusys_ble_gatt_config_t *config,
         goto fail_nimble;
     }
 
+    rc = ble_hs_id_infer_auto(0, &h->own_addr_type);
+    if (rc != 0) {
+        err = BLUSYS_ERR_INTERNAL;
+        goto fail_nimble;
+    }
+
+    err = start_advertising();
+    if (err != BLUSYS_OK) {
+        goto fail_nimble;
+    }
+
+    if (blusys_lock_take(&h->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+        h->ready = true;
+        blusys_lock_give(&h->lock);
+    }
+
     *out_handle = h;
     return BLUSYS_OK;
 
@@ -427,12 +615,15 @@ fail_nimble:
     nimble_port_stop();
     nimble_port_deinit();
     if (blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
-        s_gatt_handle = NULL;
+        if (s_gatt_handle == h) {
+            s_gatt_handle = NULL;
+        }
         blusys_lock_give(&s_gatt_global_lock);
     }
     free_nimble_tables(h);
     vEventGroupDelete(h->sync_event);
     blusys_lock_deinit(&h->lock);
+    blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_BLE_GATT);
     free(h);
     return err;
 
@@ -445,6 +636,7 @@ fail_tables:
 fail_lock:
     blusys_lock_give(&s_gatt_global_lock);
     blusys_lock_deinit(&h->lock);
+    blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_BLE_GATT);
     free(h);
     return err;
 }
@@ -455,22 +647,29 @@ blusys_err_t blusys_ble_gatt_close(blusys_ble_gatt_t *handle)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    blusys_err_t err = blusys_lock_take(&handle->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    blusys_err_t err = blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         return err;
     }
-
-    ble_gap_adv_stop();
-
-    err = blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (s_gatt_handle != handle) {
+        blusys_lock_give(&s_gatt_global_lock);
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+    err = blusys_lock_take(&handle->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
-        blusys_lock_give(&handle->lock);
+        blusys_lock_give(&s_gatt_global_lock);
         return err;
     }
+
+    handle->closing = true;
     s_gatt_handle = NULL;
     blusys_lock_give(&s_gatt_global_lock);
 
+    ble_gap_adv_stop();
+
     blusys_lock_give(&handle->lock);
+
+    xEventGroupWaitBits(handle->sync_event, GATT_IDLE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
 
     nimble_port_stop();
     nimble_port_deinit();
@@ -478,6 +677,7 @@ blusys_err_t blusys_ble_gatt_close(blusys_ble_gatt_t *handle)
     free_nimble_tables(handle);
     vEventGroupDelete(handle->sync_event);
     blusys_lock_deinit(&handle->lock);
+    blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_BLE_GATT);
     free(handle);
     return BLUSYS_OK;
 }
@@ -491,12 +691,34 @@ blusys_err_t blusys_ble_gatt_notify(blusys_ble_gatt_t *handle,
         return BLUSYS_ERR_INVALID_ARG;
     }
 
+    blusys_err_t err = blusys_lock_take(&s_gatt_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+    if (s_gatt_handle != handle) {
+        blusys_lock_give(&s_gatt_global_lock);
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+    err = blusys_lock_take(&handle->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        blusys_lock_give(&s_gatt_global_lock);
+        return err;
+    }
+    blusys_lock_give(&s_gatt_global_lock);
+
+    if (handle->closing) {
+        blusys_lock_give(&handle->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
     struct os_mbuf *om = ble_hs_mbuf_from_flat(data, len);
     if (om == NULL) {
+        blusys_lock_give(&handle->lock);
         return BLUSYS_ERR_NO_MEM;
     }
 
     int rc = ble_gatts_notify_custom(conn_handle, chr_val_handle, om);
+    blusys_lock_give(&handle->lock);
     return rc == 0 ? BLUSYS_OK : BLUSYS_ERR_INTERNAL;
 }
 

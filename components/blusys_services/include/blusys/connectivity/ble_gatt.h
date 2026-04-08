@@ -83,7 +83,7 @@ typedef struct {
  * @brief Configuration passed to @ref blusys_ble_gatt_open.
  */
 typedef struct {
-    const char                       *device_name;      /**< BLE advertised device name (max 29 bytes). */
+    const char                       *device_name;      /**< BLE advertised device name (max 29 bytes; longer names are rejected). */
     const blusys_ble_gatt_svc_def_t  *services;         /**< Array of svc_count service definitions. */
     size_t                            svc_count;         /**< Number of entries in @p services. */
     blusys_ble_gatt_conn_cb_t         conn_cb;          /**< Optional connection/disconnection callback. */
@@ -98,14 +98,15 @@ typedef struct {
  *
  * @param config    Server configuration. Must remain valid for the lifetime of the handle.
  * @param out_handle Receives the allocated handle on success.
- * @return BLUSYS_OK on success, BLUSYS_ERR_INVALID_STATE if already open,
+ * @return BLUSYS_OK on success, BLUSYS_ERR_INVALID_ARG for invalid configuration,
+ *         BLUSYS_ERR_INVALID_STATE if already open,
  *         BLUSYS_ERR_NO_MEM, BLUSYS_ERR_TIMEOUT, or BLUSYS_ERR_INTERNAL on failure.
  */
 blusys_err_t blusys_ble_gatt_open(const blusys_ble_gatt_config_t *config,
                                    blusys_ble_gatt_t **out_handle);
 
 /**
- * @brief Stop advertising, disconnect all clients, and shut down the GATT server.
+ * @brief Stop advertising and shut down the GATT server.
  *
  * @param handle Handle returned by blusys_ble_gatt_open().
  * @return BLUSYS_OK on success, BLUSYS_ERR_INVALID_ARG if handle is NULL.
@@ -121,7 +122,8 @@ blusys_err_t blusys_ble_gatt_close(blusys_ble_gatt_t *handle);
  * @param data            Notification payload.
  * @param len             Payload length in bytes.
  * @return BLUSYS_OK on success, BLUSYS_ERR_INVALID_ARG if handle/data is NULL,
- *         BLUSYS_ERR_NO_MEM if buffer allocation fails, BLUSYS_ERR_INTERNAL on stack error.
+ *         BLUSYS_ERR_INVALID_STATE if the server is closing, BLUSYS_ERR_NO_MEM
+ *         if buffer allocation fails, BLUSYS_ERR_INTERNAL on stack error.
  */
 blusys_err_t blusys_ble_gatt_notify(blusys_ble_gatt_t *handle,
                                      uint16_t conn_handle,

@@ -11,7 +11,7 @@ extern "C" {
 typedef struct blusys_bluetooth blusys_bluetooth_t;
 
 typedef struct {
-    const char *device_name;  /**< BLE GAP name broadcast in advertising data */
+    const char *device_name;  /**< BLE GAP name broadcast in advertising data (max 29 bytes). */
 } blusys_bluetooth_config_t;
 
 typedef struct {

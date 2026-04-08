@@ -124,16 +124,16 @@ On **ESP32 only**, also set the BT controller mode (ESP32-C3 and ESP32-S3 are BL
 CONFIG_BTDM_CTRL_MODE_BLE_ONLY=y
 ```
 
-The `examples/ble_gatt_basic/` example provides `sdkconfig.defaults` with these values preset.
+The `examples/ble_gatt_basic/` example provides `sdkconfig.defaults` with these values preset, and `sdkconfig.esp32` also selects BLE-only controller mode on ESP32.
 
 ## Common Mistakes
 
 - **Forgetting `val_handle_out`** — if a characteristic has `F_NOTIFY` set, `val_handle_out` must point to a valid `uint16_t`. If it is NULL, the characteristic handle is not recorded and `blusys_ble_gatt_notify()` will produce incorrect results.
 - **Wrong UUID byte order** — the most common mistake. The `uuid[16]` array is little-endian: `uuid[0]` is the LSB of the last UUID group, not the first. Use the conversion method above.
 - **Calling `close()` from a callback** — `read_cb`, `write_cb`, and `conn_cb` run from the NimBLE host task. Calling `blusys_ble_gatt_close()` from within them will deadlock. Signal a FreeRTOS task or event group instead.
-- **Using `blusys_bluetooth` and `blusys_ble_gatt` simultaneously** — both modules use the NimBLE singleton stack. Open only one at a time; close the first before opening the second.
+- **Using another BLE-owning service at the same time** — `blusys_ble_gatt`, `blusys_bluetooth`, BLE `blusys_usb_hid`, and BLE `blusys_wifi_prov` are mutually exclusive.
 - **Notifying before the client subscribes** — the client must enable the CCCD (subscribe) before notifications are delivered. The NimBLE stack silently discards notifications to unsubscribed clients.
-- **Device name longer than 29 bytes** — the advertising payload is 31 bytes with 2 bytes used for the AD structure header. Names longer than 29 bytes will be truncated.
+- **Device name longer than 29 bytes** — `blusys_ble_gatt_open()` returns `BLUSYS_ERR_INVALID_ARG`.
 
 ## Example App
 

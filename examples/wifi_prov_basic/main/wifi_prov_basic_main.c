@@ -5,7 +5,7 @@
 #include "freertos/task.h"
 
 #include "sdkconfig.h"
-#include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
 
 #define PROV_DONE_BIT BIT0
 #define PROV_FAIL_BIT BIT1
@@ -45,13 +45,6 @@ void app_main(void)
 
     s_event_group = xEventGroupCreate();
 
-    /* Skip provisioning if credentials are already stored */
-    if (blusys_wifi_prov_is_provisioned()) {
-        printf("Device is already provisioned.\n");
-        printf("Call blusys_wifi_prov_reset() to erase credentials and re-provision.\n");
-        return;
-    }
-
 #if CONFIG_PROV_TRANSPORT_BLE
     blusys_wifi_prov_transport_t transport = BLUSYS_WIFI_PROV_TRANSPORT_BLE;
 #else
@@ -71,6 +64,15 @@ void app_main(void)
     err = blusys_wifi_prov_open(&cfg, &prov);
     if (err != BLUSYS_OK) {
         printf("wifi_prov_open failed: %s\n", blusys_err_string(err));
+        vEventGroupDelete(s_event_group);
+        return;
+    }
+
+    if (blusys_wifi_prov_is_provisioned()) {
+        printf("Device is already provisioned.\n");
+        printf("Call blusys_wifi_prov_reset() to erase credentials and re-provision.\n");
+        blusys_wifi_prov_close(prov);
+        vEventGroupDelete(s_event_group);
         return;
     }
 

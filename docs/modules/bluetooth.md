@@ -16,6 +16,9 @@ BLE advertising and scanning for ESP32 devices.
 !!! note
     This module supports BLE (Bluetooth Low Energy) only. Classic Bluetooth (BR/EDR) is not exposed. The underlying stack is NimBLE, which must be enabled in sdkconfig — see [Stack Notes](#stack-notes).
 
+!!! warning
+    `blusys_bluetooth` owns the BLE host stack while open. It cannot be open at the same time as `blusys_ble_gatt`, BLE transport `blusys_usb_hid`, or BLE transport `blusys_wifi_prov`.
+
 ## Types
 
 ### `blusys_bluetooth_config_t`
@@ -26,7 +29,7 @@ typedef struct {
 } blusys_bluetooth_config_t;
 ```
 
-Configuration passed to `blusys_bluetooth_open()`. `device_name` is required and must not be NULL. Keep it under 29 bytes — the BLE advertising payload is 31 bytes and the name AD structure uses 2 bytes of overhead.
+Configuration passed to `blusys_bluetooth_open()`. `device_name` is required and must not be NULL. It must be 29 bytes or shorter — longer names are rejected with `BLUSYS_ERR_INVALID_ARG`.
 
 ### `blusys_bluetooth_scan_result_t`
 
@@ -65,7 +68,7 @@ Initializes the NimBLE BLE stack and returns a handle. Only one handle may be op
 - `config` — device name (required)
 - `out_bt` — output handle
 
-**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_STATE` if already open, `BLUSYS_ERR_TIMEOUT` if the stack does not synchronize within 5 s, `BLUSYS_ERR_NO_MEM` on allocation failure.
+**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_ARG` for invalid configuration, `BLUSYS_ERR_INVALID_STATE` if already open or another BLE-owning module is already open, `BLUSYS_ERR_TIMEOUT` if the stack does not synchronize within 5 s, `BLUSYS_ERR_NO_MEM` on allocation failure.
 
 ---
 
@@ -159,6 +162,10 @@ NimBLE must be enabled via sdkconfig before building any project that uses this 
 ```
 CONFIG_BT_ENABLED=y
 CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=y
+CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
+CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=y
 ```
 
 On ESP32, also set:
@@ -175,4 +182,4 @@ The `examples/bluetooth_basic/` example provides `sdkconfig.defaults` and `sdkco
 - No GATT server or client in this cut
 - No connection establishment or management
 - Passive scan only — no active scan requests (scan response data not fetched)
-- One handle per process (NimBLE is a singleton stack)
+- One active BLE-owning service at a time (`bluetooth`, `ble_gatt`, BLE `usb_hid`, BLE `wifi_prov`)

@@ -1,5 +1,6 @@
 set(blusys_sources
     src/common/adc.c
+    src/common/bt_stack.c
     src/common/dac.c
     src/common/efuse.c
     src/common/error.c

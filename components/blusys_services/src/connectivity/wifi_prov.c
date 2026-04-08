@@ -20,6 +20,7 @@
 #include "wifi_provisioning/scheme_ble.h"
 #endif
 
+#include "blusys/internal/blusys_bt_stack.h"
 #include "blusys/internal/blusys_esp_err.h"
 #include "blusys/internal/blusys_lock.h"
 #include "blusys/internal/blusys_nvs_init.h"
@@ -149,6 +150,13 @@ blusys_err_t blusys_wifi_prov_open(const blusys_wifi_prov_config_t *config,
         }
     }
 
+    if (config->transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
+        err = blusys_bt_stack_acquire(BLUSYS_BT_STACK_OWNER_WIFI_PROV_BLE);
+        if (err != BLUSYS_OK) {
+            goto fail_ble_owner;
+        }
+    }
+
     wifi_init_config_t wifi_cfg = WIFI_INIT_CONFIG_DEFAULT();
     esp_err = esp_wifi_init(&wifi_cfg);
     if (esp_err != ESP_OK) {
@@ -173,7 +181,7 @@ blusys_err_t blusys_wifi_prov_open(const blusys_wifi_prov_config_t *config,
 #if CONFIG_BT_NIMBLE_ENABLED
     if (h->transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
         mgr_cfg.scheme               = wifi_prov_scheme_ble;
-        mgr_cfg.scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
+        mgr_cfg.scheme_event_handler = (wifi_prov_event_handler_t)WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
     } else {
 #endif
         mgr_cfg.scheme               = wifi_prov_scheme_softap;
@@ -206,6 +214,10 @@ fail_wifi_mode:
     esp_wifi_stop();
     esp_wifi_deinit();
 fail_wifi_init:
+    if (config->transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_WIFI_PROV_BLE);
+    }
+fail_ble_owner:
     if (h->ap_netif != NULL) {
         esp_netif_destroy(h->ap_netif);
     }
@@ -245,6 +257,9 @@ blusys_err_t blusys_wifi_prov_close(blusys_wifi_prov_t *prov)
     wifi_prov_mgr_deinit();
     esp_wifi_stop();
     esp_wifi_deinit();
+    if (prov->transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_WIFI_PROV_BLE);
+    }
     if (prov->ap_netif != NULL) {
         esp_netif_destroy(prov->ap_netif);
     }
@@ -339,17 +354,16 @@ blusys_err_t blusys_wifi_prov_get_qr_payload(blusys_wifi_prov_t *prov,
 
 bool blusys_wifi_prov_is_provisioned(void)
 {
-    wifi_config_t cfg;
-    memset(&cfg, 0, sizeof(cfg));
-    if (esp_wifi_get_config(WIFI_IF_STA, &cfg) != ESP_OK) {
+    bool provisioned = false;
+    if (wifi_prov_mgr_is_provisioned(&provisioned) != ESP_OK) {
         return false;
     }
-    return (strlen((char *)cfg.sta.ssid) > 0);
+    return provisioned;
 }
 
 blusys_err_t blusys_wifi_prov_reset(void)
 {
-    esp_err_t esp_err = esp_wifi_restore();
+    esp_err_t esp_err = wifi_prov_mgr_reset_provisioning();
     return blusys_translate_esp_err(esp_err);
 }
 

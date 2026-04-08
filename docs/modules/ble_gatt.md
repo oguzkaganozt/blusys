@@ -17,7 +17,7 @@ BLE GATT server for exposing sensor data and accepting commands over Bluetooth L
     This module supports BLE (Bluetooth Low Energy) only via the NimBLE stack. Classic Bluetooth (BR/EDR) is not exposed. NimBLE must be enabled in sdkconfig — see [Stack Notes](#stack-notes).
 
 !!! warning
-    `blusys_ble_gatt` and `blusys_bluetooth` cannot be open simultaneously — both initialize the NimBLE singleton stack. Call `close()` on one before calling `open()` on the other.
+    `blusys_ble_gatt` owns the BLE host stack while open. It cannot be open at the same time as `blusys_bluetooth`, BLE transport `blusys_usb_hid`, or BLE transport `blusys_wifi_prov`.
 
 ## Types
 
@@ -116,7 +116,7 @@ typedef struct {
 
 Passed to `blusys_ble_gatt_open()`. All pointers must remain valid for the lifetime of the handle.
 
-- `device_name` — BLE advertised name; keep under 29 bytes (the advertising payload is 31 bytes with 2 bytes of AD structure overhead).
+- `device_name` — BLE advertised name; must be 29 bytes or shorter or `open()` returns `BLUSYS_ERR_INVALID_ARG`.
 - `services` — array of `svc_count` service definitions.
 - `svc_count` — must be at least 1.
 - `conn_cb` — optional; receives connect/disconnect events.
@@ -138,7 +138,7 @@ Initializes the NimBLE stack, registers the provided GATT services, and starts B
 - `config` — server configuration; all pointers must remain valid while the handle is open.
 - `out_handle` — receives the allocated handle on success.
 
-**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_STATE` if already open, `BLUSYS_ERR_TIMEOUT` if the NimBLE stack does not synchronize within 5 s, `BLUSYS_ERR_NO_MEM` on allocation failure, `BLUSYS_ERR_INTERNAL` on NimBLE registration error.
+**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_ARG` for invalid configuration, `BLUSYS_ERR_INVALID_STATE` if already open or another BLE-owning module is already open, `BLUSYS_ERR_TIMEOUT` if the NimBLE stack does not synchronize within 5 s, `BLUSYS_ERR_NO_MEM` on allocation failure, `BLUSYS_ERR_INTERNAL` on NimBLE registration or advertising error.
 
 ---
 
@@ -177,7 +177,7 @@ Sends a BLE notification for a characteristic to a specific connected client. Th
 - `data` — notification payload.
 - `len` — payload length in bytes.
 
-**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_ARG` if handle or data is NULL, `BLUSYS_ERR_NO_MEM` if buffer allocation fails, `BLUSYS_ERR_INTERNAL` on NimBLE error.
+**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_ARG` if handle or data is NULL, `BLUSYS_ERR_INVALID_STATE` if the server is closing, `BLUSYS_ERR_NO_MEM` if buffer allocation fails, `BLUSYS_ERR_INTERNAL` on NimBLE error.
 
 ## Lifecycle
 
@@ -209,7 +209,7 @@ CONFIG_BT_NIMBLE_ENABLED=y
 CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
 ```
 
-The `examples/ble_gatt_basic/` example provides `sdkconfig.defaults` with these values preset.
+The `examples/ble_gatt_basic/` example provides `sdkconfig.defaults` with these values preset, and `sdkconfig.esp32` also selects BLE-only controller mode on ESP32.
 
 ## Limitations
 
@@ -217,4 +217,4 @@ The `examples/ble_gatt_basic/` example provides `sdkconfig.defaults` with these 
 - 128-bit UUIDs only — 16-bit Bluetooth SIG UUIDs are not directly supported
 - Single active connection tracked for notifications; multi-client notify requires iterating connections at the application level
 - Maximum read/write payload handled by the internal buffer: 512 bytes
-- One handle per process — `blusys_bluetooth` and `blusys_ble_gatt` cannot be open simultaneously
+- One active BLE-owning service at a time (`ble_gatt`, `bluetooth`, BLE `usb_hid`, BLE `wifi_prov`)

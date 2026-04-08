@@ -7,7 +7,8 @@ You want the ESP32 to announce itself over Bluetooth Low Energy so nearby phones
 ## Prerequisites
 
 - A supported board (ESP32, ESP32-C3, or ESP32-S3)
-- `CONFIG_BT_ENABLED=y` and `CONFIG_BT_NIMBLE_ENABLED=y` in sdkconfig (see [sdkconfig Requirements](#sdkconfig-requirements))
+- `CONFIG_BT_ENABLED=y` and `CONFIG_BT_NIMBLE_ENABLED=y` in sdkconfig
+- NimBLE roles enabled for both advertise and scan: `CONFIG_BT_NIMBLE_ROLE_CENTRAL=y`, `CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y`, `CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y`, and `CONFIG_BT_NIMBLE_ROLE_OBSERVER=y`
 
 ## Advertise (Peripheral) Example
 
@@ -86,8 +87,9 @@ The `examples/bluetooth_basic/` example provides these files pre-configured.
 
 - **Calling `open` twice without `close`** — returns `BLUSYS_ERR_INVALID_STATE`. NimBLE is a singleton stack; only one handle is allowed at a time.
 - **Calling `advertise_start` again while already advertising** — returns `BLUSYS_ERR_INVALID_STATE`; call `advertise_stop` first.
-- **Device name longer than 29 bytes** — the BLE advertising payload is 31 bytes and the name AD structure uses 2 bytes of overhead; longer names get truncated by the controller.
+- **Device name longer than 29 bytes** — `blusys_bluetooth_open()` returns `BLUSYS_ERR_INVALID_ARG`.
 - **Missing `CONFIG_BT_ENABLED=y`** — the build will fail with undefined references to NimBLE symbols.
+- **Missing NimBLE roles for the selected mode** — advertising requires peripheral + broadcaster; scanning requires central + observer.
 - **Calling `scan_stop` or `close` from inside the scan callback** — the callback runs in the NimBLE host task; calling these from within it will deadlock. Signal a FreeRTOS task or event group instead.
 
 ## Example App

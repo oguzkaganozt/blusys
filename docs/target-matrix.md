@@ -34,7 +34,7 @@ All modules below are available on **all three targets** unless marked otherwise
 | **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
 | **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl` |
 
-All service modules are available on all targets. For `usb_hid`, BLE transport is available on all targets; USB transport additionally requires ESP32-S3 USB host support. `ui` additionally requires the `espressif/lvgl` managed component.
+All service modules are available on all targets when their sdkconfig and managed-component requirements are met. For `usb_hid`, BLE transport is available on all targets; USB transport additionally requires ESP32-S3 USB host support. `ui` additionally requires the `espressif/lvgl` managed component.
 
 ### Target-Specific Summary
 
@@ -50,15 +50,18 @@ All service modules are available on all targets. For `usb_hid`, BLE transport i
 | `usb_host` | — | — | :material-check:{ .green } |
 | `usb_device` | — | — | :material-check:{ .green } |
 
-Unsupported modules return `BLUSYS_ERR_NOT_SUPPORTED` at runtime. Use `blusys_target_supports()` to check before calling.
+Unsupported modules return `BLUSYS_ERR_NOT_SUPPORTED` at runtime. Use `blusys_target_supports()` to check target-level availability before calling, then also satisfy any sdkconfig or managed-component requirements listed below.
 
 ## Requirements
 
 - **ESP-IDF v5.5+** — auto-detected by `blusys` CLI
-- **`bluetooth`/`ble_gatt`** — require NimBLE enabled via `CONFIG_BT_NIMBLE_ENABLED` in sdkconfig
+- **`bluetooth`** — require `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_CENTRAL=y`, `CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y`, `CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y`, and `CONFIG_BT_NIMBLE_ROLE_OBSERVER=y`
+- **`ble_gatt`** — require `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, and `CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y`
+- **`wifi_prov`** (BLE transport) — additionally requires `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y`, and `CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y`
 - **Networking modules** (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`, `local_ctrl`) — require WiFi connected first
 - **`mdns`** — additionally requires `espressif/mdns` managed component in the project's `idf_component.yml`
 - **`usb_device`** — additionally requires `espressif/esp_tinyusb` managed component in the project's `idf_component.yml`
+- **`usb_hid`** (BLE transport) — additionally requires `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_CENTRAL=y`, and `CONFIG_BT_NIMBLE_ROLE_OBSERVER=y`
 - **`usb_hid`** (USB transport) — additionally requires `espressif/usb_host_hid` managed component in the project's `idf_component.yml`
 - **`ui`** — additionally requires `espressif/lvgl` managed component in the project's `idf_component.yml`
 - **`ulp`** — additionally requires `CONFIG_ULP_COPROC_ENABLED=y`, `CONFIG_ULP_COPROC_TYPE_FSM=y`, and reserved ULP RTC memory in sdkconfig

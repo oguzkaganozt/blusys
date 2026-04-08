@@ -135,10 +135,12 @@ blusys_err_t blusys_wifi_prov_get_qr_payload(blusys_wifi_prov_t *prov,
                                               char *buf, size_t buf_size);
 
 /**
- * @brief Check whether WiFi credentials are already stored in NVS.
+ * @brief Check whether the provisioning manager reports stored WiFi credentials.
  *
- * Reads the stored WiFi STA configuration directly. No provisioning handle required.
- * Call this at boot to decide whether to skip the provisioning flow.
+ * This helper queries the ESP-IDF provisioning manager state. Call it after
+ * @ref blusys_wifi_prov_open or after the application has initialized the WiFi
+ * provisioning manager separately. If the manager is not initialized yet, this
+ * function returns false.
  *
  * @return true if credentials are stored, false otherwise.
  */
@@ -147,8 +149,9 @@ bool blusys_wifi_prov_is_provisioned(void);
 /**
  * @brief Erase stored WiFi credentials from NVS.
  *
- * Restores the WiFi driver to factory defaults. After this call,
- * blusys_wifi_prov_is_provisioned() returns false.
+ * Clears the provisioning manager's stored credentials. After this call,
+ * @ref blusys_wifi_prov_is_provisioned returns false once the provisioning
+ * manager has been initialized again.
  *
  * @return BLUSYS_OK on success.
  */
