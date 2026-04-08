@@ -22,8 +22,8 @@ void app_main(void)
     blusys_lcd_t *lcd = NULL;
     blusys_lcd_config_t lcd_cfg = {
         .driver         = BLUSYS_LCD_DRIVER_ST7735,
-        .width          = 128,
-        .height         = 160,
+        .width          = 160,
+        .height         = 128,
         .bits_per_pixel = 16,
         .bgr_order      = false,
         .swap_xy        = true,
@@ -45,7 +45,10 @@ void app_main(void)
 
     /* 2. Open the UI (starts LVGL render task) */
     blusys_ui_t *ui = NULL;
-    blusys_ui_config_t ui_cfg = { .lcd = lcd };
+    blusys_ui_config_t ui_cfg = {
+        .lcd = lcd,
+        .full_refresh = false,
+    };
     blusys_ui_open(&ui_cfg, &ui);
 
     /* 3. Create widgets — always lock before touching LVGL state */
@@ -63,12 +66,14 @@ void app_main(void)
 }
 ```
 
-For common 128x160 ST7735 portrait modules, `swap_xy = true` and `mirror_x = true` is a good starting point. If text is mirrored or black/white are inverted on your module, adjust `mirror_x`, `mirror_y`, or `invert_color`.
+For common 128x160 ST7735 portrait modules, `swap_xy = true` and `mirror_x = true` is a good starting point. When `swap_xy = true`, set `width` and `height` to the logical rotated size (`160x128` here). If text is mirrored or black/white are inverted on your module, adjust `mirror_x`, `mirror_y`, or `invert_color`.
+
+For small SPI TFTs such as 128x160 ST7735 panels, keep `full_refresh = false` unless you have hardware-validated the full-screen path on your module. The default partial mode is still the only hardware-validated safe path at the moment. It flushes LVGL output conservatively row-by-row, which is slower on full-screen redraws but avoids the corruption seen with the current accelerated path experiments.
 
 ## APIs Used
 
 | Function | Purpose |
-|---|---|
+| --- | --- |
 | `blusys_ui_open()` | Initialise LVGL, create draw buffers, start render task |
 | `blusys_ui_close()` | Stop render task, free LVGL resources |
 | `blusys_ui_lock()` | Acquire LVGL mutex before widget access |

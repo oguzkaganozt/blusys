@@ -39,7 +39,11 @@ config BLUSYS_UI_BL_PIN
 
 config BLUSYS_UI_PCLK_HZ
     int "SPI pixel clock Hz"
-    default 16000000
+    default 48000000
+
+config BLUSYS_UI_FULL_REFRESH
+    bool "Use experimental full-screen LVGL render buffer"
+    default n
 
 config BLUSYS_UI_X_OFFSET
     int "ST7735 X offset"

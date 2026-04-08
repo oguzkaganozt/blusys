@@ -8,7 +8,7 @@ LVGL-based UI service. Opens an LCD handle, initialises LVGL, allocates draw buf
 ## Target Support
 
 | Target | Supported |
-|--------|-----------|
+| ------ | --------- |
 | ESP32 | yes |
 | ESP32-C3 | yes |
 | ESP32-S3 | yes |
@@ -30,8 +30,9 @@ typedef struct blusys_ui blusys_ui_t;
 typedef struct {
     blusys_lcd_t *lcd;           /* Required: already-opened LCD handle */
     uint32_t      buf_lines;     /* Draw buffer height in lines (0 = default 20) */
+    bool          full_refresh;  /* Use one full-screen render buffer (experimental on SPI LCDs) */
     int           task_priority; /* LVGL render task priority (0 = default 5) */
-    int           task_stack;    /* Render task stack in bytes (0 = default 8192) */
+    int           task_stack;    /* Render task stack in bytes (0 = default 16384) */
 } blusys_ui_config_t;
 ```
 
@@ -44,10 +45,10 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
                              blusys_ui_t **out_ui);
 ```
 
-Initialises LVGL, allocates double draw buffers (`buf_lines` rows each), registers the LCD flush callback, and starts the render task.
+Initialises LVGL, allocates draw buffers, registers the LCD flush callback, and starts the render task. By default the UI uses two partial buffers of `buf_lines` rows each and flushes them conservatively row-by-row. When `full_refresh = true`, it allocates one full-screen render buffer plus a temporary band buffer. That full-screen SPI path is still experimental.
 
 | Parameter | Description |
-|---|---|
+| --- | --- |
 | `config` | Configuration; `config->lcd` must be a valid open handle |
 | `out_ui` | Receives the UI handle on success |
 
@@ -79,7 +80,7 @@ Releases the LVGL global mutex. Always pair with `blusys_ui_lock()`.
 
 ## Lifecycle
 
-```
+```text
 blusys_lcd_open()   →   blusys_ui_open()
                               ↓
                     [render task running]
@@ -97,6 +98,7 @@ The render task calls `lv_timer_handler()` in a loop. All other tasks must brack
 - Requires `espressif/lvgl` managed component.
 - The flush callback byte-swaps RGB565 pixels for SPI LCD compatibility. If your LCD driver handles byte order natively, this swap is redundant but harmless.
 - Draw buffer size is `buf_lines × stride` bytes, allocated twice (double buffering). For a 320-pixel-wide display at 20 lines, each buffer is 320 × 20 × 2 = 12 800 bytes (25 600 bytes total).
+- When `full_refresh` is enabled, `buf_lines` is ignored and the UI allocates one screen-sized render buffer plus a temporary flush band buffer. This uses more RAM and should be treated as experimental on SPI LCDs until validated on your panel.
 
 ## Example App
 

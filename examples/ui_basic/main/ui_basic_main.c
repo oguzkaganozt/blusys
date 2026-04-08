@@ -31,6 +31,10 @@
 #define CONFIG_BLUSYS_UI_Y_OFFSET 1
 #endif
 
+#ifndef CONFIG_BLUSYS_UI_FULL_REFRESH
+#define CONFIG_BLUSYS_UI_FULL_REFRESH 0
+#endif
+
 #if CONFIG_BLUSYS_UI_SWAP_XY
 #define LCD_WIDTH  160
 #define LCD_HEIGHT 128
@@ -116,6 +120,7 @@ void app_main(void)
     /* 2. Open the UI (LVGL init + render task) */
     blusys_ui_config_t ui_config = {
         .lcd = lcd,
+        .full_refresh = CONFIG_BLUSYS_UI_FULL_REFRESH,
     };
 
     err = blusys_ui_open(&ui_config, &ui);

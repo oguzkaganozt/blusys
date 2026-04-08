@@ -1,10 +1,12 @@
 #include "blusys/display/ui.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(BLUSYS_HAS_LVGL)
 
 #include "lvgl.h"
+#include "esp_heap_caps.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -15,6 +17,7 @@
 #define UI_DEFAULT_TASK_PRIORITY  5
 #define UI_DEFAULT_TASK_STACK     16384
 #define UI_DEFAULT_BUF_LINES      20
+#define UI_FULL_REFRESH_BAND_LINES 40
 
 static blusys_ui_t *s_active_handle;
 
@@ -23,6 +26,9 @@ struct blusys_ui {
     lv_display_t      *disp;
     void              *buf1;
     void              *buf2;
+    bool               full_refresh;
+    void              *flush_buf;
+    size_t             flush_buf_size;
     TaskHandle_t       task;
     SemaphoreHandle_t  done_sem;
     volatile bool      running;
@@ -52,6 +58,46 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
 
     if ((draw_buf != NULL) && (draw_buf->header.stride != 0u)) {
         row_stride = draw_buf->header.stride;
+    }
+
+    if (ui->full_refresh &&
+        (ui->flush_buf != NULL) &&
+        (ui->flush_buf_size >= packed_row_bytes)) {
+        uint32_t max_band_rows = (uint32_t)(ui->flush_buf_size / packed_row_bytes);
+
+        if (max_band_rows > UI_FULL_REFRESH_BAND_LINES) {
+            max_band_rows = UI_FULL_REFRESH_BAND_LINES;
+        }
+        if (max_band_rows == 0u) {
+            max_band_rows = 1u;
+        }
+
+        for (uint32_t row = 0; row < area_height; row += max_band_rows) {
+            uint32_t band_rows = area_height - row;
+            uint8_t *band_ptr = ui->flush_buf;
+
+            if (band_rows > max_band_rows) {
+                band_rows = max_band_rows;
+            }
+
+            for (uint32_t band_row = 0; band_row < band_rows; band_row++) {
+                uint8_t *dst_row = band_ptr + ((size_t)band_row * packed_row_bytes);
+                uint8_t *src_row = px_map + ((size_t)(row + band_row) * row_stride);
+
+                memcpy(dst_row, src_row,
+                       packed_row_bytes);
+                lv_draw_sw_rgb565_swap(dst_row, area_width);
+            }
+
+            blusys_lcd_draw_bitmap(ui->lcd,
+                                   area->x1,
+                                   area->y1 + (int32_t)row,
+                                   area->x2 + 1,
+                                   area->y1 + (int32_t)(row + band_rows),
+                                   band_ptr);
+        }
+        lv_display_flush_ready(disp);
+        return;
     }
 
     for (uint32_t row = 0; row < area_height; row++) {
@@ -116,6 +162,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
         return BLUSYS_ERR_NO_MEM;
     }
     ui->lcd = config->lcd;
+    ui->full_refresh = config->full_refresh;
 
     ui->done_sem = xSemaphoreCreateBinary();
     if (ui->done_sem == NULL) {
@@ -145,22 +192,36 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
                          : UI_DEFAULT_BUF_LINES;
     lv_color_format_t cf = lv_display_get_color_format(ui->disp);
     uint32_t stride = lv_draw_buf_width_to_stride(width, cf);
-    uint32_t buf_bytes = stride * buf_lines;
+    uint32_t buf_bytes = stride * (ui->full_refresh ? height : buf_lines);
+    uint32_t flush_band_lines = (height < UI_FULL_REFRESH_BAND_LINES)
+                                ? height
+                                : UI_FULL_REFRESH_BAND_LINES;
+    uint32_t flush_buf_bytes = stride * flush_band_lines;
 
     ui->buf1 = malloc(buf_bytes);
-    ui->buf2 = malloc(buf_bytes);
-    if (ui->buf1 == NULL || ui->buf2 == NULL) {
+    ui->buf2 = ui->full_refresh ? NULL : malloc(buf_bytes);
+    ui->flush_buf = ui->full_refresh
+                    ? heap_caps_malloc(flush_buf_bytes,
+                                       MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)
+                    : NULL;
+    if (ui->buf1 == NULL ||
+        (!ui->full_refresh && ui->buf2 == NULL) ||
+        (ui->full_refresh && ui->flush_buf == NULL)) {
         free(ui->buf1);
         free(ui->buf2);
+        free(ui->flush_buf);
         lv_display_delete(ui->disp);
         lv_deinit();
         vSemaphoreDelete(ui->done_sem);
         free(ui);
         return BLUSYS_ERR_NO_MEM;
     }
-    /* Keep two partial render buffers available for LVGL's flush pipeline. */
+    ui->flush_buf_size = ui->full_refresh ? flush_buf_bytes : 0u;
+    /* Full-refresh trades RAM for a single contiguous frame flush. */
     lv_display_set_buffers(ui->disp, ui->buf1, ui->buf2,
-                           buf_bytes, LV_DISPLAY_RENDER_MODE_PARTIAL);
+                           buf_bytes,
+                           ui->full_refresh ? LV_DISPLAY_RENDER_MODE_FULL
+                                            : LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     /* Start render task */
     int prio  = config->task_priority > 0 ? config->task_priority
@@ -174,6 +235,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
     if (ret != pdPASS) {
         free(ui->buf1);
         free(ui->buf2);
+        free(ui->flush_buf);
         lv_display_delete(ui->disp);
         lv_deinit();
         vSemaphoreDelete(ui->done_sem);
@@ -202,6 +264,7 @@ blusys_err_t blusys_ui_close(blusys_ui_t *ui)
 
     free(ui->buf1);
     free(ui->buf2);
+    free(ui->flush_buf);
     lv_deinit();
 
     vSemaphoreDelete(ui->done_sem);
