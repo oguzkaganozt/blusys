@@ -60,14 +60,22 @@ static void on_wifi_event(blusys_wifi_t *wifi, blusys_wifi_event_t event,
     }
 
     if ((event == BLUSYS_WIFI_EVENT_DISCONNECTED) && (info != NULL)) {
-        printf("[wifi] disconnect reason: %s\n",
+        printf("[wifi] disconnect reason: %s",
                disconnect_reason_name(info->disconnect_reason));
+        if (info->raw_disconnect_reason != 0) {
+            printf(" (%d)", info->raw_disconnect_reason);
+        }
+        printf("\n");
     }
 
     if ((event == BLUSYS_WIFI_EVENT_RECONNECTING) && (info != NULL)) {
-        printf("[wifi] reconnect attempt #%d after %s\n",
+        printf("[wifi] reconnect attempt #%d after %s",
                info->retry_attempt,
                disconnect_reason_name(info->disconnect_reason));
+        if (info->raw_disconnect_reason != 0) {
+            printf(" (%d)", info->raw_disconnect_reason);
+        }
+        printf("\n");
     }
 }
 
@@ -96,7 +104,15 @@ void app_main(void)
 
     err = blusys_wifi_connect(wifi, CONFIG_WIFI_CONNECT_TIMEOUT_MS);
     if (err != BLUSYS_OK) {
+        blusys_wifi_disconnect_reason_t reason = blusys_wifi_get_last_disconnect_reason(wifi);
+        int raw_reason = blusys_wifi_get_last_disconnect_reason_raw(wifi);
+
         printf("wifi_connect failed: %s\n", blusys_err_string(err));
+        printf("last disconnect reason: %s", disconnect_reason_name(reason));
+        if (raw_reason != 0) {
+            printf(" (%d)", raw_reason);
+        }
+        printf("\n");
         blusys_wifi_close(wifi);
         return;
     }

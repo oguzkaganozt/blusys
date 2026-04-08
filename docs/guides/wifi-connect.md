@@ -89,7 +89,9 @@ static void on_wifi_event(blusys_wifi_t *wifi, blusys_wifi_event_t event,
     (void) user_ctx;
 
     if ((event == BLUSYS_WIFI_EVENT_DISCONNECTED) && (info != NULL)) {
-        printf("disconnect reason=%d\n", (int)info->disconnect_reason);
+        printf("disconnect reason=%d raw=%d\n",
+               (int)info->disconnect_reason,
+               info->raw_disconnect_reason);
     }
 }
 
@@ -104,6 +106,8 @@ blusys_wifi_sta_config_t cfg = {
 ```
 
 Keep callbacks short. Hand off long-running work to your own FreeRTOS task or queue. Treat callbacks as informational only: do not call `blusys_wifi_connect()`, `blusys_wifi_disconnect()`, or `blusys_wifi_close()` from them.
+
+If you need the exact driver reason for diagnostics, read `info->raw_disconnect_reason` in the callback or call `blusys_wifi_get_last_disconnect_reason_raw()` after `connect()` fails.
 
 ## NVS Note
 

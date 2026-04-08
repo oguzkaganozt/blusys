@@ -50,6 +50,7 @@ struct blusys_wifi {
     int                               max_retries;
     volatile int                      retry_count;
     volatile blusys_wifi_disconnect_reason_t last_disconnect_reason;
+    volatile int                      last_disconnect_reason_raw;
     char                              ssid[33];
     char                              password[65];
 };
@@ -57,77 +58,97 @@ struct blusys_wifi {
 static blusys_wifi_disconnect_reason_t map_disconnect_reason(uint8_t reason)
 {
     switch (reason) {
-#ifdef WIFI_REASON_AUTH_FAIL
+        case WIFI_REASON_AUTH_EXPIRE:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
         case WIFI_REASON_AUTH_FAIL:
             return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
-#endif
-#ifdef WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT
+        case WIFI_REASON_AUTH_LEAVE:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
         case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:
             return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
-#endif
-#ifdef WIFI_REASON_HANDSHAKE_TIMEOUT
         case WIFI_REASON_HANDSHAKE_TIMEOUT:
             return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
-#endif
-#ifdef WIFI_REASON_802_1X_AUTH_FAILED
         case WIFI_REASON_802_1X_AUTH_FAILED:
             return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
-#endif
+        case WIFI_REASON_ASSOC_NOT_AUTHED:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_IE_INVALID:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_MIC_FAILURE:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_IE_IN_4WAY_DIFFERS:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_GROUP_CIPHER_INVALID:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_PAIRWISE_CIPHER_INVALID:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_AKMP_INVALID:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_UNSUPP_RSN_IE_VERSION:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_INVALID_RSN_IE_CAP:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_CIPHER_SUITE_REJECTED:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_BAD_CIPHER_OR_AKM:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_INVALID_PMKID:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_INVALID_MDE:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
+        case WIFI_REASON_INVALID_FTE:
+            return BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED;
 
-#ifdef WIFI_REASON_NO_AP_FOUND
         case WIFI_REASON_NO_AP_FOUND:
             return BLUSYS_WIFI_DISCONNECT_REASON_NO_AP_FOUND;
-#endif
-#ifdef WIFI_REASON_NO_AP_FOUND_IN_RSSI_THRESHOLD
         case WIFI_REASON_NO_AP_FOUND_IN_RSSI_THRESHOLD:
             return BLUSYS_WIFI_DISCONNECT_REASON_NO_AP_FOUND;
-#endif
-#ifdef WIFI_REASON_NO_AP_FOUND_IN_AUTHMODE_THRESHOLD
         case WIFI_REASON_NO_AP_FOUND_IN_AUTHMODE_THRESHOLD:
             return BLUSYS_WIFI_DISCONNECT_REASON_NO_AP_FOUND;
-#endif
-#ifdef WIFI_REASON_NO_AP_FOUND_W_COMPATIBLE_SECURITY
         case WIFI_REASON_NO_AP_FOUND_W_COMPATIBLE_SECURITY:
             return BLUSYS_WIFI_DISCONNECT_REASON_NO_AP_FOUND;
-#endif
 
-#ifdef WIFI_REASON_ASSOC_FAIL
         case WIFI_REASON_ASSOC_FAIL:
             return BLUSYS_WIFI_DISCONNECT_REASON_ASSOC_FAILED;
-#endif
-#ifdef WIFI_REASON_ASSOC_EXPIRE
         case WIFI_REASON_ASSOC_EXPIRE:
             return BLUSYS_WIFI_DISCONNECT_REASON_ASSOC_FAILED;
-#endif
-#ifdef WIFI_REASON_ASSOC_TOOMANY
         case WIFI_REASON_ASSOC_TOOMANY:
             return BLUSYS_WIFI_DISCONNECT_REASON_ASSOC_FAILED;
-#endif
+        case WIFI_REASON_DISASSOC_PWRCAP_BAD:
+            return BLUSYS_WIFI_DISCONNECT_REASON_ASSOC_FAILED;
+        case WIFI_REASON_DISASSOC_SUPCHAN_BAD:
+            return BLUSYS_WIFI_DISCONNECT_REASON_ASSOC_FAILED;
+        case WIFI_REASON_ASSOC_COMEBACK_TIME_TOO_LONG:
+            return BLUSYS_WIFI_DISCONNECT_REASON_ASSOC_FAILED;
 
-#ifdef WIFI_REASON_BEACON_TIMEOUT
         case WIFI_REASON_BEACON_TIMEOUT:
             return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
-#endif
-#ifdef WIFI_REASON_CONNECTION_FAIL
         case WIFI_REASON_CONNECTION_FAIL:
             return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
-#endif
-#ifdef WIFI_REASON_NOT_AUTHED
         case WIFI_REASON_NOT_AUTHED:
             return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
-#endif
-#ifdef WIFI_REASON_NOT_ASSOCED
         case WIFI_REASON_NOT_ASSOCED:
             return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
-#endif
-#ifdef WIFI_REASON_ASSOC_LEAVE
         case WIFI_REASON_ASSOC_LEAVE:
             return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
-#endif
-#ifdef WIFI_REASON_CONN_FAIL
-        case WIFI_REASON_CONN_FAIL:
+        case WIFI_REASON_TIMEOUT:
             return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
-#endif
+        case WIFI_REASON_PEER_INITIATED:
+            return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
+        case WIFI_REASON_AP_INITIATED:
+            return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
+        case WIFI_REASON_AP_TSF_RESET:
+            return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
+        case WIFI_REASON_ROAMING:
+            return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
+        case WIFI_REASON_SA_QUERY_TIMEOUT:
+            return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
+        case WIFI_REASON_TRANSMISSION_LINK_ESTABLISH_FAILED:
+            return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
+        case WIFI_REASON_STA_LEAVING:
+            return BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST;
 
         default:
             return BLUSYS_WIFI_DISCONNECT_REASON_UNKNOWN;
@@ -221,6 +242,7 @@ static void reconnect_task_main(void *arg)
 
         int retry_attempt = wifi->retry_count;
         blusys_wifi_disconnect_reason_t disconnect_reason = wifi->last_disconnect_reason;
+        int raw_disconnect_reason = wifi->last_disconnect_reason_raw;
 
         blusys_lock_give(&wifi->lock);
 
@@ -228,6 +250,7 @@ static void reconnect_task_main(void *arg)
         memset(&info, 0, sizeof(info));
         info.retry_attempt = retry_attempt;
         info.disconnect_reason = disconnect_reason;
+        info.raw_disconnect_reason = raw_disconnect_reason;
         emit_event(wifi, BLUSYS_WIFI_EVENT_RECONNECTING, &info);
 
         err = blusys_lock_take(&wifi->lock, BLUSYS_LOCK_WAIT_FOREVER);
@@ -288,6 +311,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
             bool closing = false;
             bool should_retry = false;
             blusys_wifi_disconnect_reason_t disconnect_reason = BLUSYS_WIFI_DISCONNECT_REASON_UNKNOWN;
+            int raw_disconnect_reason = 0;
 
             blusys_err_t err = blusys_lock_take(&wifi->lock, BLUSYS_LOCK_WAIT_FOREVER);
             if (err == BLUSYS_OK) {
@@ -299,14 +323,17 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
                     disconnect_reason = BLUSYS_WIFI_DISCONNECT_REASON_USER_REQUESTED;
                     wifi->manual_disconnect = false;
                 } else if (disc != NULL) {
+                    raw_disconnect_reason = (int)disc->reason;
                     disconnect_reason = map_disconnect_reason(disc->reason);
                 }
 
                 wifi->last_disconnect_reason = disconnect_reason;
+                wifi->last_disconnect_reason_raw = raw_disconnect_reason;
                 closing = wifi->closing;
                 should_retry = !was_manual && retry_allowed(wifi);
                 blusys_lock_give(&wifi->lock);
             } else if (disc != NULL) {
+                raw_disconnect_reason = (int)disc->reason;
                 disconnect_reason = map_disconnect_reason(disc->reason);
             }
 
@@ -319,6 +346,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
             blusys_wifi_event_info_t info;
             memset(&info, 0, sizeof(info));
             info.disconnect_reason = disconnect_reason;
+            info.raw_disconnect_reason = raw_disconnect_reason;
             emit_event(wifi, BLUSYS_WIFI_EVENT_DISCONNECTED, &info);
 
             if (should_retry) {
@@ -387,6 +415,7 @@ blusys_err_t blusys_wifi_open(const blusys_wifi_sta_config_t *config, blusys_wif
                              : BLUSYS_WIFI_DEFAULT_RETRY_MS;
     wifi->max_retries = config->max_retries;
     wifi->last_disconnect_reason = BLUSYS_WIFI_DISCONNECT_REASON_UNKNOWN;
+    wifi->last_disconnect_reason_raw = 0;
 
     strncpy(wifi->ssid, config->ssid, sizeof(wifi->ssid) - 1);
     if (config->password != NULL) {
@@ -440,6 +469,9 @@ blusys_err_t blusys_wifi_open(const blusys_wifi_sta_config_t *config, blusys_wif
     wifi_config_t sta_cfg = { 0 };
     strncpy((char *)sta_cfg.sta.ssid, wifi->ssid, sizeof(sta_cfg.sta.ssid) - 1);
     strncpy((char *)sta_cfg.sta.password, wifi->password, sizeof(sta_cfg.sta.password) - 1);
+    sta_cfg.sta.pmf_cfg.capable = true;
+    sta_cfg.sta.pmf_cfg.required = false;
+    sta_cfg.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
 
     esp_err = esp_wifi_set_mode(WIFI_MODE_STA);
     if (esp_err != ESP_OK) {
@@ -615,6 +647,7 @@ blusys_err_t blusys_wifi_disconnect(blusys_wifi_t *wifi)
     wifi->manual_disconnect = true;
     wifi->connect_in_progress = false;
     wifi->last_disconnect_reason = BLUSYS_WIFI_DISCONNECT_REASON_USER_REQUESTED;
+    wifi->last_disconnect_reason_raw = 0;
 
     blusys_lock_give(&wifi->lock);
 
@@ -662,6 +695,23 @@ blusys_wifi_disconnect_reason_t blusys_wifi_get_last_disconnect_reason(blusys_wi
     }
 
     blusys_wifi_disconnect_reason_t reason = wifi->last_disconnect_reason;
+
+    blusys_lock_give(&wifi->lock);
+    return reason;
+}
+
+int blusys_wifi_get_last_disconnect_reason_raw(blusys_wifi_t *wifi)
+{
+    if (wifi == NULL) {
+        return 0;
+    }
+
+    blusys_err_t err = blusys_lock_take(&wifi->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        return 0;
+    }
+
+    int reason = wifi->last_disconnect_reason_raw;
 
     blusys_lock_give(&wifi->lock);
     return reason;
@@ -723,6 +773,12 @@ blusys_wifi_disconnect_reason_t blusys_wifi_get_last_disconnect_reason(blusys_wi
 {
     (void) wifi;
     return BLUSYS_WIFI_DISCONNECT_REASON_UNKNOWN;
+}
+
+int blusys_wifi_get_last_disconnect_reason_raw(blusys_wifi_t *wifi)
+{
+    (void) wifi;
+    return 0;
 }
 
 bool blusys_wifi_is_connected(blusys_wifi_t *wifi)

@@ -71,10 +71,13 @@ typedef struct {
 ```c
 typedef struct {
     blusys_wifi_disconnect_reason_t disconnect_reason;
+    int raw_disconnect_reason;
     int retry_attempt;
     blusys_wifi_ip_info_t ip_info;
 } blusys_wifi_event_info_t;
 ```
+
+`raw_disconnect_reason` carries the underlying ESP-IDF `wifi_err_reason_t` numeric value when available. It is `0` when no driver-provided reason exists, such as before any disconnect or after an explicit user-requested disconnect.
 
 ### `blusys_wifi_event_cb_t`
 
@@ -163,6 +166,16 @@ blusys_wifi_disconnect_reason_t blusys_wifi_get_last_disconnect_reason(blusys_wi
 ```
 
 Returns the most recent disconnect reason recorded by the WiFi handle. This is updated for both explicit `disconnect()` calls and link-loss/authentication failures.
+
+---
+
+### `blusys_wifi_get_last_disconnect_reason_raw`
+
+```c
+int blusys_wifi_get_last_disconnect_reason_raw(blusys_wifi_t *wifi);
+```
+
+Returns the most recent raw ESP-IDF disconnect reason code recorded by the WiFi handle. Returns `0` when no driver reason is available.
 
 ---
 

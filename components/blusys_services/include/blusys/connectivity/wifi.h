@@ -37,6 +37,7 @@ typedef struct {
 
 typedef struct {
     blusys_wifi_disconnect_reason_t disconnect_reason;
+    int                             raw_disconnect_reason; /* ESP-IDF wifi_err_reason_t value, 0 if unavailable */
     int                             retry_attempt;
     blusys_wifi_ip_info_t           ip_info;
 } blusys_wifi_event_info_t;
@@ -62,6 +63,7 @@ blusys_err_t blusys_wifi_connect(blusys_wifi_t *wifi, int timeout_ms);
 blusys_err_t blusys_wifi_disconnect(blusys_wifi_t *wifi);
 blusys_err_t blusys_wifi_get_ip_info(blusys_wifi_t *wifi, blusys_wifi_ip_info_t *out_info);
 blusys_wifi_disconnect_reason_t blusys_wifi_get_last_disconnect_reason(blusys_wifi_t *wifi);
+int          blusys_wifi_get_last_disconnect_reason_raw(blusys_wifi_t *wifi);
 bool         blusys_wifi_is_connected(blusys_wifi_t *wifi);
 
 #ifdef __cplusplus
