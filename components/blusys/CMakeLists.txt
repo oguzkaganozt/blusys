@@ -28,6 +28,7 @@ set(blusys_sources
     src/common/timer.c
     src/common/touch.c
     src/common/twai.c
+    src/common/ulp.c
     src/common/uart.c
     src/common/version.c
     src/common/usb_device.c
@@ -53,7 +54,7 @@ idf_component_register(
              esp_driver_i2c esp_driver_i2s esp_driver_ledc esp_driver_mcpwm
              esp_driver_pcnt esp_driver_rmt esp_driver_sdm esp_driver_sdmmc
              esp_driver_sdspi esp_driver_spi esp_driver_touch_sens esp_driver_tsens esp_driver_twai
-             esp_driver_uart esp_hw_support esp_system esp_timer bootloader_support fatfs nvs_flash sdmmc usb
+             esp_driver_uart esp_hw_support esp_system esp_timer bootloader_support fatfs nvs_flash sdmmc ulp usb
 )
 
 # Optional managed component: espressif/esp_tinyusb
@@ -63,4 +64,18 @@ if("esp_tinyusb" IN_LIST build_components OR "espressif__esp_tinyusb" IN_LIST bu
     idf_component_get_property(tinyusb_lib esp_tinyusb COMPONENT_LIB)
     target_link_libraries(${COMPONENT_LIB} PUBLIC ${tinyusb_lib})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_TINYUSB=1)
+endif()
+
+if(CONFIG_ULP_COPROC_ENABLED AND CONFIG_ULP_COPROC_TYPE_FSM AND
+   (IDF_TARGET STREQUAL "esp32" OR IDF_TARGET STREQUAL "esp32s3"))
+    set(blusys_ulp_app_name blusys_ulp_gpio_watch)
+    set(blusys_ulp_sources
+        "src/ulp/gpio_watch.S"
+        "src/ulp/wake_up.S"
+    )
+    set(blusys_ulp_dep_sources "src/common/ulp.c")
+    ulp_embed_binary(${blusys_ulp_app_name}
+                     "${blusys_ulp_sources}"
+                     "${blusys_ulp_dep_sources}"
+                     PREFIX "blusys_ulp_gpio_watch_")
 endif()

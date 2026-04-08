@@ -65,13 +65,12 @@ Production essentials and standalone CLI.
 Advanced peripherals, sensor drivers, and architecture improvements.
 
 - status: `in_progress`
-- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages), `usb_host`, `usb_device`, `usb_hid`, `gpio_expander`, `efuse`
+- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages), `usb_host`, `usb_device`, `usb_hid`, `gpio_expander`, `efuse`, `ulp`
 - planned:
   1. `ana_cmpr` — analog signal comparison (C3, S3 only)
   2. `ethernet` — wired networking (SPI W5500, or native EMAC on ESP32)
-  3. `ulp` — ultra low power coprocessor programming (ESP32, S3 only)
-  4. `wifi_mesh` — lightweight mesh networking via `esp_mesh_lite`
-  5. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
+  3. `wifi_mesh` — lightweight mesh networking via `esp_mesh_lite`
+  4. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
 
 ## Milestones
 
@@ -93,6 +92,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - added `usb_hid` service module: HID input with dual transport — USB OTG host via `usb_host_hid` (S3 only) and BLE HOGP central via NimBLE (all targets); boot-protocol keyboard/mouse parsing, raw report fallback, BLE device name filter
 - added `gpio_expander` HAL module: unified driver for PCF8574/A (8-bit I2C), MCP23017 (16-bit I2C), and MCP23S17 (16-bit SPI) GPIO expander ICs; bus-sharing pattern (caller provides blusys_i2c_master_t or blusys_spi_t handle); per-pin direction, single-pin and full-port read/write
 - added `efuse` HAL module: read-only chip identity and security-state helpers for factory MAC, chip revision, package version, anti-rollback secure version, flash encryption state, and secure boot state
+- added `ulp` HAL module: thin ULP FSM wrapper for retained GPIO watch jobs; samples one RTC GPIO during deep sleep and wakes the main CPU after a stable watched level is detected
 - added `local_ctrl` system service implementation: local WiFi device control with a built-in HTML page, `/api/info`, optional `/api/status`, and named POST action endpoints on top of `http_server`; hardware smoke test still pending before it is considered complete
 - added `dht` sensor service: DHT11/DHT22 temperature and humidity via RMT, with rate-limiting and checksum validation
 - added `seven_seg` display service: GPIO, 74HC595 shift-register, and MAX7219 SPI drivers; up to 8 digits, software multiplexing for GPIO/HC595, hardware multiplexing for MAX7219
@@ -138,6 +138,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - `blusys_one_wire_*`
 - `blusys_gpio_expander_*`
 - `blusys_efuse_*`
+- `blusys_ulp_*`
 - `blusys_usb_host_*`
 - `blusys_usb_device_*`
 
@@ -174,6 +175,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - `usb_device` module: pending hardware smoke test (ESP32-S3, requires esp_tinyusb)
 - `usb_hid` module: pending hardware smoke test (USB keyboard on S3, BLE HID peripheral)
 - `efuse` module: pending hardware smoke test (identity and security-state spot-check)
+- `ulp` module: pending hardware smoke test (ESP32 and ESP32-S3, GPIO level wake)
 - `local_ctrl` module: pending hardware smoke test (browser UI, action endpoints, WiFi reconnect behavior)
 
 ## Environment Notes
@@ -187,4 +189,5 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 1. Hardware smoke test `dht` module (DHT11, DHT22)
 2. Hardware smoke test `gpio_expander` module (PCF8574, MCP23017)
 3. Hardware smoke test `efuse` module (compare MAC/security state with board tooling)
-4. Continue V5 planned modules (`ana_cmpr`, `ethernet`, …)
+4. Hardware smoke test `ulp` module (ESP32, ESP32-S3)
+5. Continue V5 planned modules (`ana_cmpr`, `ethernet`, …)

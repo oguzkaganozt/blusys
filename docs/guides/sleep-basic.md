@@ -38,6 +38,7 @@ blusys_sleep_enter_deep();                    /* resets on wakeup — does not r
 ## APIs Used
 
 - `blusys_sleep_enable_timer_wakeup()` sets a timer wakeup source in microseconds
+- `blusys_sleep_enable_ulp_wakeup()` enables the ULP coprocessor as a deep-sleep wake source after `blusys_ulp_start()`
 - `blusys_sleep_enter_light()` halts the CPU and most peripherals; returns after wakeup; RAM is retained
 - `blusys_sleep_enter_deep()` powers down everything except the RTC domain; resets on wakeup; RAM is lost
 - `blusys_sleep_get_wakeup_cause()` returns which source fired after waking from light sleep, or at the start of `app_main()` after deep sleep wakeup

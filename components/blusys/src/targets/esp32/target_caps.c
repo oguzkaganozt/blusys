@@ -7,7 +7,8 @@ const blusys_target_caps_t *blusys_target_caps_get(void)
         .name = "ESP32",
         .cpu_cores = 2,
         .feature_mask = BLUSYS_BASE_FEATURE_MASK | BLUSYS_PCNT_FEATURE_MASK | BLUSYS_TOUCH_FEATURE_MASK |
-                        BLUSYS_DAC_FEATURE_MASK | BLUSYS_SDMMC_FEATURE_MASK | BLUSYS_MCPWM_FEATURE_MASK,
+                        BLUSYS_DAC_FEATURE_MASK | BLUSYS_SDMMC_FEATURE_MASK | BLUSYS_MCPWM_FEATURE_MASK |
+                        BLUSYS_ULP_FEATURE_MASK,
     };
 
     return &caps;

@@ -39,7 +39,7 @@ Application
 | **Analog** | `adc`, `dac`, `sdm`, `pwm` |
 | **Timers & Counters** | `timer`, `pcnt`, `mcpwm` |
 | **Storage** | `nvs`, `sdmmc`, `sd_spi` |
-| **Device** | `system`, `sleep`, `wdt`, `temp_sensor`, `efuse` |
+| **Device** | `system`, `sleep`, `wdt`, `temp_sensor`, `efuse`, `ulp` |
 
 ### Services Modules
 
@@ -82,7 +82,7 @@ mkdocs serve
 
 ## Project Status
 
-**v5.0.0** — 53 modules across HAL and Services, standalone `blusys` CLI, full docs site. See [`PROGRESS.md`](PROGRESS.md) for detailed tracking.
+**v5.0.0** — 54 modules across HAL and Services, standalone `blusys` CLI, full docs site. See [`PROGRESS.md`](PROGRESS.md) for detailed tracking.
 
 ## License
 

@@ -32,6 +32,7 @@ extern "C" {
 #include "blusys/timer.h"
 #include "blusys/touch.h"
 #include "blusys/twai.h"
+#include "blusys/ulp.h"
 #include "blusys/uart.h"
 #include "blusys/usb_device.h"
 #include "blusys/usb_host.h"

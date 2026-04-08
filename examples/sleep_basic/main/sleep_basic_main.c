@@ -14,6 +14,7 @@ static const char *wakeup_cause_name(blusys_sleep_wakeup_t cause)
         case BLUSYS_SLEEP_WAKEUP_TOUCHPAD: return "touchpad";
         case BLUSYS_SLEEP_WAKEUP_GPIO:     return "gpio";
         case BLUSYS_SLEEP_WAKEUP_UART:     return "uart";
+        case BLUSYS_SLEEP_WAKEUP_ULP:      return "ulp";
         default:                            return "undefined";
     }
 }

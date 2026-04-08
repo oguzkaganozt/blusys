@@ -3,10 +3,20 @@
 #include "blusys/internal/blusys_esp_err.h"
 
 #include "esp_sleep.h"
+#include "soc/soc_caps.h"
 
 blusys_err_t blusys_sleep_enable_timer_wakeup(uint64_t us)
 {
     return blusys_translate_esp_err(esp_sleep_enable_timer_wakeup(us));
+}
+
+blusys_err_t blusys_sleep_enable_ulp_wakeup(void)
+{
+#if SOC_ULP_SUPPORTED
+    return blusys_translate_esp_err(esp_sleep_enable_ulp_wakeup());
+#else
+    return BLUSYS_ERR_NOT_SUPPORTED;
+#endif
 }
 
 blusys_err_t blusys_sleep_enter_light(void)
@@ -29,6 +39,7 @@ blusys_sleep_wakeup_t blusys_sleep_get_wakeup_cause(void)
         case ESP_SLEEP_WAKEUP_TOUCHPAD: return BLUSYS_SLEEP_WAKEUP_TOUCHPAD;
         case ESP_SLEEP_WAKEUP_GPIO:     return BLUSYS_SLEEP_WAKEUP_GPIO;
         case ESP_SLEEP_WAKEUP_UART:     return BLUSYS_SLEEP_WAKEUP_UART;
+        case ESP_SLEEP_WAKEUP_ULP:      return BLUSYS_SLEEP_WAKEUP_ULP;
         default:                        return BLUSYS_SLEEP_WAKEUP_UNDEFINED;
     }
 }

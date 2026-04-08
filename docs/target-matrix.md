@@ -20,7 +20,7 @@ All modules below are available on **all three targets** unless marked otherwise
 | **Analog** | `adc`, `sdm`, `pwm` | `dac` — ESP32 only |
 | **Timers & Counters** | `timer` | `pcnt`, `mcpwm` — ESP32, S3 only |
 | **Storage** | `nvs`, `sd_spi` | `sdmmc` — ESP32, S3 only |
-| **Device** | `system`, `sleep`, `wdt`, `efuse` | `temp_sensor` — C3, S3 only |
+| **Device** | `system`, `sleep`, `wdt`, `efuse` | `temp_sensor` — C3, S3 only; `ulp` — ESP32, S3 only |
 
 ### Services
 
@@ -46,6 +46,7 @@ All service modules are available on all targets. For `usb_hid`, BLE transport i
 | `sdmmc` | :material-check:{ .green } | — | :material-check:{ .green } |
 | `temp_sensor` | — | :material-check:{ .green } | :material-check:{ .green } |
 | `mcpwm` | :material-check:{ .green } | — | :material-check:{ .green } |
+| `ulp` | :material-check:{ .green } | — | :material-check:{ .green } |
 | `usb_host` | — | — | :material-check:{ .green } |
 | `usb_device` | — | — | :material-check:{ .green } |
 
@@ -60,6 +61,7 @@ Unsupported modules return `BLUSYS_ERR_NOT_SUPPORTED` at runtime. Use `blusys_ta
 - **`usb_device`** — additionally requires `espressif/esp_tinyusb` managed component in the project's `idf_component.yml`
 - **`usb_hid`** (USB transport) — additionally requires `espressif/usb_host_hid` managed component in the project's `idf_component.yml`
 - **`ui`** — additionally requires `espressif/lvgl` managed component in the project's `idf_component.yml`
+- **`ulp`** — additionally requires `CONFIG_ULP_COPROC_ENABLED=y`, `CONFIG_ULP_COPROC_TYPE_FSM=y`, and reserved ULP RTC memory in sdkconfig
 
 ## Intentionally Out of Scope
 

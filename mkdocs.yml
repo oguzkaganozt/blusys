@@ -96,6 +96,7 @@ nav:
               - Watchdog: guides/wdt-basic.md
               - Temperature: guides/temp-sensor-basic.md
               - eFuse: guides/efuse-basic.md
+              - ULP GPIO Watch: guides/ulp-gpio-watch.md
               - USB Host: guides/usb-host-basic.md
               - USB Device: guides/usb-device-basic.md
       - Services:
@@ -171,6 +172,7 @@ nav:
               - Watchdog: modules/wdt.md
               - Temperature: modules/temp_sensor.md
               - eFuse: modules/efuse.md
+              - ULP: modules/ulp.md
               - USB Host: modules/usb_host.md
               - USB Device: modules/usb_device.md
       - Services:

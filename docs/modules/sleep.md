@@ -26,6 +26,7 @@ typedef enum {
     BLUSYS_SLEEP_WAKEUP_TOUCHPAD,
     BLUSYS_SLEEP_WAKEUP_GPIO,
     BLUSYS_SLEEP_WAKEUP_UART,
+    BLUSYS_SLEEP_WAKEUP_ULP,
 } blusys_sleep_wakeup_t;
 ```
 
@@ -43,6 +44,18 @@ Configures the RTC timer as a wakeup source. The device wakes after `us` microse
 - `us` — sleep duration in microseconds; must be greater than zero
 
 **Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for zero duration, translated ESP-IDF error on failure.
+
+---
+
+### `blusys_sleep_enable_ulp_wakeup`
+
+```c
+blusys_err_t blusys_sleep_enable_ulp_wakeup(void);
+```
+
+Enables the ULP coprocessor as a deep-sleep wakeup source. Use this together with `blusys_ulp_start()`.
+
+Returns translated ESP-IDF error codes if ULP is unavailable or not enabled in sdkconfig.
 
 ---
 
@@ -86,6 +99,7 @@ Returns `BLUSYS_SLEEP_WAKEUP_UNDEFINED` after a cold power-on or unknown reset.
 | EXT1 (pin mask) | `esp_sleep_enable_ext1_wakeup()` (ESP-IDF) | Deep sleep only |
 | Touchpad | `esp_sleep_enable_touchpad_wakeup()` (ESP-IDF) | ESP32 and ESP32-S3 only |
 | UART | `esp_sleep_enable_uart_wakeup()` (ESP-IDF) | Light sleep only |
+| ULP | `blusys_sleep_enable_ulp_wakeup()` | ESP32 and ESP32-S3 only; requires ULP FSM enabled |
 
 Multiple sources may be enabled simultaneously; the first to fire wakes the device.
 
