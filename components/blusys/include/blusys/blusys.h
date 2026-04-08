@@ -31,6 +31,8 @@ extern "C" {
 #include "blusys/touch.h"
 #include "blusys/twai.h"
 #include "blusys/uart.h"
+#include "blusys/usb_device.h"
+#include "blusys/usb_host.h"
 #include "blusys/version.h"
 #include "blusys/wdt.h"
 

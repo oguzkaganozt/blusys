@@ -7,6 +7,7 @@ set(blusys_services_sources
     # input
     src/input/button.c
     src/input/encoder.c
+    src/input/usb_hid.c
     # sensor
     src/sensor/dht.c
     # actuator
@@ -49,6 +50,14 @@ if("mdns" IN_LIST build_components)
     idf_component_get_property(mdns_lib mdns COMPONENT_LIB)
     target_link_libraries(${COMPONENT_LIB} PUBLIC ${mdns_lib})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_MDNS=1)
+endif()
+
+# Optional managed component: espressif/usb_host_hid
+# Only available when the project declares espressif/usb_host_hid in its idf_component.yml.
+if("usb_host_hid" IN_LIST build_components OR "espressif__usb_host_hid" IN_LIST build_components)
+    idf_component_get_property(usb_host_hid_lib usb_host_hid COMPONENT_LIB)
+    target_link_libraries(${COMPONENT_LIB} PUBLIC ${usb_host_hid_lib})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_USB_HOST_HID=1)
 endif()
 
 # Optional managed component: lvgl/lvgl

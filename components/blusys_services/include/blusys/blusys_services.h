@@ -14,6 +14,7 @@ extern "C" {
 /* input */
 #include "blusys/input/button.h"
 #include "blusys/input/encoder.h"
+#include "blusys/input/usb_hid.h"
 
 /* sensor */
 #include "blusys/sensor/dht.h"

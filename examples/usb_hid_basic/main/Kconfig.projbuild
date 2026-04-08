@@ -1,0 +1,30 @@
+menu "USB HID Basic Example"
+
+    choice BLUSYS_USB_HID_BASIC_TRANSPORT
+        prompt "HID transport"
+        default BLUSYS_USB_HID_BASIC_TRANSPORT_USB
+        help
+            Select how to receive HID input reports.
+
+        config BLUSYS_USB_HID_BASIC_TRANSPORT_USB
+            bool "USB OTG (ESP32-S3 only)"
+            help
+                Uses USB OTG host with the usb_host_hid class driver.
+                Requires the espressif/usb_host_hid managed component.
+
+        config BLUSYS_USB_HID_BASIC_TRANSPORT_BLE
+            bool "BLE HOGP (all targets)"
+            help
+                Scans for and connects to a BLE HID peripheral using
+                the NimBLE HOGP client. Requires CONFIG_BT_NIMBLE_ENABLED.
+    endchoice
+
+    config BLUSYS_USB_HID_BASIC_BLE_DEVICE_NAME
+        string "BLE peripheral name filter (empty = any HID device)"
+        default ""
+        depends on BLUSYS_USB_HID_BASIC_TRANSPORT_BLE
+        help
+            If non-empty, only connect to a BLE HID peripheral whose
+            advertised name exactly matches this string.
+
+endmenu

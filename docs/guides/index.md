@@ -46,7 +46,7 @@ Direct hardware access — use these when you need low-level control over ESP32 
 
     Chip info, sleep modes, watchdog, and on-chip temperature.
 
-    [:octicons-arrow-right-24: System Info](system-info.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md) · [Temperature](temp-sensor-basic.md)
+    [:octicons-arrow-right-24: System Info](system-info.md) · [Sleep](sleep-basic.md) · [Watchdog](wdt-basic.md) · [Temperature](temp-sensor-basic.md) · [USB Host](usb-host-basic.md) · [USB Device](usb-device-basic.md)
 
 </div>
 
@@ -70,7 +70,7 @@ Application building blocks — use these for common tasks so you can focus on y
 
     Debounced buttons and rotary encoders.
 
-    [:octicons-arrow-right-24: Button](button-basic.md) · [Encoder](encoder-basic.md)
+    [:octicons-arrow-right-24: Button](button-basic.md) · [Encoder](encoder-basic.md) · [USB HID](usb-hid-basic.md)
 
 -   :material-thermometer:{ .lg .middle } **Sensor**
 

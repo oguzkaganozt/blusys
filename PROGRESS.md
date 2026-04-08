@@ -65,7 +65,7 @@ Production essentials and standalone CLI.
 Advanced peripherals, sensor drivers, and architecture improvements.
 
 - status: `in_progress`
-- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages)
+- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages), `usb_host`, `usb_device`, `usb_hid`
 - planned:
   2. `gpio_expander` — I2C/SPI-based port expanders
   3. `ana_cmpr` — analog signal comparison (C3, S3 only)
@@ -73,9 +73,8 @@ Advanced peripherals, sensor drivers, and architecture improvements.
   5. `ethernet` — wired networking (SPI W5500, or native EMAC on ESP32)
   6. `ulp` — ultra low power coprocessor programming (ESP32, S3 only)
   7. `wifi_mesh` — lightweight mesh networking via `esp_mesh_lite`
-  8. `usb_hid` — USB HID (S3 USB-OTG) and BLE HID (all targets)
-  9. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
-  10. `local_ctrl` — local device control over BLE/WiFi
+  8. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
+  9. `local_ctrl` — local device control over BLE/WiFi
 
 ## Milestones
 
@@ -92,6 +91,9 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 
 ## Recent Work
 
+- added `usb_host` HAL module: USB OTG host lifecycle and device enumeration (ESP32-S3 only); singleton pattern, daemon + client FreeRTOS tasks, VID/PID connect/disconnect callback
+- added `usb_device` HAL module: USB device mode via TinyUSB (optional managed component); CDC ACM echo and HID report send; SOC guard + BLUSYS_HAS_TINYUSB compile-time guard
+- added `usb_hid` service module: HID input with dual transport — USB OTG host via `usb_host_hid` (S3 only) and BLE HOGP central via NimBLE (all targets); boot-protocol keyboard/mouse parsing, raw report fallback, BLE device name filter
 - added `dht` sensor service: DHT11/DHT22 temperature and humidity via RMT, with rate-limiting and checksum validation
 - added `seven_seg` display service: GPIO, 74HC595 shift-register, and MAX7219 SPI drivers; up to 8 digits, software multiplexing for GPIO/HC595, hardware multiplexing for MAX7219
 - restructured docs nav into HAL/Services split, consolidated project pages from 8 to 3
@@ -134,11 +136,13 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - `blusys_nvs_*`
 - `blusys_sd_spi_*`
 - `blusys_one_wire_*`
+- `blusys_usb_host_*`
+- `blusys_usb_device_*`
 
 ### Services Public API (`components/blusys_services/`)
 
 **display:** `blusys_lcd_*`, `blusys_led_strip_*`, `blusys_seven_seg_*`
-**input:** `blusys_button_*`, `blusys_encoder_*`
+**input:** `blusys_button_*`, `blusys_encoder_*`, `blusys_usb_hid_*`
 **sensor:** `blusys_dht_*`
 **actuator:** `blusys_buzzer_*`
 **connectivity:** `blusys_wifi_*`, `blusys_wifi_prov_*`, `blusys_espnow_*`, `blusys_bluetooth_*`, `blusys_ble_gatt_*`, `blusys_mdns_*`
@@ -164,6 +168,9 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - `mkdocs build --strict` passes
 - `seven_seg` module: pending hardware smoke test (GPIO, 74HC595, MAX7219)
 - `dht` module: pending hardware smoke test (DHT11, DHT22)
+- `usb_host` module: pending hardware smoke test (ESP32-S3)
+- `usb_device` module: pending hardware smoke test (ESP32-S3, requires esp_tinyusb)
+- `usb_hid` module: pending hardware smoke test (USB keyboard on S3, BLE HID peripheral)
 
 ## Environment Notes
 

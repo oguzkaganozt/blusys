@@ -94,6 +94,8 @@ nav:
               - Sleep: guides/sleep-basic.md
               - Watchdog: guides/wdt-basic.md
               - Temperature: guides/temp-sensor-basic.md
+              - USB Host: guides/usb-host-basic.md
+              - USB Device: guides/usb-device-basic.md
       - Services:
           - Display:
               - LCD: guides/lcd-basic.md
@@ -102,6 +104,7 @@ nav:
           - Input:
               - Button: guides/button-basic.md
               - Encoder: guides/encoder-basic.md
+              - USB HID: guides/usb-hid-basic.md
           - Sensor:
               - DHT: guides/dht-basic.md
           - Actuator:
@@ -162,6 +165,8 @@ nav:
               - Sleep: modules/sleep.md
               - Watchdog: modules/wdt.md
               - Temperature: modules/temp_sensor.md
+              - USB Host: modules/usb_host.md
+              - USB Device: modules/usb_device.md
       - Services:
           - Display:
               - LCD: modules/lcd.md
@@ -170,6 +175,7 @@ nav:
           - Input:
               - Button: modules/button.md
               - Encoder: modules/encoder.md
+              - USB HID: modules/usb_hid.md
           - Sensor:
               - DHT: modules/dht.md
           - Actuator:

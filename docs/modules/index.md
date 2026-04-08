@@ -36,7 +36,7 @@ Direct hardware abstraction — thin wrappers over ESP-IDF drivers.
 
     ---
 
-    [:octicons-arrow-right-24: System](system.md) · [Sleep](sleep.md) · [Watchdog](wdt.md) · [Temperature](temp_sensor.md)
+    [:octicons-arrow-right-24: System](system.md) · [Sleep](sleep.md) · [Watchdog](wdt.md) · [Temperature](temp_sensor.md) · [USB Host](usb_host.md) · [USB Device](usb_device.md)
 
 </div>
 
@@ -56,7 +56,7 @@ Application building blocks — higher-level modules for common tasks.
 
     ---
 
-    [:octicons-arrow-right-24: Button](button.md) · [Encoder](encoder.md)
+    [:octicons-arrow-right-24: Button](button.md) · [Encoder](encoder.md) · [USB HID](usb_hid.md)
 
 -   :material-thermometer:{ .lg .middle } **Sensor**
 
