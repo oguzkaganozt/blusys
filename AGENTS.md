@@ -1,96 +1,96 @@
 # AGENTS.md
 
-## What This Repo Is
+## Start Here
 
-- `Blusys HAL` is a C ESP-IDF component in `components/blusys/`.
-- Supported targets are exactly: `esp32`, `esp32c3`, `esp32s3`.
-- `v1.0.0` is released; next planned work starts at `V2` in `docs/roadmap.md` and `PROGRESS.md`.
+- Read `README.md`, `PROGRESS.md`, `docs/architecture.md`, `docs/guidelines.md`, and `docs/roadmap.md` before changing public API or project status.
+- Trust executable sources over prose: `blusys`, component `CMakeLists.txt`, CI workflows, and example manifests.
 
-## Source Of Truth
+## Repo Facts That Matter
 
-Read these first before changing API or project status:
+- This repo ships two ESP-IDF components sharing the `blusys/` header namespace:
+  - `components/blusys/`: HAL only
+  - `components/blusys_services/`: higher-level services; depends on `blusys`
+- Supported targets are exactly `esp32`, `esp32c3`, and `esp32s3`.
+- Current release tracked in repo docs is `v5.0.0`.
 
-- `README.md`
-- `PROGRESS.md`
-- `docs/architecture.md`
-- `docs/guidelines.md`
-- `docs/roadmap.md`
+## Commands
 
-Trust scripts and CMake over prose if they disagree.
+- Use the `blusys` CLI, not raw `idf.py`, unless you are matching CI behavior or debugging the CLI itself.
+- Most useful commands:
+  - `blusys build [project] [esp32|esp32c3|esp32s3]`
+  - `blusys run [project] [port] [esp32|esp32c3|esp32s3]`
+  - `blusys config [project] [target]` or `blusys menuconfig [project] [target]`
+  - `blusys build-examples`
+  - `blusys version`
+- CLI behavior that is easy to miss:
+  - default target is `esp32s3`
+  - build dirs are `build-<target>`
+  - `sdkconfig.defaults` and `sdkconfig.<target>` are both passed through `-DSDKCONFIG_DEFAULTS`
+  - serial auto-detect only works when exactly one `/dev/ttyUSB*` or `/dev/ttyACM*` exists
+  - `BLUSYS_PATH` is exported by the CLI and used by generated/example `CMakeLists.txt`
 
-## Build And Flash Shortcuts
+## Verification
 
-All commands go through the `blusys` CLI. Commands default to the current directory when no project is given:
+- There is no unit-test/lint/formatter pipeline to run locally.
+- Fast focused verification:
+  - `blusys build examples/smoke esp32s3`
+  - or build the example/module you changed on all supported targets
+- Broad compile gate: `blusys build-examples`
+- Docs gate: `mkdocs build --strict`
+- Real CI behavior from `.github/workflows/ci.yml`:
+  - builds every example for all three targets
+  - runs QEMU smoke tests only for `smoke`, `system_info`, `timer_basic`, `nvs_basic`, `wdt_basic`, and `concurrency_timer`
+- Hardware validation is still expected for public modules; see `docs/guides/hardware-smoke-tests.md`.
 
-- scaffold a project: `blusys create [path]` (default: cwd)
-- build: `blusys build [project] [esp32|esp32c3|esp32s3]`
-- flash: `blusys flash [project] [port] [esp32|esp32c3|esp32s3]`
-- monitor: `blusys monitor [project] [port] [esp32|esp32c3|esp32s3]`
-- build/flash/monitor: `blusys run [project] [port] [esp32|esp32c3|esp32s3]`
-- menuconfig: `blusys config [project] [esp32|esp32c3|esp32s3]`
-- firmware size: `blusys size [project] [esp32|esp32c3|esp32s3]`
-- erase flash: `blusys erase [project] [port] [esp32|esp32c3|esp32s3]`
-- clean one target: `blusys clean [project] [esp32|esp32c3|esp32s3]`
-- clean all targets: `blusys fullclean [project]`
-- build all examples: `blusys build-examples`
-- version info: `blusys version`
-- self-update: `blusys update`
+## Structure
 
-High-signal script behavior:
+- HAL public headers: `components/blusys/include/blusys/*.h`
+- HAL implementations: `components/blusys/src/common/*.c`
+- HAL private helpers shared with services: `components/blusys/include/blusys/internal/`
+- Target capability files: `components/blusys/src/targets/{esp32,esp32c3,esp32s3}/target_caps.c`
+- Services public headers: `components/blusys_services/include/blusys/<category>/*.h`
+- Services implementations: `components/blusys_services/src/<category>/*.c`
+- Each `examples/<name>/` is its own ESP-IDF app using `EXTRA_COMPONENT_DIRS`.
 
-- default project is the current working directory
-- default target is `esp32s3` if nothing else can be inferred
-- build dirs are named `build-<target>`
-- if `sdkconfig.<target>` exists, it is passed via `-DSDKCONFIG_DEFAULTS`
-- `blusys` auto-detects a serial port only when exactly one `/dev/ttyUSB*` or `/dev/ttyACM*` exists; otherwise pass the port explicitly
+## Conventions Agents Commonly Miss
 
-## Environment Gotchas
+- Public API is C only, uses the `blusys_` prefix, and must not expose ESP-IDF types.
+- Keep the public surface smaller than ESP-IDF; do not wrap every backend option just because it exists.
+- Stateful modules use opaque handles with `open` / `close`; GPIO is the main stateless pin API.
+- Feature flags live in the HAL component:
+  - add enum entries in `components/blusys/include/blusys/target.h`
+  - add masks in `components/blusys/include/blusys/internal/blusys_target_caps.h`
+  - update per-target `target_caps.c` when support is not universal
+- Do not hold `blusys_lock_t` across blocking waits; this repo already documents that as a deadlock hazard.
+- Some APIs are split across files but share one header:
+  - `i2s.h` covers TX and RX, implemented in `i2s.c` and `i2s_rx.c`
+  - `rmt.h` covers TX and RX, implemented in `rmt.c` and `rmt_rx.c`
 
-- `blusys` auto-detects ESP-IDF via: `$IDF_PATH` env var, `idf.py` in PATH, or scanning `~/.espressif/*/esp-idf/`
-- `blusys` exports `BLUSYS_PATH` for use by project CMakeLists.txt
-- if ESP-IDF detection fails, run `blusys version` to debug
+## Optional Dependency Pattern
 
-## Verification Expectations
+- Some modules only fully enable when the consuming project declares a managed component in `main/idf_component.yml`.
+- Verified current optional integrations:
+  - `usb_device` needs `espressif/esp_tinyusb`
+  - `usb_hid` USB transport needs `espressif/usb_host_hid`
+  - `mdns` needs `espressif/mdns`
+  - `ui` needs `lvgl/lvgl`
+- Follow the existing build-time detection pattern in the component `CMakeLists.txt`; do not hard-require these globally.
 
-- there is no formal unit-test, lint, or formatter setup
-- closest focused verification is a single smoke build, for example:
-  - `blusys build examples/smoke esp32s3` (from the blusys repo directory)
-- full release-style verification is `blusys build-examples`
-- hardware validation lives in `docs/guides/hardware-smoke-tests.md`
-- concurrency stress examples already exist in `examples/concurrency_*`
+## When Adding Or Changing A Public Module
 
-## Docs
+- Minimum expected work is not just code:
+  1. header in the correct public include tree
+  2. implementation in the correct component
+  3. source/dependency registration in that component `CMakeLists.txt`
+  4. feature flag and target-capability wiring if it is HAL-facing
+  5. umbrella header update (`blusys.h` or `blusys_services.h`)
+  6. runnable example in `examples/`
+  7. guide in `docs/guides/`
+  8. reference page in `docs/modules/`
+  9. nav/index updates in `mkdocs.yml`, `docs/guides/index.md`, and `docs/modules/index.md`
+  10. `PROGRESS.md`, compatibility matrix, and module inventories updated if the public surface changed
 
-- docs are built with MkDocs Material via `mkdocs.yml`
-- strict docs build command: `mkdocs build --strict`
-- CI deploys docs from `.github/workflows/docs.yml` on pushes to `main` when docs files change
+## Generated And Vendored Files
 
-## Real Structure
-
-- `components/blusys/include/blusys/`: full public API surface
-- `components/blusys/src/common/`: module implementations
-- `components/blusys/src/internal/`: private helpers for locks, timeout conversion, error translation, target caps
-- `components/blusys/src/targets/esp32/`, `esp32c3/`, `esp32s3/`: target capability files
-- each `examples/<name>/` is a standalone ESP-IDF app that pulls the repo component via `EXTRA_COMPONENT_DIRS`
-
-Do not edit `esp-idf-en-v5.5.4/` unless the task is explicitly about updating the bundled upstream docs.
-
-## Module And API Conventions
-
-- public API is C only and uses the `blusys_` prefix
-- public headers must not expose ESP-IDF types
-- stateful modules use opaque handles and `open` / `close`
-- GPIO is stateless and pin-based
-- keep the public surface smaller than ESP-IDF; do not add options just because ESP-IDF has them
-
-## When Adding A Module
-
-Minimum expected pattern:
-
-1. add `components/blusys/include/blusys/<module>.h`
-2. add `components/blusys/src/common/<module>.c`
-3. add target-specific code only under `src/targets/<target>/` when needed
-4. register new sources and required ESP-IDF components in `components/blusys/CMakeLists.txt`
-5. add a runnable example in `examples/`
-6. add one task guide in `docs/guides/` and one reference page in `docs/modules/`
-7. validate with at least a focused build, then broader builds if the change is shared
+- Ignore `examples/*/build-*` and similar generated artifacts unless the task is specifically about build output.
+- Do not edit `esp-idf-en-v5.5.4/` unless the task is explicitly about the bundled upstream docs.
