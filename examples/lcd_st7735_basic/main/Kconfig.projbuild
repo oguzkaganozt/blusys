@@ -41,4 +41,28 @@ config BLUSYS_LCD_ST7735_PCLK_HZ
     int "SPI pixel clock Hz"
     default 16000000
 
+config BLUSYS_LCD_ST7735_X_OFFSET
+    int "ST7735 X offset"
+    default 2
+
+config BLUSYS_LCD_ST7735_Y_OFFSET
+    int "ST7735 Y offset"
+    default 1
+
+config BLUSYS_LCD_ST7735_SWAP_XY
+    bool "Swap X/Y"
+    default y
+
+config BLUSYS_LCD_ST7735_MIRROR_X
+    bool "Mirror X"
+    default y
+
+config BLUSYS_LCD_ST7735_MIRROR_Y
+    bool "Mirror Y"
+    default n
+
+config BLUSYS_LCD_ST7735_INVERT_COLOR
+    bool "Invert colors"
+    default n
+
 endmenu

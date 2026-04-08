@@ -1,10 +1,13 @@
 #include "blusys/display/ui.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(BLUSYS_HAS_LVGL)
 
 #include "lvgl.h"
+#include "esp_heap_caps.h"
+#include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -12,9 +15,12 @@
 
 #include "blusys/internal/blusys_esp_err.h"
 
+static const char *TAG = "blusys_ui";
+
 #define UI_DEFAULT_TASK_PRIORITY  5
-#define UI_DEFAULT_TASK_STACK     8192
+#define UI_DEFAULT_TASK_STACK     16384
 #define UI_DEFAULT_BUF_LINES      20
+#define UI_FLUSH_BAND_LINES       40
 
 static blusys_ui_t *s_active_handle;
 
@@ -23,6 +29,8 @@ struct blusys_ui {
     lv_display_t      *disp;
     void              *buf1;
     void              *buf2;
+    void              *flush_buf;
+    size_t             flush_buf_size;
     TaskHandle_t       task;
     SemaphoreHandle_t  done_sem;
     volatile bool      running;
@@ -39,27 +47,67 @@ static uint32_t tick_get_cb(void)
 /* ------------------------------------------------------------------ */
 /* LVGL flush callback — forwards to blusys_lcd_draw_bitmap()          */
 /* ------------------------------------------------------------------ */
+/* Copy each LVGL flush area into a DMA-safe scratch buffer packed by area
+ * width (not LVGL draw-buffer stride), byte-swap in place, then send to the
+ * panel in multi-row bands. */
 static void flush_cb(lv_display_t *disp, const lv_area_t *area,
                      uint8_t *px_map)
 {
     blusys_ui_t *ui = lv_display_get_user_data(disp);
+    lv_draw_buf_t *draw_buf = lv_display_get_buf_active(disp);
+    uint32_t area_width       = (uint32_t)(area->x2 - area->x1 + 1);
+    uint32_t area_height      = (uint32_t)(area->y2 - area->y1 + 1);
+    uint32_t pixel_size       = lv_color_format_get_size(lv_display_get_color_format(disp));
+    uint32_t packed_row_bytes = area_width * pixel_size;
+    uint32_t draw_stride      = packed_row_bytes;
 
-    /* SPI LCDs expect big-endian RGB565; ESP32 is little-endian — swap bytes */
-    uint32_t px_count = (uint32_t)(area->x2 - area->x1 + 1) *
-                        (uint32_t)(area->y2 - area->y1 + 1);
-    uint16_t *px16 = (uint16_t *)px_map;
-    for (uint32_t i = 0; i < px_count; i++) {
-        px16[i] = (px16[i] >> 8) | (px16[i] << 8);
+    if ((draw_buf != NULL) && (draw_buf->header.stride != 0u)) {
+        draw_stride = draw_buf->header.stride;
+    }
+    if (draw_stride < packed_row_bytes) {
+        draw_stride = packed_row_bytes;
     }
 
-    /* blusys_lcd_draw_bitmap queues a DMA transfer and returns before it
-     * completes.  With double buffering, LVGL renders into the OTHER buffer
-     * after flush_ready, so this buffer stays untouched until the next flush
-     * call — which blocks (trans_queue_depth=1) until this DMA finishes. */
-    blusys_lcd_draw_bitmap(ui->lcd,
-                           area->x1, area->y1,
-                           area->x2 + 1, area->y2 + 1,
-                           px_map);
+    if ((ui->flush_buf != NULL) && (ui->flush_buf_size >= packed_row_bytes)) {
+        uint32_t max_band_rows = (uint32_t)(ui->flush_buf_size / packed_row_bytes);
+        if (max_band_rows == 0u) {
+            max_band_rows = 1u;
+        }
+
+        for (uint32_t row = 0; row < area_height; row += max_band_rows) {
+            uint32_t band_rows = area_height - row;
+            if (band_rows > max_band_rows) {
+                band_rows = max_band_rows;
+            }
+
+            for (uint32_t r = 0; r < band_rows; r++) {
+                uint8_t *dst = (uint8_t *)ui->flush_buf + ((size_t)r * packed_row_bytes);
+                const uint8_t *src = px_map + ((size_t)(row + r) * draw_stride);
+                memcpy(dst, src, packed_row_bytes);
+            }
+            lv_draw_sw_rgb565_swap(ui->flush_buf, area_width * band_rows);
+
+            blusys_lcd_draw_bitmap(ui->lcd,
+                                   area->x1,
+                                   area->y1 + (int32_t)row,
+                                   area->x2 + 1,
+                                   area->y1 + (int32_t)(row + band_rows),
+                                   ui->flush_buf);
+        }
+    } else {
+        /* Fallback when scratch buffer is unavailable: send row-by-row
+         * directly from the LVGL buffer with an in-place byte-swap. */
+        for (uint32_t row = 0; row < area_height; row++) {
+            uint8_t *row_ptr = px_map + ((size_t)row * draw_stride);
+            lv_draw_sw_rgb565_swap(row_ptr, area_width);
+            blusys_lcd_draw_bitmap(ui->lcd,
+                                   area->x1,
+                                   area->y1 + (int32_t)row,
+                                   area->x2 + 1,
+                                   area->y1 + (int32_t)row + 1,
+                                   row_ptr);
+        }
+    }
 
     lv_display_flush_ready(disp);
 }
@@ -130,32 +178,56 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
         free(ui);
         return BLUSYS_ERR_NO_MEM;
     }
+    lv_display_set_color_format(ui->disp, LV_COLOR_FORMAT_RGB565);
     lv_display_set_user_data(ui->disp, ui);
     lv_display_set_flush_cb(ui->disp, flush_cb);
 
     /* Allocate draw buffers */
+    bool full_refresh = config->full_refresh;
     uint32_t buf_lines = config->buf_lines > 0
                          ? config->buf_lines
                          : UI_DEFAULT_BUF_LINES;
     lv_color_format_t cf = lv_display_get_color_format(ui->disp);
     uint32_t stride = lv_draw_buf_width_to_stride(width, cf);
-    uint32_t buf_bytes = stride * buf_lines;
+    uint32_t buf_bytes = stride * (full_refresh ? height : buf_lines);
+    uint32_t flush_band_lines = (buf_lines > UI_FLUSH_BAND_LINES)
+                                ? buf_lines
+                                : UI_FLUSH_BAND_LINES;
+    if (flush_band_lines > height) {
+        flush_band_lines = height;
+    }
+    uint32_t flush_buf_bytes = stride * flush_band_lines;
 
     ui->buf1 = malloc(buf_bytes);
-    ui->buf2 = malloc(buf_bytes);
-    if (ui->buf1 == NULL || ui->buf2 == NULL) {
+    ui->buf2 = full_refresh ? NULL : malloc(buf_bytes);
+    ui->flush_buf = heap_caps_malloc(flush_buf_bytes,
+                                     MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    if (ui->buf1 == NULL ||
+        (!full_refresh && ui->buf2 == NULL) ||
+        (ui->flush_buf == NULL)) {
         free(ui->buf1);
         free(ui->buf2);
+        heap_caps_free(ui->flush_buf);
         lv_display_delete(ui->disp);
         lv_deinit();
         vSemaphoreDelete(ui->done_sem);
         free(ui);
         return BLUSYS_ERR_NO_MEM;
     }
-    /* Double buffering: LVGL renders into one buffer while the other is
-     * being DMA'd to the display, preventing data corruption. */
+    ui->flush_buf_size = flush_buf_bytes;
     lv_display_set_buffers(ui->disp, ui->buf1, ui->buf2,
-                           buf_bytes, LV_DISPLAY_RENDER_MODE_PARTIAL);
+                           buf_bytes,
+                           full_refresh ? LV_DISPLAY_RENDER_MODE_FULL
+                                        : LV_DISPLAY_RENDER_MODE_PARTIAL);
+
+    ESP_LOGI(TAG,
+             "ui open: %lux%lu buf_lines=%lu buf_bytes=%lu scratch=%lu full_refresh=%d",
+             (unsigned long)width,
+             (unsigned long)height,
+             (unsigned long)buf_lines,
+             (unsigned long)buf_bytes,
+             (unsigned long)flush_buf_bytes,
+             full_refresh ? 1 : 0);
 
     /* Start render task */
     int prio  = config->task_priority > 0 ? config->task_priority
@@ -169,6 +241,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
     if (ret != pdPASS) {
         free(ui->buf1);
         free(ui->buf2);
+        heap_caps_free(ui->flush_buf);
         lv_display_delete(ui->disp);
         lv_deinit();
         vSemaphoreDelete(ui->done_sem);
@@ -197,6 +270,7 @@ blusys_err_t blusys_ui_close(blusys_ui_t *ui)
 
     free(ui->buf1);
     free(ui->buf2);
+    heap_caps_free(ui->flush_buf);
     lv_deinit();
 
     vSemaphoreDelete(ui->done_sem);

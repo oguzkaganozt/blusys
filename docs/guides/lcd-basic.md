@@ -66,7 +66,7 @@ void app_main(void)
 
 ## ST7735R (128x160) Example
 
-For a 128x160 ST7735R TFT, use `BLUSYS_LCD_DRIVER_ST7735` and set the GRAM offsets. Most 128x160 modules need `x_offset = 2, y_offset = 1`:
+For a 128x160 ST7735R TFT, use `BLUSYS_LCD_DRIVER_ST7735`, set the GRAM offsets, and configure orientation explicitly. Many common portrait modules need `x_offset = 2`, `y_offset = 1`, `swap_xy = true`, `mirror_x = true`, and `invert_color = false`:
 
 ```c
 #include "blusys/blusys_all.h"
@@ -83,6 +83,10 @@ void app_main(void)
         .height         = 160,
         .bits_per_pixel = 16,
         .bgr_order      = false,
+        .swap_xy        = true,
+        .mirror_x       = true,
+        .mirror_y       = false,
+        .invert_color   = false,
         .spi = {
             .bus      = 0,
             .sclk_pin = 12,
@@ -111,7 +115,7 @@ void app_main(void)
 }
 ```
 
-Color inversion is applied automatically for the ST7735 driver during `blusys_lcd_open()`.
+If the picture is upside down or mirrored, adjust `mirror_x` and `mirror_y`. If black and white appear inverted, set `invert_color = true` for that specific module.
 
 ## SSD1306 I2C OLED (128x32) Example
 

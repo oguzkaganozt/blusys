@@ -47,6 +47,10 @@ typedef struct {
     uint32_t            height;
     uint8_t             bits_per_pixel; /* 16 = RGB565, 1 = SSD1306 mono */
     bool                bgr_order;
+    bool                swap_xy;      /* Apply axis swap during init */
+    bool                mirror_x;     /* Apply X mirror during init */
+    bool                mirror_y;     /* Apply Y mirror during init */
+    bool                invert_color; /* Apply panel color inversion during init */
     union {
         blusys_lcd_spi_config_t spi;
         blusys_lcd_i2c_config_t i2c;
