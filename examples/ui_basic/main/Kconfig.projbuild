@@ -41,4 +41,28 @@ config BLUSYS_UI_PCLK_HZ
     int "SPI pixel clock Hz"
     default 16000000
 
+config BLUSYS_UI_X_OFFSET
+    int "ST7735 X offset"
+    default 2
+
+config BLUSYS_UI_Y_OFFSET
+    int "ST7735 Y offset"
+    default 1
+
+config BLUSYS_UI_SWAP_XY
+    bool "Swap X/Y"
+    default y
+
+config BLUSYS_UI_MIRROR_X
+    bool "Mirror X"
+    default y
+
+config BLUSYS_UI_MIRROR_Y
+    bool "Mirror Y"
+    default n
+
+config BLUSYS_UI_INVERT_COLOR
+    bool "Invert colors"
+    default n
+
 endmenu

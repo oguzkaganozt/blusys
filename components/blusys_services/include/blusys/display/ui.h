@@ -16,7 +16,7 @@ typedef struct {
     blusys_lcd_t *lcd;            /* Required: already-opened LCD handle */
     uint32_t      buf_lines;      /* Draw buffer height in lines (0 = default 20) */
     int           task_priority;  /* LVGL render task priority (0 = default 5) */
-    int           task_stack;     /* Render task stack in bytes (0 = default 8192) */
+    int           task_stack;     /* Render task stack in bytes (0 = default 16384) */
 } blusys_ui_config_t;
 
 blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,

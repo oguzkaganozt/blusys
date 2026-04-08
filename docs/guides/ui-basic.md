@@ -26,8 +26,12 @@ void app_main(void)
         .height         = 160,
         .bits_per_pixel = 16,
         .bgr_order      = false,
+        .swap_xy        = true,
+        .mirror_x       = true,
+        .mirror_y       = false,
+        .invert_color   = false,
         .spi = {
-            .bus      = SPI2_HOST,
+            .bus      = 0,
             .sclk_pin = 18,
             .mosi_pin = 23,
             .cs_pin   = 5,
@@ -58,6 +62,8 @@ void app_main(void)
     blusys_lcd_close(lcd);
 }
 ```
+
+For common 128x160 ST7735 portrait modules, `swap_xy = true` and `mirror_x = true` is a good starting point. If text is mirrored or black/white are inverted on your module, adjust `mirror_x`, `mirror_y`, or `invert_color`.
 
 ## APIs Used
 

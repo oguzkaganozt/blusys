@@ -73,6 +73,10 @@ typedef struct {
     uint32_t            height;
     uint8_t             bits_per_pixel; /* 16 = RGB565, 1 = SSD1306 mono */
     bool                bgr_order;
+    bool                swap_xy;      /* Apply axis swap during init */
+    bool                mirror_x;     /* Apply X mirror during init */
+    bool                mirror_y;     /* Apply Y mirror during init */
+    bool                invert_color; /* Apply panel color inversion during init */
     union {
         blusys_lcd_spi_config_t spi;
         blusys_lcd_i2c_config_t i2c;
@@ -81,6 +85,8 @@ typedef struct {
 ```
 
 Use the `spi` union member for ST7789, ST7735, and NT35510 drivers. Use the `i2c` union member for the SSD1306 driver.
+
+Set `swap_xy`, `mirror_x`, `mirror_y`, and `invert_color` when a panel needs a specific orientation or hardware color inversion immediately after init. For common 128x160 ST7735 modules, portrait mode is often `swap_xy = true`, `mirror_x = true`, `mirror_y = false`, `invert_color = false`.
 
 ## Functions
 
@@ -91,7 +97,7 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
                              blusys_lcd_t **out_lcd);
 ```
 
-Creates the display transport (SPI or I2C bus), initializes the panel driver, resets the display, and turns it on. If `bl_pin` is set, the backlight GPIO is driven high.
+Creates the display transport (SPI or I2C bus), resets and initializes the panel driver, applies any configured gap/orientation/inversion settings, and turns it on. If `bl_pin` is set, the backlight GPIO is driven high.
 
 **Parameters:**
 

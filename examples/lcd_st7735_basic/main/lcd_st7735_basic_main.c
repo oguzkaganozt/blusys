@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -8,8 +9,37 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#ifndef CONFIG_BLUSYS_LCD_ST7735_SWAP_XY
+#define CONFIG_BLUSYS_LCD_ST7735_SWAP_XY 1
+#endif
+
+#ifndef CONFIG_BLUSYS_LCD_ST7735_MIRROR_X
+#define CONFIG_BLUSYS_LCD_ST7735_MIRROR_X 1
+#endif
+
+#ifndef CONFIG_BLUSYS_LCD_ST7735_MIRROR_Y
+#define CONFIG_BLUSYS_LCD_ST7735_MIRROR_Y 0
+#endif
+
+#ifndef CONFIG_BLUSYS_LCD_ST7735_INVERT_COLOR
+#define CONFIG_BLUSYS_LCD_ST7735_INVERT_COLOR 0
+#endif
+
+#ifndef CONFIG_BLUSYS_LCD_ST7735_X_OFFSET
+#define CONFIG_BLUSYS_LCD_ST7735_X_OFFSET 2
+#endif
+
+#ifndef CONFIG_BLUSYS_LCD_ST7735_Y_OFFSET
+#define CONFIG_BLUSYS_LCD_ST7735_Y_OFFSET 1
+#endif
+
+#if CONFIG_BLUSYS_LCD_ST7735_SWAP_XY
+#define LCD_WIDTH  160
+#define LCD_HEIGHT 128
+#else
 #define LCD_WIDTH  128
 #define LCD_HEIGHT 160
+#endif
 
 /* --------------------------------------------------------------------------
  * Minimal 5x7 ASCII font (printable chars 0x20–0x7E).
@@ -18,6 +48,7 @@
 #define FONT_W 5
 #define FONT_H 7
 #define FONT_FIRST 0x20
+#define LCD_FILL_BAND_LINES 40
 
 static const uint8_t s_font5x7[][FONT_W] = {
     {0x00,0x00,0x00,0x00,0x00}, /* ' ' */
@@ -117,60 +148,77 @@ static const uint8_t s_font5x7[][FONT_W] = {
     {0x08,0x08,0x2A,0x1C,0x08}, /* '~' */
 };
 
-/* --------------------------------------------------------------------------
- * Draw a single character at pixel position (x, y).
- * scale: 1 = normal (5x7), 2 = double (10x14), etc.
- * fg/bg: RGB565 colours.
- * -------------------------------------------------------------------------- */
-static uint16_t s_char_buf[FONT_W * 2 * FONT_H * 2]; /* max scale=2 */
-
-static void draw_char(blusys_lcd_t *lcd, int x, int y, char ch,
-                      uint16_t fg, uint16_t bg, int scale)
-{
-    if (ch < FONT_FIRST || ch > (char)(FONT_FIRST + sizeof(s_font5x7) / FONT_W - 1)) {
-        ch = ' ';
-    }
-    const uint8_t *glyph = s_font5x7[(uint8_t)ch - FONT_FIRST];
-
-    int pw = FONT_W * scale;
-    int ph = FONT_H * scale;
-
-    for (int row = 0; row < ph; row++) {
-        int bit_row = row / scale;
-        for (int col = 0; col < pw; col++) {
-            int bit_col = col / scale;
-            uint8_t set = (glyph[bit_col] >> bit_row) & 0x01;
-            s_char_buf[row * pw + col] = set ? fg : bg;
-        }
-    }
-
-    blusys_lcd_draw_bitmap(lcd, x, y, x + pw, y + ph, s_char_buf);
-}
-
-/* Draw a null-terminated string starting at (x, y). */
 static void draw_string(blusys_lcd_t *lcd, int x, int y, const char *str,
                         uint16_t fg, uint16_t bg, int scale)
 {
-    int cx = x;
+    size_t len = strlen(str);
     int char_w = (FONT_W + 1) * scale; /* +1 pixel gap between chars */
-    while (*str) {
-        draw_char(lcd, cx, y, *str, fg, bg, scale);
-        cx += char_w;
-        str++;
+    int text_w = (len > 0u) ? ((int)len * char_w) - scale : 0;
+    int text_h = FONT_H * scale;
+    size_t pixel_count;
+    uint16_t *text_buf;
+
+    if (text_w <= 0 || text_h <= 0) {
+        return;
     }
+
+    pixel_count = (size_t)text_w * (size_t)text_h;
+    text_buf = malloc(pixel_count * sizeof(*text_buf));
+    if (text_buf == NULL) {
+        return;
+    }
+
+    for (size_t i = 0; i < pixel_count; i++) {
+        text_buf[i] = bg;
+    }
+
+    for (size_t index = 0; index < len; index++) {
+        char ch = str[index];
+        int glyph_x = (int)index * char_w;
+
+        if (ch < FONT_FIRST || ch > (char)(FONT_FIRST + sizeof(s_font5x7) / FONT_W - 1)) {
+            ch = ' ';
+        }
+
+        const uint8_t *glyph = s_font5x7[(uint8_t)ch - FONT_FIRST];
+
+        for (int row = 0; row < text_h; row++) {
+            int bit_row = row / scale;
+            uint16_t *dst = text_buf + ((size_t)row * text_w) + glyph_x;
+
+            for (int col = 0; col < FONT_W * scale; col++) {
+                int bit_col = col / scale;
+                uint8_t set = (glyph[bit_col] >> bit_row) & 0x01;
+
+                if (set) {
+                    dst[col] = fg;
+                }
+            }
+        }
+    }
+
+    blusys_lcd_draw_bitmap(lcd, x, y, x + text_w, y + text_h, text_buf);
+    free(text_buf);
 }
 
 /* -------------------------------------------------------------------------- */
 
-static uint16_t s_row_buf[LCD_WIDTH];
+static uint16_t s_fill_buf[LCD_WIDTH * LCD_FILL_BAND_LINES];
 
 static void fill_screen(blusys_lcd_t *lcd, uint16_t color)
 {
-    for (int i = 0; i < LCD_WIDTH; i++) {
-        s_row_buf[i] = color;
+    for (size_t i = 0; i < (sizeof(s_fill_buf) / sizeof(s_fill_buf[0])); i++) {
+        s_fill_buf[i] = color;
     }
-    for (int row = 0; row < LCD_HEIGHT; row++) {
-        blusys_lcd_draw_bitmap(lcd, 0, row, LCD_WIDTH, row + 1, s_row_buf);
+
+    for (int row = 0; row < LCD_HEIGHT; row += LCD_FILL_BAND_LINES) {
+        int band_height = LCD_HEIGHT - row;
+
+        if (band_height > LCD_FILL_BAND_LINES) {
+            band_height = LCD_FILL_BAND_LINES;
+        }
+
+        blusys_lcd_draw_bitmap(lcd, 0, row, LCD_WIDTH, row + band_height, s_fill_buf);
     }
 }
 
@@ -178,6 +226,16 @@ void app_main(void)
 {
     blusys_lcd_t *lcd = NULL;
     blusys_err_t err;
+    const char *title = "BluPanda";
+    const int scale = 2;
+    const int char_stride = (FONT_W + 1) * scale;
+    const size_t title_len = strlen(title);
+    const int text_width = (title_len > 0u)
+                           ? ((int)title_len * char_stride) - scale
+                           : 0;
+    const int text_height = FONT_H * scale;
+    const int text_x = (LCD_WIDTH - text_width) / 2;
+    const int text_y = (LCD_HEIGHT - text_height) / 2;
 
     printf("blusys lcd_st7735_basic\n");
     printf("target: %s\n", blusys_target_name());
@@ -188,6 +246,10 @@ void app_main(void)
         .height         = LCD_HEIGHT,
         .bits_per_pixel = 16,
         .bgr_order      = false,
+        .swap_xy        = CONFIG_BLUSYS_LCD_ST7735_SWAP_XY,
+        .mirror_x       = CONFIG_BLUSYS_LCD_ST7735_MIRROR_X,
+        .mirror_y       = CONFIG_BLUSYS_LCD_ST7735_MIRROR_Y,
+        .invert_color   = CONFIG_BLUSYS_LCD_ST7735_INVERT_COLOR,
         .spi = {
             .bus      = CONFIG_BLUSYS_LCD_ST7735_SPI_BUS,
             .sclk_pin = CONFIG_BLUSYS_LCD_ST7735_SCLK_PIN,
@@ -197,8 +259,8 @@ void app_main(void)
             .rst_pin  = CONFIG_BLUSYS_LCD_ST7735_RST_PIN,
             .bl_pin   = CONFIG_BLUSYS_LCD_ST7735_BL_PIN,
             .pclk_hz  = CONFIG_BLUSYS_LCD_ST7735_PCLK_HZ,
-            .x_offset = 2,
-            .y_offset = 1,
+            .x_offset = CONFIG_BLUSYS_LCD_ST7735_X_OFFSET,
+            .y_offset = CONFIG_BLUSYS_LCD_ST7735_Y_OFFSET,
         },
     };
 
@@ -212,9 +274,8 @@ void app_main(void)
     /* Black background */
     fill_screen(lcd, 0x0000);
 
-    /* "BluPanda" in white, scale=2 (10x14px per char), centered vertically */
-    /* String width = 8 chars * (5+1)*2 = 96px; start x = (128-96)/2 = 16 */
-    draw_string(lcd, 16, 73, "BluPanda", 0xFFFF, 0x0000, 2);
+    /* Keep the raw drawing check aligned with the active logical panel size. */
+    draw_string(lcd, text_x, text_y, title, 0xFFFF, 0x0000, scale);
     printf("drew BluPanda\n");
 
     vTaskDelay(pdMS_TO_TICKS(5000));

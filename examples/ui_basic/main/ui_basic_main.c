@@ -7,8 +7,70 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#ifndef CONFIG_BLUSYS_UI_SWAP_XY
+#define CONFIG_BLUSYS_UI_SWAP_XY 1
+#endif
+
+#ifndef CONFIG_BLUSYS_UI_MIRROR_X
+#define CONFIG_BLUSYS_UI_MIRROR_X 1
+#endif
+
+#ifndef CONFIG_BLUSYS_UI_MIRROR_Y
+#define CONFIG_BLUSYS_UI_MIRROR_Y 0
+#endif
+
+#ifndef CONFIG_BLUSYS_UI_INVERT_COLOR
+#define CONFIG_BLUSYS_UI_INVERT_COLOR 0
+#endif
+
+#ifndef CONFIG_BLUSYS_UI_X_OFFSET
+#define CONFIG_BLUSYS_UI_X_OFFSET 2
+#endif
+
+#ifndef CONFIG_BLUSYS_UI_Y_OFFSET
+#define CONFIG_BLUSYS_UI_Y_OFFSET 1
+#endif
+
+#if CONFIG_BLUSYS_UI_SWAP_XY
+#define LCD_WIDTH  160
+#define LCD_HEIGHT 128
+#else
 #define LCD_WIDTH  128
 #define LCD_HEIGHT 160
+#endif
+
+static lv_obj_t *create_debug_rect(lv_obj_t *parent, int x, int y,
+                                   int width, int height, lv_color_t color)
+{
+    lv_obj_t *obj = lv_obj_create(parent);
+
+    lv_obj_remove_style_all(obj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, width, height);
+    lv_obj_set_style_bg_color(obj, color, 0);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
+    lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
+
+    return obj;
+}
+
+static void create_debug_overlay(lv_obj_t *scr)
+{
+    const int marker = 6;
+
+    create_debug_rect(scr, 0, 0, LCD_WIDTH, 1, lv_color_white());
+    create_debug_rect(scr, 0, LCD_HEIGHT - 1, LCD_WIDTH, 1, lv_color_white());
+    create_debug_rect(scr, 0, 0, 1, LCD_HEIGHT, lv_color_white());
+    create_debug_rect(scr, LCD_WIDTH - 1, 0, 1, LCD_HEIGHT, lv_color_white());
+
+    create_debug_rect(scr, 0, 0, marker, marker, lv_palette_main(LV_PALETTE_RED));
+    create_debug_rect(scr, LCD_WIDTH - marker, 0, marker, marker,
+                      lv_palette_main(LV_PALETTE_GREEN));
+    create_debug_rect(scr, 0, LCD_HEIGHT - marker, marker, marker,
+                      lv_palette_main(LV_PALETTE_BLUE));
+    create_debug_rect(scr, LCD_WIDTH - marker, LCD_HEIGHT - marker, marker, marker,
+                      lv_palette_main(LV_PALETTE_YELLOW));
+}
 
 void app_main(void)
 {
@@ -26,6 +88,10 @@ void app_main(void)
         .height         = LCD_HEIGHT,
         .bits_per_pixel = 16,
         .bgr_order      = false,
+        .swap_xy        = CONFIG_BLUSYS_UI_SWAP_XY,
+        .mirror_x       = CONFIG_BLUSYS_UI_MIRROR_X,
+        .mirror_y       = CONFIG_BLUSYS_UI_MIRROR_Y,
+        .invert_color   = CONFIG_BLUSYS_UI_INVERT_COLOR,
         .spi = {
             .bus      = CONFIG_BLUSYS_UI_SPI_BUS,
             .sclk_pin = CONFIG_BLUSYS_UI_SCLK_PIN,
@@ -35,8 +101,8 @@ void app_main(void)
             .rst_pin  = CONFIG_BLUSYS_UI_RST_PIN,
             .bl_pin   = CONFIG_BLUSYS_UI_BL_PIN,
             .pclk_hz  = CONFIG_BLUSYS_UI_PCLK_HZ,
-            .x_offset = 2,
-            .y_offset = 1,
+            .x_offset = CONFIG_BLUSYS_UI_X_OFFSET,
+            .y_offset = CONFIG_BLUSYS_UI_Y_OFFSET,
         },
     };
 
@@ -63,14 +129,16 @@ void app_main(void)
     /* 3. Create LVGL widgets — lock required for thread safety */
     blusys_ui_lock(ui);
 
-    lv_obj_t *scr = lv_screen_active();
+    lv_obj_t *scr = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(scr, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
+    create_debug_overlay(scr);
 
     lv_obj_t *label = lv_label_create(scr);
     lv_label_set_text(label, "BluPanda");
     lv_obj_set_style_text_color(label, lv_color_white(), 0);
     lv_obj_center(label);
+    lv_screen_load(scr);
 
     blusys_ui_unlock(ui);
     printf("ui ready\n");
