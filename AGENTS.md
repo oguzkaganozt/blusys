@@ -2,95 +2,79 @@
 
 ## Start Here
 
-- Read `README.md`, `PROGRESS.md`, `docs/architecture.md`, `docs/guidelines.md`, and `docs/roadmap.md` before changing public API or project status.
-- Trust executable sources over prose: `blusys`, component `CMakeLists.txt`, CI workflows, and example manifests.
+- Before changing public API, docs nav, or project status, read `README.md`, `PROGRESS.md`, `docs/architecture.md`, and `docs/guidelines.md`.
+- Trust executable sources over prose: `blusys`, `components/*/CMakeLists.txt`, example `idf_component.yml`, and `.github/workflows/*.yml`. Some prose inventories are older than the code.
 
-## Repo Facts That Matter
+## Repo Shape
 
-- This repo ships two ESP-IDF components sharing the `blusys/` header namespace:
+- This repo is a library repo, not one ESP-IDF app. It ships two components sharing the `blusys/` include namespace:
   - `components/blusys/`: HAL only
-  - `components/blusys_services/`: higher-level services; depends on `blusys`
+  - `components/blusys_services/`: higher-level services; `REQUIRES blusys`
 - Supported targets are exactly `esp32`, `esp32c3`, and `esp32s3`.
-- Current release tracked in repo docs is `v5.0.0`.
+- Each `examples/<name>/` is its own ESP-IDF project. Project `CMakeLists.txt` pulls in `../../components` via `EXTRA_COMPONENT_DIRS`.
+- Example/app Kconfig belongs in `main/Kconfig.projbuild`, not the project root.
 
-## Commands
+## CLI And Build Quirks
 
-- Use the `blusys` CLI, not raw `idf.py`, unless you are matching CI behavior or debugging the CLI itself.
-- Most useful commands:
+- Use the `blusys` CLI for normal work; use raw `idf.py` only when matching CI behavior or debugging the CLI itself.
+- Easy defaults to guess wrong:
+  - project defaults to the current directory
+  - default target is `esp32s3`
+  - build dirs are `build-<target>`
+  - both `sdkconfig.defaults` and `sdkconfig.<target>` are passed through `-DSDKCONFIG_DEFAULTS`
+  - serial auto-detect only works when exactly one `/dev/ttyUSB*` or `/dev/ttyACM*` exists
+  - generated projects and examples rely on `BLUSYS_PATH`, which the CLI exports
+- If you change Kconfig or `sdkconfig.defaults`, remove `build-<target>` before rebuilding; `set-target` only runs on first configure.
+- Useful commands:
   - `blusys build [project] [esp32|esp32c3|esp32s3]`
   - `blusys run [project] [port] [esp32|esp32c3|esp32s3]`
   - `blusys config [project] [target]` or `blusys menuconfig [project] [target]`
   - `blusys build-examples`
-  - `blusys version`
-- CLI behavior that is easy to miss:
-  - default target is `esp32s3`
-  - build dirs are `build-<target>`
-  - `sdkconfig.defaults` and `sdkconfig.<target>` are both passed through `-DSDKCONFIG_DEFAULTS`
-  - serial auto-detect only works when exactly one `/dev/ttyUSB*` or `/dev/ttyACM*` exists
-  - `BLUSYS_PATH` is exported by the CLI and used by generated/example `CMakeLists.txt`
+  - `blusys qemu [project] [target]` after `blusys install-qemu`; QEMU networking is Ethernet emulation, not WiFi
 
 ## Verification
 
-- There is no unit-test/lint/formatter pipeline to run locally.
-- Fast focused verification:
-  - `blusys build examples/smoke esp32s3`
-  - or build the example/module you changed on all supported targets
-- Broad compile gate: `blusys build-examples`
-- Docs gate: `mkdocs build --strict`
-- Real CI behavior from `.github/workflows/ci.yml`:
-  - builds every example for all three targets
-  - runs QEMU smoke tests only for `smoke`, `system_info`, `timer_basic`, `nvs_basic`, `wdt_basic`, and `concurrency_timer`
-- Hardware validation is still expected for public modules; see `docs/guides/hardware-smoke-tests.md`.
+- There is no repo-local unit/lint/typecheck pipeline.
+- Fast compile check: `blusys build examples/smoke esp32s3` or build the changed example/module on all supported targets.
+- Broad compile gate: `blusys build-examples`.
+- Docs gate: `mkdocs build --strict`.
+- CI builds every example for all three targets. QEMU only covers `smoke`, `system_info`, `timer_basic`, `nvs_basic`, `wdt_basic`, and `concurrency_timer`.
+- Public modules still need real-board validation; see `docs/guides/hardware-smoke-tests.md`.
 
-## Structure
+## API And Implementation Rules
 
-- HAL public headers: `components/blusys/include/blusys/*.h`
-- HAL implementations: `components/blusys/src/common/*.c`
-- HAL private helpers shared with services: `components/blusys/include/blusys/internal/`
-- Target capability files: `components/blusys/src/targets/{esp32,esp32c3,esp32s3}/target_caps.c`
-- Services public headers: `components/blusys_services/include/blusys/<category>/*.h`
-- Services implementations: `components/blusys_services/src/<category>/*.c`
-- Each `examples/<name>/` is its own ESP-IDF app using `EXTRA_COMPONENT_DIRS`.
-
-## Conventions Agents Commonly Miss
-
-- Public API is C only, uses the `blusys_` prefix, and must not expose ESP-IDF types.
-- Keep the public surface smaller than ESP-IDF; do not wrap every backend option just because it exists.
+- Public API is C-only, `blusys_`-prefixed, and must not expose ESP-IDF types or `esp_err_t`.
 - Stateful modules use opaque handles with `open` / `close`; GPIO is the main stateless pin API.
-- Feature flags live in the HAL component:
-  - add enum entries in `components/blusys/include/blusys/target.h`
-  - add masks in `components/blusys/include/blusys/internal/blusys_target_caps.h`
-  - update per-target `target_caps.c` when support is not universal
-- Do not hold `blusys_lock_t` across blocking waits; this repo already documents that as a deadlock hazard.
-- Some APIs are split across files but share one header:
-  - `i2s.h` covers TX and RX, implemented in `i2s.c` and `i2s_rx.c`
-  - `rmt.h` covers TX and RX, implemented in `rmt.c` and `rmt_rx.c`
+- Keep the public surface smaller than ESP-IDF; do not mirror backend options by default.
+- Shared internal helpers live in `components/blusys/include/blusys/internal/`.
+- Modules that need NVS should use `blusys_nvs_ensure_init()` instead of open-coding `nvs_flash_init()` / erase-retry.
+- Never hold `blusys_lock_t` across blocking waits; the expected pattern is lock -> prepare -> unlock -> wait.
+- `i2s.h` and `rmt.h` each cover both TX and RX, but the implementations are split across `i2s.c` / `i2s_rx.c` and `rmt.c` / `rmt_rx.c`.
 
-## Optional Dependency Pattern
+## Feature Gating
 
-- Some modules only fully enable when the consuming project declares a managed component in `main/idf_component.yml`.
-- Verified current optional integrations:
-  - `usb_device` needs `espressif/esp_tinyusb`
-  - `usb_hid` USB transport needs `espressif/usb_host_hid`
-  - `mdns` needs `espressif/mdns`
-  - `ui` needs `lvgl/lvgl`
-- Follow the existing build-time detection pattern in the component `CMakeLists.txt`; do not hard-require these globally.
+- HAL-facing feature flags live only in `components/blusys`: update `include/blusys/target.h`, `include/blusys/internal/blusys_target_caps.h`, and per-target `src/targets/*/target_caps.c` when support is not universal.
+- Follow the existing optional managed-component detection pattern in CMake instead of hard-requiring these globally:
+  - `usb_device` -> `espressif/esp_tinyusb`
+  - `mdns` -> `espressif/mdns`
+  - `usb_hid` USB transport -> `espressif/usb_host_hid`
+  - `ui` -> `lvgl/lvgl`
+- `bluetooth` and `ble_gatt` require `CONFIG_BT_NIMBLE_ENABLED`.
+- WiFi-dependent service modules do not bring up connectivity for you. Verified docs require WiFi to be connected first for `http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, and `local_ctrl`.
 
-## When Adding Or Changing A Public Module
+## Public Module Changes
 
-- Minimum expected work is not just code:
-  1. header in the correct public include tree
-  2. implementation in the correct component
-  3. source/dependency registration in that component `CMakeLists.txt`
-  4. feature flag and target-capability wiring if it is HAL-facing
-  5. umbrella header update (`blusys.h` or `blusys_services.h`)
-  6. runnable example in `examples/`
-  7. guide in `docs/guides/`
-  8. reference page in `docs/modules/`
-  9. nav/index updates in `mkdocs.yml`, `docs/guides/index.md`, and `docs/modules/index.md`
-  10. `PROGRESS.md`, compatibility matrix, and module inventories updated if the public surface changed
+- Minimum expected work for a new or changed public module is more than code:
+  - header in the correct public include tree
+  - implementation in the correct component and source registration in that component's `CMakeLists.txt`
+  - umbrella header update (`blusys.h` or `blusys_services.h`)
+  - runnable example in `examples/`
+  - guide in `docs/guides/` and reference page in `docs/modules/`
+  - nav updates in `mkdocs.yml` and card-index updates in `docs/guides/index.md` and `docs/modules/index.md`
+  - `PROGRESS.md` and `docs/target-matrix.md` if the public surface or support matrix changed
+- For HAL modules only, also wire feature flags and target capability masks.
 
-## Generated And Vendored Files
+## Generated Files
 
-- Ignore `examples/*/build-*` and similar generated artifacts unless the task is specifically about build output.
-- Do not edit `esp-idf-en-v5.5.4/` unless the task is explicitly about the bundled upstream docs.
+- Ignore generated artifacts under `examples/**/build*`, `examples/**/sdkconfig*` except `sdkconfig.defaults*`, and `site/` unless the task is specifically about generated output.
+- Do not edit vendored upstream docs under `esp-idf-en-*` unless the task is explicitly about that copy.
