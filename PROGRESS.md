@@ -1,195 +1,35 @@
 # Progress
 
-This is the single source of truth for both roadmap and implementation progress.
-
-## Status Legend
-
-- `not_started`
-- `in_progress`
-- `completed`
-- `blocked`
-
 ## Current Summary
 
-- current phase: `V5`
-- overall status: `in_progress`
-- last completed milestone: `V4`
-- next target milestone: `V5`
+- current phase: `V6`
 - current release: `v5.0.0`
+- overall status: `not_started`
 - open blockers: none
 
 ## Roadmap
 
-### Completed
+| Version | Status | Modules |
+|---------|--------|---------|
+| V1 | completed | `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer` |
+| V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` |
+| V3 | completed | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt` |
+| V4 | completed | `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`, standalone CLI |
+| V5 | completed | `encoder`, `buzzer`, `one_wire`, `dht`, `gpio_expander`, `efuse`, `ulp`, `usb_host`, `usb_device`, `usb_hid`, `wifi_mesh`, `local_ctrl`, services restructure |
+| V6 | not_started | `ethernet`, `camera` |
 
-- foundation and project setup
-- core modules: `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer`
-- async support and validation work
-- `v1.0.0` release
-- full `V2`: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
-- `v2.0.0` release
-- full `V3`: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt`
-- `v3.0.0` release
-- full `V4`: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`
-- standalone `blusys` CLI with install-once workflow, IDF auto-detection, tab completion
-- `v4.0.0` release
-- V5 early work: `encoder`, `buzzer`, `one_wire`, services restructure into 7 categories, docs HAL/Services split
-- `v5.0.0` release
-- LCD: add ST7735R driver support with GRAM offset configuration
-- LCD: add SSD1306 128x32 I2C OLED example and docs
-
-### V2
-
-Core HAL expansion.
-
-- status: `completed`
-- done: `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx`
-
-### V3
-
-Connectivity and system services.
-
-- status: `completed`
-- done: `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt`
-
-### V4
-
-Production essentials and standalone CLI.
-
-- status: `completed`
-- done: `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`
-- tooling: standalone `blusys` CLI, `install.sh`, IDF auto-detection, `config-idf`, `example` command, bash tab completion
-
-### V5
-
-Advanced peripherals, sensor drivers, and architecture improvements.
-
-- status: `in_progress`
-- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages), `usb_host`, `usb_device`, `usb_hid`, `gpio_expander`, `efuse`, `ulp`, `wifi_mesh`
-- planned:
-  1. `ethernet` — wired networking (SPI W5500, or native EMAC on ESP32)
-  2. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
-- deferred:
-  - `ana_cmpr` — deferred: `SOC_ANA_CMPR_SUPPORTED` is not set for ESP32, ESP32-C3, or ESP32-S3; supported only on ESP32-C5, ESP32-H2, ESP32-P4, ESP32-C61; revisit when a supported target is added to Blusys
-
-## Milestones
-
-| Milestone | Status | Notes |
-|---|---|---|
-| Foundation | completed | project setup, component skeleton, target plumbing, smoke app |
-| Core Modules | completed | `system`, `gpio`, `uart`, `i2c`, `spi`, `pwm`, `adc`, `timer` |
-| Async And Validation | completed | timer callbacks, GPIO interrupt callbacks, UART async, hardware validation |
-| V1 Release | completed | `v1.0.0` |
-| V2 | completed | `pcnt`, `rmt`, `twai`, `i2s`, `touch`, `dac`, `sdmmc`, `temp_sensor`, `wdt`, `sleep`, `mcpwm`, `sdm`, `i2c_slave`, `spi_slave`, `i2s_rx`, `rmt_rx` — released `v2.0.0` |
-| V3 | completed | `wifi`, `nvs`, `http_client`, `mqtt`, `http_server`, `ota`, `sntp`, `mdns`, `bluetooth`, `fs`, `espnow`, `ble_gatt` — released `v3.0.0` |
-| V4 | completed | `button`, `led_strip`, `console`, `fatfs`, `sd_spi`, `power_mgmt`, `ws_client`, `wifi_prov`, `lcd`, standalone CLI — released `v4.0.0` |
-| V5 | in_progress | `encoder`, `buzzer`, `one_wire`, services restructure, docs overhaul — released `v5.0.0` |
-
-## Recent Work
-
-- added `wifi_mesh` connectivity service: self-organizing multi-hop mesh via ESP-IDF `esp_mesh`; singleton pattern, event callbacks (started, stopped, parent/child connect/disconnect, got_ip), blocking send/recv API with MAC addressing, `is_root()` and `get_layer()` helpers; gated by `SOC_WIFI_SUPPORTED`
-- added `usb_host` HAL module: USB OTG host lifecycle and device enumeration (ESP32-S3 only); singleton pattern, daemon + client FreeRTOS tasks, VID/PID connect/disconnect callback
-- added `usb_device` HAL module: USB device mode via TinyUSB (optional managed component); CDC ACM echo and HID report send; SOC guard + BLUSYS_HAS_TINYUSB compile-time guard
-- added `usb_hid` service module: HID input with dual transport — USB OTG host via `usb_host_hid` (S3 only) and BLE HOGP central via NimBLE (all targets); boot-protocol keyboard/mouse parsing, raw report fallback, BLE device name filter
-- added `gpio_expander` HAL module: unified driver for PCF8574/A (8-bit I2C), MCP23017 (16-bit I2C), and MCP23S17 (16-bit SPI) GPIO expander ICs; bus-sharing pattern (caller provides blusys_i2c_master_t or blusys_spi_t handle); per-pin direction, single-pin and full-port read/write
-- added `efuse` HAL module: read-only chip identity and security-state helpers for factory MAC, chip revision, package version, anti-rollback secure version, flash encryption state, and secure boot state
-- added `ulp` HAL module: thin ULP FSM wrapper for retained GPIO watch jobs; samples one RTC GPIO during deep sleep and wakes the main CPU after a stable watched level is detected
-- added `local_ctrl` system service implementation: local WiFi device control with a built-in HTML page, `/api/info`, optional `/api/status`, and named POST action endpoints on top of `http_server`; hardware smoke test still pending before it is considered complete
-- added `dht` sensor service: DHT11/DHT22 temperature and humidity via RMT, with rate-limiting and checksum validation
-- added `seven_seg` display service: GPIO, 74HC595 shift-register, and MAX7219 SPI drivers; up to 8 digits, software multiplexing for GPIO/HC595, hardware multiplexing for MAX7219
-- restructured docs nav into HAL/Services split, consolidated project pages from 8 to 3
-- restructured `blusys_services` into 7 categories: display, input, sensor, actuator, connectivity, protocol, system
-- added `one_wire` HAL module: Dallas/Maxim 1-Wire protocol
-- added `buzzer` service module: PWM-driven passive piezo, single-tone and sequence playback
-- added `encoder` service module: EC11-style rotary encoders with PCNT hardware acceleration
-
-## Current Technical State
-
-### HAL Public API (`components/blusys/`)
-
-- `blusys_version_*`
-- `blusys_err_string()`
-- `blusys_target_*`
-- `blusys_system_*`
-- `blusys_gpio_*`
-- `blusys_uart_*`
-- `blusys_i2c_master_*`
-- `blusys_i2c_slave_*`
-- `blusys_i2s_tx_*`
-- `blusys_i2s_rx_*`
-- `blusys_spi_*`
-- `blusys_spi_slave_*`
-- `blusys_pwm_*`
-- `blusys_adc_*`
-- `blusys_timer_*`
-- `blusys_pcnt_*`
-- `blusys_rmt_*`
-- `blusys_rmt_rx_*`
-- `blusys_twai_*`
-- `blusys_touch_*`
-- `blusys_dac_*`
-- `blusys_sdmmc_*`
-- `blusys_temp_sensor_*`
-- `blusys_wdt_*`
-- `blusys_sleep_*`
-- `blusys_mcpwm_*`
-- `blusys_sdm_*`
-- `blusys_nvs_*`
-- `blusys_sd_spi_*`
-- `blusys_one_wire_*`
-- `blusys_gpio_expander_*`
-- `blusys_efuse_*`
-- `blusys_ulp_*`
-- `blusys_usb_host_*`
-- `blusys_usb_device_*`
-
-### Services Public API (`components/blusys_services/`)
-
-**display:** `blusys_lcd_*`, `blusys_led_strip_*`, `blusys_seven_seg_*`, `blusys_ui_*`
-**input:** `blusys_button_*`, `blusys_encoder_*`, `blusys_usb_hid_*`
-**sensor:** `blusys_dht_*`
-**actuator:** `blusys_buzzer_*`
-**connectivity:** `blusys_wifi_*`, `blusys_wifi_prov_*`, `blusys_wifi_mesh_*`, `blusys_espnow_*`, `blusys_bluetooth_*`, `blusys_ble_gatt_*`, `blusys_mdns_*`
-**protocol:** `blusys_mqtt_*`, `blusys_http_client_*`, `blusys_http_server_*`, `blusys_ws_client_*`
-**system:** `blusys_fs_*`, `blusys_fatfs_*`, `blusys_console_*`, `blusys_pm_*`, `blusys_sntp_*`, `blusys_ota_*`, `blusys_local_ctrl_*`
-
-### Internal Infrastructure
-
-- two-component architecture: HAL (`blusys`) and Services (`blusys_services`)
-- services organized into 7 categories with subdirectory layout
-- target-specific source selection in component CMake
-- target capability reporting for shipped public modules
-- shared lock abstraction for handle-based modules (`include/blusys/internal/`)
-- shared timeout and ESP-IDF error translation helpers
+**Deferred:** `ana_cmpr` — requires `SOC_ANA_CMPR_SUPPORTED`; not available on ESP32, ESP32-C3, or ESP32-S3.
 
 ## Validation Snapshot
 
-- `v1.0.0` release validation completed
-- `v2.0.0` release validation completed
-- `v3.0.0` release validation completed
-- `v4.0.0` release validation completed
-- `v5.0.0` release validation completed
+- v1–v5 release validation completed
 - `mkdocs build --strict` passes
-- `seven_seg` module: pending hardware smoke test (GPIO, 74HC595, MAX7219)
-- `dht` module: pending hardware smoke test (DHT11, DHT22)
-- `usb_host` module: pending hardware smoke test (ESP32-S3)
-- `usb_device` module: pending hardware smoke test (ESP32-S3, requires esp_tinyusb)
-- `usb_hid` module: pending hardware smoke test (USB keyboard on S3, BLE HID peripheral)
-- `efuse` module: pending hardware smoke test (identity and security-state spot-check)
-- `ulp` module: pending hardware smoke test (ESP32 and ESP32-S3, GPIO level wake)
-- `local_ctrl` module: pending hardware smoke test (browser UI, action endpoints, WiFi reconnect behavior)
-- `wifi_mesh` module: pending hardware smoke test (two-node mesh, root election, layer reporting)
-
-## Environment Notes
-
-- ESP-IDF v5.5+ required; auto-detected by `blusys` CLI
-- install: `git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys && ~/.blusys/install.sh`
-- some examples use target-specific `sdkconfig` files
+- pending hardware smoke tests: `seven_seg`, `dht`, `usb_host`, `usb_device`, `usb_hid`, `efuse`, `ulp`, `local_ctrl`, `wifi_mesh`
 
 ## Next Actions
 
-1. Hardware smoke test `dht` module (DHT11, DHT22)
-2. Hardware smoke test `gpio_expander` module (PCF8574, MCP23017)
-3. Hardware smoke test `efuse` module (compare MAC/security state with board tooling)
-4. Hardware smoke test `ulp` module (ESP32, ESP32-S3)
-5. Continue V5 planned modules (`ethernet`, …)
+1. Hardware smoke test `dht` (DHT11, DHT22)
+2. Hardware smoke test `gpio_expander` (PCF8574, MCP23017)
+3. Hardware smoke test `efuse` (identity and security-state spot-check)
+4. Hardware smoke test `ulp` (ESP32, ESP32-S3)
+5. Hardware smoke test `wifi_mesh` (two-node mesh)

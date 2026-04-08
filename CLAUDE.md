@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Blusys HAL** is a simplified C Hardware Abstraction Layer for ESP32 devices, built on top of ESP-IDF v5.5.4. It exposes a smaller, more stable API surface than raw ESP-IDF. Supported targets: **ESP32**, **ESP32-C3**, and **ESP32-S3**. Current release: `v5.0.0`.
+**Blusys HAL** is a simplified C Hardware Abstraction Layer for ESP32 devices, built on top of ESP-IDF v5.5.4. It exposes a smaller, more stable API surface than raw ESP-IDF. Supported targets: **ESP32**, **ESP32-C3**, and **ESP32-S3**. Current release: `v5.0.0`. 62 modules across HAL and Services.
 
 ## Build and Flash Commands
 
@@ -70,16 +70,16 @@ Application
   → Hardware
 ```
 
-**HAL modules:** gpio, gpio_expander, uart, i2c, i2c_slave, spi, spi_slave, adc, dac, pwm, mcpwm, timer, pcnt, rmt, rmt_rx, i2s, i2s_rx, sdm, twai, wdt, sleep, temp_sensor, touch, sdmmc, sd_spi, nvs, one_wire, usb_host, usb_device, system, error, target, version.
+**HAL modules:** gpio, gpio_expander, uart, i2c, i2c_slave, spi, spi_slave, adc, dac, pwm, mcpwm, timer, pcnt, rmt, rmt_rx, i2s, i2s_rx, sdm, twai, wdt, sleep, temp_sensor, touch, sdmmc, sd_spi, nvs, one_wire, efuse, ulp, usb_host, usb_device, system, error, target, version.
 
 **Service modules** (by category):
 - **display:** lcd, led_strip, seven_seg, ui
 - **input:** button, encoder, usb_hid
 - **sensor:** dht
 - **actuator:** buzzer
-- **connectivity:** wifi, wifi_prov, espnow, bluetooth, ble_gatt, mdns
+- **connectivity:** wifi, wifi_prov, wifi_mesh, espnow, bluetooth, ble_gatt, mdns
 - **protocol:** mqtt, http_client, http_server, ws_client
-- **system:** fs, fatfs, console, power_mgmt, sntp, ota
+- **system:** fs, fatfs, console, power_mgmt, sntp, ota, local_ctrl
 
 **Umbrella headers:**
 - `blusys/blusys.h` — includes all HAL modules
