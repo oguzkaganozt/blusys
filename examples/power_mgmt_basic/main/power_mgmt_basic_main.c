@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -38,7 +39,7 @@ void app_main(void)
         printf("blusys_pm_get_configuration failed: %d\n", err);
         return;
     }
-    printf("PM readback:   max=%u MHz  min=%u MHz  light_sleep=%s\n",
+    printf("PM readback:   max=%" PRIu32 " MHz  min=%" PRIu32 " MHz  light_sleep=%s\n",
            readback.max_freq_mhz, readback.min_freq_mhz,
            readback.light_sleep_enable ? "true" : "false");
 

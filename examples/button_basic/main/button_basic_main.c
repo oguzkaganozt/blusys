@@ -6,6 +6,7 @@
 #include "sdkconfig.h"
 
 #include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
 
 #define BUTTON_PIN           CONFIG_BLUSYS_BUTTON_PIN
 #define BUTTON_LONG_PRESS_MS CONFIG_BLUSYS_BUTTON_LONG_PRESS_MS

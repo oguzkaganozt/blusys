@@ -6,6 +6,7 @@
 #include "sdkconfig.h"
 
 #include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
 
 #define LED_STRIP_PIN       CONFIG_BLUSYS_LED_STRIP_PIN
 #define LED_STRIP_LED_COUNT CONFIG_BLUSYS_LED_STRIP_LED_COUNT

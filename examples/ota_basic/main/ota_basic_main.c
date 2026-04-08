@@ -3,7 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
 
 void app_main(void)
 {

@@ -5,7 +5,7 @@
 #include "freertos/task.h"
 
 #include "sdkconfig.h"
-#include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
 
 static void on_message(blusys_ws_msg_type_t type,
                         const uint8_t *data, size_t len,

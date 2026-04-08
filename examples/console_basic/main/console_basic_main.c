@@ -6,6 +6,7 @@
 #include "sdkconfig.h"
 
 #include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
 
 #define CONSOLE_UART_NUM CONFIG_BLUSYS_CONSOLE_UART_NUM
 
