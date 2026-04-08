@@ -51,7 +51,7 @@ Application
 | **Actuator** | `buzzer` |
 | **Connectivity** | `wifi`, `wifi_prov`, `espnow`, `bluetooth`, `ble_gatt`, `mdns` |
 | **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
-| **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota` |
+| **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl` |
 
 ## Usage
 
@@ -82,7 +82,7 @@ mkdocs serve
 
 ## Project Status
 
-**v5.0.0** — 52 modules across HAL and Services, standalone `blusys` CLI, full docs site. See [`PROGRESS.md`](PROGRESS.md) for detailed tracking.
+**v5.0.0** — 53 modules across HAL and Services, standalone `blusys` CLI, full docs site. See [`PROGRESS.md`](PROGRESS.md) for detailed tracking.
 
 ## License
 

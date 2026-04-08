@@ -72,7 +72,6 @@ Advanced peripherals, sensor drivers, and architecture improvements.
   3. `ulp` — ultra low power coprocessor programming (ESP32, S3 only)
   4. `wifi_mesh` — lightweight mesh networking via `esp_mesh_lite`
   5. `camera` — camera interface via `esp32-camera` (ESP32, S3 only)
-  6. `local_ctrl` — local device control over BLE/WiFi
 
 ## Milestones
 
@@ -94,6 +93,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - added `usb_hid` service module: HID input with dual transport — USB OTG host via `usb_host_hid` (S3 only) and BLE HOGP central via NimBLE (all targets); boot-protocol keyboard/mouse parsing, raw report fallback, BLE device name filter
 - added `gpio_expander` HAL module: unified driver for PCF8574/A (8-bit I2C), MCP23017 (16-bit I2C), and MCP23S17 (16-bit SPI) GPIO expander ICs; bus-sharing pattern (caller provides blusys_i2c_master_t or blusys_spi_t handle); per-pin direction, single-pin and full-port read/write
 - added `efuse` HAL module: read-only chip identity and security-state helpers for factory MAC, chip revision, package version, anti-rollback secure version, flash encryption state, and secure boot state
+- added `local_ctrl` system service implementation: local WiFi device control with a built-in HTML page, `/api/info`, optional `/api/status`, and named POST action endpoints on top of `http_server`; hardware smoke test still pending before it is considered complete
 - added `dht` sensor service: DHT11/DHT22 temperature and humidity via RMT, with rate-limiting and checksum validation
 - added `seven_seg` display service: GPIO, 74HC595 shift-register, and MAX7219 SPI drivers; up to 8 digits, software multiplexing for GPIO/HC595, hardware multiplexing for MAX7219
 - restructured docs nav into HAL/Services split, consolidated project pages from 8 to 3
@@ -149,7 +149,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 **actuator:** `blusys_buzzer_*`
 **connectivity:** `blusys_wifi_*`, `blusys_wifi_prov_*`, `blusys_espnow_*`, `blusys_bluetooth_*`, `blusys_ble_gatt_*`, `blusys_mdns_*`
 **protocol:** `blusys_mqtt_*`, `blusys_http_client_*`, `blusys_http_server_*`, `blusys_ws_client_*`
-**system:** `blusys_fs_*`, `blusys_fatfs_*`, `blusys_console_*`, `blusys_pm_*`, `blusys_sntp_*`, `blusys_ota_*`
+**system:** `blusys_fs_*`, `blusys_fatfs_*`, `blusys_console_*`, `blusys_pm_*`, `blusys_sntp_*`, `blusys_ota_*`, `blusys_local_ctrl_*`
 
 ### Internal Infrastructure
 
@@ -174,6 +174,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - `usb_device` module: pending hardware smoke test (ESP32-S3, requires esp_tinyusb)
 - `usb_hid` module: pending hardware smoke test (USB keyboard on S3, BLE HID peripheral)
 - `efuse` module: pending hardware smoke test (identity and security-state spot-check)
+- `local_ctrl` module: pending hardware smoke test (browser UI, action endpoints, WiFi reconnect behavior)
 
 ## Environment Notes
 

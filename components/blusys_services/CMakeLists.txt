@@ -28,6 +28,7 @@ set(blusys_services_sources
     src/system/console.c
     src/system/fatfs.c
     src/system/fs.c
+    src/system/local_ctrl.c
     src/system/ota.c
     src/system/power_mgmt.c
     src/system/sntp.c

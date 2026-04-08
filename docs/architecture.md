@@ -65,7 +65,7 @@ Services are organized into 7 categories, each with its own subdirectory under `
 - actuator: `buzzer`
 - connectivity: `wifi`, `wifi_prov`, `espnow`, `bluetooth`, `ble_gatt`, `mdns`
 - protocol: `mqtt`, `http_client`, `http_server`, `ws_client`
-- system: `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`
+- system: `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl`
 
 Umbrella header: `#include "blusys/blusys_services.h"`
 

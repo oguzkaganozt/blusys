@@ -40,6 +40,7 @@ extern "C" {
 #include "blusys/system/console.h"
 #include "blusys/system/fatfs.h"
 #include "blusys/system/fs.h"
+#include "blusys/system/local_ctrl.h"
 #include "blusys/system/ota.h"
 #include "blusys/system/power_mgmt.h"
 #include "blusys/system/sntp.h"

@@ -32,7 +32,7 @@ All modules below are available on **all three targets** unless marked otherwise
 | **Actuator** | `buzzer` |
 | **Connectivity** | `wifi`, `wifi_prov`, `espnow`, `bluetooth`, `ble_gatt`, `mdns` |
 | **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
-| **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota` |
+| **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl` |
 
 All service modules are available on all targets. For `usb_hid`, BLE transport is available on all targets; USB transport additionally requires ESP32-S3 USB host support. `ui` additionally requires the `espressif/lvgl` managed component.
 
@@ -55,7 +55,7 @@ Unsupported modules return `BLUSYS_ERR_NOT_SUPPORTED` at runtime. Use `blusys_ta
 
 - **ESP-IDF v5.5+** — auto-detected by `blusys` CLI
 - **`bluetooth`/`ble_gatt`** — require NimBLE enabled via `CONFIG_BT_NIMBLE_ENABLED` in sdkconfig
-- **Networking modules** (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`) — require WiFi connected first
+- **Networking modules** (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`, `local_ctrl`) — require WiFi connected first
 - **`mdns`** — additionally requires `espressif/mdns` managed component in the project's `idf_component.yml`
 - **`usb_device`** — additionally requires `espressif/esp_tinyusb` managed component in the project's `idf_component.yml`
 - **`usb_hid`** (USB transport) — additionally requires `espressif/usb_host_hid` managed component in the project's `idf_component.yml`

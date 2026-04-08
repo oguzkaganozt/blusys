@@ -110,7 +110,7 @@ Application building blocks — use these for common tasks so you can focus on y
 
     Console, filesystem, power management, time sync, and OTA updates.
 
-    [:octicons-arrow-right-24: Console](console-basic.md) · [Filesystem](fs-basic.md) · [FAT Filesystem](fatfs-basic.md) · [Power Management](power-mgmt-basic.md) · [SNTP](sntp-basic.md) · [OTA](ota-basic.md)
+    [:octicons-arrow-right-24: Console](console-basic.md) · [Filesystem](fs-basic.md) · [FAT Filesystem](fatfs-basic.md) · [Power Management](power-mgmt-basic.md) · [SNTP](sntp-basic.md) · [OTA](ota-basic.md) · [Local Control](local-ctrl-basic.md)
 
 </div>
 
