@@ -4,7 +4,72 @@
 #include "freertos/task.h"
 
 #include "sdkconfig.h"
-#include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
+
+static const char *wifi_event_name(blusys_wifi_event_t event)
+{
+    switch (event) {
+        case BLUSYS_WIFI_EVENT_STARTED:
+            return "started";
+        case BLUSYS_WIFI_EVENT_CONNECTING:
+            return "connecting";
+        case BLUSYS_WIFI_EVENT_CONNECTED:
+            return "connected";
+        case BLUSYS_WIFI_EVENT_GOT_IP:
+            return "got_ip";
+        case BLUSYS_WIFI_EVENT_DISCONNECTED:
+            return "disconnected";
+        case BLUSYS_WIFI_EVENT_RECONNECTING:
+            return "reconnecting";
+        case BLUSYS_WIFI_EVENT_STOPPED:
+            return "stopped";
+        default:
+            return "unknown";
+    }
+}
+
+static const char *disconnect_reason_name(blusys_wifi_disconnect_reason_t reason)
+{
+    switch (reason) {
+        case BLUSYS_WIFI_DISCONNECT_REASON_USER_REQUESTED:
+            return "user_requested";
+        case BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED:
+            return "auth_failed";
+        case BLUSYS_WIFI_DISCONNECT_REASON_NO_AP_FOUND:
+            return "no_ap_found";
+        case BLUSYS_WIFI_DISCONNECT_REASON_ASSOC_FAILED:
+            return "assoc_failed";
+        case BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST:
+            return "connection_lost";
+        case BLUSYS_WIFI_DISCONNECT_REASON_UNKNOWN:
+        default:
+            return "unknown";
+    }
+}
+
+static void on_wifi_event(blusys_wifi_t *wifi, blusys_wifi_event_t event,
+                          const blusys_wifi_event_info_t *info, void *user_ctx)
+{
+    (void) wifi;
+    (void) user_ctx;
+
+    printf("[wifi] event: %s\n", wifi_event_name(event));
+
+    if ((event == BLUSYS_WIFI_EVENT_GOT_IP) && (info != NULL)) {
+        printf("[wifi] ip=%s gw=%s\n", info->ip_info.ip, info->ip_info.gateway);
+    }
+
+    if ((event == BLUSYS_WIFI_EVENT_DISCONNECTED) && (info != NULL)) {
+        printf("[wifi] disconnect reason: %s\n",
+               disconnect_reason_name(info->disconnect_reason));
+    }
+
+    if ((event == BLUSYS_WIFI_EVENT_RECONNECTING) && (info != NULL)) {
+        printf("[wifi] reconnect attempt #%d after %s\n",
+               info->retry_attempt,
+               disconnect_reason_name(info->disconnect_reason));
+    }
+}
 
 void app_main(void)
 {
@@ -13,8 +78,12 @@ void app_main(void)
     blusys_err_t err;
 
     blusys_wifi_sta_config_t cfg = {
-        .ssid     = CONFIG_WIFI_SSID,
-        .password = CONFIG_WIFI_PASSWORD,
+        .ssid               = CONFIG_WIFI_SSID,
+        .password           = CONFIG_WIFI_PASSWORD,
+        .auto_reconnect     = true,
+        .reconnect_delay_ms = 1000,
+        .max_retries        = -1,
+        .on_event           = on_wifi_event,
     };
 
     err = blusys_wifi_open(&cfg, &wifi);

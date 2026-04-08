@@ -16,8 +16,11 @@ blusys_wifi_t *wifi;
 blusys_wifi_ip_info_t ip;
 
 blusys_wifi_sta_config_t cfg = {
-    .ssid     = "MyNetwork",
-    .password = "MyPassword",
+    .ssid               = "MyNetwork",
+    .password           = "MyPassword",
+    .auto_reconnect     = true,
+    .reconnect_delay_ms = 1000,
+    .max_retries        = -1,
 };
 
 blusys_wifi_open(&cfg, &wifi);
@@ -37,6 +40,7 @@ blusys_wifi_close(wifi);
 - `blusys_wifi_get_ip_info()` returns the assigned IP, netmask, and gateway
 - `blusys_wifi_disconnect()` disconnects from the AP
 - `blusys_wifi_close()` shuts down the WiFi stack and frees the handle
+- optional event callbacks report async state changes and reconnect attempts
 
 ## Open vs Connect
 
@@ -69,7 +73,37 @@ blusys_wifi_sta_config_t cfg = {
 - `connect()` triggers association and DHCP; it returns when `IP_EVENT_STA_GOT_IP` fires
 - if the AP is unreachable or the password is wrong, `connect()` returns `BLUSYS_ERR_IO`
 - if DHCP does not complete within `timeout_ms`, `connect()` returns `BLUSYS_ERR_TIMEOUT`
+- if another connect attempt is already running, `connect()` returns `BLUSYS_ERR_BUSY`
 - `is_connected()` can be polled at any time to check current connection state
+- when `auto_reconnect` is enabled, unexpected disconnects trigger background reconnect attempts after `reconnect_delay_ms`
+
+## Event Callback
+
+You can subscribe to WiFi lifecycle events without changing the blocking `connect()` flow:
+
+```c
+static void on_wifi_event(blusys_wifi_t *wifi, blusys_wifi_event_t event,
+                          const blusys_wifi_event_info_t *info, void *user_ctx)
+{
+    (void) wifi;
+    (void) user_ctx;
+
+    if ((event == BLUSYS_WIFI_EVENT_DISCONNECTED) && (info != NULL)) {
+        printf("disconnect reason=%d\n", (int)info->disconnect_reason);
+    }
+}
+
+blusys_wifi_sta_config_t cfg = {
+    .ssid               = "MyNetwork",
+    .password           = "MyPassword",
+    .auto_reconnect     = true,
+    .reconnect_delay_ms = 1000,
+    .max_retries        = -1,
+    .on_event           = on_wifi_event,
+};
+```
+
+Keep callbacks short. Hand off long-running work to your own FreeRTOS task or queue. Treat callbacks as informational only: do not call `blusys_wifi_connect()`, `blusys_wifi_disconnect()`, or `blusys_wifi_close()` from them.
 
 ## NVS Note
 
@@ -80,6 +114,7 @@ blusys_wifi_sta_config_t cfg = {
 - calling `get_ip_info()` before `connect()` succeeds — returns `BLUSYS_ERR_INVALID_STATE`
 - using a 5 GHz SSID — ESP32 radio supports 2.4 GHz only
 - forgetting to call `close()` — the NVS partition and TCP/IP stack are not released until `close()`
+- doing heavy work or WiFi lifecycle calls inside the callback — keep callbacks short, non-blocking, and informational only
 
 ## Example App
 

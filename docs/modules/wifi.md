@@ -19,9 +19,41 @@ Station-mode WiFi for connecting the ESP32 to an existing access point.
 
 ```c
 typedef struct {
-    const char *ssid;      /* AP SSID (required) */
-    const char *password;  /* AP password, NULL or "" for open networks */
+    const char *ssid;               /* AP SSID (required) */
+    const char *password;           /* AP password, NULL or "" for open networks */
+    bool auto_reconnect;            /* reconnect after unexpected disconnect */
+    int reconnect_delay_ms;         /* delay before reconnect; <= 0 uses default */
+    int max_retries;                /* 0 disables retries, -1 retries forever */
+    blusys_wifi_event_cb_t on_event;/* optional async lifecycle callback */
+    void *user_ctx;                 /* passed back in on_event */
 } blusys_wifi_sta_config_t;
+```
+
+### `blusys_wifi_event_t`
+
+```c
+typedef enum {
+    BLUSYS_WIFI_EVENT_STARTED,
+    BLUSYS_WIFI_EVENT_CONNECTING,
+    BLUSYS_WIFI_EVENT_CONNECTED,
+    BLUSYS_WIFI_EVENT_GOT_IP,
+    BLUSYS_WIFI_EVENT_DISCONNECTED,
+    BLUSYS_WIFI_EVENT_RECONNECTING,
+    BLUSYS_WIFI_EVENT_STOPPED,
+} blusys_wifi_event_t;
+```
+
+### `blusys_wifi_disconnect_reason_t`
+
+```c
+typedef enum {
+    BLUSYS_WIFI_DISCONNECT_REASON_UNKNOWN,
+    BLUSYS_WIFI_DISCONNECT_REASON_USER_REQUESTED,
+    BLUSYS_WIFI_DISCONNECT_REASON_AUTH_FAILED,
+    BLUSYS_WIFI_DISCONNECT_REASON_NO_AP_FOUND,
+    BLUSYS_WIFI_DISCONNECT_REASON_ASSOC_FAILED,
+    BLUSYS_WIFI_DISCONNECT_REASON_CONNECTION_LOST,
+} blusys_wifi_disconnect_reason_t;
 ```
 
 ### `blusys_wifi_ip_info_t`
@@ -32,6 +64,25 @@ typedef struct {
     char netmask[16];
     char gateway[16];
 } blusys_wifi_ip_info_t;
+```
+
+### `blusys_wifi_event_info_t`
+
+```c
+typedef struct {
+    blusys_wifi_disconnect_reason_t disconnect_reason;
+    int retry_attempt;
+    blusys_wifi_ip_info_t ip_info;
+} blusys_wifi_event_info_t;
+```
+
+### `blusys_wifi_event_cb_t`
+
+```c
+typedef void (*blusys_wifi_event_cb_t)(blusys_wifi_t *wifi,
+                                       blusys_wifi_event_t event,
+                                       const blusys_wifi_event_info_t *info,
+                                       void *user_ctx);
 ```
 
 ## Functions
@@ -77,6 +128,7 @@ Initiates a connection to the configured AP and blocks until an IP address is as
 - `BLUSYS_OK` — connected and IP assigned
 - `BLUSYS_ERR_TIMEOUT` — `timeout_ms` elapsed before IP was assigned
 - `BLUSYS_ERR_IO` — connection was refused or authentication failed
+- `BLUSYS_ERR_BUSY` — another connect attempt is already in progress
 - Pass `BLUSYS_TIMEOUT_FOREVER` (`-1`) to block indefinitely
 
 ---
@@ -104,6 +156,16 @@ Fills `out_info` with the current IP address, netmask, and gateway.
 
 ---
 
+### `blusys_wifi_get_last_disconnect_reason`
+
+```c
+blusys_wifi_disconnect_reason_t blusys_wifi_get_last_disconnect_reason(blusys_wifi_t *wifi);
+```
+
+Returns the most recent disconnect reason recorded by the WiFi handle. This is updated for both explicit `disconnect()` calls and link-loss/authentication failures.
+
+---
+
 ### `blusys_wifi_is_connected`
 
 ```c
@@ -111,3 +173,38 @@ bool blusys_wifi_is_connected(blusys_wifi_t *wifi);
 ```
 
 Returns `true` if the station currently has an IP address. Non-blocking.
+
+## Lifecycle
+
+```text
+blusys_wifi_open()
+    └─ started event
+blusys_wifi_connect()
+    └─ connecting event
+       └─ connected event
+          └─ got_ip event
+
+unexpected link drop
+    └─ disconnected event
+       └─ reconnecting event (if auto_reconnect enabled)
+
+blusys_wifi_disconnect()
+    └─ disconnected event (USER_REQUESTED)
+
+blusys_wifi_close()
+    └─ stopped event
+```
+
+## Auto-Reconnect
+
+- disabled by default
+- only runs after an unexpected disconnect from a previously connected session
+- does not run after explicit `blusys_wifi_disconnect()`
+- `max_retries = 0` disables retries
+- `max_retries = -1` retries forever
+
+## Callback Notes
+
+- callbacks are asynchronous and should stay short
+- use your own task or queue for heavier work
+- callbacks are informational; do not call `blusys_wifi_connect()`, `blusys_wifi_disconnect()`, or `blusys_wifi_close()` from them
