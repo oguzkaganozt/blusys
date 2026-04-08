@@ -14,7 +14,7 @@ Direct hardware access — use these when you need low-level control over ESP32 
 
     GPIO, serial buses, and communication protocols.
 
-    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [UART (Blocking)](uart-loopback.md) · [UART (Async)](uart-async.md) · [I2C Master](i2c-scan.md) · [I2C Slave](i2c-slave-basic.md) · [SPI Master](spi-loopback.md) · [SPI Slave](spi-slave-basic.md) · [TWAI](twai-basic.md) · [I2S TX](i2s-basic.md) · [I2S RX](i2s-rx-basic.md) · [1-Wire](one-wire-basic.md) · [Touch](touch-basic.md) · [RMT TX](rmt-basic.md) · [RMT RX](rmt-rx-basic.md)
+    [:octicons-arrow-right-24: GPIO](gpio-basic.md) · [UART (Blocking)](uart-loopback.md) · [UART (Async)](uart-async.md) · [I2C Master](i2c-scan.md) · [I2C Slave](i2c-slave-basic.md) · [SPI Master](spi-loopback.md) · [SPI Slave](spi-slave-basic.md) · [TWAI](twai-basic.md) · [I2S TX](i2s-basic.md) · [I2S RX](i2s-rx-basic.md) · [1-Wire](one-wire-basic.md) · [GPIO Expander](gpio-expander-basic.md) · [Touch](touch-basic.md) · [RMT TX](rmt-basic.md) · [RMT RX](rmt-rx-basic.md)
 
 -   :material-sine-wave:{ .lg .middle } **Analog**
 

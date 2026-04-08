@@ -65,9 +65,8 @@ Production essentials and standalone CLI.
 Advanced peripherals, sensor drivers, and architecture improvements.
 
 - status: `in_progress`
-- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages), `usb_host`, `usb_device`, `usb_hid`
+- done: `encoder`, `buzzer`, `one_wire`, `dht`, services restructure (7 categories), docs consolidation (HAL/Services nav split, 8→3 project pages), `usb_host`, `usb_device`, `usb_hid`, `gpio_expander`
 - planned:
-  2. `gpio_expander` — I2C/SPI-based port expanders
   3. `ana_cmpr` — analog signal comparison (C3, S3 only)
   4. `efuse` — one-time programmable memory reading
   5. `ethernet` — wired networking (SPI W5500, or native EMAC on ESP32)
@@ -94,6 +93,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - added `usb_host` HAL module: USB OTG host lifecycle and device enumeration (ESP32-S3 only); singleton pattern, daemon + client FreeRTOS tasks, VID/PID connect/disconnect callback
 - added `usb_device` HAL module: USB device mode via TinyUSB (optional managed component); CDC ACM echo and HID report send; SOC guard + BLUSYS_HAS_TINYUSB compile-time guard
 - added `usb_hid` service module: HID input with dual transport — USB OTG host via `usb_host_hid` (S3 only) and BLE HOGP central via NimBLE (all targets); boot-protocol keyboard/mouse parsing, raw report fallback, BLE device name filter
+- added `gpio_expander` HAL module: unified driver for PCF8574/A (8-bit I2C), MCP23017 (16-bit I2C), and MCP23S17 (16-bit SPI) GPIO expander ICs; bus-sharing pattern (caller provides blusys_i2c_master_t or blusys_spi_t handle); per-pin direction, single-pin and full-port read/write
 - added `dht` sensor service: DHT11/DHT22 temperature and humidity via RMT, with rate-limiting and checksum validation
 - added `seven_seg` display service: GPIO, 74HC595 shift-register, and MAX7219 SPI drivers; up to 8 digits, software multiplexing for GPIO/HC595, hardware multiplexing for MAX7219
 - restructured docs nav into HAL/Services split, consolidated project pages from 8 to 3
@@ -136,6 +136,7 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 - `blusys_nvs_*`
 - `blusys_sd_spi_*`
 - `blusys_one_wire_*`
+- `blusys_gpio_expander_*`
 - `blusys_usb_host_*`
 - `blusys_usb_device_*`
 
@@ -181,4 +182,5 @@ Advanced peripherals, sensor drivers, and architecture improvements.
 ## Next Actions
 
 1. Hardware smoke test `dht` module (DHT11, DHT22)
-2. Continue V5 planned modules (`gpio_expander`, `ana_cmpr`, `efuse`, …)
+2. Hardware smoke test `gpio_expander` module (PCF8574, MCP23017)
+3. Continue V5 planned modules (`ana_cmpr`, `efuse`, `ethernet`, …)

@@ -3,6 +3,7 @@ set(blusys_sources
     src/common/dac.c
     src/common/error.c
     src/common/gpio.c
+    src/common/gpio_expander.c
     src/common/i2c.c
     src/common/i2c_slave.c
     src/common/i2s.c

@@ -9,6 +9,7 @@ extern "C" {
 #include "blusys/dac.h"
 #include "blusys/error.h"
 #include "blusys/gpio.h"
+#include "blusys/gpio_expander.h"
 #include "blusys/i2c.h"
 #include "blusys/i2c_slave.h"
 #include "blusys/i2s.h"

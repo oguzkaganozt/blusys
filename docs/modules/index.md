@@ -12,7 +12,7 @@ Direct hardware abstraction — thin wrappers over ESP-IDF drivers.
 
     ---
 
-    [:octicons-arrow-right-24: GPIO](gpio.md) · [UART](uart.md) · [I2C Master](i2c.md) · [I2C Slave](i2c_slave.md) · [SPI Master](spi.md) · [SPI Slave](spi_slave.md) · [TWAI](twai.md) · [I2S](i2s.md) · [1-Wire](one_wire.md) · [Touch](touch.md) · [RMT](rmt.md)
+    [:octicons-arrow-right-24: GPIO](gpio.md) · [UART](uart.md) · [I2C Master](i2c.md) · [I2C Slave](i2c_slave.md) · [SPI Master](spi.md) · [SPI Slave](spi_slave.md) · [TWAI](twai.md) · [I2S](i2s.md) · [1-Wire](one_wire.md) · [GPIO Expander](gpio_expander.md) · [Touch](touch.md) · [RMT](rmt.md)
 
 -   :material-sine-wave:{ .lg .middle } **Analog**
 

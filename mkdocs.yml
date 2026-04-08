@@ -73,6 +73,7 @@ nav:
               - I2S TX: guides/i2s-basic.md
               - I2S RX: guides/i2s-rx-basic.md
               - 1-Wire: guides/one-wire-basic.md
+              - GPIO Expander: guides/gpio-expander-basic.md
               - Touch: guides/touch-basic.md
               - RMT TX: guides/rmt-basic.md
               - RMT RX: guides/rmt-rx-basic.md
@@ -145,6 +146,7 @@ nav:
               - TWAI: modules/twai.md
               - I2S: modules/i2s.md
               - 1-Wire: modules/one_wire.md
+              - GPIO Expander: modules/gpio_expander.md
               - Touch: modules/touch.md
               - RMT: modules/rmt.md
           - Analog:
