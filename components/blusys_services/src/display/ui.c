@@ -25,15 +25,18 @@ static const char *TAG = "blusys_ui";
 static blusys_ui_t *s_active_handle;
 
 struct blusys_ui {
-    blusys_lcd_t      *lcd;
-    lv_display_t      *disp;
-    void              *buf1;
-    void              *buf2;
-    void              *flush_buf;
-    size_t             flush_buf_size;
-    TaskHandle_t       task;
-    SemaphoreHandle_t  done_sem;
-    volatile bool      running;
+    blusys_lcd_t           *lcd;
+    lv_display_t           *disp;
+    void                   *buf1;
+    void                   *buf2;
+    void                   *flush_buf;
+    size_t                  flush_buf_size;
+    TaskHandle_t            task;
+    SemaphoreHandle_t       done_sem;
+    volatile bool           running;
+    blusys_ui_panel_kind_t  panel_kind;
+    uint32_t                panel_width;
+    uint32_t                panel_height;
 };
 
 /* ------------------------------------------------------------------ */
@@ -42,6 +45,53 @@ struct blusys_ui {
 static uint32_t tick_get_cb(void)
 {
     return (uint32_t)(esp_timer_get_time() / 1000ULL);
+}
+
+/* ------------------------------------------------------------------ */
+/* MONO_PAGE flush — RGB565 → SSD1306 page format → blusys_lcd          */
+/* ------------------------------------------------------------------ */
+/* Threshold each RGB565 pixel from the LVGL flush area to 1 bit (any
+ * non-black pixel = on), then pack into the SSD1306 native page
+ * format: each byte represents 8 vertical pixels in a horizontal page,
+ * MSB at the bottom of the page, 4 pages × width bytes for a 128x32
+ * panel.
+ *
+ * Caller has set MONO_PAGE panel_kind, which forces full-refresh mode
+ * during open. The flush area therefore always covers the entire
+ * panel, and `flush_buf` is sized as panel_width * panel_height / 8
+ * bytes — exactly the SSD1306 frame buffer size, so we can write the
+ * page bytes directly into it. */
+static void flush_cb_mono_page(blusys_ui_t *ui, const lv_area_t *area,
+                               uint8_t *px_map)
+{
+    const uint16_t *src = (const uint16_t *)px_map;
+    const int32_t   x1  = area->x1;
+    const int32_t   y1  = area->y1;
+    const int32_t   x2  = area->x2;
+    const int32_t   y2  = area->y2;
+    const int32_t   w   = x2 - x1 + 1;
+
+    memset(ui->flush_buf, 0, ui->flush_buf_size);
+
+    uint8_t *dst = (uint8_t *)ui->flush_buf;
+    for (int32_t y = y1; y <= y2; ++y) {
+        const int32_t page    = y / 8;
+        const int32_t bit_idx = y % 8;
+        const uint8_t bit     = (uint8_t)(1u << bit_idx);
+        const uint16_t *row   = src + ((size_t)(y - y1) * (size_t)w);
+
+        for (int32_t x = x1; x <= x2; ++x) {
+            if (row[x - x1] != 0u) {
+                dst[(size_t)page * (size_t)ui->panel_width + (size_t)x] |= bit;
+            }
+        }
+    }
+
+    blusys_lcd_draw_bitmap(ui->lcd,
+                           0, 0,
+                           (int32_t)ui->panel_width,
+                           (int32_t)ui->panel_height,
+                           ui->flush_buf);
 }
 
 /* ------------------------------------------------------------------ */
@@ -54,6 +104,13 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
                      uint8_t *px_map)
 {
     blusys_ui_t *ui = lv_display_get_user_data(disp);
+
+    if (ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE) {
+        flush_cb_mono_page(ui, area, px_map);
+        lv_display_flush_ready(disp);
+        return;
+    }
+
     lv_draw_buf_t *draw_buf = lv_display_get_buf_active(disp);
     uint32_t area_width       = (uint32_t)(area->x2 - area->x1 + 1);
     uint32_t area_height      = (uint32_t)(area->y2 - area->y1 + 1);
@@ -158,7 +215,10 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
     if (ui == NULL) {
         return BLUSYS_ERR_NO_MEM;
     }
-    ui->lcd = config->lcd;
+    ui->lcd          = config->lcd;
+    ui->panel_kind   = config->panel_kind;
+    ui->panel_width  = width;
+    ui->panel_height = height;
 
     ui->done_sem = xSemaphoreCreateBinary();
     if (ui->done_sem == NULL) {
@@ -182,8 +242,15 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
     lv_display_set_user_data(ui->disp, ui);
     lv_display_set_flush_cb(ui->disp, flush_cb);
 
-    /* Allocate draw buffers */
-    bool full_refresh = config->full_refresh;
+    /* Allocate draw buffers.
+     *
+     * MONO_PAGE forces full-refresh because the SSD1306-style page
+     * buffer is rebuilt whole on each flush — partial refresh would
+     * leave the unupdated parts of the page buffer stale. The flush
+     * scratch is sized to one full screen of page bytes
+     * (width * height / 8), which is the SSD1306 frame buffer size. */
+    bool full_refresh = config->full_refresh ||
+                        (ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE);
     uint32_t buf_lines = config->buf_lines > 0
                          ? config->buf_lines
                          : UI_DEFAULT_BUF_LINES;
@@ -196,7 +263,12 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
     if (flush_band_lines > height) {
         flush_band_lines = height;
     }
-    uint32_t flush_buf_bytes = stride * flush_band_lines;
+    uint32_t flush_buf_bytes;
+    if (ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE) {
+        flush_buf_bytes = width * height / 8u;
+    } else {
+        flush_buf_bytes = stride * flush_band_lines;
+    }
 
     ui->buf1 = malloc(buf_bytes);
     ui->buf2 = full_refresh ? NULL : malloc(buf_bytes);
@@ -221,13 +293,14 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
                                         : LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     ESP_LOGI(TAG,
-             "ui open: %lux%lu buf_lines=%lu buf_bytes=%lu scratch=%lu full_refresh=%d",
+             "ui open: %lux%lu buf_lines=%lu buf_bytes=%lu scratch=%lu full_refresh=%d panel=%s",
              (unsigned long)width,
              (unsigned long)height,
              (unsigned long)buf_lines,
              (unsigned long)buf_bytes,
              (unsigned long)flush_buf_bytes,
-             full_refresh ? 1 : 0);
+             full_refresh ? 1 : 0,
+             ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE ? "mono_page" : "rgb565");
 
     /* Start render task */
     int prio  = config->task_priority > 0 ? config->task_priority

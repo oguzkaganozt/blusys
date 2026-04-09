@@ -13,12 +13,37 @@ extern "C" {
 
 typedef struct blusys_ui blusys_ui_t;
 
+/* Panel pixel-format family. blusys_ui still renders LVGL in RGB565
+ * internally regardless of choice; the difference is what flush_cb
+ * sends to the panel:
+ *
+ *   RGB565    – byte-swap into the DMA scratch buffer and forward to
+ *               blusys_lcd_draw_bitmap (default; matches ST7735 / ILI9341
+ *               and other 16-bit SPI panels).
+ *   MONO_PAGE – threshold each RGB565 pixel to 1 bit, pack into the
+ *               SSD1306-style page format (each byte = 8 vertical
+ *               pixels in a page, MSB at the bottom of the page),
+ *               and forward the whole-screen page buffer to
+ *               blusys_lcd_draw_bitmap. Requires the underlying LCD to
+ *               have been opened with a 1-bpp driver
+ *               (e.g. BLUSYS_LCD_DRIVER_SSD1306). Forces full-refresh
+ *               mode internally because the page buffer is built whole
+ *               from each LVGL flush area.
+ *
+ * Default value (zero-init) is RGB565 — preserves backwards
+ * compatibility with every existing caller. */
+typedef enum {
+    BLUSYS_UI_PANEL_KIND_RGB565    = 0,
+    BLUSYS_UI_PANEL_KIND_MONO_PAGE = 1,
+} blusys_ui_panel_kind_t;
+
 typedef struct {
-    blusys_lcd_t *lcd;            /* Required: already-opened LCD handle */
-    uint32_t      buf_lines;      /* Draw buffer height in lines (0 = default 20) */
-    bool          full_refresh;   /* Use one full-screen render buffer (experimental on SPI LCDs) */
-    int           task_priority;  /* LVGL render task priority (0 = default 5) */
-    int           task_stack;     /* Render task stack in bytes (0 = default 16384) */
+    blusys_lcd_t           *lcd;           /* Required: already-opened LCD handle */
+    uint32_t                buf_lines;     /* Draw buffer height in lines (0 = default 20) */
+    bool                    full_refresh;  /* Use one full-screen render buffer (experimental on SPI LCDs) */
+    int                     task_priority; /* LVGL render task priority (0 = default 5) */
+    int                     task_stack;    /* Render task stack in bytes (0 = default 16384) */
+    blusys_ui_panel_kind_t  panel_kind;    /* Pixel-format family (default 0 = RGB565) */
 } blusys_ui_config_t;
 
 blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
