@@ -39,7 +39,7 @@ Blusys platform repo
 
 Product repos
   CMakeLists.txt                    top-level — reads product_config.cmake,
-                                    sets BLUSYS_BUILD_UI, EXTRA_COMPONENT_DIRS="."
+                                    sets BLUSYS_BUILD_UI, EXTRA_COMPONENT_DIRS="./app"
   sdkconfig.defaults
   main/
     CMakeLists.txt                  idf_component_register SRCS app_main.cpp, REQUIRES app
@@ -313,7 +313,7 @@ This phase has three sub-steps. The sub-steps exist specifically to de-risk the 
         main_screen.cpp       (sample)
 ```
 
-**Why `app/` is its own ESP-IDF component:** product sources under `app/ui/`, `app/controllers/`, `app/integrations/` must belong to *some* ESP-IDF component — `main/` is too narrow (one `idf_component_register` with a flat source list), and globbing across directories from `main/CMakeLists.txt` is fragile. The cleanest pattern is for `app/` to be a component in its own right, with `app/CMakeLists.txt` calling `idf_component_register(SRC_DIRS ...)`. The top-level `CMakeLists.txt` sets `EXTRA_COMPONENT_DIRS` to the project root so ESP-IDF discovers `app/` during its component scan. `main/` keeps its usual auto-discovered role and its `main/CMakeLists.txt` simply `REQUIRES app` to pull everything in.
+**Why `app/` is its own ESP-IDF component:** product sources under `app/ui/`, `app/controllers/`, `app/integrations/` must belong to *some* ESP-IDF component — `main/` is too narrow (one `idf_component_register` with a flat source list), and globbing across directories from `main/CMakeLists.txt` is fragile. The cleanest pattern is for `app/` to be a component in its own right, with `app/CMakeLists.txt` calling `idf_component_register(SRC_DIRS ...)`. The top-level `CMakeLists.txt` sets `EXTRA_COMPONENT_DIRS` to `${CMAKE_CURRENT_LIST_DIR}/app` so ESP-IDF discovers `app/` as a component during its scan — pointing at the project root would recursively re-include the top-level `CMakeLists.txt` (ESP-IDF's `__project_component_dir` treats any path with a `CMakeLists.txt` as a component). `main/` keeps its usual auto-discovered role and its `main/CMakeLists.txt` simply `REQUIRES app` to pull everything in.
 
 **Top-level CMakeLists.txt template** (scaffold-generated verbatim):
 
@@ -412,10 +412,9 @@ set(BLUSYS_TARGETS       "esp32s3")
   - Service examples: `REQUIRES blusys_services` (still valid — ~20 examples, including `usb_hid_basic`)
   - Framework examples: `REQUIRES blusys_framework` (new — added alongside widget kit)
 - **HAL, driver, and service examples stay `.c`** (services is C in V1 per decision 1). Only framework examples are `.cpp`.
-- **Remove usages of `blusys_all.h`** and switch to per-tier umbrella headers. Full known call-site list (15 files, 17 total occurrences):
-  - **Examples (2 files):**
+- **Remove usages of `blusys_all.h`** and switch to per-tier umbrella headers. Full known call-site list (13 files, 15 total occurrences; `examples/lcd_st7735_basic/main/lcd_st7735_basic_main.c` was already cleaned during Phase 3 and the CLI scaffold template was already cleaned during Phase 7):
+  - **Examples (1 file):**
     - `examples/ui_basic/main/ui_basic_main.c` — switch to `blusys/blusys_services.h` + `blusys/blusys.h`
-    - `examples/lcd_st7735_basic/main/lcd_st7735_basic_main.c` — switch to `blusys/blusys.h`
   - **Guides (12 files, 14 occurrences):**
     - `docs/guides/ota-basic.md:31` — switch to `blusys/blusys_services.h`
     - `docs/guides/button-basic.md:19` — switch to `blusys/drivers/input/button.h`

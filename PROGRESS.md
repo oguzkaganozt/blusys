@@ -88,7 +88,7 @@ No open issues. The planning docs have gone through three review passes and all 
 
 ## Immediate Next Actions
 
-1. **Phase 8 — Example ecosystem migration + `blusys_all.h` removal.** Sweep the 15 known references (2 examples + 12 guides + the CLI scaffold template — already handled in Phase 7) per `platform-transition/ROADMAP.md` Phase 8 and delete `components/blusys_services/include/blusys/blusys_all.h`. Add at least three framework-based examples (layout-only, interactive widgets, encoder focus traversal).
+1. **Phase 8 — Example ecosystem migration + `blusys_all.h` removal.** Sweep the 13 known references / 15 occurrences (1 example + 12 guides; the CLI scaffold template was already handled in Phase 7 and `examples/lcd_st7735_basic` was already cleaned in Phase 3) per `platform-transition/ROADMAP.md` Phase 8 and delete `components/blusys_services/include/blusys/blusys_all.h`. Add at least three framework-based examples (layout-only, interactive widgets, encoder focus traversal).
 2. **Bridge `blusys_framework` into the host harness.** Extend `scripts/host/CMakeLists.txt` to compile the framework C++ sources alongside `hello_lvgl` so the widget kit can be exercised on host. This unblocks visual snapshot testing and faster widget iteration.
 3. **Tag `v6.0.0` once Phase 8/9 land** so scaffolded products can pull the platform from the canonical git URL without `override_path`. Until then, scaffolded products must point at the local checkout via `override_path` for verification.
 4. Keep `platform-transition/` and repo guidance docs aligned as framework work lands.

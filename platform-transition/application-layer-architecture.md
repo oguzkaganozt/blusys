@@ -129,12 +129,12 @@ Include namespace `blusys/...` is preserved everywhere. Umbrella headers:
 - `blusys/blusys_services.h` — services (C)
 - `blusys/framework/framework.hpp` — framework (C++)
 
-`blusys/blusys_all.h` is removed at the end of the transition. Code that currently includes it must move to the per-tier umbrella headers. The removal sweep covers 15 files (17 total occurrences):
+`blusys/blusys_all.h` is removed at the end of the transition. Code that currently includes it must move to the per-tier umbrella headers. The removal sweep covers 13 files (15 total occurrences):
 
 - `components/blusys_services/include/blusys/blusys_all.h` — the header file itself
-- **Examples (2 files):** `examples/ui_basic/main/ui_basic_main.c`, `examples/lcd_st7735_basic/main/lcd_st7735_basic_main.c`
+- **Examples (1 file):** `examples/ui_basic/main/ui_basic_main.c` (`examples/lcd_st7735_basic/main/lcd_st7735_basic_main.c` was already cleaned during Phase 3)
 - **Guides (12 files, 14 occurrences):** `docs/guides/ota-basic.md`, `button-basic.md`, `http-server-basic.md`, `console-basic.md`, `ws-client-basic.md`, `mqtt-basic.md`, `lcd-basic.md` (×3), `fatfs-basic.md`, `fs-basic.md`, `http-basic.md`, `ui-basic.md`, `wifi-prov-basic.md`
-- The scaffold template inside the `blusys` CLI (generated `main/app_main.cpp`)
+- The scaffold template inside the `blusys` CLI (generated `main/app_main.cpp`) — already handled in Phase 7
 
 The full call-site list with line numbers lives in [`ROADMAP.md`](ROADMAP.md) Phase 8.
 

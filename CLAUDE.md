@@ -29,10 +29,10 @@ Locked decisions future sessions need to know:
 - **`usb_hid` stays in services.** It is runtime orchestration across USB host and BLE, not a simple driver.
 - **Framework is the only C++ tier in V1.** Services migration to C++ is deferred to V2.
 - **`blusys_framework` ships the V1 surface in full:** core spine (`router`, `intent`, `feedback`, `controller`, `runtime`), layout primitives (`screen`, `row`, `col`, `label`, `divider`), the **V1 widget kit** (`bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`), encoder focus helpers (`create_encoder_group`, `auto_focus_screen`), the `theme_tokens` registry, the semantic callbacks header (`callbacks.hpp`), and the `widget-author-guide.md` codifying the six-rule contract every widget follows. `bu_knob` is deferred to V2.
-- **Widget kit** built on LVGL with a six-rule component contract; theme is a single C++ struct populated at boot. Each Camp 2 widget uses a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` (default 32) for callback storage. No JSON, no Python, no design-tool integration.
+- **Widget kit** built on LVGL with a six-rule component contract; theme is a single C++ struct populated at boot. Each Camp 2 widget uses a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` for callback storage (default 32 for button/toggle/slider, 8 for modal/overlay). No JSON, no Python, no design-tool integration.
 - **Product scaffold** generates four CMakeLists files (top-level + `main/` + `app/` + `app/product_config.cmake`). `app/` becomes its own ESP-IDF component. Platform components are pulled via `main/idf_component.yml` managed dependencies — never via `EXTRA_COMPONENT_DIRS = "$ENV{BLUSYS_PATH}/components"` (that's the monorepo internal pattern only).
 - **Logging** in framework code goes through a thin `blusys/log.h` wrapper (`BLUSYS_LOGE/I/W/D`). HAL and services keep using `esp_log.h` directly.
-- **`blusys_all.h` is removed** at the end of the transition (Phase 8). 15 files reference it today; the full removal sweep list is in `platform-transition/ROADMAP.md` Phase 8.
+- **`blusys_all.h` is removed** at the end of the transition (Phase 8). 13 files (15 total occurrences) reference it today; the full removal sweep list is in `platform-transition/ROADMAP.md` Phase 8.
 
 Completed so far:
 
@@ -44,7 +44,7 @@ Completed so far:
 - Phase 6: framework core spine end-to-end, validated by `examples/framework_app_basic/` (button on_press → runtime.post_intent → controller.handle → slider_set_value / submit_route → ui_route_sink → overlay_show)
 - Phase 7: `blusys create --starter <headless|interactive>` generates the four-CMakeLists product scaffold (top-level + `main/` + `app/` + `app/product_config.cmake`), `main/app_main.cpp` (always `.cpp`, no `blusys_all.h`), `main/idf_component.yml` pinning all three platform components to `v6.0.0` (+ `lvgl/lvgl ~9.2` for interactive), a sample `home_controller`, and (interactive only) `app/ui/theme_init` + `app/ui/screens/main_screen` building a `[-]/[+]` counter on the widget kit. Both starter types build clean against the local checkout via `override_path`. Spec correction: `EXTRA_COMPONENT_DIRS` points at `${CMAKE_CURRENT_LIST_DIR}/app`, not the project root, because ESP-IDF's `__project_component_dir` treats a path with a `CMakeLists.txt` as a component itself — pointing at the project root recursively re-includes the top-level CMakeLists during requirement scanning.
 
-Next planned step: Phase 8 — sweep the 15 known `blusys_all.h` references, delete the umbrella header, and add at least three framework-based examples.
+Next planned step: Phase 8 — sweep the 13 known `blusys_all.h` references (15 occurrences), delete the umbrella header, and add at least three framework-based examples.
 
 Full plan, decisions log, and rationale: `platform-transition/`. Current phase status: `PROGRESS.md`.
 
