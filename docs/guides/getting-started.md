@@ -34,11 +34,50 @@ This should show the blusys version and detected ESP-IDF path.
 ## 2. Create A Project
 
 ```sh
-mkdir ~/my_project && cd ~/my_project
-blusys create
+mkdir ~/my_product && cd ~/my_product
+blusys create --starter interactive
 ```
 
-This scaffolds `CMakeLists.txt`, `main/app_main.c`, and other project files in the current directory.
+`blusys create` scaffolds a four-CMakeLists product layout in the current
+directory:
+
+```text
+my_product/
+  CMakeLists.txt              # top-level — derives BLUSYS_BUILD_UI from starter type
+  sdkconfig.defaults
+  main/
+    CMakeLists.txt            # REQUIRES app blusys_framework
+    app_main.cpp              # extern "C" void app_main(void) — always .cpp
+    idf_component.yml         # managed deps for blusys / blusys_services /
+                              # blusys_framework (+ lvgl/lvgl for interactive)
+  app/
+    CMakeLists.txt            # gates ui/ui_screens/ui_widgets on BLUSYS_BUILD_UI
+    product_config.cmake      # BLUSYS_PRODUCT_NAME / BLUSYS_STARTER_TYPE / BLUSYS_TARGETS
+    controllers/
+      home_controller.hpp     # sample controller
+      home_controller.cpp
+    integrations/
+    config/
+    ui/                       # interactive only
+      theme_init.{hpp,cpp}    # populates blusys::ui::theme_tokens at boot
+      screens/
+        main_screen.{hpp,cpp} # sample [-]/[+] counter screen on the widget kit
+```
+
+The two starter types:
+
+- **`--starter interactive`** (default) — the framework UI tier is built and
+  the scaffold ships a sample screen, theme initialization, and an
+  `lvgl/lvgl` managed dependency.
+- **`--starter headless`** — the framework UI tier is excluded entirely
+  (`BLUSYS_BUILD_UI=OFF`); the scaffold ships a controller-only sample. Use
+  this for industrial / non-display products that still want the framework
+  controller / intent / feedback spine.
+
+Edit `app/product_config.cmake` to change the product name, starter type, or
+supported targets after scaffolding. Platform components are pulled by the
+ESP-IDF managed component manager from `main/idf_component.yml` — never via
+`EXTRA_COMPONENT_DIRS`.
 
 ## 3. Build
 

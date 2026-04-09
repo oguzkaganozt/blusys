@@ -6,21 +6,10 @@ extern "C" {
 #endif
 
 /* display */
-#include "blusys/display/lcd.h"
-#include "blusys/display/led_strip.h"
-#include "blusys/display/seven_seg.h"
 #include "blusys/display/ui.h"
 
 /* input */
-#include "blusys/input/button.h"
-#include "blusys/input/encoder.h"
 #include "blusys/input/usb_hid.h"
-
-/* sensor */
-#include "blusys/sensor/dht.h"
-
-/* actuator */
-#include "blusys/actuator/buzzer.h"
 
 /* connectivity */
 #include "blusys/connectivity/ble_gatt.h"

@@ -19,7 +19,7 @@ You want to establish a persistent, full-duplex connection from an ESP32 to a We
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "blusys/blusys_all.h"
+#include "blusys/blusys_services.h"
 
 static void on_message(blusys_ws_msg_type_t type,
                         const uint8_t *data, size_t len, void *user_ctx)

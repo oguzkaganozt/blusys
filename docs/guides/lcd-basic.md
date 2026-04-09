@@ -12,7 +12,7 @@ You want to drive an SPI-connected LCD panel (such as the ST7789 or ST7735R) to 
 ## Minimal Example
 
 ```c
-#include "blusys/blusys_all.h"
+#include "blusys/drivers/display/lcd.h"
 
 static uint16_t row_buf[240];
 
@@ -69,7 +69,7 @@ void app_main(void)
 For a 128x160 ST7735R TFT, use `BLUSYS_LCD_DRIVER_ST7735`, set the GRAM offsets, and configure orientation explicitly. Many common portrait modules need `x_offset = 2`, `y_offset = 1`, `swap_xy = true`, `mirror_x = true`, and `invert_color = false`:
 
 ```c
-#include "blusys/blusys_all.h"
+#include "blusys/drivers/display/lcd.h"
 
 static uint16_t row_buf[128];
 
@@ -122,7 +122,7 @@ If the picture is upside down or mirrored, adjust `mirror_x` and `mirror_y`. If 
 For a 0.91" 128x32 monochrome OLED, use `BLUSYS_LCD_DRIVER_SSD1306` with the `.i2c` union member. The pixel format is 1 bit per pixel — each byte represents 8 vertical pixels, MSB at the bottom:
 
 ```c
-#include "blusys/blusys_all.h"
+#include "blusys/drivers/display/lcd.h"
 
 #define LCD_WIDTH  128
 #define LCD_HEIGHT 32

@@ -7,9 +7,18 @@ Start by reading the [Architecture](architecture.md) page.
 ### Core Rules
 
 - all public symbols use the `blusys_` prefix
-- public API is C only and must not expose ESP-IDF types
+- HAL, drivers, and services expose C headers and must not expose ESP-IDF types
 - names should be direct and readable
 - keep the common path short and easy to call
+
+### Language Policy
+
+- `components/blusys/` and `components/blusys_services/` expose C headers with `extern "C"` guards
+- `components/blusys_framework/` may expose C++ headers as that tier is introduced
+- framework C++ should stay platform-facing and disciplined, not become a second copy of ESP-IDF internals
+- keep cross-tier boundaries explicit: framework depends on services, services depend on HAL + drivers
+
+See [Architecture](architecture.md) for the tier model.
 
 ### API Shape
 

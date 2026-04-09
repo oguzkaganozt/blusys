@@ -19,7 +19,7 @@ You want to expose an HTTP endpoint from an ESP32 so that other devices on the l
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "blusys/blusys_all.h"
+#include "blusys/blusys_services.h"
 
 static blusys_err_t handle_root(blusys_http_server_req_t *req, void *user_ctx)
 {

@@ -26,9 +26,23 @@ env:
   IDF_CCACHE_ENABLE: "1"
 
 jobs:
+  # ── Tier 0: Layering Lint ──────────────────────────────────────────────────
+  lint:
+    name: "Layering lint"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run blusys layering lint
+        shell: bash
+        run: bash scripts/lint-layering.sh
+
   # ── Tier 1: Compilation Gate ────────────────────────────────────────────────
   build:
     name: "Build (${{ matrix.target }})"
+    needs: lint
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4

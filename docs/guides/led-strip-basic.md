@@ -13,7 +13,7 @@ You want to drive an addressable LED strip (WS2812B, SK6812, WS2811, or APA106) 
 ## Minimal Example
 
 ```c
-#include "blusys/display/led_strip.h"
+#include "blusys/drivers/display/led_strip.h"
 
 void app_main(void)
 {

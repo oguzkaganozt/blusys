@@ -50,9 +50,11 @@ Direct hardware access — use these when you need low-level control over ESP32 
 
 </div>
 
-## Services
+## Drivers
 
-Application building blocks — use these for common tasks so you can focus on your business logic.
+Hardware-facing helpers built on top of HAL — these live in
+`components/blusys/src/drivers/<category>/` and are reachable via
+`blusys/drivers/<category>/<module>.h`.
 
 <div class="grid cards" markdown>
 
@@ -62,7 +64,7 @@ Application building blocks — use these for common tasks so you can focus on y
 
     LCD panels, addressable LED strips, and 7-segment displays.
 
-    [:octicons-arrow-right-24: LCD](lcd-basic.md) · [LED Strip](led-strip-basic.md) · [7-Segment](seven-seg-basic.md) · [UI (LVGL)](ui-basic.md)
+    [:octicons-arrow-right-24: LCD](lcd-basic.md) · [LED Strip](led-strip-basic.md) · [7-Segment](seven-seg-basic.md)
 
 -   :material-gesture-tap-button:{ .lg .middle } **Input**
 
@@ -70,7 +72,7 @@ Application building blocks — use these for common tasks so you can focus on y
 
     Debounced buttons and rotary encoders.
 
-    [:octicons-arrow-right-24: Button](button-basic.md) · [Encoder](encoder-basic.md) · [USB HID](usb-hid-basic.md)
+    [:octicons-arrow-right-24: Button](button-basic.md) · [Encoder](encoder-basic.md)
 
 -   :material-thermometer:{ .lg .middle } **Sensor**
 
@@ -87,6 +89,30 @@ Application building blocks — use these for common tasks so you can focus on y
     Buzzers, speakers, and motor drivers.
 
     [:octicons-arrow-right-24: Buzzer](buzzer-basic.md)
+
+</div>
+
+## Services
+
+Runtime modules and higher-level building blocks for application behavior.
+
+<div class="grid cards" markdown>
+
+-   :material-monitor-dashboard:{ .lg .middle } **Display / Runtime**
+
+    ---
+
+    LVGL runtime setup and display-task orchestration.
+
+    [:octicons-arrow-right-24: UI (LVGL)](ui-basic.md)
+
+-   :material-usb:{ .lg .middle } **Input / Runtime**
+
+    ---
+
+    USB-host and BLE-backed HID input handling.
+
+    [:octicons-arrow-right-24: USB HID](usb-hid-basic.md)
 
 -   :material-wifi:{ .lg .middle } **Connectivity**
 
@@ -111,6 +137,26 @@ Application building blocks — use these for common tasks so you can focus on y
     Console, filesystem, power management, time sync, and OTA updates.
 
     [:octicons-arrow-right-24: Console](console-basic.md) · [Filesystem](fs-basic.md) · [FAT Filesystem](fatfs-basic.md) · [Power Management](power-mgmt-basic.md) · [SNTP](sntp-basic.md) · [OTA](ota-basic.md) · [Local Control](local-ctrl-basic.md)
+
+</div>
+
+## Framework
+
+The C++ tier of the platform. V1 covers the core spine, the widget kit,
+and encoder focus helpers — see the framework guide for the full
+walkthrough.
+
+<div class="grid cards" markdown>
+
+-   :material-view-dashboard-outline:{ .lg .middle } **Framework**
+
+    ---
+
+    Setting up a screen with the widget kit, wiring a controller into the
+    runtime, encoder focus traversal, and authoring new widgets against the
+    six-rule contract.
+
+    [:octicons-arrow-right-24: Framework Guide](framework.md)
 
 </div>
 

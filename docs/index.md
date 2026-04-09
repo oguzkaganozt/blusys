@@ -1,6 +1,6 @@
-# Blusys HAL
+# Blusys Platform
 
-A simplified C hardware abstraction layer for ESP32 devices, built on top of ESP-IDF v5.5.4. Blusys exposes a smaller, more stable API surface than raw ESP-IDF so your application code stays clean across hardware revisions.
+An internal ESP32 product platform built on top of ESP-IDF v5.5.4. Blusys combines HAL modules, hardware drivers, runtime services, and an in-progress framework tier so new products can start from a shared architecture instead of rebuilding the same plumbing repeatedly.
 
 <div class="grid cards" markdown>
 
@@ -16,7 +16,7 @@ A simplified C hardware abstraction layer for ESP32 devices, built on top of ESP
 
     ---
 
-    Step-by-step guides for every peripheral — from GPIO to MQTT.
+    Step-by-step guides across HAL, drivers, services, and the platform transition.
 
     [:octicons-arrow-right-24: Browse Guides](guides/index.md)
 
@@ -24,7 +24,7 @@ A simplified C hardware abstraction layer for ESP32 devices, built on top of ESP
 
     ---
 
-    Complete type definitions, function signatures, and error codes for every module.
+    Type definitions, function signatures, and module references across the platform tiers.
 
     [:octicons-arrow-right-24: Browse API Reference](modules/index.md)
 
@@ -40,5 +40,5 @@ A simplified C hardware abstraction layer for ESP32 devices, built on top of ESP
 
 See [Compatibility](target-matrix.md) for the full per-module support matrix.
 
-!!! info "Current Release"
-    **v5.0.0** — 62 modules across HAL and Services, standalone `blusys` CLI, and full docs site.
+!!! info "Current State"
+    The repo ships HAL, drivers, services, and the framework tier in full. The V1 widget kit (`bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`) plus the framework spine (`router`, `intent`, `feedback`, `controller`, `runtime`) and the encoder focus helpers are all live, with `examples/framework_app_basic/` validating the chain end-to-end. A PC + SDL2 host harness under `scripts/host/` lets the widget kit be iterated on without flashing hardware. See [`PROGRESS.md`](https://github.com/oguzkaganozt/blusys/blob/main/PROGRESS.md) for the current phase.

@@ -36,7 +36,13 @@ static bool blusys_i2c_is_valid_address(uint16_t device_address)
 
 static bool blusys_i2c_is_valid_scan_address(uint16_t device_address)
 {
-    return (device_address >= 0x08u) && (device_address <= 0x77u);
+    /* Allow the full 7-bit address space (0x00..0x7F). The "reserved"
+     * addresses 0x00..0x07 and 0x78..0x7F are still valid scan targets:
+     * they will simply NACK like any other empty address, and rejecting
+     * them at the API surface is hostile to callers who pass the
+     * conventional "scan everything" range 0x03..0x77 used by virtually
+     * every i2c-detect tool. */
+    return device_address <= 0x7Fu;
 }
 
 static blusys_err_t blusys_i2c_ensure_device(blusys_i2c_master_t *i2c, uint16_t device_address, int timeout_ms)
@@ -84,7 +90,18 @@ blusys_err_t blusys_i2c_master_open(int port,
         .scl_io_num = (gpio_num_t) scl_pin,
         .clk_source = I2C_CLK_SRC_DEFAULT,
         .glitch_ignore_cnt = 7,
-        .trans_queue_depth = 1,
+        /* trans_queue_depth=0 puts the ESP-IDF i2c.master driver in
+         * synchronous mode. The previous value of 1 was async mode,
+         * where i2c_master_transmit() queues the transaction and
+         * returns ESP_OK immediately without ever waiting for the
+         * slave's address-phase ACK — meaning every write looked
+         * "successful" even when the addressed device didn't exist.
+         * That broke probe/scan (false positives across the entire
+         * 7-bit address space) and quietly hid NACKs from normal
+         * blusys_i2c_master_write callers as well. Sync mode is what
+         * the API contract has always implied: return only after the
+         * transfer either ACKs or fails. */
+        .trans_queue_depth = 0,
         .flags.enable_internal_pullup = true,
     };
     blusys_i2c_master_t *i2c;
@@ -161,6 +178,44 @@ blusys_err_t blusys_i2c_master_close(blusys_i2c_master_t *i2c)
     return err;
 }
 
+/* Async-master-compatible probe. ESP-IDF's i2c_master_probe internally
+ * uses the synchronous probe path which is incompatible with the
+ * asynchronous master mode our HAL initializes (ESP-IDF logs a warning
+ * about this, then probes time out on every address). Instead, add the
+ * device handle and attempt a 1-byte transmit of 0x00 — the address
+ * phase ACK/NACK is what we care about, and 0x00 is harmless on
+ * essentially every common I2C device (SSD1306 treats it as a
+ * "next byte is command" prefix and waits, BMP280 / MPU6050 / 24LCxx
+ * EEPROM treat it as register-pointer 0 with no side effect when no
+ * follow-up read or write happens).
+ *
+ * Caller must hold the bus lock.
+ */
+static blusys_err_t blusys_i2c_probe_one_locked(blusys_i2c_master_t *i2c,
+                                                uint16_t device_address,
+                                                int timeout_ms)
+{
+    blusys_err_t err = blusys_i2c_ensure_device(i2c, device_address, timeout_ms);
+    if (err != BLUSYS_OK) {
+        return err;
+    }
+
+    static const uint8_t kProbeByte = 0x00u;
+    esp_err_t esp_err = i2c_master_transmit(i2c->device_handle,
+                                            &kProbeByte, 1u,
+                                            timeout_ms);
+    if (esp_err == ESP_OK) {
+        return BLUSYS_OK;
+    }
+
+    /* Any failure on a 1-byte address-phase write counts as "no device"
+     * for scan / probe purposes: ESP-IDF maps the address-NACK case to
+     * either ESP_ERR_TIMEOUT or ESP_ERR_INVALID_RESPONSE depending on
+     * version. Collapse all of those to NOT_FOUND so callers can do a
+     * simple BLUSYS_OK / BLUSYS_ERR_NOT_FOUND check. */
+    return BLUSYS_ERR_NOT_FOUND;
+}
+
 blusys_err_t blusys_i2c_master_probe(blusys_i2c_master_t *i2c, uint16_t device_address, int timeout_ms)
 {
     blusys_err_t err;
@@ -174,7 +229,7 @@ blusys_err_t blusys_i2c_master_probe(blusys_i2c_master_t *i2c, uint16_t device_a
         return err;
     }
 
-    err = blusys_translate_esp_err(i2c_master_probe(i2c->bus_handle, device_address, timeout_ms));
+    err = blusys_i2c_probe_one_locked(i2c, device_address, timeout_ms);
 
     blusys_lock_give(&i2c->lock);
 
@@ -190,7 +245,6 @@ blusys_err_t blusys_i2c_master_scan(blusys_i2c_master_t *i2c,
                                     size_t *out_count)
 {
     blusys_err_t err;
-    esp_err_t esp_err;
     size_t count = 0u;
     uint16_t device_address;
 
@@ -208,8 +262,8 @@ blusys_err_t blusys_i2c_master_scan(blusys_i2c_master_t *i2c,
     }
 
     for (device_address = start_address; device_address <= end_address; ++device_address) {
-        esp_err = i2c_master_probe(i2c->bus_handle, device_address, timeout_ms);
-        if (esp_err == ESP_OK) {
+        blusys_err_t probe_err = blusys_i2c_probe_one_locked(i2c, device_address, timeout_ms);
+        if (probe_err == BLUSYS_OK) {
             count += 1u;
 
             if ((callback != NULL) && !callback(device_address, user_ctx)) {
@@ -219,14 +273,14 @@ blusys_err_t blusys_i2c_master_scan(blusys_i2c_master_t *i2c,
             continue;
         }
 
-        if (esp_err != ESP_ERR_NOT_FOUND) {
+        if (probe_err != BLUSYS_ERR_NOT_FOUND) {
             blusys_lock_give(&i2c->lock);
 
             if (out_count != NULL) {
                 *out_count = count;
             }
 
-            return blusys_translate_esp_err(esp_err);
+            return probe_err;
         }
     }
 

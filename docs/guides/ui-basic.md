@@ -13,7 +13,8 @@ You want to display widgets (labels, buttons, gauges) on an LCD panel using LVGL
 ## Minimal Example
 
 ```c
-#include "blusys/blusys_all.h"
+#include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
 #include "lvgl.h"
 
 void app_main(void)

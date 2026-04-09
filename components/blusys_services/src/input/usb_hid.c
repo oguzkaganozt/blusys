@@ -174,8 +174,8 @@ static void usb_hid_host_device_cb(hid_host_device_handle_t hid_device_handle,
     case HID_HOST_INTERFACE_EVENT_INPUT_REPORT: {
         uint8_t  data[64];
         size_t   len = 0;
-        hid_host_get_raw_input_report_data(hid_device_handle,
-                                            data, sizeof(data), &len);
+        hid_host_device_get_raw_input_report_data(hid_device_handle,
+                                                  data, sizeof(data), &len);
         dispatch_raw_report(h, data, len);
         break;
     }
