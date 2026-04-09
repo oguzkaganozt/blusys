@@ -3,7 +3,7 @@
 ## Current Summary
 
 - current track: `Platform transition`
-- current phase: `Phase 6 closed — V1 spine + widget kit + end-to-end app validated; next: Phase 4.5 SDL2 harness`
+- current phase: `Phase 4.5 + 6 closed — host harness builds + V1 spine end-to-end; next: Phase 7 product scaffold`
 - target release: `v6.0.0`
 - overall status: `in_progress`
 
@@ -23,7 +23,7 @@ Blusys is mid-transition from a HAL/services library repo into an internal embed
 | 2 | Identity alignment | completed |
 | 3 | Packaging shape | completed |
 | 4 | C++ infrastructure (framework only) + `blusys/log.h` | completed |
-| 4.5 | PC + SDL2 host harness | pending |
+| 4.5 | PC + SDL2 host harness | completed |
 | 5 | Flagship widget and V1 widget kit | substantially_complete (bu_knob deferred to V2 per decision) |
 | 6 | Framework core V1 | completed |
 | 7 | Product scaffold and sample apps | pending |
@@ -68,6 +68,7 @@ No open issues. The planning docs have gone through three review passes and all 
 - framework UI input helpers added: `ui/input/encoder.hpp` + `encoder.cpp` with `create_encoder_group()` (thin lv_group_create wrapper with error logging) and `auto_focus_screen(screen, group)` (DFS pre-order walk that prunes hidden subtrees and adds every `LV_OBJ_FLAG_CLICKABLE` descendant to the focus group, then focuses the first hit). Pure LVGL group/focus wiring — products own their own `lv_indev_t` for the encoder hardware and bind it to the returned group via `lv_indev_set_group`.
 - framework widget author guide added: `components/blusys_framework/widget-author-guide.md` documenting the six-rule contract, slot-pool discipline, setter rules, callback idioms, and a per-widget review checklist
 - framework examples added: `examples/framework_core_basic/`, `examples/framework_ui_basic/`, and `examples/framework_app_basic/`. The app example **closes the Phase 6 done-when criterion**: it builds a real screen with the widget kit, defines an `app_controller` that mutates the slider on `intent::increment`/`decrement` and submits `route::show_overlay` on `intent::confirm`, wires a `ui_route_sink` that translates `show_overlay` route commands into `overlay_show` calls on the actual widget, registers a logging `feedback_sink`, and exercises the full chain (`button on_press` → `runtime.post_intent` → `runtime.step` → `controller.handle` → `slider_set_value` / `submit_route` → `ui_route_sink` → `overlay_show`, with feedback emitted at every step). Three buttons (`Down`/`Up`/`OK`) act as the simulated encoder source.
+- **Phase 4.5 PC + SDL2 host harness** added under `scripts/host/`: a CMake project that fetches LVGL v9.2.2 from upstream via `FetchContent` (pinned to the same tag as the ESP-IDF managed component), wires it against the system SDL2 via `pkg-config`, filters out the ARM-only `.S` blend back-ends so the build works on x86_64, and registers a `hello_lvgl` smoke test that opens a 480×320 SDL2 window with a centered rounded card. Host-side `lv_conf.h` enables `LV_USE_SDL=1`, 32-bit color, `LV_USE_OS=LV_OS_NONE`, `LV_USE_LOG` with `printf` output, and a 1 MB memory budget. New `blusys host-build` CLI subcommand wraps `cmake -S scripts/host -B scripts/host/build-host && cmake --build` and pre-checks for `cmake`, `pkg-config`, and `sdl2.pc` with friendly error messages. `scripts/host/README.md` documents install steps for apt/dnf/pacman/brew + a troubleshooting section.
 - docs/nav updated to reflect HAL + Drivers + Services + Framework structure
 
 ## Verification Snapshot
@@ -79,10 +80,12 @@ No open issues. The planning docs have gone through three review passes and all 
 - `./blusys build examples/framework_core_basic esp32s3` passes
 - `./blusys build examples/framework_ui_basic esp32s3` passes
 - `./blusys build examples/framework_app_basic esp32s3 / esp32 / esp32c3` passes (Phase 6 end-to-end validation)
+- `./blusys host-build` passes on Linux (Ubuntu 24.04, SDL2 2.30.0): CMake configures, `FetchContent` pulls lvgl v9.2.2, lvgl builds with `.S` files filtered, `hello_lvgl` (955 KB ELF) links against `libSDL2-2.0.so.0` and `libm`. Window-rendering still requires a manual interactive run since CI / headless shells can't open an SDL display.
 - `mkdocs build --strict` passes
 
 ## Immediate Next Actions
 
-1. **Phase 4.5 — PC + SDL2 host harness.** Stand up `scripts/host/` with a CMake project that builds LVGL against SDL2 on Linux, pinned to the same lvgl/lvgl version as the managed component (~9.2). First milestone: a "hello LVGL" host target that opens an SDL2 window. Then a `blusys host-build` CLI subcommand and a `scripts/host/README.md` documenting the toolchain setup. **Blocker check:** the host build needs `libsdl2-dev` (or equivalent) installed on the dev machine — confirm the dev environment before running the host build.
-2. **Phase 7 — Product scaffold.** Extend `blusys create` with `--starter <headless|interactive>` and generate the four-CMakeLists scaffold (top-level + main + app + product_config.cmake). Defer until Phase 4.5 lands so the scaffold can be iterated against the host harness rather than flashing hardware on every change.
-3. Keep `platform-transition/` and repo guidance docs aligned as framework work lands.
+1. **Phase 7 — Product scaffold.** Extend `blusys create` with `--starter <headless|interactive>` and generate the four-CMakeLists scaffold (top-level + `main/` + `app/` + `app/product_config.cmake`) per `platform-transition/ROADMAP.md` Phase 7. The widget kit, framework spine, encoder helpers, and host harness are all in place to back this up.
+2. **Bridge `blusys_framework` into the host harness.** Extend `scripts/host/CMakeLists.txt` to compile the framework C++ sources alongside `hello_lvgl` so the widget kit can be exercised on host. This unblocks visual snapshot testing and faster widget iteration.
+3. **Phase 8 — Example ecosystem migration + `blusys_all.h` removal.** Sweep the 15 known references and delete the umbrella header.
+4. Keep `platform-transition/` and repo guidance docs aligned as framework work lands.

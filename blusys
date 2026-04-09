@@ -423,6 +423,7 @@ Commands:
   example          Run a command on a bundled example
   lint             Run platform lint checks
   build-examples   Build all examples for all targets
+  host-build       Build the PC + SDL2 host harness (scripts/host/)
   qemu             Build and run project in QEMU emulator
   install-qemu     Download and install Espressif QEMU
   config-idf       Select default ESP-IDF version
@@ -509,6 +510,14 @@ blusys_help_build_examples() {
 blusys_help_lint() {
     printf 'Usage: blusys lint\n'
     printf '\nRun platform lint checks.\n'
+}
+
+blusys_help_host_build() {
+    printf 'Usage: blusys host-build\n'
+    printf '\nBuild the PC + SDL2 host harness in scripts/host/.\n'
+    printf 'Configures via cmake into scripts/host/build-host/ and builds.\n'
+    printf 'Requires libsdl2-dev (or distro equivalent), cmake, and pkg-config.\n'
+    printf 'See scripts/host/README.md for install instructions.\n'
 }
 
 blusys_help_version() {
@@ -1077,6 +1086,41 @@ cmd_lint() {
     bash "$BLUSYS_REPO_ROOT/scripts/lint-layering.sh"
 }
 
+cmd_host_build() {
+    if [[ $# -gt 0 ]]; then
+        blusys_help_host_build
+        exit 1
+    fi
+
+    local host_dir="$BLUSYS_REPO_ROOT/scripts/host"
+    local build_dir="$host_dir/build-host"
+
+    if [[ ! -f "$host_dir/CMakeLists.txt" ]]; then
+        printf 'host harness not found at %s\n' "$host_dir" >&2
+        exit 1
+    fi
+
+    if ! command -v cmake > /dev/null 2>&1; then
+        printf 'cmake is required for host-build\n' >&2
+        exit 1
+    fi
+    if ! command -v pkg-config > /dev/null 2>&1; then
+        printf 'pkg-config is required for host-build\n' >&2
+        exit 1
+    fi
+    if ! pkg-config --exists sdl2; then
+        printf 'SDL2 development headers not found.\n' >&2
+        printf 'Install libsdl2-dev (Debian/Ubuntu), SDL2-devel (Fedora),\n' >&2
+        printf 'sdl2 (Arch), or sdl2 (brew on macOS). See scripts/host/README.md.\n' >&2
+        exit 1
+    fi
+
+    cmake -S "$host_dir" -B "$build_dir" || exit $?
+    cmake --build "$build_dir" -j || exit $?
+
+    printf '\nhost harness built. run:\n  %s/hello_lvgl\n' "$build_dir"
+}
+
 cmd_build_examples() {
     if [[ $# -gt 0 ]]; then
         blusys_help_build_examples
@@ -1170,6 +1214,7 @@ main() {
         example)        shift; cmd_example "$@" ;;
         lint)           shift; cmd_lint "$@" ;;
         build-examples) shift; cmd_build_examples "$@" ;;
+        host-build)     shift; cmd_host_build "$@" ;;
         qemu)           shift; cmd_qemu "$@" ;;
         install-qemu)   shift; cmd_install_qemu "$@" ;;
         config-idf)     shift; cmd_config_idf "$@" ;;
