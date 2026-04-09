@@ -231,7 +231,7 @@ app/
 
 Both `blusys_framework/core` and `blusys_framework/ui` are built.
 
-**`app/` is an ESP-IDF component.** Product sources under `app/ui/`, `app/controllers/`, `app/integrations/`, and `app/ui/widgets/` belong to the `app` component; the scaffolded `app/CMakeLists.txt` registers them via `idf_component_register(SRC_DIRS ...)`. `main/` remains the auto-discovered entry component with `main/CMakeLists.txt` declaring `REQUIRES app`. The top-level project `CMakeLists.txt` sets `EXTRA_COMPONENT_DIRS = "${CMAKE_CURRENT_LIST_DIR}"` so ESP-IDF discovers `app/` during its component scan.
+**`app/` is an ESP-IDF component.** Product sources under `app/ui/`, `app/controllers/`, `app/integrations/`, and `app/ui/widgets/` belong to the `app` component; the scaffolded `app/CMakeLists.txt` registers them via `idf_component_register(SRC_DIRS ...)`. `main/` remains the auto-discovered entry component with `main/CMakeLists.txt` declaring `REQUIRES app`. The top-level project `CMakeLists.txt` sets `EXTRA_COMPONENT_DIRS = "${CMAKE_CURRENT_LIST_DIR}/app"` so ESP-IDF discovers `app/` as a single component during its component scan. (Phase 7 implementation note: pointing the variable at the project root would make ESP-IDF's `__project_component_dir` helper at `tools/cmake/project.cmake:432` treat the project root as a component itself, recursively re-including the top-level CMakeLists.txt during requirement scanning. The path is therefore scoped to `app/`.)
 
 Because `app/CMakeLists.txt` declares `INCLUDE_DIRS "."`, files inside the app component (and files in `main/` that declare `REQUIRES app`) use include paths relative to the `app/` directory — e.g. `#include "controllers/home_controller.hpp"`, not `#include "app/controllers/home_controller.hpp"`.
 

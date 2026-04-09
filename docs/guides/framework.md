@@ -161,13 +161,40 @@ See the
 [host harness README](https://github.com/oguzkaganozt/blusys/blob/main/scripts/host/README.md)
 for the full setup.
 
+## Scaffolding a new product
+
+`blusys create --starter <headless|interactive>` generates a product
+project against the framework. The scaffold produces a four-CMakeLists
+layout (top-level + `main/` + `app/` + `app/product_config.cmake`), an
+`extern "C" void app_main(void)` in `main/app_main.cpp` that brings up
+the framework runtime, a sample `home_controller`, and (for interactive)
+a sample `main_screen` on the widget kit:
+
+```sh
+mkdir my_product && cd my_product
+blusys create --starter interactive   # or --starter headless
+```
+
+The starter type drives `BLUSYS_BUILD_UI`: interactive products build
+the framework UI tier and pull `lvgl/lvgl`; headless products skip the
+UI tier entirely (zero `blusys::ui::*` symbols linked) but still route
+through `blusys_framework/core` for controllers, intents, routing, and
+feedback. Platform components are pulled by ESP-IDF's managed component
+manager from `main/idf_component.yml` — never via `EXTRA_COMPONENT_DIRS`.
+
+See [Getting Started](getting-started.md) for the full file tree and
+walkthrough.
+
 ## Status
 
 Phase 5 (V1 widget kit) is substantially complete (`bu_knob` deferred to
 V2). Phase 6 (framework core spine) is closed and validated end-to-end by
-`framework_app_basic`. Phase 4.5 (host harness) is closed. The next
-in-flight work is Phase 7 (product scaffold via `blusys create --starter`)
-and Phase 8 (example ecosystem migration + `blusys_all.h` removal). See
+`framework_app_basic`. Phase 4.5 (host harness) is closed. Phase 7 is
+closed: `blusys create --starter <headless|interactive>` generates the
+four-CMakeLists product scaffold, with both starter types verified
+buildable against the local platform checkout via `override_path`. The
+next in-flight work is Phase 8 (example ecosystem migration +
+`blusys_all.h` removal). See
 [`PROGRESS.md`](https://github.com/oguzkaganozt/blusys/blob/main/PROGRESS.md)
 for the current phase tracker.
 

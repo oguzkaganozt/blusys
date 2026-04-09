@@ -328,10 +328,15 @@ else()
     set(BLUSYS_BUILD_UI OFF CACHE BOOL "Build blusys_framework/ui")
 endif()
 
-# Discover the local app/ component. Platform components come from
-# main/idf_component.yml via the managed component manager — NOT from
-# $ENV{BLUSYS_PATH}. See DECISIONS.md decision 15.
-set(EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}")
+# Discover the local app/ component. ESP-IDF's __project_component_dir
+# helper treats the path as a component itself when the directory
+# contains a CMakeLists.txt — so we point it at app/ directly, not at
+# the project root (which would otherwise recursively include this
+# top-level CMakeLists.txt).
+# Platform components come from main/idf_component.yml via the managed
+# component manager — NOT from $ENV{BLUSYS_PATH}. See DECISIONS.md
+# decision 15.
+set(EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/app")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(${BLUSYS_PRODUCT_NAME})

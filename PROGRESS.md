@@ -3,7 +3,7 @@
 ## Current Summary
 
 - current track: `Platform transition`
-- current phase: `Phase 4.5 + 6 closed — host harness builds + V1 spine end-to-end; next: Phase 7 product scaffold`
+- current phase: `Phase 7 closed — blusys create --starter <headless|interactive> generates a buildable four-CMakeLists scaffold; next: Phase 8 example ecosystem migration`
 - target release: `v6.0.0`
 - overall status: `in_progress`
 
@@ -26,7 +26,7 @@ Blusys is mid-transition from a HAL/services library repo into an internal embed
 | 4.5 | PC + SDL2 host harness | completed |
 | 5 | Flagship widget and V1 widget kit | substantially_complete (bu_knob deferred to V2 per decision) |
 | 6 | Framework core V1 | completed |
-| 7 | Product scaffold and sample apps | pending |
+| 7 | Product scaffold and sample apps | completed |
 | 8 | Example ecosystem migration | pending |
 | 9 | Validation and migration notes | pending |
 
@@ -69,6 +69,7 @@ No open issues. The planning docs have gone through three review passes and all 
 - framework widget author guide added: `components/blusys_framework/widget-author-guide.md` documenting the six-rule contract, slot-pool discipline, setter rules, callback idioms, and a per-widget review checklist
 - framework examples added: `examples/framework_core_basic/`, `examples/framework_ui_basic/`, and `examples/framework_app_basic/`. The app example **closes the Phase 6 done-when criterion**: it builds a real screen with the widget kit, defines an `app_controller` that mutates the slider on `intent::increment`/`decrement` and submits `route::show_overlay` on `intent::confirm`, wires a `ui_route_sink` that translates `show_overlay` route commands into `overlay_show` calls on the actual widget, registers a logging `feedback_sink`, and exercises the full chain (`button on_press` → `runtime.post_intent` → `runtime.step` → `controller.handle` → `slider_set_value` / `submit_route` → `ui_route_sink` → `overlay_show`, with feedback emitted at every step). Three buttons (`Down`/`Up`/`OK`) act as the simulated encoder source.
 - **Phase 4.5 PC + SDL2 host harness** added under `scripts/host/`: a CMake project that fetches LVGL v9.2.2 from upstream via `FetchContent` (pinned to the same tag as the ESP-IDF managed component), wires it against the system SDL2 via `pkg-config`, filters out the ARM-only `.S` blend back-ends so the build works on x86_64, and registers a `hello_lvgl` smoke test that opens a 480×320 SDL2 window with a centered rounded card. Host-side `lv_conf.h` enables `LV_USE_SDL=1`, 32-bit color, `LV_USE_OS=LV_OS_NONE`, `LV_USE_LOG` with `printf` output, and a 1 MB memory budget. New `blusys host-build` CLI subcommand wraps `cmake -S scripts/host -B scripts/host/build-host && cmake --build` and pre-checks for `cmake`, `pkg-config`, and `sdl2.pc` with friendly error messages. `scripts/host/README.md` documents install steps for apt/dnf/pacman/brew + a troubleshooting section.
+- **Phase 7 product scaffold:** `blusys create` extended with `--starter <headless|interactive>` (default: `interactive`). Generates the four-CMakeLists product layout (top-level + `main/` + `app/` + `app/product_config.cmake`), `main/app_main.cpp` (always `.cpp`, no `blusys_all.h`), `main/idf_component.yml` pinning all three platform components to `v6.0.0` from `https://github.com/oguzkaganozt/blusys.git` (plus `lvgl/lvgl ~9.2` for interactive), a sample `app/controllers/home_controller.{hpp,cpp}` that handles `increment`/`decrement`/`confirm` intents and emits feedback, and (for interactive) `app/ui/theme_init.{hpp,cpp}` + `app/ui/screens/main_screen.{hpp,cpp}` that build a `[-]/[+]` counter screen on top of the widget kit. The top-level CMakeLists derives `BLUSYS_BUILD_UI` from `BLUSYS_STARTER_TYPE` so headless products skip the framework UI tier entirely. **Spec correction:** decision 15's example points `EXTRA_COMPONENT_DIRS` at `${CMAKE_CURRENT_LIST_DIR}` (the project root), but ESP-IDF's `__project_component_dir` helper at `tools/cmake/project.cmake:432` treats a path with a `CMakeLists.txt` as a component itself — so the project root would recursively include the top-level CMakeLists, blowing up `component_get_requirements.cmake`. The scaffold points at `${CMAKE_CURRENT_LIST_DIR}/app` instead, which the same helper correctly registers as a single component. Decision 15 amended in-place.
 - docs/nav updated to reflect HAL + Drivers + Services + Framework structure
 
 ## Verification Snapshot
@@ -81,11 +82,13 @@ No open issues. The planning docs have gone through three review passes and all 
 - `./blusys build examples/framework_ui_basic esp32s3` passes
 - `./blusys build examples/framework_app_basic esp32s3 / esp32 / esp32c3` passes (Phase 6 end-to-end validation)
 - `./blusys host-build` passes on Linux (Ubuntu 24.04, SDL2 2.30.0): CMake configures, `FetchContent` pulls lvgl v9.2.2, lvgl builds with `.S` files filtered, `hello_lvgl` (955 KB ELF) links against `libSDL2-2.0.so.0` and `libm`. Window-rendering still requires a manual interactive run since CI / headless shells can't open an SDL display.
+- `./blusys create --starter interactive my_panel` + `./blusys build my_panel esp32s3` passes against the local platform checkout via `override_path` (interactive ELF: `my_panel.bin` 0x50600 bytes, 69% free; 17 `blusys::ui::*` symbols linked).
+- `./blusys create --starter headless my_gateway` + `./blusys build my_gateway esp32s3` passes against the local platform checkout via `override_path` (headless ELF: `my_gateway.bin` 0x2f210 bytes, 82% free; **zero** `blusys::ui::*` symbols linked — confirms the `BLUSYS_BUILD_UI` gate excludes the entire UI tier from headless builds).
 - `mkdocs build --strict` passes
 
 ## Immediate Next Actions
 
-1. **Phase 7 — Product scaffold.** Extend `blusys create` with `--starter <headless|interactive>` and generate the four-CMakeLists scaffold (top-level + `main/` + `app/` + `app/product_config.cmake`) per `platform-transition/ROADMAP.md` Phase 7. The widget kit, framework spine, encoder helpers, and host harness are all in place to back this up.
+1. **Phase 8 — Example ecosystem migration + `blusys_all.h` removal.** Sweep the 15 known references (2 examples + 12 guides + the CLI scaffold template — already handled in Phase 7) per `platform-transition/ROADMAP.md` Phase 8 and delete `components/blusys_services/include/blusys/blusys_all.h`. Add at least three framework-based examples (layout-only, interactive widgets, encoder focus traversal).
 2. **Bridge `blusys_framework` into the host harness.** Extend `scripts/host/CMakeLists.txt` to compile the framework C++ sources alongside `hello_lvgl` so the widget kit can be exercised on host. This unblocks visual snapshot testing and faster widget iteration.
-3. **Phase 8 — Example ecosystem migration + `blusys_all.h` removal.** Sweep the 15 known references and delete the umbrella header.
+3. **Tag `v6.0.0` once Phase 8/9 land** so scaffolded products can pull the platform from the canonical git URL without `override_path`. Until then, scaffolded products must point at the local checkout via `override_path` for verification.
 4. Keep `platform-transition/` and repo guidance docs aligned as framework work lands.

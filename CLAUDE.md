@@ -42,8 +42,9 @@ Completed so far:
 - Phase 4.5: PC + SDL2 host harness under `scripts/host/` (LVGL v9.2.2 via FetchContent, `blusys host-build` CLI subcommand)
 - Phase 5: V1 widget kit (`bu_button`/`bu_toggle`/`bu_slider`/`bu_modal`/`bu_overlay`), `widget-author-guide.md`, `ui/input/` encoder helpers — `bu_knob` deferred to V2
 - Phase 6: framework core spine end-to-end, validated by `examples/framework_app_basic/` (button on_press → runtime.post_intent → controller.handle → slider_set_value / submit_route → ui_route_sink → overlay_show)
+- Phase 7: `blusys create --starter <headless|interactive>` generates the four-CMakeLists product scaffold (top-level + `main/` + `app/` + `app/product_config.cmake`), `main/app_main.cpp` (always `.cpp`, no `blusys_all.h`), `main/idf_component.yml` pinning all three platform components to `v6.0.0` (+ `lvgl/lvgl ~9.2` for interactive), a sample `home_controller`, and (interactive only) `app/ui/theme_init` + `app/ui/screens/main_screen` building a `[-]/[+]` counter on the widget kit. Both starter types build clean against the local checkout via `override_path`. Spec correction: `EXTRA_COMPONENT_DIRS` points at `${CMAKE_CURRENT_LIST_DIR}/app`, not the project root, because ESP-IDF's `__project_component_dir` treats a path with a `CMakeLists.txt` as a component itself — pointing at the project root recursively re-includes the top-level CMakeLists during requirement scanning.
 
-Next planned step: Phase 7 — extend `blusys create` with `--starter <headless|interactive>` and generate the four-CMakeLists product scaffold.
+Next planned step: Phase 8 — sweep the 15 known `blusys_all.h` references, delete the umbrella header, and add at least three framework-based examples.
 
 Full plan, decisions log, and rationale: `platform-transition/`. Current phase status: `PROGRESS.md`.
 
@@ -52,7 +53,7 @@ Full plan, decisions log, and rationale: `platform-transition/`. Current phase s
 All commands go through the `blusys` CLI. Default target is `esp32s3`. All commands default to the current directory when no project is specified.
 
 ```bash
-blusys create [path]                                              # scaffold project (default: cwd)
+blusys create [--starter <headless|interactive>] [path]           # scaffold product (default starter: interactive)
 blusys build          [project] [esp32|esp32c3|esp32s3]
 blusys flash          [project] [port] [esp32|esp32c3|esp32s3]
 blusys monitor        [project] [port] [esp32|esp32c3|esp32s3]

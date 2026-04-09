@@ -436,10 +436,16 @@ HELP
 }
 
 blusys_help_create() {
-    printf 'Usage: blusys create [path]\n'
-    printf '\nScaffold a new blusys project.\n'
-    printf 'If path is given, creates the project there; otherwise uses the current directory.\n'
+    printf 'Usage: blusys create [--starter <headless|interactive>] [path]\n'
+    printf '\nScaffold a new blusys product project.\n'
+    printf '\nOptions:\n'
+    printf '  --starter <type>   product starter type (default: interactive)\n'
+    printf '                       interactive — includes blusys_framework/ui + lvgl/lvgl\n'
+    printf '                       headless    — framework core only, no UI\n'
+    printf '\nIf path is given, creates the project there; otherwise uses the current directory.\n'
     printf 'Asks before overwriting existing files.\n'
+    printf '\nGenerates the four-CMakeLists product layout: top-level + main/ + app/ + app/product_config.cmake.\n'
+    printf 'Platform components are pulled via main/idf_component.yml — never via EXTRA_COMPONENT_DIRS.\n'
 }
 
 blusys_help_build() {
@@ -552,22 +558,62 @@ blusys_help_install_qemu() {
 # ── Subcommands ──────────────────────────────────────────────────────────────
 
 cmd_create() {
-    if [[ $# -gt 1 ]]; then
+    local starter="interactive"
+    local positional=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --starter)
+                if [[ $# -lt 2 ]]; then
+                    printf 'error: --starter requires an argument (headless|interactive)\n' >&2
+                    exit 1
+                fi
+                starter="$2"
+                shift 2
+                ;;
+            --starter=*)
+                starter="${1#--starter=}"
+                shift
+                ;;
+            -h|--help)
+                blusys_help_create
+                exit 0
+                ;;
+            --*)
+                printf 'error: unknown option %s\n' "$1" >&2
+                blusys_help_create
+                exit 1
+                ;;
+            *)
+                positional+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    if [[ ${#positional[@]} -gt 1 ]]; then
         blusys_help_create
         exit 1
     fi
 
-    local target_dir
-    case $# in
-        0) target_dir="$(pwd)" ;;
-        1)
-            if [[ "$1" = /* ]]; then
-                target_dir="$1"
-            else
-                target_dir="$(pwd)/$1"
-            fi
+    case "$starter" in
+        headless|interactive) ;;
+        *)
+            printf 'error: --starter must be "headless" or "interactive" (got %q)\n' "$starter" >&2
+            exit 1
             ;;
     esac
+
+    local target_dir
+    if [[ ${#positional[@]} -eq 0 ]]; then
+        target_dir="$(pwd)"
+    else
+        if [[ "${positional[0]}" = /* ]]; then
+            target_dir="${positional[0]}"
+        else
+            target_dir="$(pwd)/${positional[0]}"
+        fi
+    fi
 
     mkdir -p "$target_dir"
     target_dir="$(cd "$target_dir" && pwd)"
@@ -575,9 +621,20 @@ cmd_create() {
     local project_name
     project_name="$(basename "$target_dir")"
 
-    # Check for existing project files
+    # Check for existing project files. The Phase 7 scaffold ships four
+    # CMakeLists files (top-level + main/ + app/ + app/product_config.cmake)
+    # plus app_main.cpp and idf_component.yml.
     local existing_files=()
-    for f in CMakeLists.txt main/CMakeLists.txt main/app_main.c main/Kconfig.projbuild sdkconfig.defaults; do
+    for f in \
+        CMakeLists.txt \
+        sdkconfig.defaults \
+        main/CMakeLists.txt \
+        main/app_main.cpp \
+        main/idf_component.yml \
+        app/CMakeLists.txt \
+        app/product_config.cmake \
+        app/controllers/home_controller.hpp \
+        app/controllers/home_controller.cpp; do
         [[ -f "$target_dir/$f" ]] && existing_files+=("$f")
     done
 
@@ -594,45 +651,482 @@ cmd_create() {
         fi
     fi
 
-    mkdir -p "$target_dir/main"
+    mkdir -p \
+        "$target_dir/main" \
+        "$target_dir/app/controllers" \
+        "$target_dir/app/integrations" \
+        "$target_dir/app/config"
 
-    cat > "$target_dir/CMakeLists.txt" <<CMAKE
-cmake_minimum_required(VERSION 3.16)
+    if [[ "$starter" == "interactive" ]]; then
+        mkdir -p \
+            "$target_dir/app/ui/screens" \
+            "$target_dir/app/ui/widgets"
+    fi
 
-set(EXTRA_COMPONENT_DIRS "\$ENV{BLUSYS_PATH}/components")
+    blusys_create_top_cmakelists "$target_dir"
+    blusys_create_main "$target_dir" "$starter"
+    blusys_create_app "$target_dir" "$project_name" "$starter"
+    blusys_create_sample_controller "$target_dir"
+    if [[ "$starter" == "interactive" ]]; then
+        blusys_create_sample_ui "$target_dir"
+    fi
 
-include(\$ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(${project_name})
-CMAKE
-
-    cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
-idf_component_register(
-    SRCS "app_main.c"
-    REQUIRES blusys_services
-)
-CMAKE
-
-    cat > "$target_dir/main/app_main.c" <<'CSRC'
-#include "blusys/blusys_all.h"
-
-void app_main(void)
-{
-}
-CSRC
-
-    cat > "$target_dir/main/Kconfig.projbuild" <<'KCONFIG'
-menu "App Configuration"
-endmenu
-KCONFIG
+    # Empty marker files so empty directories survive git add.
+    touch \
+        "$target_dir/app/integrations/.keep" \
+        "$target_dir/app/config/.keep"
+    if [[ "$starter" == "interactive" ]]; then
+        touch "$target_dir/app/ui/widgets/.keep"
+    fi
 
     touch "$target_dir/sdkconfig.defaults"
 
-    printf '\nCreated blusys project: %s\n\n' "$target_dir"
+    printf '\nCreated blusys project: %s\n' "$target_dir"
+    printf 'Starter type: %s\n\n' "$starter"
     printf 'Next steps:\n'
     printf '  cd %s\n' "$target_dir"
     printf '  blusys build                # build for default target\n'
     printf '  blusys run                  # build, flash, and monitor\n'
     printf '  blusys config               # open menuconfig\n'
+    printf '\n'
+    printf 'Platform components are pulled by ESP-IDF managed components from\n'
+    printf 'main/idf_component.yml. See app/product_config.cmake to change the\n'
+    printf 'product name, starter type, or supported targets.\n'
+}
+
+# ── cmd_create helpers ──────────────────────────────────────────────────────
+
+blusys_create_top_cmakelists() {
+    local target_dir="$1"
+    cat > "$target_dir/CMakeLists.txt" <<'CMAKE'
+cmake_minimum_required(VERSION 3.16)
+
+# Read product configuration (name, starter type, supported targets).
+include(${CMAKE_CURRENT_LIST_DIR}/app/product_config.cmake)
+
+# Derive the framework UI build flag from the starter type. The framework
+# component reads BLUSYS_BUILD_UI from cache during ESP-IDF's component scan.
+if(BLUSYS_STARTER_TYPE STREQUAL "interactive")
+    set(BLUSYS_BUILD_UI ON CACHE BOOL "Build blusys_framework/ui")
+else()
+    set(BLUSYS_BUILD_UI OFF CACHE BOOL "Build blusys_framework/ui")
+endif()
+
+# Discover the local app/ component. ESP-IDF's __project_component_dir helper
+# treats the path as a component itself when the directory contains a
+# CMakeLists.txt — so we point it at app/ directly, not at the project root
+# (which would otherwise recursively include this top-level CMakeLists.txt).
+# Platform components come from main/idf_component.yml via the managed
+# component manager — NOT from $ENV{BLUSYS_PATH}.
+# See platform-transition/DECISIONS.md decision 15.
+set(EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/app")
+
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(${BLUSYS_PRODUCT_NAME})
+CMAKE
+}
+
+blusys_create_main() {
+    local target_dir="$1"
+    local starter="$2"
+
+    cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
+idf_component_register(
+    SRCS "app_main.cpp"
+    REQUIRES app blusys_framework
+)
+CMAKE
+
+    if [[ "$starter" == "interactive" ]]; then
+        blusys_create_main_yml_interactive "$target_dir"
+        blusys_create_app_main_interactive "$target_dir"
+    else
+        blusys_create_main_yml_headless "$target_dir"
+        blusys_create_app_main_headless "$target_dir"
+    fi
+}
+
+blusys_create_main_yml_interactive() {
+    local target_dir="$1"
+    cat > "$target_dir/main/idf_component.yml" <<'YAML'
+## Managed dependencies for the blusys platform.
+##
+## All three platform components must be pinned to the SAME release tag.
+## Mixing tiers across versions is not supported (decision 7).
+##
+## To test against a local platform checkout instead of the pinned tag,
+## replace `git`/`version`/`path` for each blusys_* dep with:
+##     override_path: "../../path/to/blusys/components/<component>"
+dependencies:
+  idf:
+    version: ">=5.5"
+
+  blusys:
+    git: "https://github.com/oguzkaganozt/blusys.git"
+    version: "v6.0.0"
+    path: "components/blusys"
+  blusys_services:
+    git: "https://github.com/oguzkaganozt/blusys.git"
+    version: "v6.0.0"
+    path: "components/blusys_services"
+  blusys_framework:
+    git: "https://github.com/oguzkaganozt/blusys.git"
+    version: "v6.0.0"
+    path: "components/blusys_framework"
+
+  lvgl/lvgl:
+    version: "~9.2"
+YAML
+}
+
+blusys_create_main_yml_headless() {
+    local target_dir="$1"
+    cat > "$target_dir/main/idf_component.yml" <<'YAML'
+## Managed dependencies for the blusys platform.
+##
+## All three platform components must be pinned to the SAME release tag.
+## Mixing tiers across versions is not supported (decision 7).
+##
+## To test against a local platform checkout instead of the pinned tag,
+## replace `git`/`version`/`path` for each blusys_* dep with:
+##     override_path: "../../path/to/blusys/components/<component>"
+dependencies:
+  idf:
+    version: ">=5.5"
+
+  blusys:
+    git: "https://github.com/oguzkaganozt/blusys.git"
+    version: "v6.0.0"
+    path: "components/blusys"
+  blusys_services:
+    git: "https://github.com/oguzkaganozt/blusys.git"
+    version: "v6.0.0"
+    path: "components/blusys_services"
+  blusys_framework:
+    git: "https://github.com/oguzkaganozt/blusys.git"
+    version: "v6.0.0"
+    path: "components/blusys_framework"
+YAML
+}
+
+blusys_create_app_main_headless() {
+    local target_dir="$1"
+    cat > "$target_dir/main/app_main.cpp" <<'CPP'
+// app_main.cpp — headless product entry point.
+//
+// Brings up the framework runtime, registers a single home_controller, and
+// drives the runtime tick from the main task. Headless products still go
+// through blusys_framework/core; only blusys_framework/ui is excluded.
+
+#include "blusys/framework/framework.hpp"
+#include "blusys/log.h"
+#include "controllers/home_controller.hpp"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_timer.h"
+
+namespace {
+constexpr const char *kTag = "app_main";
+}
+
+extern "C" void app_main(void)
+{
+    blusys::framework::init();
+
+    static home_controller controller;
+    static blusys::framework::runtime runtime;
+
+    const blusys_err_t err = runtime.init(&controller, /*output_route_sink=*/nullptr, 10);
+    if (err != BLUSYS_OK) {
+        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(err));
+        return;
+    }
+
+    BLUSYS_LOGI(kTag, "headless product running");
+
+    // Main loop: tick the runtime, drive integrations from here. A real
+    // headless product would post integration events from MQTT/sensor tasks.
+    while (true) {
+        runtime.step(static_cast<std::uint32_t>(esp_timer_get_time() / 1000));
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+CPP
+}
+
+blusys_create_app_main_interactive() {
+    local target_dir="$1"
+    cat > "$target_dir/main/app_main.cpp" <<'CPP'
+// app_main.cpp — interactive product entry point.
+//
+// Brings up the framework runtime, initializes LVGL + theme, hands the
+// home_controller a screen built from the widget kit, and ticks both the
+// runtime and LVGL from the main task.
+
+#include "blusys/framework/framework.hpp"
+#include "blusys/framework/ui/widgets.hpp"
+#include "blusys/log.h"
+#include "controllers/home_controller.hpp"
+#include "ui/theme_init.hpp"
+#include "ui/screens/main_screen.hpp"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_timer.h"
+
+namespace {
+constexpr const char *kTag = "app_main";
+}
+
+extern "C" void app_main(void)
+{
+    blusys::framework::init();
+    lv_init();
+    app::ui::theme_init();
+
+    static home_controller controller;
+    static blusys::framework::runtime runtime;
+
+    const blusys_err_t err = runtime.init(&controller, /*output_route_sink=*/nullptr, 10);
+    if (err != BLUSYS_OK) {
+        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(err));
+        return;
+    }
+
+    app::ui::main_screen_create(&runtime);
+
+    BLUSYS_LOGI(kTag, "interactive product running");
+
+    while (true) {
+        runtime.step(static_cast<std::uint32_t>(esp_timer_get_time() / 1000));
+        lv_timer_handler();
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+CPP
+}
+
+blusys_create_app() {
+    local target_dir="$1"
+    local project_name="$2"
+    local starter="$3"
+
+    cat > "$target_dir/app/CMakeLists.txt" <<'CMAKE'
+set(src_dirs "controllers" "integrations")
+
+if(BLUSYS_BUILD_UI)
+    # ui/widgets is included so products can drop in product-specific
+    # widgets (files that aren't part of the platform widget kit) without
+    # editing CMakeLists. The directory is scaffolded empty; sources only
+    # appear if the product team adds them.
+    list(APPEND src_dirs "ui" "ui/screens" "ui/widgets")
+endif()
+
+idf_component_register(
+    SRC_DIRS ${src_dirs}
+    INCLUDE_DIRS "."
+    REQUIRES blusys blusys_services blusys_framework
+)
+CMAKE
+
+    cat > "$target_dir/app/product_config.cmake" <<CMAKE
+# Product configuration consumed by the top-level CMakeLists.txt before
+# project() runs. Edit these values rather than the top-level CMakeLists.
+
+set(BLUSYS_PRODUCT_NAME  "${project_name}")
+set(BLUSYS_STARTER_TYPE  "${starter}")
+set(BLUSYS_TARGETS       "esp32s3")
+CMAKE
+}
+
+blusys_create_sample_controller() {
+    local target_dir="$1"
+    cat > "$target_dir/app/controllers/home_controller.hpp" <<'HPP'
+#pragma once
+
+#include "blusys/framework/core/controller.hpp"
+
+class home_controller final : public blusys::framework::controller {
+public:
+    blusys_err_t init() override;
+    void handle(const blusys::framework::app_event &event) override;
+    void tick(std::uint32_t now_ms) override;
+
+    int counter() const { return counter_; }
+
+private:
+    int counter_ = 0;
+};
+HPP
+
+    cat > "$target_dir/app/controllers/home_controller.cpp" <<'CPP'
+#include "controllers/home_controller.hpp"
+
+#include "blusys/log.h"
+
+namespace {
+constexpr const char *kTag = "home_controller";
+}
+
+blusys_err_t home_controller::init()
+{
+    counter_ = 0;
+    BLUSYS_LOGI(kTag, "home_controller initialized");
+    return BLUSYS_OK;
+}
+
+void home_controller::handle(const blusys::framework::app_event &event)
+{
+    if (event.kind != blusys::framework::app_event_kind::intent) {
+        return;
+    }
+
+    switch (blusys::framework::app_event_intent(event)) {
+    case blusys::framework::intent::increment:
+        ++counter_;
+        BLUSYS_LOGI(kTag, "counter=%d", counter_);
+        emit_feedback({
+            .channel = blusys::framework::feedback_channel::haptic,
+            .pattern = blusys::framework::feedback_pattern::click,
+            .value   = 1,
+            .payload = nullptr,
+        });
+        break;
+    case blusys::framework::intent::decrement:
+        --counter_;
+        BLUSYS_LOGI(kTag, "counter=%d", counter_);
+        emit_feedback({
+            .channel = blusys::framework::feedback_channel::haptic,
+            .pattern = blusys::framework::feedback_pattern::click,
+            .value   = 1,
+            .payload = nullptr,
+        });
+        break;
+    case blusys::framework::intent::confirm:
+        BLUSYS_LOGI(kTag, "confirm at counter=%d", counter_);
+        emit_feedback({
+            .channel = blusys::framework::feedback_channel::audio,
+            .pattern = blusys::framework::feedback_pattern::confirm,
+            .value   = 1,
+            .payload = nullptr,
+        });
+        break;
+    default:
+        break;
+    }
+}
+
+void home_controller::tick(std::uint32_t /*now_ms*/)
+{
+    // Periodic work goes here. Called once per runtime tick.
+}
+CPP
+}
+
+blusys_create_sample_ui() {
+    local target_dir="$1"
+
+    cat > "$target_dir/app/ui/theme_init.hpp" <<'HPP'
+#pragma once
+
+namespace app::ui {
+void theme_init();
+}
+HPP
+
+    cat > "$target_dir/app/ui/theme_init.cpp" <<'CPP'
+#include "ui/theme_init.hpp"
+
+#include "blusys/framework/ui/theme.hpp"
+
+namespace app::ui {
+
+void theme_init()
+{
+    blusys::ui::set_theme({
+        .color_primary    = lv_color_hex(0x2A62FF),
+        .color_surface    = lv_color_hex(0x11141D),
+        .color_on_primary = lv_color_hex(0xF7F9FF),
+        .color_accent     = lv_color_hex(0x69D6C8),
+        .color_disabled   = lv_color_hex(0x667089),
+        .spacing_sm   = 8,
+        .spacing_md   = 12,
+        .spacing_lg   = 20,
+        .radius_card  = 14,
+        .radius_button = 999,
+        .font_body    = LV_FONT_DEFAULT,
+        .font_title   = LV_FONT_DEFAULT,
+        .font_mono    = LV_FONT_DEFAULT,
+    });
+}
+
+}  // namespace app::ui
+CPP
+
+    cat > "$target_dir/app/ui/screens/main_screen.hpp" <<'HPP'
+#pragma once
+
+namespace blusys::framework { class runtime; }
+
+namespace app::ui {
+void main_screen_create(blusys::framework::runtime *runtime);
+}
+HPP
+
+    cat > "$target_dir/app/ui/screens/main_screen.cpp" <<'CPP'
+#include "ui/screens/main_screen.hpp"
+
+#include "blusys/framework/core/runtime.hpp"
+#include "blusys/framework/ui/widgets.hpp"
+
+namespace app::ui {
+
+void main_screen_create(blusys::framework::runtime *runtime)
+{
+    lv_obj_t *screen = blusys::ui::screen_create({});
+
+    lv_obj_t *col = blusys::ui::col_create(screen, {
+        .gap     = blusys::ui::theme().spacing_md,
+        .padding = blusys::ui::theme().spacing_lg,
+    });
+
+    blusys::ui::label_create(col, {
+        .text = "Hello, blusys",
+        .font = blusys::ui::theme().font_title,
+    });
+    blusys::ui::divider_create(col, {});
+
+    lv_obj_t *row = blusys::ui::row_create(col, {
+        .gap     = blusys::ui::theme().spacing_sm,
+        .padding = 0,
+    });
+
+    blusys::ui::button_create(row, {
+        .label    = "-",
+        .variant  = blusys::ui::button_variant::secondary,
+        .on_press = +[](void *user_data) {
+            auto *rt = static_cast<blusys::framework::runtime *>(user_data);
+            rt->post_intent(blusys::framework::intent::decrement);
+        },
+        .user_data = runtime,
+    });
+    blusys::ui::button_create(row, {
+        .label    = "+",
+        .variant  = blusys::ui::button_variant::primary,
+        .on_press = +[](void *user_data) {
+            auto *rt = static_cast<blusys::framework::runtime *>(user_data);
+            rt->post_intent(blusys::framework::intent::increment);
+        },
+        .user_data = runtime,
+    });
+
+    lv_group_t *group = blusys::ui::create_encoder_group();
+    blusys::ui::auto_focus_screen(screen, group);
+}
+
+}  // namespace app::ui
+CPP
 }
 
 cmd_version() {

@@ -279,13 +279,21 @@ else()
     set(BLUSYS_BUILD_UI OFF CACHE BOOL "Build blusys_framework/ui")
 endif()
 
-# Tell ESP-IDF to scan the project root for extra components. This is how
-# the local `app/` component (which owns product sources under app/ui, 
-# app/controllers, app/integrations) gets discovered. The platform 
-# components (blusys, blusys_services, blusys_framework) are NOT pulled 
-# in via this mechanism — they come from main/idf_component.yml through
-# ESP-IDF's managed component manager (see decision 7).
-set(EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}")
+# Discover the local `app/` component (which owns product sources under
+# app/ui, app/controllers, app/integrations). Platform components
+# (blusys, blusys_services, blusys_framework) are NOT pulled in via this
+# mechanism — they come from main/idf_component.yml through ESP-IDF's
+# managed component manager (see decision 7).
+#
+# IMPORTANT: point at app/ directly, NOT at the project root. ESP-IDF's
+# `__project_component_dir` helper at tools/cmake/project.cmake:432
+# treats the given path AS a component when it contains a CMakeLists.txt.
+# Pointing at the project root would make ESP-IDF re-include the
+# top-level CMakeLists.txt during component requirement scanning,
+# blowing up `component_get_requirements.cmake`. Pointing at app/ makes
+# the same helper register app/ as a single component, which is the
+# desired behavior. (Phase 7 implementation correction.)
+set(EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/app")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(${BLUSYS_PRODUCT_NAME})
@@ -319,7 +327,9 @@ idf_component_register(
 
 **Rationale:** CACHE variables are visible in every CMake scope including component CMakeLists during ESP-IDF's component scan — no `idf_build_set_property` gymnastics, no Kconfig surface. `app/product_config.cmake` is the primary starter-type input at scaffold time, and the top-level CMake stays derived from it. V1 deliberately stops there: scaffolded files are normal source files after creation, not part of a live regenerate/sync system. That keeps the model straightforward for a small internal team. Flow is still strictly one-way (product → framework); framework never reaches up into `app/`. Headless products that try to include UI headers get link errors for undefined symbols, which is the desired failure mode.
 
-The `EXTRA_COMPONENT_DIRS` line points at the project root so ESP-IDF discovers the local `app/` component. It deliberately does **not** point at `$ENV{BLUSYS_PATH}/components`: product repos consume the platform through managed components pinned in `main/idf_component.yml` (decision 7). Mixing the two models (managed components for platform + `EXTRA_COMPONENT_DIRS` to the monorepo for platform) would silently prefer local checkouts over the pinned tag — the opposite of what a product repo should do.
+The `EXTRA_COMPONENT_DIRS` line points at `${CMAKE_CURRENT_LIST_DIR}/app` so ESP-IDF discovers the local `app/` component. It deliberately does **not** point at `$ENV{BLUSYS_PATH}/components`: product repos consume the platform through managed components pinned in `main/idf_component.yml` (decision 7). Mixing the two models (managed components for platform + `EXTRA_COMPONENT_DIRS` to the monorepo for platform) would silently prefer local checkouts over the pinned tag — the opposite of what a product repo should do.
+
+(Phase 7 implementation note: an earlier draft of this decision pointed `EXTRA_COMPONENT_DIRS` at the project root rather than `app/`. ESP-IDF's `__project_component_dir` helper at `tools/cmake/project.cmake:432` treats a path with a `CMakeLists.txt` as a component itself, which made the project root recursively include the top-level CMakeLists.txt during requirement scanning and blew up `component_get_requirements.cmake`. The path is now scoped to `app/` so the helper registers it as a single component. The intent of decision 15 — discover the local app/ component without leaning on `$ENV{BLUSYS_PATH}` — is unchanged.)
 
 Rejected alternatives:
 - **Kconfig symbol (`CONFIG_BLUSYS_FRAMEWORK_UI_ENABLED`):** adds a menuconfig surface product teams would otherwise never touch, and forces configuration in both `product_config.cmake` and `sdkconfig.defaults`.

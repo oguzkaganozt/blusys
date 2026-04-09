@@ -12,13 +12,19 @@ build/flash/host workflow.
 git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
 ~/.blusys/install.sh
 
-# Create, build, flash, monitor
-mkdir ~/my_project && cd ~/my_project
-blusys create
+# Scaffold a product (interactive: framework UI tier on; headless: UI tier off)
+mkdir ~/my_product && cd ~/my_product
+blusys create --starter interactive   # or --starter headless
+
+# Build, flash, monitor
 blusys run /dev/ttyACM0 esp32s3
 ```
 
-Requires ESP-IDF v5.5+ (auto-detected).
+Requires ESP-IDF v5.5+ (auto-detected). `blusys create` generates the
+four-CMakeLists product layout (top-level + `main/` + `app/` +
+`app/product_config.cmake`); platform components are pulled by ESP-IDF's
+managed component manager from `main/idf_component.yml`. See
+[Getting Started](docs/guides/getting-started.md) for the full walkthrough.
 
 ## Architecture
 
