@@ -16,7 +16,7 @@ Trust executable sources over prose: the `blusys` shell script, `components/*/CM
 
 ## Project Overview
 
-**Blusys** is an ESP32 platform repo built on top of ESP-IDF v5.5.4. Supported targets: **ESP32**, **ESP32-C3**, **ESP32-S3**. Released state is still `v5.0.0`, but the repo is now actively implementing the V6 transition branch.
+**Blusys** is an ESP32 platform repo built on top of ESP-IDF v5.5.4. Supported targets: **ESP32**, **ESP32-C3**, **ESP32-S3**. Released state is `v6.0.0` (the V6 platform transition landed).
 
 ## Active Transition (V5 → V6)
 
