@@ -84,16 +84,6 @@ static blusys_st7735_panel_t *blusys_st7735_from_panel(esp_lcd_panel_t *panel)
     return (blusys_st7735_panel_t *)panel;
 }
 
-static int blusys_st7735_effective_x_gap(const blusys_st7735_panel_t *panel)
-{
-    return panel->x_gap;
-}
-
-static int blusys_st7735_effective_y_gap(const blusys_st7735_panel_t *panel)
-{
-    return panel->y_gap;
-}
-
 static esp_err_t blusys_st7735_panel_del(esp_lcd_panel_t *panel)
 {
     blusys_st7735_panel_t *st7735 = blusys_st7735_from_panel(panel);
@@ -223,8 +213,8 @@ static esp_err_t blusys_st7735_panel_draw_bitmap(esp_lcd_panel_t *panel,
     blusys_st7735_panel_t *st7735 = blusys_st7735_from_panel(panel);
     esp_lcd_panel_io_handle_t io_handle = st7735->io_handle;
     esp_err_t esp_err;
-    int x_gap = blusys_st7735_effective_x_gap(st7735);
-    int y_gap = blusys_st7735_effective_y_gap(st7735);
+    int x_gap = st7735->x_gap;
+    int y_gap = st7735->y_gap;
     size_t row_bytes;
     size_t max_rows_per_tx;
     const uint8_t *src = color_data;
@@ -399,7 +389,6 @@ static esp_err_t blusys_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io_
     blusys_st7735_panel_t *st7735;
     gpio_config_t reset_cfg = {0};
     esp_err_t esp_err;
-    bool reset_gpio_configured = false;
 
     if ((io_handle == NULL) || (panel_cfg == NULL) || (ret_panel == NULL)) {
         return ESP_ERR_INVALID_ARG;
@@ -418,7 +407,6 @@ static esp_err_t blusys_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io_
             free(st7735);
             return esp_err;
         }
-        reset_gpio_configured = true;
     }
 
     switch (panel_cfg->rgb_ele_order) {
@@ -429,7 +417,7 @@ static esp_err_t blusys_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io_
         st7735->madctl_val = LCD_CMD_BGR_BIT;
         break;
     default:
-        if (reset_gpio_configured) {
+        if (panel_cfg->reset_gpio_num >= 0) {
             gpio_reset_pin((gpio_num_t)panel_cfg->reset_gpio_num);
         }
         free(st7735);
@@ -446,7 +434,7 @@ static esp_err_t blusys_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io_
         st7735->fb_bits_per_pixel = 24;
         break;
     default:
-        if (reset_gpio_configured) {
+        if (panel_cfg->reset_gpio_num >= 0) {
             gpio_reset_pin((gpio_num_t)panel_cfg->reset_gpio_num);
         }
         free(st7735);

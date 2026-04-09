@@ -18,7 +18,7 @@ lv_obj_t *col_create(lv_obj_t *parent, const col_config &config)
     lv_obj_set_style_pad_column(col, config.gap, 0);
     lv_obj_set_style_pad_row(col, config.gap, 0);
     lv_obj_set_width(col, LV_PCT(100));
-    lv_obj_clear_flag(col, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_remove_flag(col, LV_OBJ_FLAG_SCROLLABLE);
 
     return col;
 }
