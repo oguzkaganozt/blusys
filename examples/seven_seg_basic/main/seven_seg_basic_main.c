@@ -3,7 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "blusys/display/seven_seg.h"
+#include "blusys/drivers/display/seven_seg.h"
 
 static blusys_seven_seg_t *s_display;
 

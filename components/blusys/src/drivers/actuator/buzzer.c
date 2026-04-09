@@ -1,4 +1,4 @@
-#include "blusys/actuator/buzzer.h"
+#include "blusys/drivers/actuator/buzzer.h"
 
 #include <stdlib.h>
 

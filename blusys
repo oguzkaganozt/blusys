@@ -421,6 +421,7 @@ Commands:
   clean            Remove build directory for one target
   fullclean        Remove build directories for all targets
   example          Run a command on a bundled example
+  lint             Run platform lint checks
   build-examples   Build all examples for all targets
   qemu             Build and run project in QEMU emulator
   install-qemu     Download and install Espressif QEMU
@@ -503,6 +504,11 @@ blusys_help_example() {
 blusys_help_build_examples() {
     printf 'Usage: blusys build-examples\n'
     printf '\nBuilds every example for every target (esp32, esp32c3, esp32s3).\n'
+}
+
+blusys_help_lint() {
+    printf 'Usage: blusys lint\n'
+    printf '\nRun platform lint checks.\n'
 }
 
 blusys_help_version() {
@@ -1062,6 +1068,15 @@ cmd_qemu() {
         $extra_flags
 }
 
+cmd_lint() {
+    if [[ $# -gt 0 ]]; then
+        blusys_help_lint
+        exit 1
+    fi
+
+    bash "$BLUSYS_REPO_ROOT/scripts/lint-layering.sh"
+}
+
 cmd_build_examples() {
     if [[ $# -gt 0 ]]; then
         blusys_help_build_examples
@@ -1081,6 +1096,7 @@ cmd_build_examples() {
     local fail=0
 
     blusys_setup_idf_env
+    cmd_lint
 
     for target in "${targets[@]}"; do
         for example_dir in "${examples[@]}"; do
@@ -1152,6 +1168,7 @@ main() {
         clean)          shift; cmd_clean "$@" ;;
         fullclean)      shift; cmd_fullclean "$@" ;;
         example)        shift; cmd_example "$@" ;;
+        lint)           shift; cmd_lint "$@" ;;
         build-examples) shift; cmd_build_examples "$@" ;;
         qemu)           shift; cmd_qemu "$@" ;;
         install-qemu)   shift; cmd_install_qemu "$@" ;;

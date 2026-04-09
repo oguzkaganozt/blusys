@@ -40,9 +40,9 @@ Direct hardware abstraction — thin wrappers over ESP-IDF drivers.
 
 </div>
 
-## Services
+## Drivers
 
-Application building blocks — higher-level modules for common tasks.
+Hardware-facing building blocks layered on top of HAL.
 
 <div class="grid cards" markdown>
 
@@ -50,13 +50,13 @@ Application building blocks — higher-level modules for common tasks.
 
     ---
 
-    [:octicons-arrow-right-24: LCD](lcd.md) · [LED Strip](led_strip.md) · [7-Segment](seven_seg.md) · [UI (LVGL)](ui.md)
+    [:octicons-arrow-right-24: LCD](lcd.md) · [LED Strip](led_strip.md) · [7-Segment](seven_seg.md)
 
 -   :material-gesture-tap-button:{ .lg .middle } **Input**
 
     ---
 
-    [:octicons-arrow-right-24: Button](button.md) · [Encoder](encoder.md) · [USB HID](usb_hid.md)
+    [:octicons-arrow-right-24: Button](button.md) · [Encoder](encoder.md)
 
 -   :material-thermometer:{ .lg .middle } **Sensor**
 
@@ -87,5 +87,59 @@ Application building blocks — higher-level modules for common tasks.
     ---
 
     [:octicons-arrow-right-24: Console](console.md) · [Filesystem](fs.md) · [FAT Filesystem](fatfs.md) · [Power Management](power_mgmt.md) · [SNTP](sntp.md) · [OTA](ota.md) · [Local Control](local_ctrl.md)
+
+</div>
+
+## Services
+
+Stateful runtime modules and higher-level system capabilities.
+
+<div class="grid cards" markdown>
+
+-   :material-monitor-dashboard:{ .lg .middle } **Display / Runtime**
+
+    ---
+
+    [:octicons-arrow-right-24: UI (LVGL Runtime)](ui.md)
+
+-   :material-usb:{ .lg .middle } **Input / Runtime**
+
+    ---
+
+    [:octicons-arrow-right-24: USB HID](usb_hid.md)
+
+-   :material-wifi:{ .lg .middle } **Connectivity**
+
+    ---
+
+    [:octicons-arrow-right-24: WiFi](wifi.md) · [WiFi Provisioning](wifi_prov.md) · [WiFi Mesh](wifi_mesh.md) · [ESP-NOW](espnow.md) · [Bluetooth](bluetooth.md) · [BLE GATT](ble_gatt.md) · [mDNS](mdns.md)
+
+-   :material-swap-vertical:{ .lg .middle } **Protocol**
+
+    ---
+
+    [:octicons-arrow-right-24: HTTP Client](http_client.md) · [HTTP Server](http_server.md) · [MQTT](mqtt.md) · [WebSocket Client](ws_client.md)
+
+-   :material-cog:{ .lg .middle } **System**
+
+    ---
+
+    [:octicons-arrow-right-24: Console](console.md) · [Filesystem](fs.md) · [FAT Filesystem](fatfs.md) · [Power Management](power_mgmt.md) · [SNTP](sntp.md) · [OTA](ota.md) · [Local Control](local_ctrl.md)
+
+</div>
+
+## Framework
+
+The framework tier exists in the repo but is still being introduced.
+
+<div class="grid cards" markdown>
+
+-   :material-view-dashboard-outline:{ .lg .middle } **Framework**
+
+    ---
+
+    Product-layer controllers, routing, feedback, and future widget-kit APIs are being added during the platform transition.
+
+    [:octicons-arrow-right-24: Framework Status](framework.md)
 
 </div>

@@ -22,19 +22,34 @@ All modules below are available on **all three targets** unless marked otherwise
 | **Storage** | `nvs`, `sd_spi` | `sdmmc` — ESP32, S3 only |
 | **Device** | `system`, `sleep`, `wdt`, `efuse` | `temp_sensor` — C3, S3 only; `ulp` — ESP32, S3 only |
 
+### Drivers
+
+| Category | Modules |
+|----------|---------|
+| **Display** | `lcd`, `led_strip`, `seven_seg` |
+| **Input** | `button`, `encoder` |
+| **Sensor** | `dht` |
+| **Actuator** | `buzzer` |
+
+All driver modules build through `blusys` and use the same target-support rules as the HAL beneath them.
+
 ### Services
 
 | Category | Modules |
 |----------|---------|
-| **Display** | `lcd`, `led_strip`, `seven_seg`, `ui` |
-| **Input** | `button`, `encoder`, `usb_hid` |
-| **Sensor** | `dht` |
-| **Actuator** | `buzzer` |
+| **Display / Runtime** | `ui` |
+| **Input / Runtime** | `usb_hid` |
 | **Connectivity** | `wifi`, `wifi_prov`, `espnow`, `bluetooth`, `ble_gatt`, `mdns` |
 | **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
 | **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl` |
 
-All service modules are available on all targets when their sdkconfig and managed-component requirements are met. For `usb_hid`, BLE transport is available on all targets; USB transport additionally requires ESP32-S3 USB host support. `ui` additionally requires the `espressif/lvgl` managed component.
+All service modules are available on all targets when their sdkconfig and managed-component requirements are met. For `usb_hid`, BLE transport is available on all targets; USB transport additionally requires ESP32-S3 USB host support. `ui` additionally requires the `lvgl/lvgl` managed component.
+
+### Framework
+
+| Category | Modules | Notes |
+|----------|---------|-------|
+| **Core / UI** | none yet | `components/blusys_framework/` exists as a transition stub; public framework modules land later |
 
 ### Target-Specific Summary
 
@@ -63,7 +78,7 @@ Unsupported modules return `BLUSYS_ERR_NOT_SUPPORTED` at runtime. Use `blusys_ta
 - **`usb_device`** — additionally requires `espressif/esp_tinyusb` managed component in the project's `idf_component.yml`
 - **`usb_hid`** (BLE transport) — additionally requires `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_CENTRAL=y`, and `CONFIG_BT_NIMBLE_ROLE_OBSERVER=y`
 - **`usb_hid`** (USB transport) — additionally requires `espressif/usb_host_hid` managed component in the project's `idf_component.yml`
-- **`ui`** — additionally requires `espressif/lvgl` managed component in the project's `idf_component.yml`
+- **`ui`** — additionally requires `lvgl/lvgl` managed component in the project's `idf_component.yml`
 - **`ulp`** — additionally requires `CONFIG_ULP_COPROC_ENABLED=y`, `CONFIG_ULP_COPROC_TYPE_FSM=y`, and reserved ULP RTC memory in sdkconfig
 
 ## Deferred Modules

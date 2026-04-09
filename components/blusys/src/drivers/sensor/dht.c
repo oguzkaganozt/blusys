@@ -1,4 +1,4 @@
-#include "blusys/sensor/dht.h"
+#include "blusys/drivers/sensor/dht.h"
 
 #include "soc/soc_caps.h"
 

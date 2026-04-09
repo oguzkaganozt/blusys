@@ -1,4 +1,4 @@
-#include "blusys/input/encoder.h"
+#include "blusys/drivers/input/encoder.h"
 
 #include <stdlib.h>
 
@@ -10,7 +10,7 @@
 
 #include "driver/gpio.h"
 
-#include "blusys/input/button.h"
+#include "blusys/drivers/input/button.h"
 #include "blusys/gpio.h"
 #include "blusys/internal/blusys_esp_err.h"
 #include "blusys/internal/blusys_lock.h"

@@ -5,7 +5,7 @@
 #include "sdkconfig.h"
 
 #include "blusys/blusys.h"
-#include "blusys/input/encoder.h"
+#include "blusys/drivers/input/encoder.h"
 #include "driver/gpio.h"
 
 /* Software encoder simulator — drives CLK/DT as INPUT_OUTPUT so the encoder's

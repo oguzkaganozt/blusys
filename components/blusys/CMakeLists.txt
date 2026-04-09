@@ -35,6 +35,13 @@ set(blusys_sources
     src/common/usb_device.c
     src/common/usb_host.c
     src/common/wdt.c
+    src/drivers/display/lcd.c
+    src/drivers/display/led_strip.c
+    src/drivers/display/seven_seg.c
+    src/drivers/input/button.c
+    src/drivers/input/encoder.c
+    src/drivers/sensor/dht.c
+    src/drivers/actuator/buzzer.c
     src/internal/blusys_lock_freertos.c
 )
 
@@ -55,14 +62,21 @@ idf_component_register(
              esp_driver_i2c esp_driver_i2s esp_driver_ledc esp_driver_mcpwm
              esp_driver_pcnt esp_driver_rmt esp_driver_sdm esp_driver_sdmmc
              esp_driver_sdspi esp_driver_spi esp_driver_touch_sens esp_driver_tsens esp_driver_twai
-             esp_driver_uart esp_hw_support esp_system esp_timer bootloader_support fatfs nvs_flash sdmmc ulp usb
+             esp_driver_uart esp_hw_support esp_system esp_timer bootloader_support fatfs nvs_flash sdmmc ulp usb esp_lcd
 )
 
 # Optional managed component: espressif/esp_tinyusb
 # Only available when the project declares espressif/esp_tinyusb in its idf_component.yml.
 idf_build_get_property(build_components BUILD_COMPONENTS)
-if("esp_tinyusb" IN_LIST build_components OR "espressif__esp_tinyusb" IN_LIST build_components)
-    idf_component_get_property(tinyusb_lib esp_tinyusb COMPONENT_LIB)
+set(blusys_tinyusb_component "")
+if("esp_tinyusb" IN_LIST build_components)
+    set(blusys_tinyusb_component esp_tinyusb)
+elseif("espressif__esp_tinyusb" IN_LIST build_components)
+    set(blusys_tinyusb_component espressif__esp_tinyusb)
+endif()
+
+if(NOT blusys_tinyusb_component STREQUAL "")
+    idf_component_get_property(tinyusb_lib ${blusys_tinyusb_component} COMPONENT_LIB)
     target_link_libraries(${COMPONENT_LIB} PUBLIC ${tinyusb_lib})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_TINYUSB=1)
 endif()

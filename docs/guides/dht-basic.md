@@ -18,7 +18,7 @@ You have a DHT11 or DHT22 (AM2302) sensor and want to read ambient temperature a
 
 ```c
 #include "blusys/blusys.h"
-#include "blusys/sensor/dht.h"
+#include "blusys/drivers/sensor/dht.h"
 
 void app_main(void)
 {

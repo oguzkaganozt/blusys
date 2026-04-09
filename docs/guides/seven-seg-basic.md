@@ -19,7 +19,7 @@ Choose one of the three wiring options below:
 === "MAX7219"
 
     ```c
-    #include "blusys/display/seven_seg.h"
+    #include "blusys/drivers/display/seven_seg.h"
 
     blusys_seven_seg_t *display;
 
@@ -42,7 +42,7 @@ Choose one of the three wiring options below:
 === "74HC595"
 
     ```c
-    #include "blusys/display/seven_seg.h"
+    #include "blusys/drivers/display/seven_seg.h"
 
     blusys_seven_seg_t *display;
 
@@ -67,7 +67,7 @@ Choose one of the three wiring options below:
 === "Direct GPIO"
 
     ```c
-    #include "blusys/display/seven_seg.h"
+    #include "blusys/drivers/display/seven_seg.h"
 
     blusys_seven_seg_t *display;
 

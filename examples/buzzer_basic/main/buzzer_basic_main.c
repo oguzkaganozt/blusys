@@ -5,7 +5,7 @@
 #include "sdkconfig.h"
 
 #include "blusys/blusys.h"
-#include "blusys/actuator/buzzer.h"
+#include "blusys/drivers/actuator/buzzer.h"
 
 #define BUZZER_PIN  CONFIG_BLUSYS_BUZZER_BASIC_PIN
 #define BUZZER_DUTY CONFIG_BLUSYS_BUZZER_BASIC_DUTY_PERMILLE

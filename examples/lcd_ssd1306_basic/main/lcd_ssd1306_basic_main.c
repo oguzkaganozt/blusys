@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "blusys/blusys.h"
-#include "blusys/blusys_services.h"
 #include "sdkconfig.h"
 
 #include "freertos/FreeRTOS.h"

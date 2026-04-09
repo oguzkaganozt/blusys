@@ -5,7 +5,7 @@
 #include "sdkconfig.h"
 
 #include "blusys/blusys.h"
-#include "blusys/sensor/dht.h"
+#include "blusys/drivers/sensor/dht.h"
 
 #define DHT_PIN  CONFIG_BLUSYS_DHT_BASIC_PIN
 
