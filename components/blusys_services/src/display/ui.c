@@ -178,11 +178,11 @@ static void render_task(void *arg)
 
     while (ui->running) {
         uint32_t ms = lv_timer_handler();
-        if (ms > 500) {
-            ms = 500;
+        if (ms > 33) {
+            ms = 33;   /* cap at ~30 FPS so dirty frames aren't held up */
         }
-        if (ms < 5) {
-            ms = 5;
+        if (ms < 1) {
+            ms = 1;
         }
         vTaskDelay(pdMS_TO_TICKS(ms));
     }
