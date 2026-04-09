@@ -31,6 +31,7 @@ struct blusys_ui {
     void                   *buf2;
     void                   *flush_buf;
     size_t                  flush_buf_size;
+    uint32_t                draw_stride;    /* bytes per row in LVGL draw buffers; fixed at open */
     TaskHandle_t            task;
     SemaphoreHandle_t       done_sem;
     volatile bool           running;
@@ -120,25 +121,14 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
         return;
     }
 
-    lv_draw_buf_t *draw_buf = lv_display_get_buf_active(disp);
     uint32_t area_width       = (uint32_t)(area->x2 - area->x1 + 1);
     uint32_t area_height      = (uint32_t)(area->y2 - area->y1 + 1);
     uint32_t pixel_size       = lv_color_format_get_size(lv_display_get_color_format(disp));
     uint32_t packed_row_bytes = area_width * pixel_size;
-    uint32_t draw_stride      = packed_row_bytes;
-
-    if ((draw_buf != NULL) && (draw_buf->header.stride != 0u)) {
-        draw_stride = draw_buf->header.stride;
-    }
-    if (draw_stride < packed_row_bytes) {
-        draw_stride = packed_row_bytes;
-    }
+    uint32_t draw_stride      = ui->draw_stride;
 
     if ((ui->flush_buf != NULL) && (ui->flush_buf_size >= packed_row_bytes)) {
         uint32_t max_band_rows = (uint32_t)(ui->flush_buf_size / packed_row_bytes);
-        if (max_band_rows == 0u) {
-            max_band_rows = 1u;
-        }
 
         for (uint32_t row = 0; row < area_height; row += max_band_rows) {
             uint32_t band_rows = area_height - row;
@@ -146,10 +136,20 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
                 band_rows = max_band_rows;
             }
 
-            for (uint32_t r = 0; r < band_rows; r++) {
-                uint8_t *dst = (uint8_t *)ui->flush_buf + ((size_t)r * packed_row_bytes);
-                const uint8_t *src = px_map + ((size_t)(row + r) * draw_stride);
-                memcpy(dst, src, packed_row_bytes);
+            /* Copy band rows into the DMA scratch buffer, stripping any LVGL
+             * row padding.  When there is no padding (draw_stride ==
+             * packed_row_bytes, which is the common case for RGB565 panels)
+             * the whole band is contiguous and a single memcpy suffices. */
+            if (draw_stride == packed_row_bytes) {
+                memcpy(ui->flush_buf,
+                       px_map + (size_t)row * draw_stride,
+                       (size_t)band_rows * packed_row_bytes);
+            } else {
+                for (uint32_t r = 0; r < band_rows; r++) {
+                    memcpy((uint8_t *)ui->flush_buf + (size_t)r * packed_row_bytes,
+                           px_map + (size_t)(row + r) * draw_stride,
+                           packed_row_bytes);
+                }
             }
             lv_draw_sw_rgb565_swap(ui->flush_buf, area_width * band_rows);
 
@@ -321,6 +321,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
         return BLUSYS_ERR_NO_MEM;
     }
     ui->flush_buf_size = flush_buf_bytes;
+    ui->draw_stride    = stride;
     lv_display_set_buffers(ui->disp, ui->buf1, ui->buf2,
                            buf_bytes,
                            full_refresh ? LV_DISPLAY_RENDER_MODE_FULL
