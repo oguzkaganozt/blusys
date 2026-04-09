@@ -838,22 +838,29 @@ blusys_err_t blusys_lcd_draw_bitmap(blusys_lcd_t *lcd,
                                         x_start, y_start,
                                         x_end, y_end,
                                         color_data);
+
+    /* Release the lock before blocking on DMA completion.  Holding a
+     * blusys_lock_t across a blocking wait violates the project threading
+     * contract and would deadlock any concurrent caller (e.g. lcd_on/off,
+     * set_brightness) that tries to acquire the same lock while DMA is
+     * in flight. */
+    blusys_lock_give(&lcd->lock);
+
     if ((esp_err == ESP_OK) &&
         lcd->wait_color_trans_done &&
         (lcd->color_done_sem != NULL)) {
         if (xSemaphoreTake(lcd->color_done_sem, portMAX_DELAY) != pdTRUE) {
-            err = BLUSYS_ERR_TIMEOUT;
-        } else {
-            /* Drain callbacks from any remaining chunks in a multi-chunk transfer. */
-            while (xSemaphoreTake(lcd->color_done_sem, 0) == pdTRUE) {}
-            err = BLUSYS_OK;
+            return BLUSYS_ERR_TIMEOUT;
         }
-    } else {
-        err = blusys_translate_esp_err(esp_err);
+        /* Drain any stale signal that an ISR may have posted between the
+         * take above and now (e.g. a late callback from a previous
+         * transaction).  color_done_sem is binary so this never loops
+         * more than once. */
+        while (xSemaphoreTake(lcd->color_done_sem, 0) == pdTRUE) {}
+        return BLUSYS_OK;
     }
 
-    blusys_lock_give(&lcd->lock);
-    return err;
+    return blusys_translate_esp_err(esp_err);
 }
 
 blusys_err_t blusys_lcd_on(blusys_lcd_t *lcd)

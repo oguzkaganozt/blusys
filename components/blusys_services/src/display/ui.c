@@ -87,11 +87,14 @@ static void flush_cb_mono_page(blusys_ui_t *ui, const lv_area_t *area,
         }
     }
 
-    blusys_lcd_draw_bitmap(ui->lcd,
+    blusys_err_t draw_err = blusys_lcd_draw_bitmap(ui->lcd,
                            0, 0,
                            (int32_t)ui->panel_width,
                            (int32_t)ui->panel_height,
                            ui->flush_buf);
+    if (draw_err != BLUSYS_OK) {
+        ESP_LOGE(TAG, "lcd_draw_bitmap failed: %d (mono_page)", (int)draw_err);
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -144,25 +147,38 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
             }
             lv_draw_sw_rgb565_swap(ui->flush_buf, area_width * band_rows);
 
-            blusys_lcd_draw_bitmap(ui->lcd,
+            blusys_err_t draw_err = blusys_lcd_draw_bitmap(ui->lcd,
                                    area->x1,
                                    area->y1 + (int32_t)row,
                                    area->x2 + 1,
                                    area->y1 + (int32_t)(row + band_rows),
                                    ui->flush_buf);
+            if (draw_err != BLUSYS_OK) {
+                ESP_LOGE(TAG, "lcd_draw_bitmap failed: %d (band row=%lu)",
+                         (int)draw_err, (unsigned long)row);
+            }
         }
     } else {
         /* Fallback when scratch buffer is unavailable: send row-by-row
-         * directly from the LVGL buffer with an in-place byte-swap. */
+         * directly from the LVGL buffer with a temporary in-place byte-swap.
+         * The swap is reversed after each DMA call so that px_map (LVGL's
+         * draw buffer) is left unmodified — callers that composite
+         * semi-transparent widgets read from it as background and would
+         * produce incorrect colours if the bytes were left swapped. */
         for (uint32_t row = 0; row < area_height; row++) {
             uint8_t *row_ptr = px_map + ((size_t)row * draw_stride);
             lv_draw_sw_rgb565_swap(row_ptr, area_width);
-            blusys_lcd_draw_bitmap(ui->lcd,
+            blusys_err_t draw_err = blusys_lcd_draw_bitmap(ui->lcd,
                                    area->x1,
                                    area->y1 + (int32_t)row,
                                    area->x2 + 1,
                                    area->y1 + (int32_t)row + 1,
                                    row_ptr);
+            lv_draw_sw_rgb565_swap(row_ptr, area_width);  /* restore: undo the in-place swap */
+            if (draw_err != BLUSYS_OK) {
+                ESP_LOGE(TAG, "lcd_draw_bitmap failed: %d (fallback row=%lu)",
+                         (int)draw_err, (unsigned long)row);
+            }
         }
     }
 
