@@ -430,16 +430,21 @@ set(BLUSYS_TARGETS       "esp32s3")
     - `docs/guides/wifi-prov-basic.md:18` — switch to `blusys/blusys_services.h`
   - **Scaffold template (1):** the `blusys` CLI `cmd_create` heredoc that generates `main/app_main.cpp` — already handled in Phase 7, verify nothing leaks into Phase 8.
 - **Delete `components/blusys_services/include/blusys/blusys_all.h`** once no examples, guides, or scaffold templates reference it. (The file lives in services, not HAL — note the path.)
+- **Update prose mentions of `blusys_all.h`** once the umbrella header is deleted (these still read as "transitional compatibility header" today and become wrong the moment the file is gone):
+  - `docs/architecture.md:182` — drop the "still exists as a transitional compatibility header" sentence; surrounding paragraph already steers readers to per-tier umbrella headers.
+  - `docs/guides/framework.md:197` — drop the `blusys_all.h` removal-plan reference.
 - **Verify `components/blusys/include/blusys/blusys.h`** now includes driver headers under `blusys/drivers/...` since drivers moved in Phase 3.
-- **Add framework examples** (at least 3) showing widget kit usage:
-  - A screen with layout primitives only (labels + rows + cols).
-  - A screen with interactive widgets (button + slider + toggle).
-  - An encoder-driven focus-traversal example using the input helpers.
+- **Add the missing framework example.** The current example set already covers spine-in-isolation and the interactive-widget scenarios; only the encoder-traversal scenario is missing as a *real* `lv_indev_t` example (today's `framework_app_basic` simulates encoder traversal with button presses).
+  - **Spine in isolation (already landed):** `examples/framework_core_basic/` — router/intent/feedback/controller/runtime, no LVGL. Headless.
+  - **Layout primitives + interactive widgets (already landed):** `examples/framework_ui_basic/` — theme + layout primitives + button/toggle/slider on the V1 widget kit. Tighten the README/comments to make explicit that this is the canonical example for both the layout-only and interactive-widgets scenarios so the next contributor doesn't reach for a redundant fourth example.
+  - **Full spine + widgets (already landed):** `examples/framework_app_basic/` — button on_press → runtime.post_intent → controller → slider_set_value / submit_route → ui_route_sink → overlay_show, with feedback emitted at each step.
+  - **Encoder focus traversal (TO ADD):** `examples/framework_encoder_basic/` — wire a real `lv_indev_t` of type `LV_INDEV_TYPE_ENCODER` into `create_encoder_group` + `auto_focus_screen`. Should run under the host harness (SDL2 keyboard ←/→/Enter mapped as encoder rotation + press) and on hardware (the `encoder` driver from `components/blusys/src/drivers/input/`). This is the one example that exercises the framework's defining input mode end-to-end.
 
 **Done when:**
 - All examples build on all supported targets (esp32, esp32c3, esp32s3).
-- `blusys_all.h` is deleted from the repo; no file references it.
-- Example ecosystem contains at least 3 framework-based examples.
+- `blusys_all.h` is deleted from the repo; no file or guide references it (verified by `git grep -F blusys_all.h` returning only platform-transition planning docs and historical references).
+- The two prose mentions in `docs/architecture.md:182` and `docs/guides/framework.md:197` are updated.
+- Example ecosystem contains four framework-based examples covering: spine in isolation (`framework_core_basic`), layout primitives + interactive widgets (`framework_ui_basic`), full spine + widgets (`framework_app_basic`), and real encoder focus traversal (`framework_encoder_basic`).
 
 ### Phase 9 — Validation and migration notes
 

@@ -17,7 +17,9 @@ report_hits() {
 }
 
 mapfile -t common_hits < <(
-    rg -n '#include "blusys/drivers/' "$repo_root/components/blusys/src/common" -g '*.[ch]' || true
+    grep -rEn --include='*.c' --include='*.h' \
+        '#include[[:space:]]*[<"]blusys/drivers/' \
+        "$repo_root/components/blusys/src/common" || true
 )
 
 if [[ ${#common_hits[@]} -gt 0 ]]; then
@@ -25,14 +27,17 @@ if [[ ${#common_hits[@]} -gt 0 ]]; then
 fi
 
 mapfile -t driver_internal_hits < <(
-    rg -n '#include "blusys/internal/[^"]+"' "$repo_root/components/blusys/src/drivers" -g '*.[ch]' || true
+    grep -rEn --include='*.c' --include='*.h' \
+        '#include[[:space:]]*[<"]blusys/internal/[^>"]+[>"]' \
+        "$repo_root/components/blusys/src/drivers" || true
 )
 
 disallowed_driver_hits=()
 for hit in "${driver_internal_hits[@]}"; do
     case "$hit" in
-        *'blusys/internal/blusys_lock.h"'|*'blusys/internal/blusys_esp_err.h"'|*'blusys/internal/blusys_timeout.h"')
-            ;;
+        *'blusys/internal/blusys_lock.h"'|*'blusys/internal/blusys_lock.h>')   ;;
+        *'blusys/internal/blusys_esp_err.h"'|*'blusys/internal/blusys_esp_err.h>') ;;
+        *'blusys/internal/blusys_timeout.h"'|*'blusys/internal/blusys_timeout.h>') ;;
         *)
             disallowed_driver_hits+=("$hit")
             ;;
