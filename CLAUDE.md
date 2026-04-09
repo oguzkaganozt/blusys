@@ -6,8 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Before changing public API, docs, or project status, read these files — they're the canonical sources and may be more up to date than this guide:
 
-- `PROGRESS.md` — current release, module inventory, validation state
-- `ROADMAP.md` — planned V2 work and V1.1 follow-ups
+- `ROADMAP.md` — current release state, module inventory, validation, V1.1 follow-ups, V2 plans
 - `docs/architecture.md` — current repo architecture and tiering
 - `docs/guidelines.md` — public API design rules and contribution workflow
 
@@ -278,8 +277,8 @@ Drivers already live in `components/blusys/src/drivers/<category>/`. `usb_hid` r
 - Run `mkdocs build --strict` to verify nav references and cross-links.
 - If the support matrix changed: update `docs/target-matrix.md`.
 
-### 10. PROGRESS.md
-Add the module to the **What Ships in V6** section under its component tier. If hardware smoke testing is pending, add it to the **Verification Snapshot** "pending" list.
+### 10. ROADMAP.md
+Add the module to the **What ships** inventory under its component tier. If hardware smoke testing is pending, add a note to the **Validation state** table.
 
 ## Generated Files
 

@@ -1,89 +1,149 @@
-# Roadmap
+# Blusys — State & Roadmap
 
-Blusys V1 (v6.x) is complete. This document tracks planned V2 work and
-near-term V1.1 follow-ups.
+## What We're Building
 
-## V1.1 follow-ups
+Blusys is an internal ESP32 product platform. The goal is to stop rebuilding the same
+low-level plumbing on every new product. HAL, drivers, and services are solved once and
+shared; a C++ framework layer ships the runtime spine and UI widget kit; product teams
+write business logic, not peripheral glue.
 
-These items do not block the current release but are tracked so they are not lost.
-
-### End-to-end encoder + LCD rig
-
-Each piece has been individually validated on real hardware, but no single session has
-wired a physical EC11 encoder, an ST7735 panel, and the framework spine into one rig and
-demonstrated encoder-rotation → focus-traversal → confirm-press → overlay-show
-end-to-end.
-
-Recommended setup: esp32-s3 + ST7735 SPI + EC11 encoder, using the interactive scaffold
-`app_main.cpp` LCD init TODO block as the reference.
-
-### Scope-based input → feedback latency measurement
-
-Wire `intent::confirm` emission to a debug GPIO toggle inside `controller::handle`. Tap
-that GPIO + the first `blusys_lcd_draw_bitmap` SPI CS edge with a Saleae or oscilloscope.
-Record median + p99 over a few hundred presses. File the report under `docs/guides/`
-following the hardware-validation report naming convention
-(`docs/guides/hardware-validation-report-template.md`).
-
-### SSD1306 bus recovery on `blusys_lcd_open`
-
-A previous failed boot can leave an I2C slave (SSD1306 in particular) holding SDA low
-mid-transaction, locking the bus. Standard recovery sequence before `i2c_new_master_bus`:
-take SDA/SCL as GPIO; if SDA reads low, pulse SCL 9 times to flush the stuck byte, issue
-a manual STOP condition (SDA low → SCL high → SDA high), then release the GPIOs back to
-the I2C peripheral.
-
-Blocked on a deliberate stuck-state reproduction so the fix can be validated. ~20-line
-isolated change once the reproduction is in hand.
-
-### `widget_kit_demo` keyboard encoder simulation
-
-Map arrow keys to `LV_INDEV_TYPE_ENCODER` events in `scripts/host/src/widget_kit_demo.cpp`
-so encoder focus traversal can be validated visually on host without real hardware.
-Currently only `framework_encoder_basic` does this on-device.
+One platform. Many products. One spine.
 
 ---
 
-## V2 scope
+## Where We Are — v6.1.0
 
-V2 items are not yet scheduled. They are captured here to preserve the reasoning from
-the V1 transition.
+**Current release: v6.1.0** (April 2026). The V6 platform is complete and validated on
+real hardware across all three targets (ESP32, ESP32-C3, ESP32-S3).
+
+### What ships
+
+Three ESP-IDF components under one version tag:
+
+```
+components/blusys/            HAL + drivers (C)
+components/blusys_services/   runtime services (C)
+components/blusys_framework/  framework + widget kit (C++)
+```
+
+**HAL** — `gpio`, `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave`, `adc`, `dac`, `sdm`,
+`pwm`, `mcpwm`, `timer`, `pcnt`, `rmt`, `rmt_rx`, `i2s`, `i2s_rx`, `twai`, `wdt`,
+`sleep`, `temp_sensor`, `touch`, `sdmmc`, `sd_spi`, `nvs`, `one_wire`, `efuse`, `ulp`,
+`usb_host`, `usb_device`, `system`, `error`, `target`, `version`
+
+**Drivers** — Display: `lcd`, `led_strip`, `seven_seg` · Input: `button`, `encoder` ·
+Sensor: `dht` · Actuator: `buzzer`
+
+**Services** — `ui` (LVGL lifecycle + render task), `usb_hid`, `wifi`, `wifi_prov`,
+`wifi_mesh`, `espnow`, `bluetooth`, `ble_gatt`, `mdns`, `mqtt`, `http_client`,
+`http_server`, `ws_client`, `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`,
+`local_ctrl`
+
+**Framework** — Core spine: `router`, `intent`, `feedback`, `controller`, `runtime` ·
+Layout: `screen`, `row`, `col`, `label`, `divider` · Widget kit: `bu_button`,
+`bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay` · Theme: single `theme_tokens` struct
+populated at boot · Encoder helpers: `create_encoder_group`, `auto_focus_screen`
+
+**Tooling** — `blusys create --starter <headless|interactive>` product scaffold ·
+`blusys host-build` PC + SDL2 harness (LVGL v9.2.2) · `blusys lint` layering gate ·
+`blusys qemu` QEMU smoke runner
+
+### Validation state
+
+All checks passing:
+
+| Check | Result |
+|---|---|
+| `blusys lint` | ✅ layering gate |
+| `blusys build-examples` (all 3 targets) | ✅ |
+| `blusys host-build` (Ubuntu 24.04) | ✅ `hello_lvgl` + `widget_kit_demo` + `pomodoro_host` |
+| `blusys qemu` headless scaffold (all 3 targets) | ✅ |
+| Real hardware — headless scaffold | ✅ esp32 + esp32c3 + esp32s3 |
+| Real hardware — interactive scaffold + ST7735 LCD | ✅ esp32c3 |
+| Real hardware — SSD1306 OLED + encoder (`oled_encoder_basic`) | ✅ esp32 |
+| `mkdocs build --strict` | ✅ |
+
+Full hardware validation record: `docs/validation-report-v6.md`.
+
+### Release notes
+
+**v6.1.0** — I2C sync mode fix (silent write failures on async mode), `blusys_ui` mono-
+page panel support for SSD1306-style OLEDs, `oled_encoder_basic` Pomodoro example,
+`pomodoro_host` SDL2 demo, host build scaffolding in `blusys create`.
+
+**v6.0.0** — Initial V6: full three-tier architecture, V1 widget kit, product scaffold,
+host harness, QEMU validation, real-hardware validation on all three targets.
+Migration guide: `docs/migration-guide.md`.
+
+---
+
+## What's Next — V1.1
+
+Near-term items that don't block v6.1.0 but should land before V2.
+
+### End-to-end encoder + LCD rig
+
+Each piece is individually validated but no single session has wired a physical EC11
+encoder, an ST7735 panel, and the framework spine into one rig end-to-end
+(encoder-rotation → focus-traversal → confirm-press → overlay-show).
+
+Target: esp32-s3 + ST7735 SPI + EC11 encoder. Use the interactive scaffold
+`app_main.cpp` LCD init TODO block as the reference.
+
+### Scope-based input → feedback latency
+
+Wire `intent::confirm` to a debug GPIO toggle inside `controller::handle`. Tap that GPIO
++ the first `blusys_lcd_draw_bitmap` SPI CS edge with a Saleae or oscilloscope. Record
+median + p99 over a few hundred presses. File under `docs/guides/` using the
+hardware-validation report template.
+
+### SSD1306 bus recovery
+
+A failed boot can leave SDA held low mid-transaction, locking the I2C bus for the next
+power cycle. Fix: before `i2c_new_master_bus`, if SDA reads low pulse SCL 9 times,
+issue a manual STOP condition, then release the GPIOs. Blocked on a deliberate stuck-
+state reproduction (~20-line change once reproducible).
+
+### `widget_kit_demo` keyboard encoder simulation
+
+Map arrow keys to `LV_INDEV_TYPE_ENCODER` events in
+`scripts/host/src/widget_kit_demo.cpp` so encoder focus traversal can be validated
+visually on host. Currently only `framework_encoder_basic` does this on-device.
+
+---
+
+## What's Planned — V2
+
+Not yet scheduled. Captured to preserve the reasoning.
 
 ### `bu_knob` — Camp 3 rotary widget
 
-A dedicated knob widget using `lv_obj_class_t` embedded storage (Camp 3) instead of the
-external slot pool (Camp 2). The implementation template differs from the V1 Camp 2
-widgets and was deferred to V2 so the Camp 2 pattern could stabilize across five widgets
-before introducing the second pattern.
+A knob widget using `lv_obj_class_t` embedded storage (Camp 3) instead of the external
+slot pool (Camp 2). Deferred from V1 so the Camp 2 pattern could stabilize across five
+widgets before introducing a second implementation pattern.
 
 ### Services → C++ migration
 
-`blusys_services` is currently C (opaque handles, explicit lifecycle). Migrating it to
-C++ would let service callbacks use captureless lambdas and align the services tier
-with the framework tier's language. Deferred because:
-- the existing C implementations (`wifi.c`, `mqtt.c`, `ota.c`) are already
-  well-factored and clean
-- migrating in V1 would force every service example from `.c` to `.cpp`
-- no concrete pain point has shown up yet that C cannot address
-
-Migration should be driven by a real pain point, not as a general cleanup.
+`blusys_services` is C. Migrating it to C++ would enable captureless lambdas in service
+callbacks and align it with the framework tier. Deferred because the existing
+implementations are already clean and well-factored, and no concrete pain point has
+appeared that C cannot address. Should be driven by a real need, not cleanup.
 
 ### Per-module build gating
 
-V1 uses a binary `BLUSYS_STARTER_TYPE` (`headless` or `interactive`) to gate the UI
-tier. V2 could introduce per-module build flags (`BLUSYS_MODULE_WIFI`, `BLUSYS_MODULE_BLE`,
-etc.) to let products strip unused services from the binary. Worth revisiting once there
-are three or more products with different module subsets.
+V1 gates the entire UI tier with a binary `BLUSYS_STARTER_TYPE` flag. V2 could
+introduce per-module flags (`BLUSYS_MODULE_WIFI`, `BLUSYS_MODULE_BLE`, etc.) so
+products can strip unused services. Worth revisiting once there are three or more
+products with different module subsets.
 
 ### Latency tooling
 
-On-device input → feedback latency tooling (GPIO-toggle + scope or logic analyser
-integration) as a standard part of the validation chain. Currently measured ad-hoc;
-V2 could formalize the methodology and add a template report.
+Formalize the input → feedback latency measurement methodology — GPIO-toggle + scope
+integration as a standard validation step, with a template report and expected
+thresholds. Currently measured ad-hoc.
 
 ### LVGL version track
 
-LVGL v9.2.2 is pinned in `scripts/host/CMakeLists.txt` and in each interactive example's
-`idf_component.yml`. Review the pin when LVGL v9.3+ or v10.x stabilize. The main risks
-are API surface changes in `lv_arc`, `lv_switch`, and the `LV_EVENT_*` set that the
-widget kit directly uses.
+LVGL v9.2.2 is pinned in `scripts/host/CMakeLists.txt` and each interactive example's
+`idf_component.yml`. Review when v9.3+ or v10.x stabilize. Risk areas: `lv_arc`,
+`lv_switch`, and the `LV_EVENT_*` set the widget kit directly uses.
