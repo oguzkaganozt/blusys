@@ -48,21 +48,25 @@ static uint32_t tick_get_cb(void)
 }
 
 /* ------------------------------------------------------------------ */
-/* MONO_PAGE flush — RGB565 → SSD1306 page format → blusys_lcd          */
+/* MONO_PAGE flush — RGB565 → SSD1306 page format                     */
 /* ------------------------------------------------------------------ */
 /* Threshold each RGB565 pixel from the LVGL flush area to 1 bit (any
  * non-black pixel = on), then pack into the SSD1306 native page
  * format: each byte represents 8 vertical pixels in a horizontal page,
- * MSB at the bottom of the page, 4 pages × width bytes for a 128x32
- * panel.
+ * D0 (LSB) at the top of the page, 4 pages × width bytes for a
+ * 128x32 panel.
  *
  * Caller has set MONO_PAGE panel_kind, which forces full-refresh mode
  * during open. The flush area therefore always covers the entire
  * panel, and `flush_buf` is sized as panel_width * panel_height / 8
- * bytes — exactly the SSD1306 frame buffer size, so we can write the
- * page bytes directly into it. */
-static void flush_cb_mono_page(blusys_ui_t *ui, const lv_area_t *area,
-                               uint8_t *px_map)
+ * bytes — exactly the SSD1306 frame buffer size.
+ *
+ * This function only builds the page buffer in flush_buf.  The caller
+ * (flush_cb) is responsible for the actual DMA send so that
+ * lv_display_flush_ready() can be called before the transfer starts,
+ * freeing the LVGL draw buffer while DMA is in flight. */
+static void flush_cb_mono_page_build(blusys_ui_t *ui, const lv_area_t *area,
+                                     const uint8_t *px_map)
 {
     const uint16_t *src = (const uint16_t *)px_map;
     const int32_t   x1  = area->x1;
@@ -86,15 +90,6 @@ static void flush_cb_mono_page(blusys_ui_t *ui, const lv_area_t *area,
             }
         }
     }
-
-    blusys_err_t draw_err = blusys_lcd_draw_bitmap(ui->lcd,
-                           0, 0,
-                           (int32_t)ui->panel_width,
-                           (int32_t)ui->panel_height,
-                           ui->flush_buf);
-    if (draw_err != BLUSYS_OK) {
-        ESP_LOGE(TAG, "lcd_draw_bitmap failed: %d (mono_page)", (int)draw_err);
-    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -109,8 +104,19 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
     blusys_ui_t *ui = lv_display_get_user_data(disp);
 
     if (ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE) {
-        flush_cb_mono_page(ui, area, px_map);
+        /* Build page buffer from px_map, then release the LVGL draw buffer
+         * before starting DMA.  flush_buf is a separate DMA-capable allocation
+         * so LVGL can render into buf1/buf2 while the transfer is in flight. */
+        flush_cb_mono_page_build(ui, area, px_map);
         lv_display_flush_ready(disp);
+        blusys_err_t draw_err = blusys_lcd_draw_bitmap(ui->lcd,
+                               0, 0,
+                               (int32_t)ui->panel_width,
+                               (int32_t)ui->panel_height,
+                               ui->flush_buf);
+        if (draw_err != BLUSYS_OK) {
+            ESP_LOGE(TAG, "lcd_draw_bitmap failed: %d (mono_page)", (int)draw_err);
+        }
         return;
     }
 
@@ -147,6 +153,16 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
             }
             lv_draw_sw_rgb565_swap(ui->flush_buf, area_width * band_rows);
 
+            /* On the last band all pixel data has been copied out of
+             * px_map into flush_buf.  Release the LVGL draw buffer now so
+             * LVGL can start rendering the next dirty area into buf1/buf2
+             * while this band's DMA transfer is still in flight.  Earlier
+             * bands cannot call flush_ready because px_map is still being
+             * read in subsequent iterations. */
+            if (row + band_rows >= area_height) {
+                lv_display_flush_ready(disp);
+            }
+
             blusys_err_t draw_err = blusys_lcd_draw_bitmap(ui->lcd,
                                    area->x1,
                                    area->y1 + (int32_t)row,
@@ -164,7 +180,10 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
          * The swap is reversed after each DMA call so that px_map (LVGL's
          * draw buffer) is left unmodified — callers that composite
          * semi-transparent widgets read from it as background and would
-         * produce incorrect colours if the bytes were left swapped. */
+         * produce incorrect colours if the bytes were left swapped.
+         *
+         * DMA reads directly from px_map here, so flush_ready must be
+         * deferred until all rows are sent (unlike the band path above). */
         for (uint32_t row = 0; row < area_height; row++) {
             uint8_t *row_ptr = px_map + ((size_t)row * draw_stride);
             lv_draw_sw_rgb565_swap(row_ptr, area_width);
@@ -180,9 +199,8 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
                          (int)draw_err, (unsigned long)row);
             }
         }
+        lv_display_flush_ready(disp);
     }
-
-    lv_display_flush_ready(disp);
 }
 
 /* ------------------------------------------------------------------ */

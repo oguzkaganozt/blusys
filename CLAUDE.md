@@ -208,7 +208,9 @@ Modules not available on all targets use a SOC capability guard (see `temp_senso
 #endif
 ```
 
-**Singleton modules:** `bluetooth`, `ble_gatt`, `espnow`, and `sntp` each maintain a global static handle and only support one open instance at a time. Opening a second instance returns `BLUSYS_ERR_INVALID_STATE`.
+**Singleton modules:** `bluetooth`, `ble_gatt`, `espnow`, `sntp`, and `ui` each maintain a global static handle and only support one open instance at a time. Opening a second instance returns `BLUSYS_ERR_INVALID_STATE`.
+
+`blusys_ui` is a singleton for two reasons: (1) `lv_init()` / `lv_deinit()` are global to LVGL — `blusys_ui_open` calls `lv_init()` and `blusys_ui_close` calls `lv_deinit()`, so no other code must call these directly; (2) `blusys_ui_lock` / `blusys_ui_unlock` wrap LVGL's global `lv_lock()` / `lv_unlock()`. Any code that needs LVGL must go through `blusys_ui`. The host harness (`scripts/host/`) calls `lv_init()` directly because it doesn't use `blusys_ui`.
 
 ### Examples
 

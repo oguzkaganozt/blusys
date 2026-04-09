@@ -38,7 +38,15 @@ typedef enum {
 } blusys_ui_panel_kind_t;
 
 typedef struct {
-    blusys_lcd_t           *lcd;           /* Required: already-opened LCD handle */
+    /* Required: an already-opened LCD handle.
+     *
+     * The caller must keep the LCD open for the entire lifetime of the
+     * blusys_ui instance.  Calling blusys_lcd_close() while blusys_ui is
+     * running leaves the render task with a dangling pointer and will
+     * produce undefined behaviour on the next flush.  Always call
+     * blusys_ui_close() before blusys_lcd_close(). */
+    blusys_lcd_t           *lcd;
+
     uint32_t                buf_lines;     /* Draw buffer height in lines (0 = default 20) */
     bool                    full_refresh;  /* Use one full-screen render buffer (experimental on SPI LCDs) */
     int                     task_priority; /* LVGL render task priority (0 = default 5) */
@@ -50,7 +58,15 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
                             blusys_ui_t **out_ui);
 blusys_err_t blusys_ui_close(blusys_ui_t *ui);
 
-/* Lock/unlock for thread-safe LVGL widget access from non-render tasks. */
+/* Lock/unlock for thread-safe LVGL widget access from non-render tasks.
+ *
+ * These wrap LVGL's global lv_lock() / lv_unlock().  Because only one
+ * blusys_ui instance may exist at a time (blusys_ui is a singleton) the
+ * lock is effectively per-display, but callers from different tasks all
+ * contend on the same underlying mutex.  Call blusys_ui_lock() before
+ * creating, modifying, or deleting any LVGL object from outside the
+ * render task, and release it as soon as possible — the lock is held by
+ * the render task for the duration of each lv_timer_handler() call. */
 blusys_err_t blusys_ui_lock(blusys_ui_t *ui);
 blusys_err_t blusys_ui_unlock(blusys_ui_t *ui);
 

@@ -12,6 +12,7 @@
 
 #include "soc/soc_caps.h"
 #include "driver/gpio.h"
+#include "driver/ledc.h"
 #include "driver/spi_master.h"
 #include "driver/spi_common.h"
 #include "driver/i2c_master.h"
@@ -32,6 +33,8 @@ struct blusys_lcd {
     blusys_lock_t             lock;
     SemaphoreHandle_t         color_done_sem;
     int                       bl_pin;
+    int                       bl_ledc_channel;  /* -1 = plain GPIO, >=0 = LEDC PWM */
+    ledc_mode_t               bl_ledc_mode;
     blusys_lcd_driver_t       driver;
     spi_host_device_t         spi_host;
     i2c_master_bus_handle_t   i2c_bus;
@@ -496,6 +499,10 @@ static spi_host_device_t blusys_lcd_spi_bus_to_host(int bus)
 static void blusys_lcd_teardown(blusys_lcd_t *lcd)
 {
     if (lcd->bl_pin != -1) {
+        if (lcd->bl_ledc_channel >= 0) {
+            ledc_stop(lcd->bl_ledc_mode,
+                      (ledc_channel_t)lcd->bl_ledc_channel, 0);
+        }
         gpio_set_level((gpio_num_t)lcd->bl_pin, 0);
         gpio_reset_pin((gpio_num_t)lcd->bl_pin);
     }
@@ -719,10 +726,11 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
         return BLUSYS_ERR_NO_MEM;
     }
 
-    lcd->driver = config->driver;
-    lcd->bl_pin = -1;
-    lcd->width  = config->width;
-    lcd->height = config->height;
+    lcd->driver          = config->driver;
+    lcd->bl_pin          = -1;
+    lcd->bl_ledc_channel = -1;
+    lcd->width           = config->width;
+    lcd->height          = config->height;
 
     err = blusys_lock_init(&lcd->lock);
     if (err != BLUSYS_OK) {
@@ -776,20 +784,60 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
     }
 
     if (lcd->bl_pin != -1) {
-        gpio_config_t bl_cfg = {
-            .pin_bit_mask = 1ULL << (uint32_t)lcd->bl_pin,
-            .mode         = GPIO_MODE_OUTPUT,
-            .pull_up_en   = GPIO_PULLUP_DISABLE,
-            .pull_down_en = GPIO_PULLDOWN_DISABLE,
-            .intr_type    = GPIO_INTR_DISABLE,
-        };
-        esp_err = gpio_config(&bl_cfg);
-        if (esp_err != ESP_OK) {
-            err = blusys_translate_esp_err(esp_err);
-            blusys_lcd_teardown(lcd);
-            return err;
+        if (config->spi.bl_ledc_enabled) {
+            /* PWM backlight via LEDC.  Use a 10-bit duty resolution which
+             * gives 1024 steps at up to ~78 kHz, well above the visible
+             * flicker threshold for any reasonable frequency. */
+            ledc_timer_config_t bl_timer = {
+                .speed_mode      = LEDC_LOW_SPEED_MODE,
+                .timer_num       = (ledc_timer_t)config->spi.bl_ledc_timer,
+                .duty_resolution = LEDC_TIMER_10_BIT,
+                .freq_hz         = config->spi.bl_ledc_freq_hz > 0u
+                                       ? config->spi.bl_ledc_freq_hz
+                                       : 5000u,
+                .clk_cfg         = LEDC_AUTO_CLK,
+            };
+            esp_err = ledc_timer_config(&bl_timer);
+            if (esp_err != ESP_OK) {
+                err = blusys_translate_esp_err(esp_err);
+                blusys_lcd_teardown(lcd);
+                return err;
+            }
+
+            ledc_channel_config_t bl_ch = {
+                .gpio_num   = lcd->bl_pin,
+                .speed_mode = LEDC_LOW_SPEED_MODE,
+                .channel    = (ledc_channel_t)config->spi.bl_ledc_channel,
+                .timer_sel  = (ledc_timer_t)config->spi.bl_ledc_timer,
+                .duty       = (1u << 10) - 1u,  /* full brightness at open */
+                .hpoint     = 0,
+            };
+            esp_err = ledc_channel_config(&bl_ch);
+            if (esp_err != ESP_OK) {
+                err = blusys_translate_esp_err(esp_err);
+                blusys_lcd_teardown(lcd);
+                return err;
+            }
+
+            lcd->bl_ledc_channel = config->spi.bl_ledc_channel;
+            lcd->bl_ledc_mode    = LEDC_LOW_SPEED_MODE;
+        } else {
+            /* Binary GPIO backlight (default) */
+            gpio_config_t bl_cfg = {
+                .pin_bit_mask = 1ULL << (uint32_t)lcd->bl_pin,
+                .mode         = GPIO_MODE_OUTPUT,
+                .pull_up_en   = GPIO_PULLUP_DISABLE,
+                .pull_down_en = GPIO_PULLDOWN_DISABLE,
+                .intr_type    = GPIO_INTR_DISABLE,
+            };
+            esp_err = gpio_config(&bl_cfg);
+            if (esp_err != ESP_OK) {
+                err = blusys_translate_esp_err(esp_err);
+                blusys_lcd_teardown(lcd);
+                return err;
+            }
+            gpio_set_level((gpio_num_t)lcd->bl_pin, 1);
         }
-        gpio_set_level((gpio_num_t)lcd->bl_pin, 1);
     }
 
     *out_lcd = lcd;
@@ -982,7 +1030,18 @@ blusys_err_t blusys_lcd_set_brightness(blusys_lcd_t *lcd, int percent)
     }
 
     if (lcd->bl_pin != -1) {
-        gpio_set_level((gpio_num_t)lcd->bl_pin, percent > 0 ? 1 : 0);
+        if (lcd->bl_ledc_channel >= 0) {
+            /* Map 0–100 % linearly onto the 10-bit LEDC duty range. */
+            const uint32_t max_duty = (1u << 10) - 1u;
+            uint32_t duty = (uint32_t)percent * max_duty / 100u;
+            ledc_set_duty(lcd->bl_ledc_mode,
+                          (ledc_channel_t)lcd->bl_ledc_channel, duty);
+            ledc_update_duty(lcd->bl_ledc_mode,
+                             (ledc_channel_t)lcd->bl_ledc_channel);
+        } else {
+            /* Binary GPIO: any non-zero percent is fully on. */
+            gpio_set_level((gpio_num_t)lcd->bl_pin, percent > 0 ? 1 : 0);
+        }
     }
 
     blusys_lock_give(&lcd->lock);
