@@ -52,7 +52,9 @@ Direct hardware access — use these when you need low-level control over ESP32 
 
 ## Drivers
 
-Hardware-facing helpers built on top of HAL.
+Hardware-facing helpers built on top of HAL — these live in
+`components/blusys/src/drivers/<category>/` and are reachable via
+`blusys/drivers/<category>/<module>.h`.
 
 <div class="grid cards" markdown>
 
@@ -87,30 +89,6 @@ Hardware-facing helpers built on top of HAL.
     Buzzers, speakers, and motor drivers.
 
     [:octicons-arrow-right-24: Buzzer](buzzer-basic.md)
-
--   :material-wifi:{ .lg .middle } **Connectivity**
-
-    ---
-
-    WiFi, Bluetooth, BLE, ESP-NOW, mesh networking, and network discovery.
-
-    [:octicons-arrow-right-24: WiFi](wifi-connect.md) · [WiFi Provisioning](wifi-prov-basic.md) · [WiFi Mesh](wifi-mesh-basic.md) · [ESP-NOW](espnow-basic.md) · [Bluetooth](bluetooth-basic.md) · [BLE GATT](ble_gatt-basic.md) · [mDNS](mdns-basic.md)
-
--   :material-swap-vertical:{ .lg .middle } **Protocol**
-
-    ---
-
-    HTTP, MQTT, and WebSocket application protocols.
-
-    [:octicons-arrow-right-24: HTTP Client](http-basic.md) · [HTTP Server](http-server-basic.md) · [MQTT](mqtt-basic.md) · [WebSocket Client](ws-client-basic.md)
-
--   :material-cog:{ .lg .middle } **System**
-
-    ---
-
-    Console, filesystem, power management, time sync, and OTA updates.
-
-    [:octicons-arrow-right-24: Console](console-basic.md) · [Filesystem](fs-basic.md) · [FAT Filesystem](fatfs-basic.md) · [Power Management](power-mgmt-basic.md) · [SNTP](sntp-basic.md) · [OTA](ota-basic.md) · [Local Control](local-ctrl-basic.md)
 
 </div>
 
@@ -164,7 +142,9 @@ Runtime modules and higher-level building blocks for application behavior.
 
 ## Framework
 
-Framework guides will land with the product-platform layer.
+The C++ tier of the platform. V1 covers the core spine, the widget kit,
+and encoder focus helpers — see the framework guide for the full
+walkthrough.
 
 <div class="grid cards" markdown>
 
@@ -172,9 +152,11 @@ Framework guides will land with the product-platform layer.
 
     ---
 
-    Product scaffolding, controllers, routing, feedback, and widget-kit guides are being added during the transition.
+    Setting up a screen with the widget kit, wiring a controller into the
+    runtime, encoder focus traversal, and authoring new widgets against the
+    six-rule contract.
 
-    [:octicons-arrow-right-24: Framework Status](framework.md)
+    [:octicons-arrow-right-24: Framework Guide](framework.md)
 
 </div>
 

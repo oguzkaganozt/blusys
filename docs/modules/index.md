@@ -42,7 +42,9 @@ Direct hardware abstraction — thin wrappers over ESP-IDF drivers.
 
 ## Drivers
 
-Hardware-facing building blocks layered on top of HAL.
+Hardware-facing building blocks layered on top of HAL — these live in
+`components/blusys/src/drivers/<category>/` and are reachable via
+`blusys/drivers/<category>/<module>.h`.
 
 <div class="grid cards" markdown>
 
@@ -69,24 +71,6 @@ Hardware-facing building blocks layered on top of HAL.
     ---
 
     [:octicons-arrow-right-24: Buzzer](buzzer.md)
-
--   :material-wifi:{ .lg .middle } **Connectivity**
-
-    ---
-
-    [:octicons-arrow-right-24: WiFi](wifi.md) · [WiFi Provisioning](wifi_prov.md) · [WiFi Mesh](wifi_mesh.md) · [ESP-NOW](espnow.md) · [Bluetooth](bluetooth.md) · [BLE GATT](ble_gatt.md) · [mDNS](mdns.md)
-
--   :material-swap-vertical:{ .lg .middle } **Protocol**
-
-    ---
-
-    [:octicons-arrow-right-24: HTTP Client](http_client.md) · [HTTP Server](http_server.md) · [MQTT](mqtt.md) · [WebSocket Client](ws_client.md)
-
--   :material-cog:{ .lg .middle } **System**
-
-    ---
-
-    [:octicons-arrow-right-24: Console](console.md) · [Filesystem](fs.md) · [FAT Filesystem](fatfs.md) · [Power Management](power_mgmt.md) · [SNTP](sntp.md) · [OTA](ota.md) · [Local Control](local_ctrl.md)
 
 </div>
 
@@ -130,16 +114,25 @@ Stateful runtime modules and higher-level system capabilities.
 
 ## Framework
 
-The framework tier exists in the repo but is still being introduced.
+The C++ tier of the platform. V1 ships the core spine, the widget kit,
+and encoder focus helpers in full.
 
 <div class="grid cards" markdown>
 
--   :material-view-dashboard-outline:{ .lg .middle } **Framework**
+-   :material-view-dashboard-outline:{ .lg .middle } **Core spine**
 
     ---
 
-    Product-layer controllers, routing, feedback, and future widget-kit APIs are being added during the platform transition.
+    Router, intent dispatch, feedback bus, controller lifecycle, and the runtime that owns event/route queues and tick cadence.
 
-    [:octicons-arrow-right-24: Framework Status](framework.md)
+    [:octicons-arrow-right-24: Framework Reference](framework.md)
+
+-   :material-puzzle-outline:{ .lg .middle } **Widget kit**
+
+    ---
+
+    `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`, plus layout primitives (`screen` / `row` / `col` / `label` / `divider`), the theme registry, and encoder focus helpers.
+
+    [:octicons-arrow-right-24: Framework Reference](framework.md)
 
 </div>

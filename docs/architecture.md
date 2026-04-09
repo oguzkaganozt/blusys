@@ -97,17 +97,29 @@ Umbrella header:
 
 ### Framework (`components/blusys_framework/`)
 
-The framework tier has been introduced as a real ESP-IDF component, but only minimal infrastructure is shipped during this stage of the transition.
+The framework tier is the only C++ component in V1, with `-fno-exceptions -fno-rtti` and a fixed-capacity allocation policy. It ships the V1 product surface in full:
 
-Intended long-term role:
-- `core/` for product lifecycle, controllers, intents, routing, and feedback
-- `ui/` for higher-level UI helpers and widget-kit code
+**Core spine** (`include/blusys/framework/core/`):
+- `router.hpp` — six route commands (`set_root`, `push`, `replace`, `pop`, `show_overlay`, `hide_overlay`) plus a `route_sink` interface
+- `intent.hpp` — nine semantic intents (`press`/`long_press`/`release`/`confirm`/`cancel`/`increment`/`decrement`/`focus_next`/`focus_prev`) and the `app_event` envelope
+- `feedback.hpp` — three channels (`visual`/`audio`/`haptic`), six patterns, fixed-capacity bus
+- `controller.hpp` — `init`/`handle`/`tick`/`deinit` lifecycle base class with `submit_route` and `emit_feedback` helpers
+- `runtime.hpp` — event/route ring buffers, 10 ms default tick cadence, `route_sink` and `feedback_bus` integration
+- `containers.hpp` — `static_vector`, `ring_buffer`, `array`, `string`
 
-Current status:
-- component exists in the build graph
-- framework core headers are shipped for router, intent, feedback, controller, and runtime
-- the first UI foundation is shipped for theme tokens and basic layout primitives
-- framework pages in the docs track the currently landed surface and examples
+**UI layer** (`include/blusys/framework/ui/`, gated by `BLUSYS_BUILD_UI`):
+- `theme.hpp` — single `theme_tokens` struct populated at boot, `set_theme()` / `theme()` accessors
+- `callbacks.hpp` — semantic callback types (`press_cb_t`, `toggle_cb_t`, `change_cb_t`, ...) — products never see `lv_event_cb_t`
+- `widgets.hpp` — umbrella over all widget kit headers
+- Layout primitives: `screen`, `row`, `col`, `label`, `divider`
+- V1 widget kit: `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay` (`bu_knob` deferred to V2)
+- `input/encoder.hpp` — `create_encoder_group` + `auto_focus_screen` for encoder-driven focus traversal
+
+Authoring contract: every widget follows the six-rule contract (theme tokens only, config struct interface, setters own state transitions, standard state set, one folder per widget, header is the spec). Camp 2 stock-backed widgets use a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` for callback storage. See `components/blusys_framework/widget-author-guide.md`.
+
+End-to-end validation: `examples/framework_app_basic/` exercises the full chain (`button.on_press` → `runtime.post_intent` → `controller.handle` → `slider_set_value` / `submit_route` → `ui_route_sink` → `overlay_show`).
+
+Host iteration: `scripts/host/` builds LVGL against SDL2 on Linux via `blusys host-build`, pinned to the same upstream LVGL tag as the ESP-IDF managed component. Lets the widget kit be iterated on without flashing hardware on every change.
 
 ## Layering Rules
 

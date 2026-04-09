@@ -28,8 +28,8 @@ Locked decisions future sessions need to know:
 - **Drivers** (display/input/sensor/actuator: lcd, led_strip, seven_seg, button, encoder, dht, buzzer) now live under `components/blusys/src/drivers/<category>/`. HAL/drivers boundary inside `components/blusys/` is enforced by directory discipline + `blusys lint`.
 - **`usb_hid` stays in services.** It is runtime orchestration across USB host and BLE, not a simple driver.
 - **Framework is the only C++ tier in V1.** Services migration to C++ is deferred to V2.
-- **`blusys_framework` now exists as a real component.** The repo already ships framework core contracts (`router`, `intent`, `feedback`, `controller`, `runtime`) plus the first UI foundation (`theme.hpp`, `widgets.hpp`, `screen`, `row`, `col`, `label`, `divider`).
-- **Widget kit** built on LVGL with a six-rule component contract; theme is a single C++ struct populated at boot. No JSON, no Python, no design-tool integration.
+- **`blusys_framework` ships the V1 surface in full:** core spine (`router`, `intent`, `feedback`, `controller`, `runtime`), layout primitives (`screen`, `row`, `col`, `label`, `divider`), the **V1 widget kit** (`bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`), encoder focus helpers (`create_encoder_group`, `auto_focus_screen`), the `theme_tokens` registry, the semantic callbacks header (`callbacks.hpp`), and the `widget-author-guide.md` codifying the six-rule contract every widget follows. `bu_knob` is deferred to V2.
+- **Widget kit** built on LVGL with a six-rule component contract; theme is a single C++ struct populated at boot. Each Camp 2 widget uses a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` (default 32) for callback storage. No JSON, no Python, no design-tool integration.
 - **Product scaffold** generates four CMakeLists files (top-level + `main/` + `app/` + `app/product_config.cmake`). `app/` becomes its own ESP-IDF component. Platform components are pulled via `main/idf_component.yml` managed dependencies — never via `EXTRA_COMPONENT_DIRS = "$ENV{BLUSYS_PATH}/components"` (that's the monorepo internal pattern only).
 - **Logging** in framework code goes through a thin `blusys/log.h` wrapper (`BLUSYS_LOGE/I/W/D`). HAL and services keep using `esp_log.h` directly.
 - **`blusys_all.h` is removed** at the end of the transition (Phase 8). 15 files reference it today; the full removal sweep list is in `platform-transition/ROADMAP.md` Phase 8.
@@ -39,9 +39,11 @@ Completed so far:
 - Phase 2: identity/docs alignment
 - Phase 3: drivers move + framework component stub + CI lint + repo/docs rewrite
 - Phase 4: framework C++ compile policy + `blusys/log.h` + foundational framework headers
-- Phase 5/6 partial: framework core contracts, runtime, theme registry, first layout primitives, and framework examples
+- Phase 4.5: PC + SDL2 host harness under `scripts/host/` (LVGL v9.2.2 via FetchContent, `blusys host-build` CLI subcommand)
+- Phase 5: V1 widget kit (`bu_button`/`bu_toggle`/`bu_slider`/`bu_modal`/`bu_overlay`), `widget-author-guide.md`, `ui/input/` encoder helpers — `bu_knob` deferred to V2
+- Phase 6: framework core spine end-to-end, validated by `examples/framework_app_basic/` (button on_press → runtime.post_intent → controller.handle → slider_set_value / submit_route → ui_route_sink → overlay_show)
 
-Next planned step: the first interactive widget, starting with `button`.
+Next planned step: Phase 7 — extend `blusys create` with `--starter <headless|interactive>` and generate the four-CMakeLists product scaffold.
 
 Full plan, decisions log, and rationale: `platform-transition/`. Current phase status: `PROGRESS.md`.
 
@@ -62,6 +64,7 @@ blusys erase          [project] [port] [esp32|esp32c3|esp32s3]    # erase entire
 blusys clean          [project] [esp32|esp32c3|esp32s3]           # remove one target build dir
 blusys fullclean      [project]                                   # remove all target build dirs
 blusys build-examples                                             # build all examples × all targets
+blusys host-build                                                 # build the PC + SDL2 host harness (scripts/host/)
 blusys example <name> [build|flash|monitor|run] [port] [target]   # operate on bundled examples
 blusys qemu           [project] [esp32|esp32c3|esp32s3]           # build + run in QEMU
 blusys install-qemu                                               # fetch pre-built Espressif QEMU
@@ -91,6 +94,7 @@ There is no repo-local unit test or static analysis pipeline. Validation happens
 2. **QEMU smoke gate (CI):** after the build gate, six examples run in QEMU on all three targets — `smoke`, `system_info`, `timer_basic`, `nvs_basic`, `wdt_basic`, `concurrency_timer`. Local equivalent: `blusys install-qemu` then `blusys qemu <example> <target>`. The QEMU runner script is `scripts/qemu-test.sh`.
 3. **Doc gate:** `mkdocs build --strict` must pass. Fails on broken nav references, missing pages, or bad cross-references. Run before any merge.
 4. **Hardware gate:** new or changed public modules need at least one real-board smoke test. See `docs/guides/hardware-smoke-tests.md` and the report template at `docs/guides/hardware-validation-report-template.md`.
+5. **Host harness (Phase 4.5):** `blusys host-build` configures `scripts/host/` via CMake, fetches LVGL v9.2.2 from upstream, and builds `hello_lvgl` against SDL2. Useful for visual iteration on the framework UI without flashing hardware. Requires `libsdl2-dev` (or distro equivalent), `cmake`, and `pkg-config`. See `scripts/host/README.md`.
 
 ## Documentation
 
@@ -110,7 +114,7 @@ The codebase is now split into three ESP-IDF components:
 
 - **`components/blusys/`** — HAL + drivers. HAL sources live in `src/common/`; drivers live in `src/drivers/<category>/`.
 - **`components/blusys_services/`** — runtime services. `ui` and `usb_hid` stay here along with connectivity/protocol/system services.
-- **`components/blusys_framework/`** — framework tier. Ships the current framework core and UI foundation.
+- **`components/blusys_framework/`** — framework tier (C++). Ships the V1 widget kit (`bu_button`/`bu_toggle`/`bu_slider`/`bu_modal`/`bu_overlay`), layout primitives, theme registry, core spine (`router`/`intent`/`feedback`/`controller`/`runtime`), encoder focus helpers, and the `widget-author-guide.md`.
 
 Dependency direction:
 

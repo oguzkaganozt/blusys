@@ -41,4 +41,4 @@ An internal ESP32 product platform built on top of ESP-IDF v5.5.4. Blusys combin
 See [Compatibility](target-matrix.md) for the full per-module support matrix.
 
 !!! info "Current State"
-    The repo currently ships HAL, drivers, and services today, with the framework tier being introduced during the platform transition.
+    The repo ships HAL, drivers, services, and the framework tier in full. The V1 widget kit (`bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`) plus the framework spine (`router`, `intent`, `feedback`, `controller`, `runtime`) and the encoder focus helpers are all live, with `examples/framework_app_basic/` validating the chain end-to-end. A PC + SDL2 host harness under `scripts/host/` lets the widget kit be iterated on without flashing hardware. See [`PROGRESS.md`](https://github.com/oguzkaganozt/blusys/blob/main/PROGRESS.md) for the current phase.

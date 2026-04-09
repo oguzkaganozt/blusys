@@ -10,7 +10,7 @@
 - This repo is a platform repo, not one ESP-IDF app. It currently ships three components sharing the `blusys/` include namespace:
   - `components/blusys/`: HAL + drivers
   - `components/blusys_services/`: runtime services; `REQUIRES blusys`
-  - `components/blusys_framework/`: framework core + UI foundation; `REQUIRES blusys_services`
+  - `components/blusys_framework/`: framework core spine + V1 widget kit (`bu_button`/`bu_toggle`/`bu_slider`/`bu_modal`/`bu_overlay`) + encoder helpers; `REQUIRES blusys_services`. Authoring contract is in `components/blusys_framework/widget-author-guide.md`.
 - Supported targets are exactly `esp32`, `esp32c3`, and `esp32s3`.
 - Each `examples/<name>/` is its own ESP-IDF project. Project `CMakeLists.txt` pulls in `../../components` via `EXTRA_COMPONENT_DIRS`.
 - Example/app Kconfig belongs in `main/Kconfig.projbuild`, not the project root.
@@ -32,6 +32,7 @@
   - `blusys config [project] [target]` or `blusys menuconfig [project] [target]`
   - `blusys lint`
   - `blusys build-examples`
+  - `blusys host-build` builds the PC + SDL2 host harness in `scripts/host/`; requires `libsdl2-dev` (or distro equivalent), `cmake`, and `pkg-config`
   - `blusys qemu [project] [target]` after `blusys install-qemu`; QEMU networking is Ethernet emulation, not WiFi
 
 ## Verification
@@ -43,6 +44,7 @@
 - Docs gate: `mkdocs build --strict`.
 - CI builds every example for all three targets. QEMU only covers `smoke`, `system_info`, `timer_basic`, `nvs_basic`, `wdt_basic`, and `concurrency_timer`.
 - Public modules still need real-board validation; see `docs/guides/hardware-smoke-tests.md`.
+- Framework UI work can be iterated on host via `blusys host-build` and `./scripts/host/build-host/hello_lvgl` before being flashed to hardware. The host harness pins LVGL to the same upstream tag (v9.2.2) as the ESP-IDF managed component, so behaviour matches.
 
 ## API And Implementation Rules
 

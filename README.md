@@ -1,8 +1,9 @@
-# Blusys HAL
+# Blusys Platform
 
-A simplified C hardware abstraction layer for ESP32 devices, built on ESP-IDF v5.5.
-
-One API across **ESP32**, **ESP32-C3**, and **ESP32-S3** — simpler than raw ESP-IDF for common embedded tasks.
+An internal ESP32 product platform built on ESP-IDF v5.5. Three tiers
+sharing the `blusys/` header namespace, one supported set of targets
+(**ESP32**, **ESP32-C3**, **ESP32-S3**), and a single CLI for the whole
+build/flash/host workflow.
 
 ## Quick Start
 
@@ -21,17 +22,24 @@ Requires ESP-IDF v5.5+ (auto-detected).
 
 ## Architecture
 
-Two ESP-IDF components sharing the `blusys/` header namespace:
+Three ESP-IDF components, one-way dependency direction:
 
 ```
 Application
-  → Services    blusys/<category>/<module>.h    (high-level building blocks)
-  → HAL         blusys/<module>.h               (hardware abstraction)
+  → Framework      blusys/framework/...        (C++; controllers, routing,
+                                                 feedback, widget kit)
+  → Services       blusys/<category>/<module>  (C; runtime modules)
+  → HAL + Drivers  blusys/<module> /            (C; hardware abstraction +
+                   blusys/drivers/<...>          driver building blocks)
   → ESP-IDF
   → Hardware
 ```
 
-### HAL Modules
+`blusys_framework` → `blusys_services` → `blusys`. Reverse dependencies
+are forbidden and the HAL/drivers boundary inside `components/blusys/`
+is enforced by `blusys lint`.
+
+### HAL modules
 
 | Category | Modules |
 |---|---|
@@ -41,37 +49,81 @@ Application
 | **Storage** | `nvs`, `sdmmc`, `sd_spi` |
 | **Device** | `system`, `sleep`, `wdt`, `temp_sensor`, `efuse`, `ulp` |
 
-### Services Modules
+### Driver modules
 
 | Category | Modules |
 |---|---|
-| **Display** | `lcd`, `led_strip`, `seven_seg`, `ui` |
-| **Input** | `button`, `encoder`, `usb_hid` |
+| **Display** | `lcd`, `led_strip`, `seven_seg` |
+| **Input** | `button`, `encoder` |
 | **Sensor** | `dht` |
 | **Actuator** | `buzzer` |
-| **Connectivity** | `wifi`, `wifi_prov`, `espnow`, `bluetooth`, `ble_gatt`, `mdns` |
+
+### Service modules
+
+| Category | Modules |
+|---|---|
+| **Display / Runtime** | `ui` |
+| **Input / Runtime** | `usb_hid` |
+| **Connectivity** | `wifi`, `wifi_prov`, `wifi_mesh`, `espnow`, `bluetooth`, `ble_gatt`, `mdns` |
 | **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
 | **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl` |
+
+### Framework
+
+C++ tier shipping the V1 widget kit and the product spine:
+
+- **Core spine:** `router`, `intent`, `feedback`, `controller`, `runtime`
+  (queued events, route delivery, feedback bus, tick cadence).
+- **Widget kit:** `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`,
+  `bu_overlay`, plus layout primitives `screen` / `row` / `col` /
+  `label` / `divider`.
+- **Theme system:** single `theme_tokens` struct populated at boot.
+- **Encoder helpers:** `create_encoder_group` + `auto_focus_screen` for
+  encoder-driven focus traversal across the widget kit.
+
+See [`components/blusys_framework/widget-author-guide.md`](components/blusys_framework/widget-author-guide.md)
+for the six-rule widget contract.
 
 ## Usage
 
 ```c
-#include "blusys/blusys.h"           /* HAL only */
-#include "blusys/blusys_services.h"  /* all services */
-#include "blusys/blusys_all.h"       /* both */
+#include "blusys/blusys.h"             /* HAL + drivers */
+#include "blusys/blusys_services.h"    /* services */
+```
+
+```cpp
+#include "blusys/framework/framework.hpp"  /* framework core */
+#include "blusys/framework/ui/widgets.hpp" /* widget kit */
 ```
 
 ```cmake
-# HAL only
+# HAL + driver examples
 idf_component_register(SRCS "main.c" REQUIRES blusys)
 
-# With services
+# Service examples
 idf_component_register(SRCS "main.c" REQUIRES blusys_services)
+
+# Framework / app examples (C++)
+idf_component_register(SRCS "main.cpp" REQUIRES blusys_framework)
+```
+
+## Host harness
+
+The `scripts/host/` CMake project builds LVGL against SDL2 on Linux so
+the widget kit can be iterated against without flashing hardware on
+every change. See [`scripts/host/README.md`](scripts/host/README.md) for
+the install steps.
+
+```sh
+sudo apt install libsdl2-dev   # or distro equivalent
+blusys host-build
+./scripts/host/build-host/hello_lvgl
 ```
 
 ## Documentation
 
-[**oguzkaganozt.github.io/blusys**](https://oguzkaganozt.github.io/blusys/) — guides, API reference, and architecture docs.
+[**oguzkaganozt.github.io/blusys**](https://oguzkaganozt.github.io/blusys/) —
+guides, API reference, and architecture docs.
 
 Build locally:
 
@@ -82,7 +134,10 @@ mkdocs serve
 
 ## Project Status
 
-**v5.0.0** — 54 modules across HAL and Services, standalone `blusys` CLI, full docs site. See [`PROGRESS.md`](PROGRESS.md) for detailed tracking.
+Mid-transition from a HAL/services library repo to an internal product
+platform. See [`PROGRESS.md`](PROGRESS.md) for the current phase, the
+[`platform-transition/`](platform-transition/) directory for the locked
+planning docs, and [`AGENTS.md`](AGENTS.md) for repo conventions.
 
 ## License
 
