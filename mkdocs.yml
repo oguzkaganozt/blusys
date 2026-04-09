@@ -224,3 +224,4 @@ nav:
   - Project:
       - Architecture: architecture.md
       - Guidelines: guidelines.md
+      - Migration (V5 → V6): migration-guide.md
