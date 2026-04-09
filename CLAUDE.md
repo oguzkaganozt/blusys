@@ -8,7 +8,6 @@ Before changing public API, docs, or project status, read these files — they'r
 
 - `PROGRESS.md` — current release, module inventory, validation state
 - `ROADMAP.md` — planned V2 work and V1.1 follow-ups
-- `AGENTS.md` — repo conventions, CLI quirks, verification info
 - `docs/architecture.md` — current repo architecture and tiering
 - `docs/guidelines.md` — public API design rules and contribution workflow
 
@@ -18,10 +17,15 @@ Trust executable sources over prose: the `blusys` shell script, `components/*/CM
 
 **Blusys** is an ESP32 platform repo built on top of ESP-IDF v5.5.4. Supported targets: **ESP32**, **ESP32-C3**, **ESP32-S3**. Current release: `v6.1.0`.
 
+This is a platform repo, not one ESP-IDF app. It ships three ESP-IDF components sharing the `blusys/` header namespace:
+
+- `components/blusys/` — HAL + drivers
+- `components/blusys_services/` — runtime services; `REQUIRES blusys`
+- `components/blusys_framework/` — framework core spine + V1 widget kit; `REQUIRES blusys_services`
+
 ## Platform Architecture (V6)
 
-The V5 → V6 transition is complete. The platform ships a three-tier ESP-IDF component
-stack. Key decisions and constraints for future sessions:
+The V5 → V6 transition is complete. Key decisions and constraints for future sessions:
 
 - **Three tiers**: `blusys` (HAL + drivers, C) → `blusys_services` (C) → `blusys_framework` (C++).
 - **Drivers** (display/input/sensor/actuator: lcd, led_strip, seven_seg, button, encoder, dht, buzzer) live under `components/blusys/src/drivers/<category>/`. HAL/drivers boundary inside `components/blusys/` is enforced by directory discipline + `blusys lint`.
@@ -52,10 +56,11 @@ blusys erase          [project] [port] [esp32|esp32c3|esp32s3]    # erase entire
 blusys clean          [project] [esp32|esp32c3|esp32s3]           # remove one target build dir
 blusys fullclean      [project]                                   # remove all target build dirs
 blusys build-examples                                             # build all examples × all targets
-blusys host-build                                                 # build the PC + SDL2 host harness (scripts/host/)
+blusys host-build     [project]                                   # build the PC + SDL2 host harness
 blusys example <name> [build|flash|monitor|run] [port] [target]   # operate on bundled examples
 blusys qemu           [project] [esp32|esp32c3|esp32s3]           # build + run in QEMU
 blusys install-qemu                                               # fetch pre-built Espressif QEMU
+blusys lint                                                       # run HAL/drivers layering check
 blusys config-idf                                                 # select default ESP-IDF version
 blusys version                                                    # show blusys version + IDF info
 blusys update                                                     # self-update via git pull
@@ -63,7 +68,7 @@ blusys update                                                     # self-update 
 
 `blusys` configuration:
 - IDF detection: auto-detects from `$IDF_PATH`, PATH, or `~/.espressif/*/esp-idf/`
-- `BLUSYS_PATH` is exported automatically and used by example/scaffold project CMakeLists.txt
+- `BLUSYS_PATH` is exported automatically and used by bundled example CMakeLists.txt. Scaffolded products (`blusys create`) do **not** use `BLUSYS_PATH` — they pull the platform via managed components from `main/idf_component.yml`.
 
 ### CLI quirks worth knowing
 
@@ -76,13 +81,14 @@ blusys update                                                     # self-update 
 
 ## Validation Gates
 
-There is no repo-local unit test or static analysis pipeline. Validation happens at four levels:
+There is no repo-local unit test or static analysis pipeline. Validation happens at these levels:
 
-1. **Compile gate (CI):** `.github/workflows/ci.yml` builds every example for all three targets. Local equivalent: `blusys build-examples`.
-2. **QEMU smoke gate (CI):** after the build gate, six examples run in QEMU on all three targets — `smoke`, `system_info`, `timer_basic`, `nvs_basic`, `wdt_basic`, `concurrency_timer`. Local equivalent: `blusys install-qemu` then `blusys qemu <example> <target>`. The QEMU runner script is `scripts/qemu-test.sh`.
-3. **Doc gate:** `mkdocs build --strict` must pass. Fails on broken nav references, missing pages, or bad cross-references. Run before any merge.
-4. **Hardware gate:** new or changed public modules need at least one real-board smoke test. See `docs/guides/hardware-smoke-tests.md` and the report template at `docs/guides/hardware-validation-report-template.md`.
-5. **Host harness (Phase 4.5):** `blusys host-build` configures `scripts/host/` via CMake, fetches LVGL v9.2.2 from upstream, and builds `hello_lvgl` against SDL2. Useful for visual iteration on the framework UI without flashing hardware. Requires `libsdl2-dev` (or distro equivalent), `cmake`, and `pkg-config`. See `scripts/host/README.md`.
+1. **Layering gate:** `blusys lint` enforces the HAL/drivers boundary inside `components/blusys/`. Fast — run it first.
+2. **Compile gate (CI):** `.github/workflows/ci.yml` builds every example for all three targets. Local equivalent: `blusys build-examples`. Fast check: `blusys build examples/smoke esp32s3`.
+3. **QEMU smoke gate (CI):** six examples run in QEMU on all three targets — `smoke`, `system_info`, `timer_basic`, `nvs_basic`, `wdt_basic`, `concurrency_timer`. Local: `blusys install-qemu` then `blusys qemu <example> <target>`. The runner script is `scripts/qemu-test.sh`.
+4. **Doc gate:** `mkdocs build --strict` must pass. Fails on broken nav references, missing pages, or bad cross-references. Run before any merge.
+5. **Host harness:** `blusys host-build` builds `hello_lvgl`, `widget_kit_demo`, and `pomodoro_host` against SDL2. Useful for visual iteration on the framework UI without flashing hardware. Requires `libsdl2-dev`, `cmake`, and `pkg-config`. See `scripts/host/README.md`.
+6. **Hardware gate:** new or changed public modules need at least one real-board smoke test. See `docs/guides/hardware-smoke-tests.md` and the report template at `docs/guides/hardware-validation-report-template.md`.
 
 ## Documentation
 
@@ -94,26 +100,14 @@ mkdocs build --strict # doc gate (run before merge)
 
 The site uses MkDocs Material with navigation tabs: **Home**, **Guides**, **API Reference**, **Project**. The nav hierarchy in `mkdocs.yml` groups pages under peripheral categories. When adding pages, place them in the correct category in both the Guides and API Reference tabs. Card grid landing pages live at `docs/guides/index.md` and `docs/modules/index.md` — update them when adding a new module.
 
-The docs/nav already use the Drivers + Services + Framework split introduced during the transition. Keep that structure consistent when adding pages.
-
 ## Code Architecture
-
-The codebase is now split into three ESP-IDF components:
-
-- **`components/blusys/`** — HAL + drivers. HAL sources live in `src/common/`; drivers live in `src/drivers/<category>/`.
-- **`components/blusys_services/`** — runtime services. `ui` and `usb_hid` stay here along with connectivity/protocol/system services.
-- **`components/blusys_framework/`** — framework tier (C++). Ships the V1 widget kit (`bu_button`/`bu_toggle`/`bu_slider`/`bu_modal`/`bu_overlay`), layout primitives, theme registry, core spine (`router`/`intent`/`feedback`/`controller`/`runtime`), encoder focus helpers, and the `widget-author-guide.md`.
-
-Dependency direction:
-
-- `blusys_framework` -> `blusys_services` -> `blusys`
-- reverse dependencies are forbidden
 
 ```
 Application
   → Framework API         (components/blusys_framework/include/blusys/framework/...)
   → Services API          (components/blusys_services/include/blusys/<category>/*.h)
-  → HAL + Driver API      (components/blusys/include/blusys/*.h, components/blusys/include/blusys/drivers/<category>/*.h)
+  → HAL + Driver API      (components/blusys/include/blusys/*.h,
+                           components/blusys/include/blusys/drivers/<category>/*.h)
   → Services Impl         (components/blusys_services/src/<category>/*.c)
   → HAL Implementation    (components/blusys/src/common/*.c)
   → Driver Implementation (components/blusys/src/drivers/<category>/*.c)
@@ -142,25 +136,26 @@ Application
 ### Key API Conventions
 
 - All return values use `blusys_err_t` — never `esp_err_t` in public headers.
-- Stateful peripherals use an opaque handle: `blusys_<module>_open()` → `blusys_<module>_close()`.
-- GPIO is stateless and pin-based (no handle).
+- Stateful peripherals use an opaque handle: `blusys_<module>_open()` → `blusys_<module>_close()`. GPIO is the exception — stateless and pin-based, no handle.
 - Timeout parameter: `BLUSYS_TIMEOUT_FOREVER` (`-1`) to block indefinitely.
 - No ESP-IDF types, handles, or macros in public headers.
-- No `#ifdef` for target differences in public or common code — use `blusys_target_supports(feature)` or the SOC capability guard pattern below.
+- No `#ifdef` for target differences in public or common code — use `blusys_target_supports(feature)` or the SOC capability guard pattern.
+- Modules that need NVS use `blusys_nvs_ensure_init()` instead of open-coding `nvs_flash_init()`.
+- `i2s.h` and `rmt.h` each cover both TX and RX; implementations are split across `i2s.c` / `i2s_rx.c` and `rmt.c` / `rmt_rx.c`.
 
-Full API design rules: `docs/guidelines.md`.
+**Critical thread-safety rule:** Never hold a `blusys_lock_t` across a blocking wait (`xEventGroupWaitBits`, `vTaskDelay`, network/disk wait, long service call). The pattern is: take lock → prepare → give lock → block. Violating this deadlocks any concurrent caller on the same handle. See `wifi.c:blusys_wifi_connect()` and `mqtt.c:blusys_mqtt_connect()` as correct reference implementations.
+
+**Framework rules:** no exceptions, no RTTI, no RAII over LVGL or ESP-IDF handles, no dynamic allocation in the steady state (fixed-capacity slot pools only).
 
 ### Internal Utilities (`components/blusys/include/blusys/internal/`)
 
-These headers are public to both components but are implementation details, not user-facing API. Include them as `#include "blusys/internal/blusys_lock.h"` etc.
+These headers are public to components but are implementation details, not user-facing API. Include as `#include "blusys/internal/blusys_lock.h"` etc.
 
-- `blusys_lock.h` / `blusys_lock_freertos.c` (`src/internal/`) — FreeRTOS mutex used by all stateful modules.
+- `blusys_lock.h` / `blusys_lock_freertos.c` — FreeRTOS mutex used by all stateful modules.
 - `blusys_esp_err.h` — `blusys_translate_esp_err(esp_err_t)` maps ESP errors to `blusys_err_t`.
 - `blusys_timeout.h` — timeout conversion helpers.
 - `blusys_target_caps.h` — `BLUSYS_FEATURE_MASK(feature)` macro, `BLUSYS_BASE_FEATURE_MASK`, per-target feature bitmasks.
-- `blusys_nvs_init.h` — `blusys_nvs_ensure_init()` shared helper used by any module that requires NVS (wifi, espnow, bluetooth, ble_gatt). Use this instead of calling `nvs_flash_init()` directly.
-
-**Critical thread-safety rule:** Never hold a `blusys_lock_t` across a blocking wait (`xEventGroupWaitBits`, `vTaskDelay`, network/disk wait, long service call). The pattern is: take lock → prepare → give lock → block. Violating this deadlocks any concurrent caller on the same handle. See `wifi.c:blusys_wifi_connect()` and `mqtt.c:blusys_mqtt_connect()` as correct reference implementations.
+- `blusys_nvs_init.h` — `blusys_nvs_ensure_init()` shared helper for NVS-dependent modules.
 
 ### Target Feature Support Matrix
 
@@ -177,17 +172,28 @@ Modules in `BLUSYS_BASE_FEATURE_MASK` are available on all three targets. Target
 | `usb_host`   |       |          | ✓        |
 | `usb_device` |       |          | ✓        |
 
+Full support matrix: `docs/target-matrix.md`.
+
 **Deferred modules** (not supported on any current target):
 
-| Module       | Reason |
-|--------------|--------|
-| `ana_cmpr`   | `SOC_ANA_CMPR_SUPPORTED` is false for ESP32, ESP32-C3, ESP32-S3; only available on ESP32-C5/H2/P4/C61 |
+| Module     | Reason |
+|------------|--------|
+| `ana_cmpr` | `SOC_ANA_CMPR_SUPPORTED` is false for ESP32, ESP32-C3, ESP32-S3 |
 
-All other modules are in `BLUSYS_BASE_FEATURE_MASK` and available on all targets. Full support matrix: `docs/target-matrix.md`.
+### Feature Gating
 
-**Combined headers:** `i2s.h` declares both `blusys_i2s_tx_*` and `blusys_i2s_rx_*`. `rmt.h` declares both `blusys_rmt_*` (TX) and `blusys_rmt_rx_*`. Their implementations live in separate `.c` files (`i2s.c` / `i2s_rx.c`, `rmt.c` / `rmt_rx.c`).
+- HAL-facing feature flags live only in `components/blusys`: update `include/blusys/target.h`, `include/blusys/internal/blusys_target_caps.h`, and per-target `src/targets/*/target_caps.c` when support is not universal.
+- `blusys_framework/ui` is gated by `BLUSYS_BUILD_UI` and should only compile when LVGL is present.
+- `bluetooth` and `ble_gatt` require `CONFIG_BT_NIMBLE_ENABLED` (set via menuconfig).
+- WiFi-dependent service modules (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`) use `SOC_WIFI_SUPPORTED` as their guard and require `blusys_wifi_connect()` to have been called first.
+- Follow the existing optional managed-component detection pattern in CMake (`if(... IN_LIST build_components)`) instead of hard-requiring these globally:
 
-**Singleton modules:** `bluetooth`, `ble_gatt`, `espnow`, and `sntp` each maintain a global static handle and only support one open instance at a time. Opening a second instance returns `BLUSYS_ERR_INVALID_STATE`. They use an `ensure_global_lock()` helper and a module-level `s_*_handle` static for callback dispatch.
+| Module     | Managed component          | Macro                     |
+|------------|----------------------------|---------------------------|
+| `mdns`     | `espressif/mdns`           | `BLUSYS_HAS_MDNS`         |
+| `ui`       | `lvgl/lvgl`                | `BLUSYS_HAS_LVGL`         |
+| `usb_hid`  | `espressif/usb_host_hid`   | `BLUSYS_HAS_USB_HOST_HID` |
+| `usb_device` | `espressif/esp_tinyusb`  | `BLUSYS_HAS_TINYUSB`      |
 
 ### Target-Gated Modules
 
@@ -203,35 +209,24 @@ Modules not available on all targets use a SOC capability guard (see `temp_senso
 #endif
 ```
 
-**Wi-Fi-gated modules:** the V3 connectivity modules (`http_client`, `http_server`, `mqtt`, `ota`, `sntp`, `mdns`, `espnow`) use `SOC_WIFI_SUPPORTED` as their guard rather than a per-target `FEATURE_MASK` entry. They also require `blusys_wifi_connect()` to be called first at the application level.
-
-**NimBLE-gated modules:** `bluetooth` and `ble_gatt` use `CONFIG_BT_NIMBLE_ENABLED` (set via menuconfig) as their guard.
-
-**Optional managed components:** several modules detect their dependency at build time using the `if(... IN_LIST build_components)` pattern in `blusys_services/CMakeLists.txt` and define a `BLUSYS_HAS_*` macro when the component is present. Projects must declare these in their own `main/idf_component.yml`:
-
-| Module       | Managed component         | Macro                    |
-|--------------|---------------------------|--------------------------|
-| `mdns`       | `espressif/mdns`          | `BLUSYS_HAS_MDNS`        |
-| `ui`         | `lvgl/lvgl`               | `BLUSYS_HAS_LVGL`        |
-| `usb_hid` (USB transport) | `espressif/usb_host_hid` | `BLUSYS_HAS_USB_HOST_HID` |
-| `usb_device` | `espressif/esp_tinyusb`   | `BLUSYS_HAS_TINYUSB`     |
-
-See `examples/mdns_basic/main/idf_component.yml` as reference.
+**Singleton modules:** `bluetooth`, `ble_gatt`, `espnow`, and `sntp` each maintain a global static handle and only support one open instance at a time. Opening a second instance returns `BLUSYS_ERR_INVALID_STATE`.
 
 ### Examples
 
 Each example is a standalone ESP-IDF project under `examples/<name>/`:
 - `main/<name>_main.c` — entry point
-- `main/CMakeLists.txt` — `idf_component_register(SRCS "..." REQUIRES blusys)` (or `REQUIRES blusys_services` for service modules)
+- `main/CMakeLists.txt` — `idf_component_register(SRCS "..." REQUIRES blusys)` (or `blusys_services` / `blusys_framework`)
 - `main/Kconfig.projbuild` — menuconfig options (must live in `main/`, not the project root)
 - `CMakeLists.txt` — sets `EXTRA_COMPONENT_DIRS` to `../../components`
 - `sdkconfig.esp32c3` / `sdkconfig.esp32s3` — optional per-target defaults
+
+Bundled examples rely on `BLUSYS_PATH` (exported by the CLI). Scaffolded products (`blusys create`) do **not** use `BLUSYS_PATH` — they pull the platform via managed components from `main/idf_component.yml`.
 
 ## Adding a New Module
 
 First decide which component the module belongs to:
 - **HAL** (`components/blusys/`) — direct hardware abstraction (GPIO, bus protocols, timers, ADC, etc.)
-- **Services** (`components/blusys_services/`) — higher-level modules in one of 7 categories: display, input, sensor, actuator, connectivity, protocol, system
+- **Services** (`components/blusys_services/`) — higher-level modules in one of 5 categories: display/runtime, input/runtime, connectivity, protocol, system
 
 Drivers already live in `components/blusys/src/drivers/<category>/`. `usb_hid` remains in `components/blusys_services/src/input/`.
 
@@ -239,8 +234,7 @@ Drivers already live in `components/blusys/src/drivers/<category>/`. `usb_hid` r
 - **HAL:** `components/blusys/include/blusys/<module>.h`
 - **Services:** `components/blusys_services/include/blusys/<category>/<module>.h`
 - Opaque handle: `typedef struct blusys_<module> blusys_<module>_t;`
-- All functions return `blusys_err_t`
-- No ESP-IDF types
+- All functions return `blusys_err_t`; no ESP-IDF types
 
 ### 2. Implementation
 - **HAL:** `components/blusys/src/common/<module>.c`
@@ -248,7 +242,6 @@ Drivers already live in `components/blusys/src/drivers/<category>/`. `usb_hid` r
 - Filename is `<module>.c` (no `blusys_` prefix)
 - `#include "soc/soc_caps.h"` + SOC guard if not universally supported
 - Use `blusys_translate_esp_err()`, `blusys_lock_*`, `calloc`/`free` pattern
-- Internal utilities: `#include "blusys/internal/blusys_lock.h"` (etc.)
 - Always check the return value of `blusys_lock_take()` — even in `close()` and cleanup paths
 - See `temp_sensor.c` (simple HAL), `uart.c` (async/callback HAL), or `wifi.c` (event-group service) as reference
 
@@ -256,7 +249,7 @@ Drivers already live in `components/blusys/src/drivers/<category>/`. `usb_hid` r
 - **HAL:** Add to `blusys_sources` in `components/blusys/CMakeLists.txt`
 - **Services:** Add to `blusys_services_sources` in `components/blusys_services/CMakeLists.txt`
 - Add any new ESP-IDF component to `REQUIRES` in the appropriate CMakeLists.txt
-- For optional managed-component dependencies, follow the existing `if(... IN_LIST build_components)` pattern (see the `mdns`/`ui`/`usb_host_hid`/`tinyusb` blocks)
+- For optional managed-component dependencies, follow the existing `if(... IN_LIST build_components)` pattern
 
 ### 4. Feature flag — `components/blusys/include/blusys/target.h`
 - Add `BLUSYS_FEATURE_<MODULE>` to `blusys_feature_t` enum, before `BLUSYS_FEATURE_COUNT`
@@ -275,17 +268,19 @@ Drivers already live in `components/blusys/src/drivers/<category>/`. `usb_hid` r
 
 ### 8. Example — `examples/<module>_basic/`
 - Follow the structure described in the Examples section above
-- **HAL examples:** `REQUIRES blusys` in `main/CMakeLists.txt`
-- **Service examples:** `REQUIRES blusys_services` in `main/CMakeLists.txt`
 - `Kconfig.projbuild` belongs in `main/`, not the project root
 
 ### 9. Docs
-- `docs/modules/<module>.md` — API reference. Use the structured format: one-line description, tip admonition linking to the guide, Target Support table, Types (full typedef code blocks), Functions (signatures + parameters + returns), Lifecycle, Thread Safety, Limitations. See `docs/modules/wifi.md` as the style reference.
-- `docs/guides/<module>-basic.md` — task guide. Follow Problem Statement → Prerequisites → Minimal Example → APIs Used → Expected Behavior → Common Mistakes → Example App → API Reference link. See `docs/guides/temp-sensor-basic.md` as reference.
+- `docs/modules/<module>.md` — API reference. See `docs/modules/wifi.md` as the style reference.
+- `docs/guides/<module>-basic.md` — task guide. See `docs/guides/temp-sensor-basic.md` as reference.
 - Add both to `mkdocs.yml` nav under the appropriate peripheral category in both Guides and API Reference tabs.
 - Update card-grid landing pages: `docs/guides/index.md` and `docs/modules/index.md`.
 - Run `mkdocs build --strict` to verify nav references and cross-links.
 - If the support matrix changed: update `docs/target-matrix.md`.
 
 ### 10. PROGRESS.md
-Add the module to the **Module Inventory** section under its component (HAL / Drivers / Services / Framework). If hardware smoke testing is pending, add it to the **Validation Snapshot** "pending hardware smoke tests" list. PROGRESS.md is currently structured as the V6 transition log; the per-version "Recent Work" lists from prior releases (V1–V5) are historical and frozen — do not append to them.
+Add the module to the **What Ships in V6** section under its component tier. If hardware smoke testing is pending, add it to the **Verification Snapshot** "pending" list.
+
+## Generated Files
+
+Ignore generated artifacts under `examples/**/build*`, `examples/**/sdkconfig*` (except `sdkconfig.defaults*`), and `site/` unless the task is specifically about generated output. Do not edit vendored upstream docs under `esp-idf-en-*` unless the task is explicitly about that copy.

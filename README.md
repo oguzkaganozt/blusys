@@ -142,7 +142,7 @@ mkdocs serve
 
 Current release: **v6.1.0**. See [`PROGRESS.md`](PROGRESS.md) for the release
 history and validation state, [`ROADMAP.md`](ROADMAP.md) for planned V2 work,
-and [`AGENTS.md`](AGENTS.md) for repo conventions.
+and [`CLAUDE.md`](CLAUDE.md) for repo conventions.
 
 ## License
 

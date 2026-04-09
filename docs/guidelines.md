@@ -157,4 +157,4 @@ A public module is done when it has:
 ## Project Tracking
 
 - implementation progress: `../PROGRESS.md`
-- repository guidance for agents: `../AGENTS.md`
+- repository guidance for agents: `../CLAUDE.md`
