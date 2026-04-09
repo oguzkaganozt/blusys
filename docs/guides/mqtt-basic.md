@@ -18,7 +18,7 @@ You want to exchange messages between an ESP32 and other devices or services usi
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "blusys/blusys_all.h"
+#include "blusys/blusys_services.h"
 
 static void on_message(const char *topic, const uint8_t *payload,
                         size_t payload_len, void *user_ctx)

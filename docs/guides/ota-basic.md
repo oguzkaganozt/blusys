@@ -28,7 +28,7 @@ Or use a custom `partitions.csv`.
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "blusys/blusys_all.h"
+#include "blusys/blusys_services.h"
 
 void app_main(void)
 {

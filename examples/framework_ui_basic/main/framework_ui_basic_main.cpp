@@ -1,3 +1,26 @@
+// framework_ui_basic — canonical example for the framework UI surface.
+//
+// This example covers two of the four framework example scenarios:
+//
+//   1. Layout primitives only — the screen + col + row + label + divider
+//      composition at the top of app_main demonstrates the layout helpers
+//      in isolation, before any interactive widget is created.
+//   2. Interactive widgets — button (primary + secondary), toggle, slider,
+//      modal, and overlay are wired up further down to demonstrate the
+//      full V1 widget kit and the semantic callbacks contract.
+//
+// The remaining two framework example scenarios live in their own examples:
+//
+//   - framework_core_basic: spine in isolation (router, intent, controller,
+//     runtime), no LVGL.
+//   - framework_app_basic: full spine + widgets, button-driven event flow
+//     through runtime.post_intent → controller → ui_route_sink.
+//   - framework_encoder_basic: real lv_indev_t encoder driving
+//     create_encoder_group + auto_focus_screen end-to-end.
+//
+// If you're looking for a layout-only or widget-kit-only starting point,
+// this is the canonical example — do not duplicate it.
+
 #include "blusys/framework/ui/widgets.hpp"
 
 #include "blusys/log.h"
@@ -140,10 +163,11 @@ extern "C" void app_main(void)
         .user_data = &g_overlay_hidden,
     });
 
-    // Wire encoder focus traversal across the screen. The example does
-    // not actually drive an encoder indev — that's product responsibility
-    // — but creating the group and walking the screen exercises the
-    // helper API at compile + runtime time.
+    // Wire encoder focus traversal across the screen. This example only
+    // exercises the helper API at compile + runtime time — it does not
+    // attach a real lv_indev_t. For an end-to-end encoder example with a
+    // real LV_INDEV_TYPE_ENCODER device (SDL2 keyboard on host, encoder
+    // driver on hardware), see examples/framework_encoder_basic/.
     lv_group_t *encoder_group = blusys::ui::create_encoder_group();
     blusys::ui::auto_focus_screen(screen, encoder_group);
 

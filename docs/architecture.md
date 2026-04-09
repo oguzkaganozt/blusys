@@ -179,8 +179,6 @@ Two consumption models, deliberately separated:
   scaffold layout and the [Framework guide](guides/framework.md#scaffolding-a-new-product)
   for the starter-type semantics.
 
-Prefer per-tier umbrella headers. `blusys/blusys_all.h` still exists as a transitional compatibility header, but new code should include the specific tier headers instead.
-
 ## Lifecycle Verbs
 
 Lifecycle verbs stay explicit where relevant:

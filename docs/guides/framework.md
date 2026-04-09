@@ -192,9 +192,12 @@ V2). Phase 6 (framework core spine) is closed and validated end-to-end by
 `framework_app_basic`. Phase 4.5 (host harness) is closed. Phase 7 is
 closed: `blusys create --starter <headless|interactive>` generates the
 four-CMakeLists product scaffold, with both starter types verified
-buildable against the local platform checkout via `override_path`. The
-next in-flight work is Phase 8 (example ecosystem migration +
-`blusys_all.h` removal). See
+buildable against the local platform checkout via `override_path`.
+Phase 8 is closed: the example ecosystem migrated to per-tier umbrella
+headers, the `blusys_all.h` umbrella was deleted, and a fourth framework
+example (`framework_encoder_basic`) was added covering real
+`lv_indev_t` encoder traversal. The next in-flight work is Phase 9
+(validation chain: PC + LVGL + SDL2 → ESP-IDF QEMU → real hardware). See
 [`PROGRESS.md`](https://github.com/oguzkaganozt/blusys/blob/main/PROGRESS.md)
 for the current phase tracker.
 
