@@ -215,6 +215,8 @@ target_compile_options(${COMPONENT_LIB} PRIVATE
 
 **Goal:** Prove the widget contract works on one flagship widget before scaling, then fill out the V1 kit.
 
+**Status:** In progress. `theme.hpp`, `widgets.hpp`, and the first layout primitives (`screen`, `row`, `col`, `label`, `divider`) are already landed, along with `examples/framework_ui_basic/`. Interactive widgets and the remaining primitives are still pending.
+
 This phase has three sub-steps. The sub-steps exist specifically to de-risk the widget kit: build one widget carefully, validate the pattern, then scale. (A pilot service-migration sub-phase was removed in the pre-implementation refinement pass — services stays C in V1.)
 
 #### Phase 5a — Flagship widget: `bu_button`
@@ -258,6 +260,8 @@ This phase has three sub-steps. The sub-steps exist specifically to de-risk the 
 
 **Goal:** Ship the minimal spine alongside the widget kit so controllers can actually consume platform services.
 
+**Status:** In progress. `router.hpp`, `intent.hpp`, `feedback.hpp`, `controller.hpp`, `runtime.hpp`, and `examples/framework_core_basic/` are already landed. Remaining work is to connect the spine to richer product flows and the incoming widget layer.
+
 **Work (in parallel with Phase 5):**
 - Define the router contract in `blusys_framework/core/router.hpp`:
   - Minimum command set: `set_root`, `push`, `replace`, `pop`, `show_overlay`, `hide_overlay`
@@ -267,7 +271,7 @@ This phase has three sub-steps. The sub-steps exist specifically to de-risk the 
 - Define the controller lifecycle base in `blusys_framework/core/controller.hpp`:
   - `init` / `handle` / `tick` / `deinit`
 - Tick cadence: default 10 ms, configurable per product.
-- Framework event loop in `blusys_framework/core/framework.cpp` (`blusys::framework::init`, `blusys::framework::run`).
+- Framework event loop/runtime in `blusys_framework/core/framework.cpp` / `runtime.hpp` (`blusys::framework::init`, `blusys::framework::run`, or equivalent runtime ownership API).
 
 **Deliverables:**
 - `blusys_framework/core` is usable by a controller that routes between screens and emits feedback.

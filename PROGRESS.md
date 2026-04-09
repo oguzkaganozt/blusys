@@ -3,7 +3,7 @@
 ## Current Summary
 
 - current track: `Platform transition`
-- current phase: `Phase 5/6 prep — framework core implementation`
+- current phase: `Phase 5/6 — framework core and UI foundation`
 - target release: `v6.0.0`
 - overall status: `in_progress`
 
@@ -24,8 +24,8 @@ Blusys is mid-transition from a HAL/services library repo into an internal embed
 | 3 | Packaging shape | completed |
 | 4 | C++ infrastructure (framework only) + `blusys/log.h` | completed |
 | 4.5 | PC + SDL2 host harness | pending |
-| 5 | Flagship widget and V1 widget kit | pending |
-| 6 | Framework core V1 | pending |
+| 5 | Flagship widget and V1 widget kit | in_progress |
+| 6 | Framework core V1 | in_progress |
 | 7 | Product scaffold and sample apps | pending |
 | 8 | Example ecosystem migration | pending |
 | 9 | Validation and migration notes | pending |
@@ -56,6 +56,10 @@ No open issues. The planning docs have gone through three review passes and all 
 - `components/blusys_framework/` added as a real component with C++20 compile policy
 - foundational framework files added: `framework.hpp`, `core/containers.hpp`, `framework.cpp`, `README.md`
 - `blusys/log.h` added for framework-side logging
+- framework core contracts added: `core/router.hpp`, `core/intent.hpp`, `core/feedback.hpp`, `core/controller.hpp`
+- framework runtime added: `core/runtime.hpp` with queued events, route delivery, feedback bus integration, and tick cadence ownership
+- framework UI foundation added: `ui/theme.hpp`, `ui/widgets.hpp`, and first layout primitives (`screen`, `row`, `col`, `label`, `divider`)
+- framework examples added: `examples/framework_core_basic/` and `examples/framework_ui_basic/`
 - docs/nav updated to reflect HAL + Drivers + Services + Framework structure
 
 ## Verification Snapshot
@@ -64,10 +68,12 @@ No open issues. The planning docs have gone through three review passes and all 
 - `./blusys build examples/button_basic esp32s3` passes
 - `./blusys build examples/ui_basic esp32s3` passes
 - `./blusys build examples/usb_hid_basic esp32s3` passes
+- `./blusys build examples/framework_core_basic esp32s3` passes
+- `./blusys build examples/framework_ui_basic esp32s3` passes
 - `mkdocs build --strict` passes
 
 ## Immediate Next Actions
 
-1. Implement real `blusys_framework/core` APIs: router, intent, feedback, controller lifecycle.
-2. Decide whether Phase 5 widget work or Phase 6 core work should lead once the first framework contracts are in place.
-3. Add the first framework-consuming example once the core surface is stable.
+1. Implement the first interactive widget, starting with `button`.
+2. Add the next layout/widget helpers needed to compose a real framework-managed screen.
+3. Keep `platform-transition/` and repo guidance docs aligned as framework work lands.

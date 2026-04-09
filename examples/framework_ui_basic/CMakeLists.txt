@@ -5,4 +5,4 @@ set(EXTRA_COMPONENT_DIRS "${BLUSYS_REPO_ROOT}/components")
 set(BLUSYS_BUILD_UI ON CACHE BOOL "Build blusys_framework/ui" FORCE)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(blusys_ui_basic)
+project(blusys_framework_ui_basic)

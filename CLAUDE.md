@@ -28,7 +28,7 @@ Locked decisions future sessions need to know:
 - **Drivers** (display/input/sensor/actuator: lcd, led_strip, seven_seg, button, encoder, dht, buzzer) now live under `components/blusys/src/drivers/<category>/`. HAL/drivers boundary inside `components/blusys/` is enforced by directory discipline + `blusys lint`.
 - **`usb_hid` stays in services.** It is runtime orchestration across USB host and BLE, not a simple driver.
 - **Framework is the only C++ tier in V1.** Services migration to C++ is deferred to V2.
-- **`blusys_framework` now exists as a real component.** Minimal C++ infrastructure is in place (`framework.hpp`, `core/containers.hpp`, compile policy, `blusys/log.h` wrapper), but framework core/widget APIs are not implemented yet.
+- **`blusys_framework` now exists as a real component.** The repo already ships framework core contracts (`router`, `intent`, `feedback`, `controller`, `runtime`) plus the first UI foundation (`theme.hpp`, `widgets.hpp`, `screen`, `row`, `col`, `label`, `divider`).
 - **Widget kit** built on LVGL with a six-rule component contract; theme is a single C++ struct populated at boot. No JSON, no Python, no design-tool integration.
 - **Product scaffold** generates four CMakeLists files (top-level + `main/` + `app/` + `app/product_config.cmake`). `app/` becomes its own ESP-IDF component. Platform components are pulled via `main/idf_component.yml` managed dependencies — never via `EXTRA_COMPONENT_DIRS = "$ENV{BLUSYS_PATH}/components"` (that's the monorepo internal pattern only).
 - **Logging** in framework code goes through a thin `blusys/log.h` wrapper (`BLUSYS_LOGE/I/W/D`). HAL and services keep using `esp_log.h` directly.
@@ -39,8 +39,9 @@ Completed so far:
 - Phase 2: identity/docs alignment
 - Phase 3: drivers move + framework component stub + CI lint + repo/docs rewrite
 - Phase 4: framework C++ compile policy + `blusys/log.h` + foundational framework headers
+- Phase 5/6 partial: framework core contracts, runtime, theme registry, first layout primitives, and framework examples
 
-Next planned step: Phase 5/6 implementation work, starting with real `blusys_framework/core` APIs.
+Next planned step: the first interactive widget, starting with `button`.
 
 Full plan, decisions log, and rationale: `platform-transition/`. Current phase status: `PROGRESS.md`.
 
@@ -101,7 +102,7 @@ mkdocs build --strict # doc gate (run before merge)
 
 The site uses MkDocs Material with navigation tabs: **Home**, **Guides**, **API Reference**, **Project**. The nav hierarchy in `mkdocs.yml` groups pages under peripheral categories. When adding pages, place them in the correct category in both the Guides and API Reference tabs. Card grid landing pages live at `docs/guides/index.md` and `docs/modules/index.md` — update them when adding a new module.
 
-Phase 3 of the V6 transition will restructure the Services nav sub-section into Drivers + Services + Framework. Don't pre-empt that change in `mkdocs.yml`.
+The docs/nav already use the Drivers + Services + Framework split introduced during the transition. Keep that structure consistent when adding pages.
 
 ## Code Architecture
 
@@ -109,7 +110,7 @@ The codebase is now split into three ESP-IDF components:
 
 - **`components/blusys/`** — HAL + drivers. HAL sources live in `src/common/`; drivers live in `src/drivers/<category>/`.
 - **`components/blusys_services/`** — runtime services. `ui` and `usb_hid` stay here along with connectivity/protocol/system services.
-- **`components/blusys_framework/`** — framework tier. Currently minimal C++ infrastructure only.
+- **`components/blusys_framework/`** — framework tier. Ships the current framework core and UI foundation.
 
 Dependency direction:
 

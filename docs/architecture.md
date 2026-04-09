@@ -105,8 +105,9 @@ Intended long-term role:
 
 Current status:
 - component exists in the build graph
-- only foundational framework headers are shipped so far
-- framework pages in the docs are placeholders until implementation lands
+- framework core headers are shipped for router, intent, feedback, controller, and runtime
+- the first UI foundation is shipped for theme tokens and basic layout primitives
+- framework pages in the docs track the currently landed surface and examples
 
 ## Layering Rules
 
