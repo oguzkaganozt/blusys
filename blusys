@@ -679,7 +679,20 @@ cmd_create() {
         touch "$target_dir/app/ui/widgets/.keep"
     fi
 
-    touch "$target_dir/sdkconfig.defaults"
+    if [[ "$starter" == "interactive" ]]; then
+        # The interactive starter compiles blusys_framework/ui, which drives
+        # LVGL from the blusys_ui render task. Without LV_OS_FREERTOS the
+        # LVGL global lock is a no-op and render/main race into an
+        # LV_ASSERT_MSG "Invalidate area is not allowed during rendering"
+        # whose default handler is `while(1);` — i.e. a hang. LV_COLOR_DEPTH_16
+        # matches the RGB565 color format blusys_ui uses with the LCD driver.
+        cat > "$target_dir/sdkconfig.defaults" <<'DEFAULTS'
+CONFIG_LV_OS_FREERTOS=y
+CONFIG_LV_COLOR_DEPTH_16=y
+DEFAULTS
+    else
+        touch "$target_dir/sdkconfig.defaults"
+    fi
 
     printf '\nCreated blusys project: %s\n' "$target_dir"
     printf 'Starter type: %s\n\n' "$starter"
@@ -860,10 +873,33 @@ blusys_create_app_main_interactive() {
     cat > "$target_dir/main/app_main.cpp" <<'CPP'
 // app_main.cpp — interactive product entry point.
 //
-// Brings up the framework runtime, initializes LVGL + theme, hands the
-// home_controller a screen built from the widget kit, and ticks both the
-// runtime and LVGL from the main task.
+// Brings up the framework runtime, opens the product's display through
+// blusys_ui, builds the widget-kit screen under the UI lock, and ticks
+// the runtime in the main loop.
+//
+// IMPORTANT: this template ships *without* a concrete LCD driver init —
+// LCD pin assignments, panel driver selection (ST7735/ILI9341/SSD1306/…),
+// orientation, and color order are all board-specific. The TODO block
+// below is the single place product teams fill in. Until it is filled,
+// the framework spine runs headless-style and nothing is drawn.
+//
+// Reference working LCD init patterns:
+//   - examples/ui_basic/ (ST7735 SPI, Kconfig-driven pins, raw LVGL)
+//   - scripts/host/src/widget_kit_demo.cpp (host SDL2 + widget kit)
+//
+// Lock discipline (do not break these):
+//   1. lv_init() is called *inside* blusys_ui_open — DO NOT call it here.
+//   2. The blusys_ui render task owns lv_timer_handler() — DO NOT call
+//      it from the main loop.
+//   3. Every widget mutation (including initial screen creation and
+//      runtime.step, which may mutate widgets via the controller) MUST
+//      run under blusys_ui_lock / blusys_ui_unlock. See the main loop
+//      below.
+//   4. CONFIG_LV_OS_FREERTOS must be set in sdkconfig.defaults — the
+//      scaffold writes it for you, do not remove it.
 
+#include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
 #include "blusys/framework/framework.hpp"
 #include "blusys/framework/ui/widgets.hpp"
 #include "blusys/log.h"
@@ -882,25 +918,78 @@ constexpr const char *kTag = "app_main";
 extern "C" void app_main(void)
 {
     blusys::framework::init();
-    lv_init();
-    app::ui::theme_init();
 
-    static home_controller controller;
+    // ─── TODO: open your LCD + blusys_ui here ─────────────────────────
+    //
+    // Example (ST7735 SPI on esp32-c3, pins from examples/ui_basic):
+    //
+    //     blusys_lcd_t            *lcd = nullptr;
+    //     const blusys_lcd_config_t lcd_config = {
+    //         .driver = BLUSYS_LCD_DRIVER_ST7735,
+    //         .width = 160, .height = 128,
+    //         .bits_per_pixel = 16, .bgr_order = false,
+    //         .swap_xy = true, .mirror_x = true,
+    //         .mirror_y = false, .invert_color = false,
+    //         .spi = { .bus = 0,
+    //                  .sclk_pin = 4, .mosi_pin = 6,
+    //                  .cs_pin = 7, .dc_pin = 3,
+    //                  .rst_pin = -1, .bl_pin = -1,
+    //                  .pclk_hz = 8000000,
+    //                  .x_offset = 0, .y_offset = 0 },
+    //     };
+    //     if (blusys_lcd_open(&lcd_config, &lcd) != BLUSYS_OK) { return; }
+    //
+    //     blusys_ui_t            *ui = nullptr;
+    //     const blusys_ui_config_t ui_config = {
+    //         .lcd = lcd, .buf_lines = 20,
+    //         .full_refresh = false,
+    //         .task_priority = 0, .task_stack = 0,
+    //     };
+    //     if (blusys_ui_open(&ui_config, &ui) != BLUSYS_OK) {
+    //         blusys_lcd_close(lcd);
+    //         return;
+    //     }
+    //
+    // Product teams: replace the stub below with the real init, keep the
+    // resulting `blusys_ui_t *ui` in scope for the main loop.
+    blusys_ui_t *ui = nullptr;
+    BLUSYS_LOGW(kTag,
+                "interactive starter: LCD not opened — fill in the TODO "
+                "block in app_main.cpp before this board will draw anything");
+    // ──────────────────────────────────────────────────────────────────
+
+    static home_controller           controller;
     static blusys::framework::runtime runtime;
 
-    const blusys_err_t err = runtime.init(&controller, /*output_route_sink=*/nullptr, 10);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(err));
+    const blusys_err_t init_err = runtime.init(
+        &controller, /*output_route_sink=*/nullptr, /*queue_depth=*/10);
+    if (init_err != BLUSYS_OK) {
+        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(init_err));
         return;
     }
 
-    app::ui::main_screen_create(&runtime);
+    // Build the widget-kit screen under the UI lock so the blusys_ui
+    // render task never sees a half-constructed screen. If the TODO
+    // block above is still a stub, `ui` is nullptr and we skip the
+    // widget kit entirely — the framework spine still runs so sensor
+    // integrations and headless flows keep working.
+    if (ui != nullptr) {
+        blusys_ui_lock(ui);
+        app::ui::theme_init();
+        app::ui::main_screen_create(&runtime);
+        blusys_ui_unlock(ui);
+    }
 
     BLUSYS_LOGI(kTag, "interactive product running");
 
     while (true) {
-        runtime.step(static_cast<std::uint32_t>(esp_timer_get_time() / 1000));
-        lv_timer_handler();
+        if (ui != nullptr) {
+            blusys_ui_lock(ui);
+            runtime.step(static_cast<std::uint32_t>(esp_timer_get_time() / 1000));
+            blusys_ui_unlock(ui);
+        } else {
+            runtime.step(static_cast<std::uint32_t>(esp_timer_get_time() / 1000));
+        }
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
@@ -1123,6 +1212,10 @@ void main_screen_create(blusys::framework::runtime *runtime)
 
     lv_group_t *group = blusys::ui::create_encoder_group();
     blusys::ui::auto_focus_screen(screen, group);
+
+    // Activate the freshly-built screen. Without this call the display
+    // keeps showing whatever default screen LVGL created, not our widgets.
+    lv_screen_load(screen);
 }
 
 }  // namespace app::ui

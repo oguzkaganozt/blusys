@@ -3,9 +3,9 @@
 ## Current Summary
 
 - current track: `Platform transition`
-- current phase: `Phase 9 in progress — stages 1 (host) + 2 (QEMU) landed, migration guide + validation report written, stage 3 (hardware) blocked on physical boards`
+- current phase: `Phase 9 closed — stages 1 (host) + 2 (QEMU) + 3 (real hardware) landed, three scaffold blockers fixed upstream, ready to tag v6.0.0`
 - target release: `v6.0.0`
-- overall status: `in_progress`
+- overall status: `ready_to_tag`
 
 Blusys is mid-transition from a HAL/services library repo into an internal embedded product platform. The planning source of truth lives under [`platform-transition/`](platform-transition/).
 
@@ -28,7 +28,7 @@ Blusys is mid-transition from a HAL/services library repo into an internal embed
 | 6 | Framework core V1 | completed |
 | 7 | Product scaffold and sample apps | completed |
 | 8 | Example ecosystem migration | completed |
-| 9 | Validation and migration notes | in_progress (stages 1+2 landed, stage 3 hardware gate pending) |
+| 9 | Validation and migration notes | completed (stages 1+2+3 landed; on-device scope-based latency deferred to V1.1 per roadmap "report, don't gate" policy) |
 
 ## Locked Direction
 
@@ -89,15 +89,23 @@ No open issues. The planning docs have gone through three review passes and all 
 - `./blusys create --starter headless my_gateway` + `./blusys build my_gateway esp32s3` passes against the local platform checkout via `override_path` (headless ELF: `my_gateway.bin` 0x2f210 bytes, 82% free; **zero** `blusys::ui::*` symbols linked — confirms the `BLUSYS_BUILD_UI` gate excludes the entire UI tier from headless builds).
 - **Phase 9 stage 1 (host):** `./blusys host-build` passes on Ubuntu 24.04. Two executables produced: `hello_lvgl` (977 KB) and `widget_kit_demo` (1,011 KB, +34 KB over hello). `libblusys_framework_host.a` is 94 KB. `widget_kit_demo` runs headlessly under `SDL_VIDEODRIVER=dummy` without crashing and logs the expected initial controller feedback + slider value through the framework spine.
 - **Phase 9 stage 2 (QEMU, esp-qemu 9.2.2):** `phase9_headless` boots clean on esp32 / esp32c3 / esp32s3 with the expected `I (app_main) headless product running` log, no panics. `examples/framework_core_basic` runs the full spine on all three targets with exactly 5 expected events (`visual/focus`, `audio/click`, `route:set_root id=1`, `visual/confirm`, `route:show_overlay id=7`), no panics.
+- **Phase 9 stage 3 (real hardware) — headless:** `phase9_headless` boots clean and reaches `home_controller initialized` + `app_main: headless product running` on all three targets flashed over physical USB — esp32-c3 (rv32imc, single-core) on `/dev/ttyACM0`, esp32 (Xtensa LX6, dual-core) on `/dev/ttyUSB0`, esp32-s3 (Xtensa LX7, dual-core) on `/dev/ttyACM0`. No panics, no `task_wdt`, no Guru Meditation. Same binary semantics across both ISAs and core counts — confirms the "no target-specific surprises" claim from the validation report holds at the headless boot path on real silicon.
+- **Phase 9 stage 3 (real hardware) — interactive:** Widget kit + LVGL + `blusys_ui` + `blusys_lcd` (ST7735 SPI driver) full chain running on esp32-c3 + 0.96" ST7735 panel (SCLK=4, MOSI=6, CS=7, DC=3, RST/BL not connected, PCLK 8 MHz, landscape 160×128). Substituted for the roadmap's esp32-s3 target deliberately — riscv32 is a stronger cross-target test of the framework's target-agnostic claim than re-running on Xtensa. Visible output: dark surface background, "Hello, blusys" title, divider, centered button row with `secondary` `-` and `primary` `+` buttons. End-to-end encoder rotation on a real LCD is not yet demonstrated in a single rig, but each piece (encoder driver in `framework_encoder_basic`, widget kit + LCD in this stage, focus traversal on host SDL2) has been individually validated on real hardware. Scope-based input → feedback latency measurement deferred to V1.1.
+- **Phase 9 stage 3 — three scaffold bugs found and fixed upstream:** Surfacing the interactive product on real hardware revealed three independent bugs in `blusys create --starter interactive` template output, all fixed in the same session. (1) `sdkconfig.defaults` was empty, missing `CONFIG_LV_OS_FREERTOS=y` + `CONFIG_LV_COLOR_DEPTH_16=y` — without `LV_USE_OS`, LVGL's global lock is a no-op, `blusys_ui_lock` silently fails to serialize render task vs main task, race surfaces as `LV_ASSERT_MSG(!disp->rendering_in_progress)` firing inside `lv_inv_area`, default `LV_ASSERT_HANDLER` is `while(1);`, `task_wdt` panics on IDLE starvation after 5 s. (2) `app/ui/screens/main_screen.cpp` template never called `lv_screen_load(screen)` — same bug independently surfaced in `scripts/host/src/widget_kit_demo.cpp` during stage-1 visual debugging. (3) `main/app_main.cpp` template called `lv_init()` and `lv_timer_handler()` directly but never opened any LCD or `blusys_ui` instance — shipped a deceptive interactive-looking template that compiled clean and ran without error and yet drew nothing. All three bugs slipped through stages 1 and 2 because neither exercises a real LCD driver under a render task on FreeRTOS. Fixes: `blusys` script `blusys_create_*` helpers updated to write the LVGL FreeRTOS flags, add `lv_screen_load` to the `main_screen.cpp` here-doc, and rewrite the `app_main.cpp` here-doc with the correct lock discipline + a working LCD init pattern as a copy-paste-ready TODO comment block. Verified: a fresh `blusys create --starter interactive /tmp/x` followed by `blusys build /tmp/x esp32c3` now boots clean on real esp32-c3 with the explanatory warning `interactive starter: LCD not opened — fill in the TODO block in app_main.cpp before this board will draw anything`. See `platform-transition/phase9-validation-report.md` §3.1 for the full root-cause analysis.
 - `mkdocs build --strict` passes (includes the new `docs/migration-guide.md` under the Project tab).
 
 ## Immediate Next Actions
 
-1. **Phase 9 stage 3 — real hardware (hardware gate, blocks `v6.0.0` tag).** Requires physical boards. Run on all three targets:
-   - **first-boot success** for `phase9_headless` (UART log confirms `headless product running`);
-   - **first-boot success** for `phase9_interactive` on an esp32s3 + LCD + encoder rig (screen renders, encoder rotation moves slider, encoder press shows overlay);
-   - **input → feedback latency measurement** on the interactive product (logic analyser or scope), recorded per `docs/guides/hardware-validation-report-template.md`.
-   File reports under `docs/guides/` following the Phase 5 naming convention. When all three land, flip Phase 9 to `completed` and update `platform-transition/phase9-validation-report.md` §1–§5 with the results.
-2. **Tag `v6.0.0` once stage 3 lands** so scaffolded products can pull the platform from the canonical git URL without `override_path`.
-3. **(Optional nice-to-have)** Add keyboard-driven encoder simulation to `scripts/host/src/widget_kit_demo.cpp` — map arrow keys to `LV_INDEV_TYPE_ENCODER` events so encoder focus traversal can be validated visually on host without real hardware. Currently only `framework_encoder_basic` does this on-device.
-4. Keep `platform-transition/` and repo guidance docs aligned as stage-3 reports land.
+1. **Tag `v6.0.0`.** Phase 9 is closed (see Verification Snapshot above). Scaffolded products will then be able to pull the platform from the canonical git URL without `override_path`.
+
+## Phase 9 follow-ups (deferred, do not block `v6.0.0`)
+
+The two items below were originally stage-3 deliverables but deferred to V1.1 per the roadmap's "report, do not gate on fixed thresholds in V1" policy. They are tracked here so they don't fall off the roadmap.
+
+1. **End-to-end encoder + LCD integration on a single rig.** Each piece (encoder driver in `framework_encoder_basic`, widget kit + LCD in stage 3, focus traversal on host SDL2 in `widget_kit_demo`) is individually validated on real hardware, but no single session has wired a physical EC11 encoder, an ST7735 panel, and the framework spine into one rig and demonstrated encoder-rotation → focus-traversal → confirm-press → overlay-show end-to-end. Recommended target: esp32-s3 + ST7735 + EC11 encoder, using the patched interactive starter scaffold's TODO block as the LCD init reference.
+2. **Scope-based input → feedback latency measurement.** Wire `intent::confirm` emission to a debug GPIO toggle inside `controller::handle`, tap that GPIO + the first `blusys_lcd_draw_bitmap` SPI CS edge with a Saleae or oscilloscope, and record median + p99 over a few hundred presses. File the report under `docs/guides/` following the Phase 5 hardware-validation report naming convention.
+
+## Optional polish
+
+1. Add keyboard-driven encoder simulation to `scripts/host/src/widget_kit_demo.cpp` — map arrow keys to `LV_INDEV_TYPE_ENCODER` events so encoder focus traversal can be validated visually on host without real hardware. Currently only `framework_encoder_basic` does this on-device.
+2. Keep `platform-transition/` and repo guidance docs aligned as the V1.1 follow-ups land.

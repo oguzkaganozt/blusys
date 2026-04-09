@@ -270,6 +270,8 @@ void build_demo_screen()
         .on_hidden   = nullptr,
         .user_data   = nullptr,
     });
+
+    lv_screen_load(screen);
 }
 
 }  // namespace
