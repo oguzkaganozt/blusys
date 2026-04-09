@@ -1,11 +1,12 @@
 # Architecture
 
-Blusys is in transition from a HAL-first library repo to an internal product platform. The repo now has a three-tier component shape:
+Blusys is an internal ESP32 product platform. The repo ships three ESP-IDF components
+sharing the `blusys/` header namespace:
 
 ```text
 components/blusys/            HAL + drivers
 components/blusys_services/   runtime services
-components/blusys_framework/  framework infrastructure (transition in progress)
+components/blusys_framework/  framework infrastructure (C++, widget kit, core spine)
 ```
 
 The public include namespace stays `blusys/...` across all tiers.
@@ -178,6 +179,57 @@ Two consumption models, deliberately separated:
   project root. See [Getting Started](guides/getting-started.md) for the
   scaffold layout and the [Framework guide](guides/framework.md#scaffolding-a-new-product)
   for the starter-type semantics.
+
+## Design Rationale
+
+Key decisions and their reasoning, preserved here for future contributors.
+
+**HAL and drivers stay C.** HAL is the layer closest to the MCU. Explicit lifecycle,
+deterministic behavior, and the simplest possible low-level surface are most critical
+here. HAL wraps ESP-IDF drivers that are themselves C. Drivers (display, input, sensor,
+actuator) compose HAL primitives into hardware drivers; they are mostly stateless or hold
+trivial state and do not benefit meaningfully from C++ encapsulation.
+
+**Drivers live inside `components/blusys/`, not a fourth component.** The HAL/drivers
+boundary is enforced by directory discipline and CI lint (not a component boundary)
+because the operational boundary is about what the code *does*, not where it lives. A
+fourth component would add a `REQUIRES` edge with no meaningful encapsulation benefit.
+
+**Services stay C in V1.** The existing C service implementations (`wifi.c`, `mqtt.c`,
+`ota.c`) are already well-factored around opaque handles and explicit lifecycle — the
+same structure C++ classes would give. Migrating in V1 would force every service example
+from `.c` to `.cpp` and open a hybrid C/C++ window for speculative benefit.
+
+**Framework is C++** because the widget kit needs designated initializers for config
+structs, captureless lambdas for semantic callbacks, `enum class` for variants, and
+template containers. Controller state machines, router logic, intent dispatch, and
+feedback channels all benefit from the same toolset. C++ earns its keep concretely here.
+
+**Fixed-capacity allocation.** The framework spine and widget kit never call `new` or
+`malloc` after initialization. Widget callback slots use static pools sized by KConfig.
+The pool fires a fail-loud assert on exhaustion — silent exhaustion is worse than a crash.
+This policy keeps heap fragmentation predictable on embedded targets.
+
+**Single version tag per release.** All three components (`blusys`, `blusys_services`,
+`blusys_framework`) ship under one git tag. Product repos pin one tag in their
+`idf_component.yml`. A three-component version matrix would require product teams to
+reason about inter-component compatibility on every update.
+
+**Theme as one struct.** The `theme_tokens` struct is populated at boot by product code
+and read by every widget. No JSON pipeline, no design-tool integration, no secondary
+theme-file format. Products tune colors, radii, spacing, and fonts by filling in the
+struct; widgets pick up changes automatically.
+
+**`EXTRA_COMPONENT_DIRS` points at `app/`, not the project root.** ESP-IDF's
+`__project_component_dir` helper treats any path containing a `CMakeLists.txt` as a
+component itself. Pointing at the project root would recursively include the top-level
+CMakeLists during requirement scanning. Pointing at `app/` registers exactly one local
+component.
+
+**Six-rule widget contract.** Every widget follows the same contract (theme tokens only,
+config struct interface, setters own state transitions, standard state set, one folder,
+header is the spec) so any developer can read any widget and know where to look. The
+contract is enforced by code review, not tooling.
 
 ## Lifecycle Verbs
 

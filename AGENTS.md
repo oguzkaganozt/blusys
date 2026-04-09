@@ -82,7 +82,7 @@
   - nav updates in `mkdocs.yml` and card-index updates in `docs/guides/index.md` and `docs/modules/index.md`
   - `PROGRESS.md` and `docs/target-matrix.md` if the public surface or support matrix changed
 - For HAL modules only, also wire feature flags and target capability masks.
-- For framework modules, also update `platform-transition/` docs if the landing changes the planned or already-landed V1 surface.
+- For framework modules that change the V1 surface or defer items to V2, update `ROADMAP.md`.
 
 ## Generated Files
 

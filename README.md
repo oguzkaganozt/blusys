@@ -140,10 +140,9 @@ mkdocs serve
 
 ## Project Status
 
-Mid-transition from a HAL/services library repo to an internal product
-platform. See [`PROGRESS.md`](PROGRESS.md) for the current phase, the
-[`platform-transition/`](platform-transition/) directory for the locked
-planning docs, and [`AGENTS.md`](AGENTS.md) for repo conventions.
+Current release: **v6.1.0**. See [`PROGRESS.md`](PROGRESS.md) for the release
+history and validation state, [`ROADMAP.md`](ROADMAP.md) for planned V2 work,
+and [`AGENTS.md`](AGENTS.md) for repo conventions.
 
 ## License
 

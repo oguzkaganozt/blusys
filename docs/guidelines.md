@@ -14,11 +14,31 @@ Start by reading the [Architecture](architecture.md) page.
 ### Language Policy
 
 - `components/blusys/` and `components/blusys_services/` expose C headers with `extern "C"` guards
-- `components/blusys_framework/` may expose C++ headers as that tier is introduced
+- `components/blusys_framework/` is the only C++ tier in V1; it exposes C++ headers
+- framework C++ uses `-std=c++20 -fno-exceptions -fno-rtti -fno-threadsafe-statics`
 - framework C++ should stay platform-facing and disciplined, not become a second copy of ESP-IDF internals
+- services migration to C++ is deferred to V2
 - keep cross-tier boundaries explicit: framework depends on services, services depend on HAL + drivers
 
 See [Architecture](architecture.md) for the tier model.
+
+### Logging Convention
+
+- HAL and service code uses `esp_log.h` directly (`ESP_LOGI`, `ESP_LOGE`, etc.)
+- framework code uses `blusys/log.h` (`BLUSYS_LOGI`, `BLUSYS_LOGE`, etc.) — a thin
+  wrapper that isolates the framework tier from direct `esp_log.h` usage
+- product app code may use either, but preferring `blusys/log.h` keeps the style
+  consistent with framework code
+
+### Allocation Policy
+
+- framework code (core spine + widget kit) does not call `new` / `delete` or
+  `malloc` / `free` after initialization
+- interactive widget callback slots use fixed-capacity static pools sized by
+  KConfig symbols (`BLUSYS_UI_<NAME>_POOL_SIZE`); the pool fires a fail-loud assert
+  on exhaustion — silent pool exhaustion is worse than a crash
+- layout primitives and the core spine (router, runtime, feedback bus) are
+  allocation-free after `init()`
 
 ### API Shape
 

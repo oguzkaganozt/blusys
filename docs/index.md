@@ -16,7 +16,7 @@ An internal ESP32 product platform built on top of ESP-IDF v5.5.4. Blusys combin
 
     ---
 
-    Step-by-step guides across HAL, drivers, services, and the platform transition.
+    Step-by-step guides across HAL, drivers, services, and the framework tier.
 
     [:octicons-arrow-right-24: Browse Guides](guides/index.md)
 

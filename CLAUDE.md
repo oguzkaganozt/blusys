@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Before changing public API, docs, or project status, read these files — they're the canonical sources and may be more up to date than this guide:
 
-- `PROGRESS.md` — current phase, module inventory, active work
-- `platform-transition/` — locked planning docs for the in-progress V6 platform transition
+- `PROGRESS.md` — current release, module inventory, validation state
+- `ROADMAP.md` — planned V2 work and V1.1 follow-ups
 - `AGENTS.md` — repo conventions, CLI quirks, verification info
 - `docs/architecture.md` — current repo architecture and tiering
 - `docs/guidelines.md` — public API design rules and contribution workflow
@@ -16,39 +16,24 @@ Trust executable sources over prose: the `blusys` shell script, `components/*/CM
 
 ## Project Overview
 
-**Blusys** is an ESP32 platform repo built on top of ESP-IDF v5.5.4. Supported targets: **ESP32**, **ESP32-C3**, **ESP32-S3**. Released state is `v6.0.0` (the V6 platform transition landed).
+**Blusys** is an ESP32 platform repo built on top of ESP-IDF v5.5.4. Supported targets: **ESP32**, **ESP32-C3**, **ESP32-S3**. Current release: `v6.1.0`.
 
-## Active Transition (V5 → V6)
+## Platform Architecture (V6)
 
-Planning is **locked** in `platform-transition/`, and implementation is now in progress on the `platform-transition` branch.
+The V5 → V6 transition is complete. The platform ships a three-tier ESP-IDF component
+stack. Key decisions and constraints for future sessions:
 
-Locked decisions future sessions need to know:
-
-- **Three tiers**, not two: `blusys` (HAL + drivers, C) → `blusys_services` (C) → `blusys_framework` (C++).
-- **Drivers** (display/input/sensor/actuator: lcd, led_strip, seven_seg, button, encoder, dht, buzzer) now live under `components/blusys/src/drivers/<category>/`. HAL/drivers boundary inside `components/blusys/` is enforced by directory discipline + `blusys lint`.
+- **Three tiers**: `blusys` (HAL + drivers, C) → `blusys_services` (C) → `blusys_framework` (C++).
+- **Drivers** (display/input/sensor/actuator: lcd, led_strip, seven_seg, button, encoder, dht, buzzer) live under `components/blusys/src/drivers/<category>/`. HAL/drivers boundary inside `components/blusys/` is enforced by directory discipline + `blusys lint`.
 - **`usb_hid` stays in services.** It is runtime orchestration across USB host and BLE, not a simple driver.
 - **Framework is the only C++ tier in V1.** Services migration to C++ is deferred to V2.
 - **`blusys_framework` ships the V1 surface in full:** core spine (`router`, `intent`, `feedback`, `controller`, `runtime`), layout primitives (`screen`, `row`, `col`, `label`, `divider`), the **V1 widget kit** (`bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`), encoder focus helpers (`create_encoder_group`, `auto_focus_screen`), the `theme_tokens` registry, the semantic callbacks header (`callbacks.hpp`), and the `widget-author-guide.md` codifying the six-rule contract every widget follows. `bu_knob` is deferred to V2.
 - **Widget kit** built on LVGL with a six-rule component contract; theme is a single C++ struct populated at boot. Each Camp 2 widget uses a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` for callback storage (default 32 for button/toggle/slider, 8 for modal/overlay). No JSON, no Python, no design-tool integration.
-- **Product scaffold** generates four CMakeLists files (top-level + `main/` + `app/` + `app/product_config.cmake`). `app/` becomes its own ESP-IDF component. Platform components are pulled via `main/idf_component.yml` managed dependencies — never via `EXTRA_COMPONENT_DIRS = "$ENV{BLUSYS_PATH}/components"` (that's the monorepo internal pattern only).
+- **Product scaffold** generates four CMakeLists files (top-level + `main/` + `app/` + `app/product_config.cmake`). `app/` becomes its own ESP-IDF component. Platform components are pulled via `main/idf_component.yml` managed dependencies — never via `EXTRA_COMPONENT_DIRS = "$ENV{BLUSYS_PATH}/components"` (that's the monorepo internal pattern only). `EXTRA_COMPONENT_DIRS` points at `${CMAKE_CURRENT_LIST_DIR}/app`, not the project root, because ESP-IDF's `__project_component_dir` treats a path with a `CMakeLists.txt` as a component itself.
 - **Logging** in framework code goes through a thin `blusys/log.h` wrapper (`BLUSYS_LOGE/I/W/D`). HAL and services keep using `esp_log.h` directly.
-- **`blusys_all.h` was removed in Phase 8.** Code uses the per-tier umbrella headers (`blusys/blusys.h`, `blusys/blusys_services.h`, `blusys/framework/framework.hpp`); driver-specific headers (`blusys/drivers/<category>/<module>.h`) are also acceptable when an example only needs one driver.
-
-Completed so far:
-
-- Phase 2: identity/docs alignment
-- Phase 3: drivers move + framework component stub + CI lint + repo/docs rewrite
-- Phase 4: framework C++ compile policy + `blusys/log.h` + foundational framework headers
-- Phase 4.5: PC + SDL2 host harness under `scripts/host/` (LVGL v9.2.2 via FetchContent, `blusys host-build` CLI subcommand)
-- Phase 5: V1 widget kit (`bu_button`/`bu_toggle`/`bu_slider`/`bu_modal`/`bu_overlay`), `widget-author-guide.md`, `ui/input/` encoder helpers — `bu_knob` deferred to V2
-- Phase 6: framework core spine end-to-end, validated by `examples/framework_app_basic/` (button on_press → runtime.post_intent → controller.handle → slider_set_value / submit_route → ui_route_sink → overlay_show)
-- Phase 7: `blusys create --starter <headless|interactive>` generates the four-CMakeLists product scaffold (top-level + `main/` + `app/` + `app/product_config.cmake`), `main/app_main.cpp` (always `.cpp`, no `blusys_all.h`), `main/idf_component.yml` pinning all three platform components to `v6.0.0` (+ `lvgl/lvgl ~9.2` for interactive), a sample `home_controller`, and (interactive only) `app/ui/theme_init` + `app/ui/screens/main_screen` building a `[-]/[+]` counter on the widget kit. Both starter types build clean against the local checkout via `override_path`. Spec correction: `EXTRA_COMPONENT_DIRS` points at `${CMAKE_CURRENT_LIST_DIR}/app`, not the project root, because ESP-IDF's `__project_component_dir` treats a path with a `CMakeLists.txt` as a component itself — pointing at the project root recursively re-includes the top-level CMakeLists during requirement scanning.
-- Phase 8: example ecosystem migrated to per-tier umbrella headers (1 example + 12 guides swept), `components/blusys_services/include/blusys/blusys_all.h` deleted, prose mentions in `docs/architecture.md` and `docs/guides/framework.md` updated. Fourth framework example added: `examples/framework_encoder_basic/` wires a real `lv_indev_t` of type `LV_INDEV_TYPE_ENCODER` into `create_encoder_group` + `auto_focus_screen` and bridges the `blusys_encoder` driver to LVGL via a callback-to-poll state buffer; uses a stub display so it builds and runs on all three targets without LCD hardware. Pre-Phase-8 housekeeping also wired `scripts/lint-layering.sh` into CI as a Tier-0 gate and extended the regex to catch angle-bracket includes.
-- Phase 9 stages 1+2 (hardware gate pending): framework bridged into the host harness — `scripts/host/CMakeLists.txt` now compiles a `blusys_framework_host` static lib and a second executable `widget_kit_demo` that exercises the full spine (runtime → controller → route sink) through `bu_button`/`bu_slider`/`bu_overlay` on host LVGL + SDL2. Host `esp_log.h` shim lives at `scripts/host/include_host/esp_log.h`. ESP-IDF QEMU validation (qemu-esp-develop-9.2.2-20250817): `phase9_headless` and `framework_core_basic` both boot clean on all three targets, full spine events visible, no panics. Interactive product skips QEMU by design (no LCD emulation). RAM/flash deltas measured on esp32s3: framework core ≈ +2 KB image on top of bare HAL; UI tier ≈ +136 KB image, dominated by LVGL (Blusys widget kit itself is 3,355 bytes). V5→V6 migration guide written at `docs/migration-guide.md` (added to mkdocs Project tab). Full validation report: `platform-transition/phase9-validation-report.md`.
-
-Next planned step: Phase 9 stage 3 — real hardware validation (first-boot + latency measurement on esp32/c3/s3), then tag `v6.0.0`. Stage 3 is the hardware gate and blocks the tag; everything else is landed.
-
-Full plan, decisions log, and rationale: `platform-transition/`. Current phase status: `PROGRESS.md`.
+- **`blusys_all.h` was removed.** Code uses the per-tier umbrella headers (`blusys/blusys.h`, `blusys/blusys_services.h`, `blusys/framework/framework.hpp`); driver-specific headers (`blusys/drivers/<category>/<module>.h`) are also acceptable when an example only needs one driver.
+- **Host harness** (`scripts/host/`) builds LVGL v9.2.2 + SDL2 on Linux. `blusys host-build [project]` builds either the monorepo harness or a scaffolded product's `host/` target. Both starter types scaffold a `host/CMakeLists.txt` + `host/main.cpp`.
+- **Real hardware validation** completed on all three targets. Full record: `docs/validation-report-v6.md`. V1.1 follow-ups (encoder+LCD rig, latency measurement, SSD1306 bus recovery) are tracked in `ROADMAP.md`.
 
 ## Build and Flash Commands
 

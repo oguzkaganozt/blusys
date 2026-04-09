@@ -139,6 +139,7 @@ nav:
               - OTA: guides/ota-basic.md
       - Framework:
           - Overview: guides/framework.md
+          - Widget Authoring Guide: guides/ui-widget-guide.md
       - Testing:
           - Hardware Smoke Tests: guides/hardware-smoke-tests.md
           - Concurrency Tests: guides/concurrency-tests.md
@@ -225,3 +226,4 @@ nav:
       - Architecture: architecture.md
       - Guidelines: guidelines.md
       - Migration (V5 → V6): migration-guide.md
+      - V6 Validation Report: validation-report-v6.md
