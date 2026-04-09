@@ -519,10 +519,17 @@ blusys_help_lint() {
 }
 
 blusys_help_host_build() {
-    printf 'Usage: blusys host-build\n'
-    printf '\nBuild the PC + SDL2 host harness in scripts/host/.\n'
-    printf 'Configures via cmake into scripts/host/build-host/ and builds.\n'
-    printf 'Requires libsdl2-dev (or distro equivalent), cmake, and pkg-config.\n'
+    printf 'Usage: blusys host-build [project]\n'
+    printf '\nBuild a blusys product for the PC host (no hardware needed).\n'
+    printf '\n  project   optional path to a blusys project created with\n'
+    printf '            "blusys create". If omitted, uses the current directory\n'
+    printf '            when it contains a host/ subdirectory, otherwise falls\n'
+    printf '            back to the monorepo scripts/host/ harness.\n'
+    printf '\nWorks for both starter types:\n'
+    printf '  interactive  SDL2 window, same LVGL screen as the device build\n'
+    printf '  headless     terminal-only, framework runtime + controller, no display\n'
+    printf '\nRequires: cmake, pkg-config.\n'
+    printf 'Interactive apps additionally require libsdl2-dev (or equivalent).\n'
     printf 'See scripts/host/README.md for install instructions.\n'
 }
 
@@ -655,7 +662,8 @@ cmd_create() {
         "$target_dir/main" \
         "$target_dir/app/controllers" \
         "$target_dir/app/integrations" \
-        "$target_dir/app/config"
+        "$target_dir/app/config" \
+        "$target_dir/host"
 
     if [[ "$starter" == "interactive" ]]; then
         mkdir -p \
@@ -670,6 +678,7 @@ cmd_create() {
     if [[ "$starter" == "interactive" ]]; then
         blusys_create_sample_ui "$target_dir"
     fi
+    blusys_create_host "$target_dir" "$project_name" "$starter"
 
     # Empty marker files so empty directories survive git add.
     touch \
@@ -698,6 +707,7 @@ DEFAULTS
     printf 'Starter type: %s\n\n' "$starter"
     printf 'Next steps:\n'
     printf '  cd %s\n' "$target_dir"
+    printf '  blusys host-build           # build + run on PC (no hardware needed)\n'
     printf '  blusys build                # build for default target\n'
     printf '  blusys run                  # build, flash, and monitor\n'
     printf '  blusys config               # open menuconfig\n'
@@ -1222,6 +1232,354 @@ void main_screen_create(blusys::framework::runtime *runtime)
 CPP
 }
 
+blusys_create_host() {
+    local target_dir="$1"
+    local project_name="$2"
+    local starter="$3"
+
+    if [[ "$starter" == "interactive" ]]; then
+        blusys_create_host_cmakelists_interactive "$target_dir" "$project_name"
+        blusys_create_host_main_interactive "$target_dir" "$project_name"
+    else
+        blusys_create_host_cmakelists_headless "$target_dir" "$project_name"
+        blusys_create_host_main_headless "$target_dir" "$project_name"
+    fi
+}
+
+blusys_create_host_cmakelists_interactive() {
+    local target_dir="$1"
+    local project_name="$2"
+    # PLACEHOLDER is replaced by sed after writing so cmake ${} vars
+    # don't need to be escaped in the heredoc.
+    cat > "$target_dir/host/CMakeLists.txt" <<'CMAKE'
+cmake_minimum_required(VERSION 3.16)
+project(BLUSYS_PRODUCT_HOST LANGUAGES C CXX)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# BLUSYS_PATH is exported by the blusys CLI automatically.
+# For manual builds: export BLUSYS_PATH=/path/to/blusys && cmake -S host -B build-host
+if(NOT DEFINED ENV{BLUSYS_PATH})
+    message(FATAL_ERROR
+        "BLUSYS_PATH is not set.\n"
+        "Run via 'blusys host-build' (it exports BLUSYS_PATH automatically), or:\n"
+        "  export BLUSYS_PATH=/path/to/blusys && cmake -S host -B build-host")
+endif()
+set(BLUSYS_PATH "$ENV{BLUSYS_PATH}")
+
+# SDL2
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
+
+# LVGL — pinned to the same tag as the managed component (lvgl/lvgl ~9.2)
+include(FetchContent)
+set(LV_CONF_PATH "${BLUSYS_PATH}/scripts/host/lv_conf.h" CACHE FILEPATH "")
+set(LV_CONF_BUILD_DISABLE_THORVG_INTERNAL ON CACHE BOOL "" FORCE)
+set(LV_CONF_BUILD_DISABLE_EXAMPLES        ON CACHE BOOL "" FORCE)
+set(LV_CONF_BUILD_DISABLE_DEMOS           ON CACHE BOOL "" FORCE)
+FetchContent_Declare(lvgl
+    GIT_REPOSITORY https://github.com/lvgl/lvgl.git
+    GIT_TAG        v9.2.2
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(lvgl)
+# Strip ARM/Helium assembly that x86_64 assembler cannot compile.
+get_target_property(_lvgl_src lvgl SOURCES)
+list(FILTER _lvgl_src EXCLUDE REGEX "\\.S$")
+set_property(TARGET lvgl PROPERTY SOURCES ${_lvgl_src})
+target_link_libraries(lvgl PUBLIC PkgConfig::SDL2)
+
+# blusys_framework_host — framework C++ sources compiled for the host.
+# Sources mirror scripts/host/CMakeLists.txt so host and device builds
+# stay in sync automatically when the platform is updated.
+set(BLUSYS_COMP "${BLUSYS_PATH}/components/blusys")
+set(BLUSYS_FW   "${BLUSYS_PATH}/components/blusys_framework")
+
+add_library(blusys_framework_host STATIC
+    ${BLUSYS_COMP}/src/common/error.c
+    ${BLUSYS_FW}/src/core/controller.cpp
+    ${BLUSYS_FW}/src/core/feedback.cpp
+    ${BLUSYS_FW}/src/core/framework.cpp
+    ${BLUSYS_FW}/src/core/router.cpp
+    ${BLUSYS_FW}/src/core/runtime.cpp
+    ${BLUSYS_FW}/src/ui/input/encoder.cpp
+    ${BLUSYS_FW}/src/ui/primitives/col.cpp
+    ${BLUSYS_FW}/src/ui/primitives/divider.cpp
+    ${BLUSYS_FW}/src/ui/primitives/label.cpp
+    ${BLUSYS_FW}/src/ui/primitives/row.cpp
+    ${BLUSYS_FW}/src/ui/primitives/screen.cpp
+    ${BLUSYS_FW}/src/ui/theme.cpp
+    ${BLUSYS_FW}/src/ui/widgets/button/button.cpp
+    ${BLUSYS_FW}/src/ui/widgets/modal/modal.cpp
+    ${BLUSYS_FW}/src/ui/widgets/overlay/overlay.cpp
+    ${BLUSYS_FW}/src/ui/widgets/slider/slider.cpp
+    ${BLUSYS_FW}/src/ui/widgets/toggle/toggle.cpp
+)
+target_include_directories(blusys_framework_host PUBLIC
+    ${BLUSYS_COMP}/include
+    ${BLUSYS_FW}/include
+    ${BLUSYS_PATH}/scripts/host/include_host
+)
+target_compile_options(blusys_framework_host PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
+    -Wall -Wextra
+)
+target_link_libraries(blusys_framework_host PUBLIC lvgl)
+
+# App sources — platform-free LVGL code, compiles unchanged on host.
+# CMake collects all .cpp files under app/ui/ and app/controllers/
+# so new screens and controllers are picked up automatically.
+file(GLOB_RECURSE APP_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/../app/ui/*.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../app/controllers/*.cpp"
+)
+
+add_executable(BLUSYS_PRODUCT_HOST
+    "${CMAKE_CURRENT_LIST_DIR}/main.cpp"
+    ${APP_SOURCES}
+)
+target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../app"
+)
+target_link_libraries(BLUSYS_PRODUCT_HOST PRIVATE
+    blusys_framework_host PkgConfig::SDL2 m
+)
+target_compile_options(BLUSYS_PRODUCT_HOST PRIVATE
+    -fno-exceptions -fno-rtti -fno-threadsafe-statics -Wall -Wextra
+)
+CMAKE
+    sed -i "s/BLUSYS_PRODUCT_HOST/${project_name}_host/g" "$target_dir/host/CMakeLists.txt"
+}
+
+blusys_create_host_cmakelists_headless() {
+    local target_dir="$1"
+    local project_name="$2"
+    cat > "$target_dir/host/CMakeLists.txt" <<'CMAKE'
+cmake_minimum_required(VERSION 3.16)
+project(BLUSYS_PRODUCT_HOST LANGUAGES C CXX)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# BLUSYS_PATH is exported by the blusys CLI automatically.
+# For manual builds: export BLUSYS_PATH=/path/to/blusys && cmake -S host -B build-host
+if(NOT DEFINED ENV{BLUSYS_PATH})
+    message(FATAL_ERROR
+        "BLUSYS_PATH is not set.\n"
+        "Run via 'blusys host-build' (it exports BLUSYS_PATH automatically), or:\n"
+        "  export BLUSYS_PATH=/path/to/blusys && cmake -S host -B build-host")
+endif()
+set(BLUSYS_PATH "$ENV{BLUSYS_PATH}")
+
+# blusys_framework_core_host — framework core only, no LVGL, no SDL2.
+# Headless apps need the runtime/controller/router/feedback spine but
+# no UI surface.
+set(BLUSYS_COMP "${BLUSYS_PATH}/components/blusys")
+set(BLUSYS_FW   "${BLUSYS_PATH}/components/blusys_framework")
+
+add_library(blusys_framework_core_host STATIC
+    ${BLUSYS_COMP}/src/common/error.c
+    ${BLUSYS_FW}/src/core/controller.cpp
+    ${BLUSYS_FW}/src/core/feedback.cpp
+    ${BLUSYS_FW}/src/core/framework.cpp
+    ${BLUSYS_FW}/src/core/router.cpp
+    ${BLUSYS_FW}/src/core/runtime.cpp
+)
+target_include_directories(blusys_framework_core_host PUBLIC
+    ${BLUSYS_COMP}/include
+    ${BLUSYS_FW}/include
+    ${BLUSYS_PATH}/scripts/host/include_host
+)
+target_compile_options(blusys_framework_core_host PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
+    -Wall -Wextra
+)
+
+# App controller sources
+file(GLOB_RECURSE APP_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/../app/controllers/*.cpp"
+)
+
+add_executable(BLUSYS_PRODUCT_HOST
+    "${CMAKE_CURRENT_LIST_DIR}/main.cpp"
+    ${APP_SOURCES}
+)
+target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../app"
+)
+target_link_libraries(BLUSYS_PRODUCT_HOST PRIVATE blusys_framework_core_host)
+target_compile_options(BLUSYS_PRODUCT_HOST PRIVATE
+    -fno-exceptions -fno-rtti -fno-threadsafe-statics -Wall -Wextra
+)
+CMAKE
+    sed -i "s/BLUSYS_PRODUCT_HOST/${project_name}_host/g" "$target_dir/host/CMakeLists.txt"
+}
+
+blusys_create_host_main_interactive() {
+    local target_dir="$1"
+    local project_name="$2"
+    cat > "$target_dir/host/main.cpp" <<CPP
+// host/main.cpp — interactive host entry point for ${project_name}.
+//
+// Brings up LVGL + SDL2, calls the same app::ui functions used on
+// device, and runs the main loop. The window resolution defaults to
+// 480×320 — adjust kHorRes / kVerRes to match your target LCD.
+//
+// This file is intentionally thin. All UI code lives in app/ui/ and
+// compiles unchanged on both device and host. Only the platform init
+// (SDL2 window vs blusys_lcd) differs.
+
+#include <SDL2/SDL.h>
+#include <cstdint>
+#include <cstdio>
+
+#include "lvgl.h"
+#include "src/drivers/sdl/lv_sdl_window.h"
+#include "src/drivers/sdl/lv_sdl_mouse.h"
+#include "src/drivers/sdl/lv_sdl_keyboard.h"
+
+#include "blusys/framework/framework.hpp"
+#include "blusys/log.h"
+#include "controllers/home_controller.hpp"
+#include "ui/theme_init.hpp"
+#include "ui/screens/main_screen.hpp"
+
+namespace {
+constexpr const char *kTag   = "host_main";
+constexpr int32_t    kHorRes = 480;   /* match your target LCD */
+constexpr int32_t    kVerRes = 320;
+}  // namespace
+
+int main(void)
+{
+    lv_init();
+
+    lv_display_t *display = lv_sdl_window_create(kHorRes, kVerRes);
+    if (display == nullptr) {
+        std::fprintf(stderr, "lv_sdl_window_create failed\n");
+        return 1;
+    }
+    lv_sdl_window_set_title(display, "${project_name} — host");
+    (void)lv_sdl_mouse_create();
+    (void)lv_sdl_keyboard_create();
+
+    blusys::framework::init();
+
+    static home_controller            controller;
+    static blusys::framework::runtime runtime;
+
+    const blusys_err_t err = runtime.init(&controller, nullptr, 10);
+    if (err != BLUSYS_OK) {
+        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(err));
+        return 1;
+    }
+
+    app::ui::theme_init();
+    app::ui::main_screen_create(&runtime);
+
+    BLUSYS_LOGI(kTag, "${project_name} host running. close the window to exit.");
+
+    std::uint32_t last_ticks = SDL_GetTicks();
+    while (true) {
+        const std::uint32_t now     = SDL_GetTicks();
+        const std::uint32_t elapsed = now - last_ticks;
+        if (elapsed > 0) {
+            lv_tick_inc(elapsed);
+            last_ticks = now;
+        }
+        runtime.step(now);
+        const std::uint32_t sleep_ms = lv_timer_handler();
+        SDL_Delay(sleep_ms < 5 ? 5 : (sleep_ms > 33 ? 33 : sleep_ms));
+    }
+    return 0;
+}
+CPP
+}
+
+blusys_create_host_main_headless() {
+    local target_dir="$1"
+    local project_name="$2"
+    cat > "$target_dir/host/main.cpp" <<CPP
+// host/main.cpp — headless host entry point for ${project_name}.
+//
+// Runs the framework runtime + home_controller on the PC with no
+// display required. Output goes to stdout / stderr via the esp_log
+// shim. Useful for testing controller logic, intent routing, and
+// integration flows without touching hardware.
+//
+// Time source: POSIX clock_gettime (monotonic). Delay: nanosleep.
+// No ESP-IDF, no FreeRTOS, no SDL2 required.
+
+#include <cstdint>
+#include <cstdio>
+#include <time.h>
+#include <csignal>
+
+#include "blusys/framework/framework.hpp"
+#include "blusys/log.h"
+#include "controllers/home_controller.hpp"
+
+namespace {
+constexpr const char *kTag = "host_main";
+
+static bool s_running = true;
+
+static std::uint32_t now_ms()
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return static_cast<std::uint32_t>(
+        static_cast<std::uint64_t>(ts.tv_sec) * 1000u
+        + static_cast<std::uint32_t>(ts.tv_nsec / 1000000u));
+}
+
+static void delay_ms(std::uint32_t ms)
+{
+    struct timespec ts;
+    ts.tv_sec  = ms / 1000;
+    ts.tv_nsec = static_cast<long>((ms % 1000u) * 1000000u);
+    nanosleep(&ts, nullptr);
+}
+}  // namespace
+
+int main(void)
+{
+    signal(SIGINT,  [](int) { s_running = false; });
+    signal(SIGTERM, [](int) { s_running = false; });
+
+    blusys::framework::init();
+
+    static home_controller            controller;
+    static blusys::framework::runtime runtime;
+
+    const blusys_err_t err = runtime.init(&controller, nullptr, 10);
+    if (err != BLUSYS_OK) {
+        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(err));
+        return 1;
+    }
+
+    BLUSYS_LOGI(kTag, "${project_name} host running — Ctrl+C to exit");
+
+    while (s_running) {
+        runtime.step(now_ms());
+        delay_ms(10);
+    }
+
+    BLUSYS_LOGI(kTag, "shutting down");
+    return 0;
+}
+CPP
+}
+
 cmd_version() {
     local blusys_version
     blusys_version="$(grep '#define BLUSYS_VERSION_STRING' \
@@ -1674,28 +2032,76 @@ cmd_lint() {
 }
 
 cmd_host_build() {
+    local project_arg=""
+
+    # Accept optional [project] positional arg; reject unknown flags.
+    if [[ $# -gt 0 ]]; then
+        if [[ "$1" == -* ]]; then
+            blusys_help_host_build
+            exit 1
+        fi
+        project_arg="$1"
+        shift
+    fi
     if [[ $# -gt 0 ]]; then
         blusys_help_host_build
         exit 1
     fi
 
-    local host_dir="$BLUSYS_REPO_ROOT/scripts/host"
-    local build_dir="$host_dir/build-host"
+    # Resolve host_dir + build_dir:
+    #   1. Explicit project arg            → <project>/host/
+    #   2. cwd contains host/CMakeLists.txt → <cwd>/host/
+    #   3. Fallback                        → monorepo scripts/host/
+    local host_dir build_dir is_product=false
+
+    if [[ -n "$project_arg" ]]; then
+        local project_dir
+        project_dir="$(blusys_resolve_project_dir "$project_arg")" || exit 1
+        if [[ ! -f "$project_dir/host/CMakeLists.txt" ]]; then
+            printf 'error: no host/CMakeLists.txt found in %s\n' "$project_dir" >&2
+            printf '       re-run: blusys create --starter <headless|interactive> %s\n' "$project_dir" >&2
+            exit 1
+        fi
+        host_dir="$project_dir/host"
+        build_dir="$project_dir/build-host"
+        is_product=true
+    elif [[ -f "$(pwd)/host/CMakeLists.txt" ]]; then
+        host_dir="$(pwd)/host"
+        build_dir="$(pwd)/build-host"
+        is_product=true
+    else
+        host_dir="$BLUSYS_REPO_ROOT/scripts/host"
+        build_dir="$host_dir/build-host"
+        is_product=false
+    fi
 
     if [[ ! -f "$host_dir/CMakeLists.txt" ]]; then
-        printf 'host harness not found at %s\n' "$host_dir" >&2
+        printf 'error: host harness not found at %s\n' "$host_dir" >&2
         exit 1
     fi
 
     if ! command -v cmake > /dev/null 2>&1; then
-        printf 'cmake is required for host-build\n' >&2
+        printf 'error: cmake is required for host-build\n' >&2
         exit 1
     fi
     if ! command -v pkg-config > /dev/null 2>&1; then
-        printf 'pkg-config is required for host-build\n' >&2
+        printf 'error: pkg-config is required for host-build\n' >&2
         exit 1
     fi
-    if ! pkg-config --exists sdl2; then
+
+    # SDL2 check — only needed for interactive apps. For product builds,
+    # detect the starter type from app/product_config.cmake; for the
+    # monorepo harness always check (it always needs SDL2).
+    local needs_sdl=true
+    if [[ "$is_product" == true ]]; then
+        local config_file
+        config_file="$(dirname "$host_dir")/app/product_config.cmake"
+        if [[ -f "$config_file" ]] && grep -q 'BLUSYS_STARTER_TYPE.*headless' "$config_file"; then
+            needs_sdl=false
+        fi
+    fi
+
+    if [[ "$needs_sdl" == true ]] && ! pkg-config --exists sdl2; then
         printf 'SDL2 development headers not found.\n' >&2
         printf 'Install libsdl2-dev (Debian/Ubuntu), SDL2-devel (Fedora),\n' >&2
         printf 'sdl2 (Arch), or sdl2 (brew on macOS). See scripts/host/README.md.\n' >&2
@@ -1705,7 +2111,17 @@ cmd_host_build() {
     cmake -S "$host_dir" -B "$build_dir" || exit $?
     cmake --build "$build_dir" -j || exit $?
 
-    printf '\nhost harness built. run:\n  %s/hello_lvgl\n' "$build_dir"
+    if [[ "$is_product" == true ]]; then
+        local exe
+        exe="$(find "$build_dir" -maxdepth 1 -type f -executable ! -name '*.so' 2>/dev/null | sort | head -1)"
+        if [[ -n "$exe" ]]; then
+            printf '\nhost build complete. run:\n  %s\n' "$exe"
+        else
+            printf '\nhost build complete. binaries in: %s\n' "$build_dir"
+        fi
+    else
+        printf '\nhost harness built. run:\n  %s/hello_lvgl\n' "$build_dir"
+    fi
 }
 
 cmd_build_examples() {

@@ -182,3 +182,20 @@ target_compile_options(widget_kit_demo PRIVATE
     -Wall
     -Wextra
 )
+
+# ── pomodoro_host (oled_encoder_basic ported to host) ────────────────────────
+#
+# Pixel-identical 128×32 OLED layout running on the PC + SDL2 stack.
+# The window opens at 4× zoom (512×128 px) for desktop legibility.
+# Keyboard input replaces the physical rotary encoder:
+#   ← / → arrows  → CCW / CW  (set duration)
+#   Space / Enter  → PRESS     (start / stop)
+add_executable(pomodoro_host src/pomodoro_host_main.cpp)
+target_link_libraries(pomodoro_host PRIVATE lvgl PkgConfig::SDL2 m)
+target_compile_options(pomodoro_host PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
