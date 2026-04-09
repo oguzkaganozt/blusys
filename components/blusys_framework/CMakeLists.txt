@@ -11,12 +11,18 @@ idf_build_get_property(build_components BUILD_COMPONENTS)
 if(BLUSYS_BUILD_UI)
     if("lvgl__lvgl" IN_LIST build_components)
         list(APPEND blusys_framework_sources
+            src/ui/input/encoder.cpp
             src/ui/primitives/col.cpp
             src/ui/primitives/divider.cpp
             src/ui/primitives/label.cpp
             src/ui/primitives/row.cpp
             src/ui/primitives/screen.cpp
             src/ui/theme.cpp
+            src/ui/widgets/button/button.cpp
+            src/ui/widgets/modal/modal.cpp
+            src/ui/widgets/overlay/overlay.cpp
+            src/ui/widgets/slider/slider.cpp
+            src/ui/widgets/toggle/toggle.cpp
         )
     else()
         message(FATAL_ERROR "BLUSYS_BUILD_UI=ON requires the lvgl/lvgl managed component")
