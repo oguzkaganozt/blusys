@@ -5,6 +5,10 @@
 #include <cstddef>
 #include <cstdint>
 
+#ifdef ESP_PLATFORM
+#include "blusys/system/console.h"
+#endif
+
 namespace blusys::framework { class runtime; }
 
 namespace blusys::app {
@@ -36,8 +40,6 @@ struct diagnostics_status {
 // ---- device implementation ----
 
 #ifdef ESP_PLATFORM
-
-#include "blusys/system/console.h"
 
 struct diagnostics_config {
     bool enable_console         = false;

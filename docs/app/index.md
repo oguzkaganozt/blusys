@@ -35,6 +35,8 @@ These are handled by the framework runtime, profiles, and capabilities.
 
 ## Example Apps
 
+- [`examples/quickstart/interactive_controller/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/interactive_controller) --- canonical interactive controller quickstart using shell navigation and setup flow
+- [`examples/reference/interactive_panel/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/interactive_panel) --- operational panel reference using the same app runtime and shell
 - [`examples/quickstart/framework_device_basic/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/framework_device_basic) --- minimal interactive app
 - [`examples/quickstart/connected_device/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/connected_device) --- connected interactive product
 - [`examples/quickstart/connected_headless/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/connected_headless) --- connected headless product

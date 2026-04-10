@@ -2,6 +2,13 @@
 
 Build and run a display-first interactive product using the `blusys::app` path.
 
+The canonical interactive starting point is the `interactive controller` archetype:
+
+- example: `examples/quickstart/interactive_controller/`
+- visual bias: expressive and tactile
+- interaction bias: compact, encoder-friendly control flows
+- architecture: the same reducer, shell, and capability model used everywhere else
+
 ## Create the project
 
 ```bash
@@ -19,11 +26,16 @@ The app launches in a host SDL2 window with the default theme. Arrow keys move f
 
 ## What you get
 
-The scaffold generates a minimal interactive app with:
+The scaffold generates a host-first interactive app with:
 
-- a home screen with a counter, `-`, `+`, and `OK` buttons
-- framework-owned boot, LVGL lifecycle, and encoder focus wiring
-- host-first prototyping out of the box
+- framework-owned boot, LVGL lifecycle, shell, and focus wiring
+- the canonical `logic/`, `ui/`, and `system/` product structure
+- a reducer-owned control flow that can be retargeted to host or ST7735 device profiles
+
+If you want a concrete product-shaped reference immediately, start from:
+
+- `examples/quickstart/interactive_controller/` for compact expressive control surfaces
+- `examples/reference/interactive_panel/` for denser operational panels
 
 ## Project structure
 
@@ -47,6 +59,7 @@ my_product/
 
 ## Next steps
 
+- [Archetype Starters](archetypes.md) --- choose between controller and panel starting shapes
 - [Reducer Model](../app/reducer-model.md) --- understand state, actions, and `update()`
 - [Views & Widgets](../app/views-and-widgets.md) --- build screens with stock widgets
 - [Profiles](../app/profiles.md) --- target a real device with `BLUSYS_APP_MAIN_DEVICE`

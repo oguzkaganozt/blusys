@@ -29,7 +29,7 @@ blusys_err_t connectivity_capability::start(blusys::framework::runtime &rt)
     }
     if (nvs_err != ESP_OK) {
         BLUSYS_LOGE(TAG, "NVS init failed: %d", nvs_err);
-        return BLUSYS_ERR_FAIL;
+        return BLUSYS_ERR_INTERNAL;
     }
 
     if (cfg_.wifi_ssid == nullptr) {

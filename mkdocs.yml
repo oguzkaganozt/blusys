@@ -58,6 +58,7 @@ nav:
       - start/index.md
       - Interactive Quickstart: start/quickstart-interactive.md
       - Headless Quickstart: start/quickstart-headless.md
+      - Archetype Starters: start/archetypes.md
   - App:
       - app/index.md
       - Reducer Model: app/reducer-model.md
@@ -136,6 +137,7 @@ nav:
       - internals/index.md
       - Architecture: internals/architecture.md
       - Guidelines: internals/guidelines.md
+      - Phase 5 Interactive Archetypes Plan: internals/phase-5-interactive-archetypes-plan.md
       - Target Matrix: internals/target-matrix.md
       - Testing:
           - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md

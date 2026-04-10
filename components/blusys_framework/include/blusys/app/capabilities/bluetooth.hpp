@@ -4,6 +4,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <atomic>
+
+#ifdef ESP_PLATFORM
+#include "blusys/connectivity/ble_gatt.h"
+#include "blusys/connectivity/bluetooth.h"
+#endif
 
 namespace blusys::framework { class runtime; }
 
@@ -35,11 +41,6 @@ struct bluetooth_status {
 // ---- device implementation ----
 
 #ifdef ESP_PLATFORM
-
-#include "blusys/connectivity/bluetooth.h"
-#include "blusys/connectivity/ble_gatt.h"
-
-#include <atomic>
 
 struct bluetooth_config {
     const char *device_name = nullptr;

@@ -12,7 +12,7 @@ build/flash/host workflow.
 git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
 ~/.blusys/install.sh
 
-# Scaffold a product (interactive: framework UI tier on; headless: UI tier off)
+# Scaffold a product (interactive controller by default; headless also available)
 mkdir ~/my_product && cd ~/my_product
 blusys create --starter interactive   # or --starter headless
 
@@ -21,7 +21,10 @@ blusys run /dev/ttyACM0 esp32s3
 ```
 
 Requires ESP-IDF v5.5+ (auto-detected). `blusys create` generates a
-minimal app using the `blusys::app` reducer model. See
+minimal app using the `blusys::app` reducer model. The canonical interactive
+reference is now `examples/quickstart/interactive_controller/`, with
+`examples/reference/interactive_panel/` as the secondary interactive archetype.
+See
 [Getting Started](docs/start/index.md) for the full walkthrough.
 
 ## Architecture
@@ -83,8 +86,8 @@ framework spine:
 - **View layer:** action-bound widgets, reactive bindings, page helpers,
   custom widget contract, bounded LVGL scope.
 - **Platform profiles:** host (SDL2), headless, generic SPI ST7735.
-- **Service bundles:** connectivity (Wi-Fi, SNTP, mDNS, local control),
-  storage (SPIFFS, FAT).
+- **Capabilities:** connectivity (Wi-Fi, SNTP, mDNS, local control),
+  storage (SPIFFS, FAT), diagnostics, provisioning, OTA, bluetooth.
 - **Widget kit:** `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`,
   `bu_overlay`, plus layout primitives `screen` / `row` / `col` /
   `label` / `divider`.

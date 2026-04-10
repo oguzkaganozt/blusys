@@ -4,6 +4,11 @@
 
 #include <cstdint>
 
+#ifdef ESP_PLATFORM
+#include "blusys/system/fatfs.h"
+#include "blusys/system/fs.h"
+#endif
+
 namespace blusys::framework { class runtime; }
 
 namespace blusys::app {
@@ -39,9 +44,6 @@ struct storage_config {
 // ---- device implementation ----
 
 #ifdef ESP_PLATFORM
-
-#include "blusys/system/fs.h"
-#include "blusys/system/fatfs.h"
 
 class storage_capability final : public capability_base {
 public:

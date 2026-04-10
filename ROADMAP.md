@@ -444,6 +444,8 @@ Capability contract requirements:
 
 ## Phase 5: Interactive Archetype References
 
+Detailed execution plan: `docs/internals/phase-5-interactive-archetypes-plan.md`
+
 ### Goal
 
 Prove the platform can build strong local interactive products without adding a separate interaction-specific architecture.

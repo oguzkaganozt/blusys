@@ -91,7 +91,7 @@ endif()
 idf_component_register(
     SRCS ${blusys_framework_sources}
     INCLUDE_DIRS include
-    REQUIRES blusys blusys_services
+    REQUIRES blusys blusys_services spi_flash
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE
@@ -109,5 +109,5 @@ target_compile_options(${COMPONENT_LIB} PRIVATE
 if(BLUSYS_BUILD_UI)
     idf_component_get_property(lvgl_lib lvgl__lvgl COMPONENT_LIB)
     target_link_libraries(${COMPONENT_LIB} PUBLIC ${lvgl_lib})
-    target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_FRAMEWORK_HAS_UI=1)
+    target_compile_definitions(${COMPONENT_LIB} PUBLIC BLUSYS_FRAMEWORK_HAS_UI=1)
 endif()

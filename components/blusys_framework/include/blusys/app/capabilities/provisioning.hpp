@@ -4,6 +4,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <atomic>
+
+#ifdef ESP_PLATFORM
+#include "blusys/connectivity/wifi_prov.h"
+#endif
 
 namespace blusys::framework { class runtime; }
 
@@ -34,10 +39,6 @@ struct provisioning_status {
 // ---- device implementation ----
 
 #ifdef ESP_PLATFORM
-
-#include "blusys/connectivity/wifi_prov.h"
-
-#include <atomic>
 
 struct provisioning_config {
     blusys_wifi_prov_transport_t transport = BLUSYS_WIFI_PROV_TRANSPORT_BLE;

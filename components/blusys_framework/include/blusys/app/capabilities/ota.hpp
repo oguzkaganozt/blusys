@@ -4,6 +4,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <atomic>
+
+#ifdef ESP_PLATFORM
+#include "blusys/system/ota.h"
+#endif
 
 namespace blusys::framework { class runtime; }
 
@@ -37,10 +42,6 @@ struct ota_status {
 // ---- device implementation ----
 
 #ifdef ESP_PLATFORM
-
-#include "blusys/system/ota.h"
-
-#include <atomic>
 
 struct ota_config {
     const char *firmware_url   = nullptr;

@@ -10,7 +10,7 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 
     ---
 
-    Build a display-first product with the reducer model, stock widgets, and host-first prototyping.
+    Build a display-first product with the reducer model, stock widgets, and the `interactive controller` archetype as the canonical starting point.
 
     [:octicons-arrow-right-24: Interactive Quickstart](quickstart-interactive.md)
 
@@ -24,12 +24,16 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 
 </div>
 
+## Archetypes
+
+- [Archetype Starters](archetypes.md) --- choose between the `interactive controller` and `interactive panel` starting shapes
+
 ## Platform Layers
 
 | Layer | What it provides | When to use |
 |-------|-----------------|-------------|
-| [App](../app/index.md) | Product-facing API: reducer model, views, service bundles, profiles | **Start here** for new products |
-| [Services](../services/index.md) | Runtime services: WiFi, HTTP, MQTT, OTA, storage, display | When you need direct service access beyond bundles |
+| [App](../app/index.md) | Product-facing API: reducer model, views, capabilities, profiles | **Start here** for new products |
+| [Services](../services/index.md) | Runtime services: WiFi, HTTP, MQTT, OTA, storage, display | When you need direct service access beyond capabilities |
 | [HAL + Drivers](../hal/index.md) | Hardware abstraction: GPIO, UART, SPI, I2C, sensors, actuators | When you need direct hardware control |
 | [Internals](../internals/index.md) | Architecture, guidelines, testing infrastructure | When contributing to the platform itself |
 

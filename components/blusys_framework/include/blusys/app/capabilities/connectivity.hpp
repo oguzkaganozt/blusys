@@ -4,6 +4,14 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <atomic>
+
+#ifdef ESP_PLATFORM
+#include "blusys/connectivity/mdns.h"
+#include "blusys/connectivity/wifi.h"
+#include "blusys/system/local_ctrl.h"
+#include "blusys/system/sntp.h"
+#endif
 
 namespace blusys::framework { class runtime; }
 
@@ -29,7 +37,6 @@ enum class connectivity_event : std::uint32_t {
 
 // IP info — mirrors the C struct on device, standalone on host.
 #ifdef ESP_PLATFORM
-#include "blusys/connectivity/wifi.h"
 using connectivity_ip_info = blusys_wifi_ip_info_t;
 #else
 struct connectivity_ip_info {
@@ -54,12 +61,6 @@ struct connectivity_status {
 // ---- device implementation ----
 
 #ifdef ESP_PLATFORM
-
-#include "blusys/connectivity/mdns.h"
-#include "blusys/system/sntp.h"
-#include "blusys/system/local_ctrl.h"
-
-#include <atomic>
 
 // Declarative connectivity configuration.
 // Each subsystem is optional — enabled when its key field is non-null.
