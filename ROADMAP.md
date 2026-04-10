@@ -1,147 +1,421 @@
-# Blusys — State & Roadmap
+# V7 Refactor Roadmap
 
-## What We're Building
+## Status
 
-Blusys is an internal ESP32 product platform. The goal is to stop rebuilding the same
-low-level plumbing on every new product. HAL, drivers, and services are solved once and
-shared; a C++ framework layer ships the runtime spine and UI widget kit; product teams
-write business logic, not peripheral glue.
+Active planning document. This roadmap tracks the phased execution of the v7 product-surface reset.
 
-One platform. Many products. One spine.
+The companion product requirements document lives at `PRD.md`.
 
----
+## Guiding Principle
 
-## Where We Are — v6.1.0
+This program is not about building a cleaner generic ESP32 framework.
 
-**Current release: v6.1.0** (April 2026). The V6 platform is complete and validated on
-real hardware across all three targets (ESP32, ESP32-C3, ESP32-S3).
+This program is about building the internal operating system for our product families.
 
-### What ships
+That means roadmap decisions should favor:
 
-Three ESP-IDF components under one version tag:
+- recurring product archetypes over generic module sprawl
+- shared product flows over app-by-app wiring
+- strong default interaction and service behavior over many equal-looking choices
+- expressive consumer products and reliable industrial products on the same core runtime
 
-```
-components/blusys/            HAL + drivers (C)
-components/blusys_services/   runtime services (C)
-components/blusys_framework/  framework + widget kit (C++)
-```
+## Milestone Status
 
-**HAL** — `gpio`, `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave`, `adc`, `dac`, `sdm`,
-`pwm`, `mcpwm`, `timer`, `pcnt`, `rmt`, `rmt_rx`, `i2s`, `i2s_rx`, `twai`, `wdt`,
-`sleep`, `temp_sensor`, `touch`, `sdmmc`, `sd_spi`, `nvs`, `one_wire`, `efuse`, `ulp`,
-`usb_host`, `usb_device`, `system`, `error`, `target`, `version`
+- [ ] Phase 0: Freeze the v7 contract
+- [ ] Phase 1: Build `blusys::app` core
+- [ ] Phase 2: Build the view layer and widget contract
+- [ ] Phase 3: Build platform profiles
+- [ ] Phase 4: Build service bundles
+- [ ] Phase 5: Reset scaffold and CLI
+- [ ] Phase 6: Shrink docs, examples, metadata, and CI
+- [ ] Phase 7: Cut over to v7
 
-**Drivers** — Display: `lcd`, `led_strip`, `seven_seg` · Input: `button`, `encoder` ·
-Sensor: `dht` · Actuator: `buzzer`
+## Reference Product Families
 
-**Services** — `ui` (LVGL lifecycle + render task), `usb_hid`, `wifi`, `wifi_prov`,
-`wifi_mesh`, `espnow`, `bluetooth`, `ble_gatt`, `mdns`, `mqtt`, `http_client`,
-`http_server`, `ws_client`, `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`,
-`local_ctrl`
+The roadmap should continuously validate the v7 platform against these recurring families:
 
-**Framework** — Core spine: `router`, `intent`, `feedback`, `controller`, `runtime` ·
-Layout: `screen`, `row`, `col`, `label`, `divider` · Widget kit: `bu_button`,
-`bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay` · Theme: single `theme_tokens` struct
-populated at boot · Encoder helpers: `create_encoder_group`, `auto_focus_screen`
+- interactive consumer devices
+- interactive control surfaces
+- headless connected appliances and nodes
+- industrial telemetry and control products
 
-**Tooling** — `blusys create --starter <headless|interactive>` product scaffold ·
-`blusys host-build` PC + SDL2 harness (LVGL v9.2.2) · `blusys lint` layering gate ·
-`blusys qemu` QEMU smoke runner
+The first two canonical reference slices for implementation are:
 
-### Validation state
+- one host-first interactive product
+- one headless connected product
 
-All checks passing:
+## Workstreams
 
-| Check | Result |
-|---|---|
-| `blusys lint` | ✅ layering gate |
-| `blusys build-examples` (all 3 targets) | ✅ |
-| `blusys host-build` (Ubuntu 24.04) | ✅ `hello_lvgl` + `widget_kit_demo` + `pomodoro_host` |
-| `blusys qemu` headless scaffold (all 3 targets) | ✅ |
-| Real hardware — headless scaffold | ✅ esp32 + esp32c3 + esp32s3 |
-| Real hardware — interactive scaffold + ST7735 LCD | ✅ esp32c3 |
-| Real hardware — SSD1306 OLED + encoder (`oled_encoder_basic`) | ✅ esp32 |
-| `mkdocs build --strict` | ✅ |
+### Workstream A: App Core
 
-Full hardware validation record: `docs/validation-report-v6.md`.
+Scope:
 
-### Release notes
+- `blusys::app` namespace
+- reducer model
+- product operating model
+- runtime ownership
+- navigation ownership
+- effects model
+- host, device, and headless entrypoints
 
-**v6.1.0** — I2C sync mode fix (silent write failures on async mode), `blusys_ui` mono-
-page panel support for SSD1306-style OLEDs, `oled_encoder_basic` Pomodoro example,
-`pomodoro_host` SDL2 demo, host build scaffolding in `blusys create`.
+### Workstream B: View Layer
 
-**v6.0.0** — Initial V6: full three-tier architecture, V1 widget kit, product scaffold,
-host harness, QEMU validation, real-hardware validation on all three targets.
-Migration guide: `docs/migration-guide.md`.
+Scope:
 
----
+- stock widgets
+- bindings
+- design-system primitives
+- page helpers
+- overlays and navigation surfaces
+- custom widget contract
+- explicit custom LVGL view scope
 
-## What's Next — V1.1
+### Workstream C: Platform And Services
 
-Near-term items that don't block v6.1.0 but should land before V2.
+Scope:
 
-### ~~`widget_kit_demo` keyboard encoder simulation~~ ✅
+- host profile
+- headless profile
+- generic SPI ST7735 profile
+- connected-device bundle
+- storage bundle
+- shared operational flows
 
-Done. Arrow keys (Left/Right/Up/Down) map to encoder rotation, Space/Enter map to
-encoder press. An `lv_indev_t` of type `LV_INDEV_TYPE_ENCODER` drives LVGL focus
-traversal via `create_encoder_group` + `auto_focus_screen`, mirroring the on-device
-`framework_encoder_basic` pattern. Both mouse and keyboard input work simultaneously.
+Ownership note:
 
-### Deferred — hardware required
+- service bundles and shared operational flows are framework-owned product-path behavior built on top of `blusys_services`, not new responsibilities for the services tier
 
-The remaining V1.1 items all require physical hardware and are parked until a bench
-session is available.
+### Workstream D: Tooling And Scaffolding
 
-**End-to-end encoder + LCD rig** — Wire a physical EC11 encoder, ST7735 SPI panel, and
-the framework spine into one rig on esp32-s3 end-to-end (encoder-rotation →
-focus-traversal → confirm-press → overlay-show). Use the interactive scaffold
-`app_main.cpp` LCD init TODO block as the reference.
+Scope:
 
-**Scope-based input → feedback latency** — Wire `intent::confirm` to a debug GPIO
-toggle inside `controller::handle`. Tap that GPIO + the first `blusys_lcd_draw_bitmap`
-SPI CS edge with a Saleae or oscilloscope. Record median + p99 over a few hundred
-presses. Depends on the encoder+LCD rig above.
+- scaffold templates
+- `blusys create`
+- generated project shape
+- first-run experience
 
-**SSD1306 bus recovery** — A failed boot can leave SDA held low mid-transaction,
-locking the I2C bus for the next power cycle. Fix: before `i2c_new_master_bus`, if SDA
-reads low pulse SCL 9 times, issue a manual STOP condition, then release the GPIOs.
-Blocked on a deliberate stuck-state reproduction (~20-line change once reproducible).
+### Workstream E: Repo Surface
 
----
+Scope:
 
-## What's Planned — V2
+- docs structure
+- example taxonomy
+- reference-product coverage
+- metadata inventory
+- PR CI and nightly validation split
 
-Not yet scheduled. Captured to preserve the reasoning.
+## Phase Plan
 
-### `bu_knob` — Camp 3 rotary widget
+## Phase 0: Freeze the v7 contract
 
-A knob widget using `lv_obj_class_t` embedded storage (Camp 3) instead of the external
-slot pool (Camp 2). Deferred from V1 so the Camp 2 pattern could stabilize across five
-widgets before introducing a second implementation pattern.
+Goal:
 
-### Services → C++ migration
+Define the target before implementation so the refactor does not drift.
 
-`blusys_services` is C. Migrating it to C++ would enable captureless lambdas in service
-callbacks and align it with the framework tier. Deferred because the existing
-implementations are already clean and well-factored, and no concrete pain point has
-appeared that C cannot address. Should be driven by a real need, not cleanup.
+Deliverables:
 
-### Per-module build gating
+- v7 PRD
+- app model and reducer contract
+- product family archetypes and reference slices
+- shared operational flow inventory
+- design-system and interaction grammar scope
+- custom widget contract
+- support-tier classification for modules, docs, and examples
+- deprecation and removal list
+- success metrics and release criteria
 
-V1 gates the entire UI tier with a binary `BLUSYS_STARTER_TYPE` flag. V2 could
-introduce per-module flags (`BLUSYS_MODULE_WIFI`, `BLUSYS_MODULE_BLE`, etc.) so
-products can strip unused services. Worth revisiting once there are three or more
-products with different module subsets.
+Exit Criteria:
 
-### Latency tooling
+- `PRD.md` exists
+- the product contract is written down and stable enough to implement against
+- the team can point to one source of truth for the refactor
 
-Formalize the input → feedback latency measurement methodology — GPIO-toggle + scope
-integration as a standard validation step, with a template report and expected
-thresholds. Currently measured ad-hoc.
+## Phase 1: Build `blusys::app` core
 
-### LVGL version track
+Goal:
 
-LVGL v9.2.2 is pinned in `scripts/host/CMakeLists.txt` and each interactive example's
-`idf_component.yml`. Review when v9.3+ or v10.x stabilize. Risk areas: `lv_arc`,
-`lv_switch`, and the `LV_EVENT_*` set the widget kit directly uses.
+Create the new product-facing app runtime on top of the existing framework substrate.
+
+Deliverables:
+
+- `blusys::app` namespace skeleton
+- `app_spec`
+- `app_ctx`
+- reducer-driven dispatch loop
+- app-level operating model for both interactive and headless products
+- internal navigation ownership
+- internal feedback ownership
+- entry macros for host, device, and headless
+- default theme presets
+
+Dependencies:
+
+- Phase 0 complete
+
+Exit Criteria:
+
+- one interactive demo runs with no app-owned runtime plumbing
+- one headless demo runs with the same reducer model
+- normal app code no longer constructs low-level framework runtime objects directly
+- both demos clearly map to the intended product families rather than generic examples
+
+## Phase 2: Build the view layer and widget contract
+
+Goal:
+
+Make common product UI simple while preserving bounded LVGL freedom.
+
+Deliverables:
+
+- action-bound stock widgets
+- simple bindings for text, value, enabled, and visible state
+- reusable design-system primitives
+- page and screen helpers
+- built-in overlay and route helpers
+- custom widget contract
+- explicit custom LVGL view blocks
+
+Dependencies:
+
+- Phase 1 complete
+
+Exit Criteria:
+
+- canonical interactive app avoids raw widget handles for common flows
+- custom product widgets have a formal extension pattern
+- raw LVGL remains bounded to approved scopes
+- the view layer is suitable for both expressive consumer UI and clear industrial UI
+
+## Phase 3: Build platform profiles
+
+Goal:
+
+Make the new app model runnable on host, headless, and the first canonical interactive device path.
+
+Deliverables:
+
+- host default profile
+- headless default profile
+- generic SPI ST7735 profile
+- framework-owned display and UI bring-up for the canonical path
+- framework-owned common input bridge
+- first product-family-aligned runtime slices on real targets
+
+Dependencies:
+
+- Phase 1 complete
+- Phase 2 complete enough to support the canonical interactive example
+
+Exit Criteria:
+
+- host-first interactive quickstart runs immediately
+- headless quickstart is first-class
+- ST7735 profile builds on ESP32, ESP32-C3, and ESP32-S3
+- at least one target has real hardware validation for the canonical ST7735 path
+- the platform proves the same app model works for both interactive and headless families
+
+Support note:
+
+- milestone support for the ST7735 profile means compile support on all three targets
+- release-ready support additionally requires staged real-hardware validation beyond the first validated target
+
+## Phase 4: Build service bundles
+
+Goal:
+
+Remove low-level service orchestration from common product apps.
+
+Deliverables:
+
+- connected-device bundle over Wi-Fi with optional local control, mDNS, and SNTP
+- unified storage bundle over the current storage surfaces
+- clear advanced-only positioning for raw services in the docs and examples
+- common diagnostics and control hooks for connected products
+
+Dependencies:
+
+- Phase 1 complete
+
+Exit Criteria:
+
+- canonical connected examples use bundles rather than raw service orchestration
+- headless and interactive app paths can use services through app effects and bundles
+- common connected product flows are shared across consumer and industrial examples
+
+## Phase 5: Reset scaffold and CLI
+
+Goal:
+
+Make the new app model the first and most obvious user path.
+
+Deliverables:
+
+- scaffold templates extracted from the monolithic CLI script
+- new generated project shape aligned with `blusys::app`
+- runnable host-first interactive scaffold
+- runnable headless scaffold
+- simplified CLI surface for product creation
+- scaffold outputs that map onto known product-family reference slices
+
+Dependencies:
+
+- Phases 1 through 3 complete enough to scaffold against
+
+Exit Criteria:
+
+- `blusys create` generates the new app model by default
+- generated projects clearly separate framework glue from app-owned code
+- getting-started can be rewritten around the new scaffold without caveats
+- users can identify which quickstart matches their product family quickly
+
+## Phase 6: Shrink docs, examples, metadata, and CI
+
+Goal:
+
+Reduce repo sprawl and validation cost once the new product path is real.
+
+Deliverables:
+
+- docs reorganized into `Start`, `App`, `Services`, `HAL + Drivers`, `Internals`, `Archive`
+- examples reorganized into `quickstart`, `reference`, `validation`
+- curated public example set
+- reference products and family-oriented docs replacing generic sprawl where possible
+- metadata-driven support and inventory checks
+- PR CI narrowed to curated core builds and docs checks
+- broader validation moved to nightly or release jobs
+
+Dependencies:
+
+- the new app path is stable enough to document and validate as canonical
+
+Exit Criteria:
+
+- public docs are scan-fast and consistent
+- public example list is curated rather than exhaustive
+- PR CI is materially smaller and faster than the current full example matrix
+- docs and examples describe product families and common flows, not only module catalogs
+
+## Phase 7: Cut over to v7
+
+Goal:
+
+Complete the reset and avoid carrying two product stories.
+
+Deliverables:
+
+- canonical quickstarts migrated to `blusys::app`
+- old public app path archived or clearly demoted
+- short `v6 -> v7` migration guide
+- final cleanup of overlapping examples and stale docs
+- the product-family operating-system mindset is reflected across the repo surface
+
+Dependencies:
+
+- prior phases complete
+
+Exit Criteria:
+
+- `blusys::app` is the only recommended product-facing API
+- the old product path no longer appears as a peer path in onboarding materials
+
+## First Milestone
+
+The first implementation milestone combines the minimum work needed to make the reset real.
+
+Scope:
+
+- finish Phase 0
+- complete the first cut of Phase 1
+- produce one canonical interactive quickstart
+- produce one canonical headless quickstart
+- establish compile support for the generic SPI ST7735 profile on all three targets
+- rewrite getting-started around the new path
+- validate the milestone against the first two reference product families
+
+Success Criteria:
+
+- the new app model exists in code
+- both canonical quickstarts run through the new reducer-driven framework path
+- no scaffolded app-owned low-level runtime wiring remains in the new quickstarts
+- the quickstarts already feel like the foundation of a product operating system, not just framework demos
+
+## Tracking Checklist
+
+### Product Strategy
+
+- [ ] Define canonical product families
+- [ ] Define first reference product slices
+- [ ] Define shared interaction grammar
+- [ ] Define shared operational flows
+- [ ] Define design-system scope for v7
+
+### App Core
+
+- [ ] Define `app_spec`
+- [ ] Define `app_ctx`
+- [ ] Define reducer dispatch lifecycle
+- [ ] Add host entry macro
+- [ ] Add device entry macro
+- [ ] Add headless entry macro
+- [ ] Move route ownership inside the app runtime
+- [ ] Move feedback ownership inside the app runtime
+
+### View Layer
+
+- [ ] Add action-bound button API
+- [ ] Add simple value and text binding helpers
+- [ ] Define reusable feedback primitives
+- [ ] Add page helpers
+- [ ] Add overlay helper path
+- [ ] Define custom widget contract
+- [ ] Define explicit custom LVGL scope
+
+### Platform Profiles
+
+- [ ] Add host default profile
+- [ ] Add headless default profile
+- [ ] Add generic SPI ST7735 profile
+- [ ] Confirm ESP32 compile support
+- [ ] Confirm ESP32-C3 compile support
+- [ ] Confirm ESP32-S3 compile support
+- [ ] Complete first hardware smoke on ST7735 profile
+
+### Services
+
+- [ ] Define connected-device bundle API
+- [ ] Define storage bundle API
+- [ ] Map bundles onto existing services
+- [ ] Define diagnostics and local-control hooks for shared product flows
+
+### Tooling
+
+- [ ] Extract scaffold templates from `blusys`
+- [ ] Create new interactive scaffold
+- [ ] Create new headless scaffold
+- [ ] Update CLI create flow
+
+### Repo Cleanup
+
+- [ ] Define new docs IA
+- [ ] Define new example taxonomy
+- [ ] Add metadata inventory source
+- [ ] Add docs build gate to CI
+- [ ] Reduce PR build matrix
+
+## Success Metrics
+
+- interactive scaffold runs on host immediately
+- headless scaffold is similarly minimal
+- canonical product code avoids `runtime.init`, `route_sink`, `feedback_sink`, `blusys_ui_lock`, and `lv_screen_load`
+- public examples are reduced to a curated set
+- PR CI becomes materially smaller and faster
+- docs are fast to scan from `App` to `Services` to `HAL + Drivers` to `Internals`
+- new products can map onto a known product family and shared flow model quickly
+
+## Guardrails
+
+- do not collapse the three-tier architecture
+- do not add a heavy compatibility layer for the old product path
+- do not allow direct service calls from UI code in the new model
+- do not let raw LVGL escape outside approved custom scopes
+- do not keep old and new public app models alive in parallel longer than necessary

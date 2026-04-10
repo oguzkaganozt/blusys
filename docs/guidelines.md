@@ -6,7 +6,8 @@ Start by reading the [Architecture](architecture.md) page.
 
 ### Core Rules
 
-- all public symbols use the `blusys_` prefix
+- public C APIs in HAL, drivers, and services use the `blusys_` prefix
+- product-facing C++ APIs may use the `blusys::...` namespace hierarchy
 - HAL, drivers, and services expose C headers and must not expose ESP-IDF types
 - names should be direct and readable
 - keep the common path short and easy to call
@@ -65,18 +66,18 @@ See [Architecture](architecture.md) for the tier model.
 ### Stability Rules
 
 - do not expose target-specific behavior unless all supported targets share it
-- do not add public API before examples and docs exist
-- prefer additive evolution over breaking redesign
+- do not add or recommend public API without proportionate examples, docs, and validation
+- during the v7 refactor, prefer the new canonical product path over preserving additive continuity with the old one
 
 ## Development Workflow
 
-1. confirm the scope
-2. define the public API shape
-3. define lifecycle and thread-safety rules
-4. implement the module
-5. add the example
-6. add the task guide and module reference
-7. validate all supported targets
+1. confirm the scope against `PRD.md` and `ROADMAP.md`
+2. define whether the work belongs to the canonical product path, an advanced path, or validation-only infrastructure
+3. define the public API shape and ownership boundary
+4. define lifecycle and thread-safety rules
+5. implement the smallest change that moves the repo toward the v7 target
+6. add or update only the docs, examples, and validation required for that support tier
+7. validate the affected paths proportionally
 
 ### Change Rules
 
@@ -84,25 +85,28 @@ See [Architecture](architecture.md) for the tier model.
 - keep the public surface smaller than the backend surface
 - avoid target-specific public APIs unless there is a clear need
 - keep target differences internal
-- prefer small additive changes over broad redesigns
+- during the v7 refactor, prefer deliberate simplification over preserving broad additive surface area
 
 ### Release Rules
 
 - no undocumented public API
-- no exampleless public module
-- no module considered done without validation on all supported targets
+- no unsupported recommended-path API
+- no release cut without validation appropriate to the API's support tier
 
 ## Module Done Criteria
 
-A public module is done when it has:
+A public surface is done when it has support artifacts appropriate to its support tier.
+
+Canonical product-path features should generally have:
 
 - public API
 - implementation
-- example
-- task guide
-- module reference page
-- successful builds on all supported targets
-- at least one real-board validation pass
+- at least one canonical example or quickstart path
+- user-facing documentation
+- successful builds on the supported targets for that path
+- validation appropriate to its release role
+
+Advanced or validation-only surfaces may require a different mix of examples, docs, and validation depending on their role in the repo.
 
 ## Testing Strategy
 
@@ -156,5 +160,6 @@ A public module is done when it has:
 
 ## Project Tracking
 
-- release state and roadmap: `../ROADMAP.md`
+- v7 product requirements: `../PRD.md`
+- v7 roadmap: `../ROADMAP.md`
 - repository guidance for agents: `../CLAUDE.md`
