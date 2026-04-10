@@ -21,6 +21,7 @@
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/app/view/screen_router.hpp"
+#include "blusys/app/view/shell.hpp"
 #endif
 
 namespace blusys::app {
@@ -45,6 +46,11 @@ protected:
     static void bind_screen_router(app_ctx &ctx, view::screen_router *router)
     {
         ctx.screen_router_ = router;
+    }
+
+    static void bind_shell(app_ctx &ctx, view::shell *shell)
+    {
+        ctx.shell_ = shell;
     }
 #endif
 
@@ -144,6 +150,33 @@ public:
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
         bind_screen_router(ctx_, &screen_router_);
         screen_router_.bind_ctx(&ctx_);
+
+        // Create and load the interaction shell if configured.
+        if (spec_.shell != nullptr) {
+            shell_ = view::shell_create(*spec_.shell);
+            shell_.ctx = &ctx_;
+            bind_shell(ctx_, &shell_);
+            view::shell_load(shell_);
+
+            // Tell the screen_registry to swap content inside the shell's
+            // content area instead of loading standalone screens.
+            screen_router_.bind_shell(shell_.content_area);
+
+            // Auto-update header on every screen change.
+            screen_router_.set_screen_changed_callback(
+                [](lv_obj_t * /*screen*/, void *user_ctx) {
+                    auto *s = static_cast<view::shell *>(user_ctx);
+                    if (s == nullptr || s->ctx == nullptr) {
+                        return;
+                    }
+                    auto *router = s->ctx->screen_router();
+                    if (router == nullptr) {
+                        return;
+                    }
+                    view::shell_set_back_visible(*s, router->stack_depth() > 1);
+                },
+                &shell_);
+        }
 #endif
 
         start_capabilities();
@@ -326,6 +359,7 @@ private:
     detail::default_feedback_sink                        default_feedback_sink_{};
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     view::screen_router                                  screen_router_{};
+    view::shell                                          shell_{};
 #else
     detail::default_route_sink                           default_route_sink_{};
 #endif

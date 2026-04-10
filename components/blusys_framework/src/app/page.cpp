@@ -31,6 +31,30 @@ page page_create(const page_config &config)
     };
 }
 
+page page_create_in(lv_obj_t *parent, const page_config &config)
+{
+    const int pad = (config.padding >= 0) ? config.padding : blusys::ui::theme().spacing_lg;
+    const int gap = (config.gap >= 0) ? config.gap : blusys::ui::theme().spacing_md;
+
+    lv_obj_t *content = blusys::ui::col_create(parent, {
+        .gap     = gap,
+        .padding = pad,
+    });
+    lv_obj_set_size(content, LV_PCT(100), LV_PCT(100));
+
+    if (config.scrollable) {
+        lv_obj_add_flag(content, LV_OBJ_FLAG_SCROLLABLE);
+    }
+
+    lv_group_t *group = blusys::ui::create_encoder_group();
+
+    return {
+        .screen  = parent,
+        .content = content,
+        .group   = group,
+    };
+}
+
 void page_load(page &p)
 {
     blusys::ui::auto_focus_screen(p.screen, p.group);

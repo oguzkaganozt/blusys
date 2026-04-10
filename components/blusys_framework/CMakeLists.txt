@@ -13,6 +13,7 @@ if(ESP_PLATFORM)
     list(APPEND blusys_framework_sources
         src/app/capabilities/connectivity.cpp
         src/app/capabilities/storage.cpp
+        src/app/button_array_bridge.cpp
     )
 endif()
 
@@ -43,6 +44,10 @@ if(BLUSYS_BUILD_UI)
             src/ui/widgets/overlay/overlay.cpp
             src/ui/widgets/slider/slider.cpp
             src/ui/widgets/toggle/toggle.cpp
+            src/app/shell.cpp
+            src/app/touch_bridge.cpp
+            src/ui/transition.cpp
+            src/ui/input/focus_scope.cpp
         )
     else()
         message(FATAL_ERROR "BLUSYS_BUILD_UI=ON requires the lvgl/lvgl managed component")

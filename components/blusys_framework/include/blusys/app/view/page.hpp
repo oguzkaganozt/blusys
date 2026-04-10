@@ -22,6 +22,11 @@ struct page {
 // Does NOT load the screen — call page_load() when ready.
 page page_create(const page_config &config = {});
 
+// Create a page inside an existing parent (e.g., a shell content area).
+// The page does NOT own its own screen — it lives inside the parent.
+// The returned page.screen points to the parent for compatibility.
+page page_create_in(lv_obj_t *parent, const page_config &config = {});
+
 // Load the page: calls lv_screen_load and wires encoder focus.
 void page_load(page &p);
 

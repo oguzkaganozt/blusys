@@ -16,15 +16,34 @@
 #include "blusys/drivers/display/lcd.h"
 #include "blusys/display/ui.h"
 #include "blusys/drivers/input/encoder.h"
+#include "blusys/drivers/input/button.h"
+#include "blusys/framework/core/intent.hpp"
+
+#include <cstddef>
 
 namespace blusys::app {
+
+static constexpr std::size_t kMaxProfileButtons = 8;
+
+// Mapping from a hardware button to framework intents.
+struct profile_button_mapping {
+    blusys_button_config_t      button_config;
+    blusys::framework::intent   on_press      = blusys::framework::intent::confirm;
+    blusys::framework::intent   on_long_press = blusys::framework::intent::cancel;
+};
 
 struct device_profile {
     blusys_lcd_config_t       lcd;           // LCD hardware config
     blusys_ui_config_t        ui;            // UI service config (ui.lcd filled at runtime)
     blusys_encoder_config_t   encoder;       // encoder config (ignored if has_encoder == false)
     bool                      has_encoder = false;
+    bool                      has_touch   = false;
     int                       brightness  = 100; // initial backlight 0-100
+
+    // Button array (ignored if button_count == 0).
+    // Points to a product-owned array that must outlive the profile.
+    const profile_button_mapping *buttons      = nullptr;
+    std::size_t                   button_count = 0;
 };
 
 }  // namespace blusys::app

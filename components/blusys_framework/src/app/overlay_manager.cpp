@@ -24,6 +24,9 @@ void overlay_manager::submit(const blusys::framework::route_command &command)
         lv_obj_t *w = find(command.id);
         if (w != nullptr) {
             blusys::ui::overlay_show(w);
+            if (focus_scope_ != nullptr) {
+                focus_scope_->push_scope(w);
+            }
         } else {
             BLUSYS_LOGW(kTag, "show_overlay: unknown id=%lu",
                         static_cast<unsigned long>(command.id));
@@ -34,6 +37,9 @@ void overlay_manager::submit(const blusys::framework::route_command &command)
         lv_obj_t *w = find(command.id);
         if (w != nullptr) {
             blusys::ui::overlay_hide(w);
+            if (focus_scope_ != nullptr) {
+                focus_scope_->pop_scope();
+            }
         } else {
             BLUSYS_LOGW(kTag, "hide_overlay: unknown id=%lu",
                         static_cast<unsigned long>(command.id));

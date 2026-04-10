@@ -32,6 +32,14 @@ bool screen_router::register_screen(std::uint32_t    route_id,
     return screens_.register_screen(route_id, create_fn, destroy_fn);
 }
 
+bool screen_router::register_screen(std::uint32_t         route_id,
+                                     screen_create_fn       create_fn,
+                                     screen_destroy_fn      destroy_fn,
+                                     const screen_lifecycle &lifecycle)
+{
+    return screens_.register_screen(route_id, create_fn, destroy_fn, lifecycle);
+}
+
 void screen_router::set_screen_changed_callback(void (*fn)(lv_obj_t *screen, void *user_ctx),
                                                  void *user_ctx)
 {

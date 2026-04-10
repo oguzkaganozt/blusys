@@ -15,5 +15,6 @@
 #include "blusys/app/view/page.hpp"
 #include "blusys/app/view/screen_registry.hpp"
 #include "blusys/app/view/screen_router.hpp"
+#include "blusys/app/view/shell.hpp"
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI

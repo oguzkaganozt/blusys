@@ -20,6 +20,7 @@
 //   BLUSYS_APP_MAIN_DEVICE(spec, profile) — device target with LCD + optional encoder
 
 #include "blusys/app/app_runtime.hpp"
+#include "blusys/framework/core/runtime.hpp"
 #include "blusys/log.h"
 
 // Device-specific headers — only available in the IDF component build
@@ -27,6 +28,7 @@
 #if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM)
 #include "blusys/app/platform_profile.hpp"
 #include "blusys/app/input_bridge.hpp"
+#include "blusys/app/button_array_bridge.hpp"
 #endif
 
 #include <cstdint>
@@ -42,6 +44,7 @@ namespace blusys_app_platform {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 // Host platform (SDL2)
 void host_init(int w, int h, const char *title);
+void host_set_runtime(blusys::framework::runtime *rt);
 std::uint32_t host_get_ticks_ms();
 void host_tick_inc(std::uint32_t ms);
 std::uint32_t host_frame_step();
@@ -119,6 +122,11 @@ void run_host(const app_spec<State, Action> &spec,
         BLUSYS_LOGE("blusys_app", "app runtime init failed: %d", static_cast<int>(err));
         return;
     }
+
+    // Bind framework runtime to host encoder so it posts intents
+    // (increment, decrement, confirm, long_press, release) matching
+    // the device input_bridge behavior.
+    blusys_app_platform::host_set_runtime(&runtime.framework_runtime());
 
     BLUSYS_LOGI("blusys_app", "app running");
 
@@ -201,6 +209,27 @@ void run_device(const app_spec<State, Action> &spec,
         }
     }
 
+    // Button array bridge (optional — only if profile declares buttons).
+    button_array_bridge btn_bridge{};
+    if (profile.button_count > 0 && profile.buttons != nullptr) {
+        button_array_config btn_cfg{};
+        btn_cfg.count = profile.button_count;
+        btn_cfg.framework_runtime = &runtime.framework_runtime();
+        for (std::size_t i = 0; i < profile.button_count && i < kMaxButtons; ++i) {
+            btn_cfg.buttons[i] = {
+                .button_config = profile.buttons[i].button_config,
+                .on_press      = profile.buttons[i].on_press,
+                .on_long_press = profile.buttons[i].on_long_press,
+            };
+        }
+        const blusys_err_t btn_err = button_array_open(btn_cfg, &btn_bridge);
+        if (btn_err != BLUSYS_OK) {
+            BLUSYS_LOGW("blusys_app",
+                        "button array open failed: %d — continuing without buttons",
+                        static_cast<int>(btn_err));
+        }
+    }
+
     BLUSYS_LOGI("blusys_app", "app running on device");
 
     while (true) {
@@ -212,6 +241,9 @@ void run_device(const app_spec<State, Action> &spec,
     }
 
     // Unreachable in normal operation.
+    if (btn_bridge.count > 0) {
+        button_array_close(&btn_bridge);
+    }
     if (profile.has_encoder) {
         input_bridge_close(&bridge);
     }

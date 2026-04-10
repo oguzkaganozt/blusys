@@ -4,6 +4,7 @@
 
 #include "blusys/framework/core/containers.hpp"
 #include "blusys/framework/core/router.hpp"
+#include "blusys/framework/ui/input/focus_scope.hpp"
 #include "blusys/framework/ui/widgets/overlay/overlay.hpp"
 
 #include <cstdint>
@@ -24,6 +25,9 @@ public:
 
     bool register_overlay(std::uint32_t id, lv_obj_t *overlay);
 
+    // Bind a focus scope manager for focus trapping on overlay show/hide.
+    void bind_focus_scope(blusys::ui::focus_scope_manager *fsm) { focus_scope_ = fsm; }
+
     void submit(const blusys::framework::route_command &command) override;
 
 private:
@@ -35,6 +39,7 @@ private:
     lv_obj_t *find(std::uint32_t id) const;
 
     blusys::static_vector<entry, kMaxOverlays> overlays_{};
+    blusys::ui::focus_scope_manager           *focus_scope_ = nullptr;
 };
 
 // Convenience: create an overlay widget and register it with the manager.

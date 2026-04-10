@@ -9,6 +9,7 @@
 namespace blusys::app::view {
 class overlay_manager;
 class screen_router;
+struct shell;
 }
 #endif
 
@@ -63,6 +64,9 @@ public:
 
     // ---- overlay manager access (delegates to the screen_router's overlay_manager) ----
     [[nodiscard]] view::overlay_manager *overlay_manager() const;
+
+    // ---- interaction shell access (nullptr if no shell configured) ----
+    [[nodiscard]] view::shell *shell() const { return shell_; }
 #endif
 
     // ---- bundle status queries ----
@@ -88,6 +92,7 @@ private:
     void                           *runtime_ptr_   = nullptr;
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     view::screen_router            *screen_router_ = nullptr;
+    view::shell                    *shell_          = nullptr;
 #endif
     connectivity_capability        *connectivity_   = nullptr;
     storage_capability             *storage_        = nullptr;

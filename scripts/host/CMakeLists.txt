@@ -144,6 +144,10 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/overlay/overlay.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/slider/slider.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/toggle/toggle.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/shell.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/touch_bridge.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/transition.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/input/focus_scope.cpp
 )
 
 add_library(blusys_framework_host STATIC ${blusys_framework_host_sources})

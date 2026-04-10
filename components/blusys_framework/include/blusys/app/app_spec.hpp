@@ -10,6 +10,8 @@
 #include "blusys/framework/ui/theme.hpp"
 #endif
 
+namespace blusys::app::view { struct shell_config; }
+
 namespace blusys::app {
 
 struct capability_list;  // forward declaration — include capability_list.hpp to use
@@ -55,6 +57,13 @@ struct app_spec {
     // nullptr = use default expressive_dark preset.
     // Prefer setting identity->theme instead of this field.
     const blusys::ui::theme_tokens *theme = nullptr;
+
+    // ---- interaction shell (interactive path only) ----
+    // When non-null, the framework creates a persistent shell with
+    // header, status bar, and/or tab bar. Screen content is swapped
+    // inside the shell's content area on navigation. nullptr = no
+    // shell, screens are standalone (current default behavior).
+    const view::shell_config *shell = nullptr;
 #endif
 };
 
