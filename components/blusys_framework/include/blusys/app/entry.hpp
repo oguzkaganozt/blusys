@@ -69,6 +69,23 @@ void headless_delay(std::uint32_t ms);
 
 }  // namespace blusys_app_platform
 
+// ---- host profile ----
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+
+namespace blusys::app {
+
+// Passed to BLUSYS_APP_MAIN_HOST_PROFILE to control the SDL2 window.
+struct host_profile {
+    int         hor_res = 480;
+    int         ver_res = 320;
+    const char *title   = "Blusys App";
+};
+
+}  // namespace blusys::app
+
+#endif  // BLUSYS_FRAMEWORK_HAS_UI
+
 namespace blusys::app::detail {
 
 // ---- host interactive entry (SDL2 + LVGL) ----
@@ -157,6 +174,16 @@ void run_device(const app_spec<State, Action> &spec,
                         "input bridge open failed: %d — continuing without encoder",
                         static_cast<int>(bridge_err));
             profile.has_encoder = false;
+        } else {
+            // Wire focus re-attachment: after each screen transition the
+            // screen_router calls input_bridge_attach_screen to rebuild
+            // the focus group from the new screen's widget tree.
+            runtime.screen_router().set_screen_changed_callback(
+                [](lv_obj_t *screen, void *ctx) {
+                    input_bridge_attach_screen(
+                        static_cast<input_bridge *>(ctx), screen);
+                },
+                &bridge);
         }
     }
 
@@ -218,6 +245,20 @@ void run_headless(const app_spec<State, Action> &spec)
     int main(void) {                                                        \
         auto _blusys_spec = (spec_expr);                                    \
         ::blusys::app::detail::run_host(_blusys_spec);                      \
+        return 0;                                                           \
+    }
+
+// Like BLUSYS_APP_MAIN_HOST but reads window size and title from a
+// blusys::app::host_profile struct. Useful for product archetypes that
+// have a fixed display size (e.g. 128×32 OLED, 320×240 TFT).
+#define BLUSYS_APP_MAIN_HOST_PROFILE(spec_expr, profile_expr)               \
+    int main(void) {                                                        \
+        auto _blusys_spec    = (spec_expr);                                 \
+        auto _blusys_profile = (profile_expr);                              \
+        ::blusys::app::detail::run_host(_blusys_spec,                       \
+                                        _blusys_profile.hor_res,            \
+                                        _blusys_profile.ver_res,            \
+                                        _blusys_profile.title);             \
         return 0;                                                           \
     }
 

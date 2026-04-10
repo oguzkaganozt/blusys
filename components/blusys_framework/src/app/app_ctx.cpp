@@ -1,6 +1,10 @@
 #include "blusys/app/app_ctx.hpp"
-#include "blusys/app/bundles/connectivity.hpp"
-#include "blusys/app/bundles/storage.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
+#include "blusys/app/capabilities/storage.hpp"
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+#include "blusys/app/view/screen_router.hpp"
+#endif
 
 namespace blusys::app {
 
@@ -64,7 +68,19 @@ void app_ctx::emit_feedback(blusys::framework::feedback_channel channel,
     }
 }
 
-// ---- bundle queries ----
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+
+blusys::app::view::overlay_manager *blusys::app::app_ctx::overlay_manager() const
+{
+    if (screen_router_ != nullptr) {
+        return &screen_router_->overlays();
+    }
+    return nullptr;
+}
+
+#endif  // BLUSYS_FRAMEWORK_HAS_UI
+
+// ---- capability queries ----
 
 const connectivity_status *app_ctx::connectivity() const
 {

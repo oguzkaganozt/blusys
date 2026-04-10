@@ -433,7 +433,7 @@ modules:
     support: supported
     targets: [esp32, esp32c3, esp32s3]
     doc: docs/app/index.md
-    examples: [framework_app_basic, framework_ui_basic, framework_device_basic, framework_encoder_basic]
+    examples: [framework_device_basic, framework_encoder_basic, connected_device, connected_headless]
 
 # ---------------------------------------------------------------------------
 # Examples
@@ -457,19 +457,19 @@ examples:
     ci_nightly: true
 
   - name: framework_app_basic
-    category: quickstart
+    category: reference
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
-    ci_pr: true
+    ci_pr: false
     ci_nightly: true
 
   - name: framework_ui_basic
-    category: quickstart
+    category: reference
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
-    ci_pr: true
+    ci_pr: false
     ci_nightly: true
 
   - name: framework_device_basic
@@ -1080,7 +1080,7 @@ docs:
     section: app
     visibility: public
 
-  - path: docs/app/service-bundles.md
+  - path: docs/app/capabilities.md
     section: app
     visibility: public
 

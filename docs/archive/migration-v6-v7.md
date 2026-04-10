@@ -27,8 +27,8 @@ a v7 `blusys::app` project ready to run.
 | `blusys_ui_lock()` / `blusys_ui_unlock()` | handled by the app runtime |
 | `lv_screen_load()` | handled by the app runtime |
 | manual `blusys_lcd_open()` + `blusys_ui_open()` | `BLUSYS_APP_MAIN_DEVICE(spec, profile)` with a platform profile |
-| manual Wi-Fi connect + SNTP + mDNS orchestration | `connectivity_bundle` with config struct |
-| manual SPIFFS / FAT mount | `storage_bundle` with config struct |
+| manual Wi-Fi connect + SNTP + mDNS orchestration | `connectivity_capability` with config struct |
+| manual SPIFFS / FAT mount | `storage_capability` with config struct |
 | `#include "blusys/framework/framework.hpp"` | `#include "blusys/app/app.hpp"` |
 | global mutable state + widget pointers | `State` struct owned by the runtime, mutated in `update()` |
 
@@ -177,14 +177,14 @@ Available profiles: `st7735.hpp`, `host.hpp`, `headless.hpp`.
 
 V6 headless products typically wired services manually (Wi-Fi connect,
 SNTP sync, SPIFFS mount) inside `app_main()`. V7 replaces this with
-service bundles and the same reducer model.
+capabilities and the same reducer model.
 
 ### Step 1. Define state and actions
 
 ```cpp
 #include "blusys/app/app.hpp"
-#include "blusys/app/bundles/connectivity.hpp"
-#include "blusys/app/bundles/storage.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
+#include "blusys/app/capabilities/storage.hpp"
 
 struct State {
     bool connected   = false;
@@ -211,7 +211,7 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
 }
 ```
 
-### Step 3. Replace manual service orchestration with bundles
+### Step 3. Replace manual service orchestration with capabilities
 
 **V6** — manual wiring:
 
@@ -227,33 +227,33 @@ extern "C" void app_main(void)
 }
 ```
 
-**V7** — bundle config + entry macro:
+**V7** — capability config + entry macro:
 
 ```cpp
-static blusys::app::connectivity_bundle conn{{
+static blusys::app::connectivity_capability conn{blusys::app::connectivity_config{
     .wifi_ssid     = "my_ssid",
     .wifi_password = "my_pass",
     .sntp_server   = "pool.ntp.org",
     .mdns_hostname = "my-device",
 }};
 
-static blusys::app::storage_bundle stor{{
+static blusys::app::storage_capability stor{blusys::app::storage_config{
     .spiffs_base_path = "/fs",
 }};
 
-static blusys::app::bundle_list bundles{&conn, &stor};
+static blusys::app::capability_list capabilities{&conn, &stor};
 
 static auto spec = blusys::app::app_spec<State, Action>{
     .initial_state = {},
     .update        = update,
-    .map_event     = map_event,   // bridge bundle events → app actions
-    .bundles       = &bundles,
+    .map_event     = map_event,   // bridge capability events → app actions
+    .capabilities  = &capabilities,
 };
 
 BLUSYS_APP_MAIN_HEADLESS(spec)
 ```
 
-### Step 4. Bridge bundle events to app actions
+### Step 4. Bridge capability events to app actions
 
 ```cpp
 bool map_event(std::uint32_t id, std::uint32_t, const void *, Action *out)
@@ -278,7 +278,7 @@ However, the recommended path for new development is `blusys::app`, even
 for simple products. The benefits:
 
 - structured state management through the reducer model
-- service bundles instead of manual orchestration
+- capabilities instead of manual orchestration
 - consistent product operating model across your product family
 
 To adopt `blusys::app` incrementally:
@@ -287,7 +287,7 @@ To adopt `blusys::app` incrementally:
 2. Add `blusys_framework` to your `REQUIRES`.
 3. Define a minimal `State`, `Action`, `update()`, and `app_spec`.
 4. Wrap your entry in `BLUSYS_APP_MAIN_HEADLESS(spec)`.
-5. Move service init code into bundle configs or `on_init`.
+5. Move service init code into capability configs or `on_init`.
 
 ## Version pinning
 
@@ -348,6 +348,6 @@ custom widget implementations and explicit `lvgl_scope` blocks.
 - [App](../app/index.md) — the v7 product-facing API documentation
 - [Reducer Model](../app/reducer-model.md) — state, actions, and `update()`
 - [Views & Widgets](../app/views-and-widgets.md) — stock widgets and bindings
-- [Service Bundles](../app/service-bundles.md) — connectivity and storage bundles
+- [Capabilities](../app/capabilities.md) — connectivity and storage capabilities
 - [Profiles](../app/profiles.md) — host, headless, and device platform profiles
 - [V5 to V6 Migration](migration-v5-v6.md) — previous migration guide

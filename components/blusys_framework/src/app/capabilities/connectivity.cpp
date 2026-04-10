@@ -1,6 +1,6 @@
 #ifdef ESP_PLATFORM
 
-#include "blusys/app/bundles/connectivity.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/framework/core/intent.hpp"
 #include "blusys/framework/core/runtime.hpp"
 #include "blusys/log.h"
@@ -11,12 +11,12 @@ static const char *TAG = "blusys_conn";
 
 namespace blusys::app {
 
-connectivity_bundle::connectivity_bundle(const connectivity_config &cfg)
+connectivity_capability::connectivity_capability(const connectivity_config &cfg)
     : cfg_(cfg)
 {
 }
 
-blusys_err_t connectivity_bundle::start(blusys::framework::runtime &rt)
+blusys_err_t connectivity_capability::start(blusys::framework::runtime &rt)
 {
     rt_ = &rt;
 
@@ -55,7 +55,7 @@ blusys_err_t connectivity_bundle::start(blusys::framework::runtime &rt)
     err = blusys_wifi_connect(wifi_, cfg_.connect_timeout_ms);
     if (err != BLUSYS_OK) {
         BLUSYS_LOGE(TAG, "wifi connect failed: %d", static_cast<int>(err));
-        // Non-fatal if auto_reconnect is enabled — the bundle will retry.
+        // Non-fatal if auto_reconnect is enabled — the capability will retry.
         if (!cfg_.auto_reconnect) {
             blusys_wifi_close(wifi_);
             wifi_ = nullptr;
@@ -66,7 +66,7 @@ blusys_err_t connectivity_bundle::start(blusys::framework::runtime &rt)
     return BLUSYS_OK;
 }
 
-void connectivity_bundle::poll(std::uint32_t /*now_ms*/)
+void connectivity_capability::poll(std::uint32_t /*now_ms*/)
 {
     const std::uint32_t flags =
         pending_flags_.exchange(kPendingNone, std::memory_order_acquire);
@@ -99,11 +99,11 @@ void connectivity_bundle::poll(std::uint32_t /*now_ms*/)
             start_dependent_services();
         }
 
-        check_bundle_ready();
+        check_capability_ready();
     }
 }
 
-void connectivity_bundle::stop()
+void connectivity_capability::stop()
 {
     if (ctrl_ != nullptr) {
         blusys_local_ctrl_close(ctrl_);
@@ -128,12 +128,12 @@ void connectivity_bundle::stop()
     rt_ = nullptr;
 }
 
-void connectivity_bundle::wifi_event_handler(blusys_wifi_t * /*wifi*/,
-                                             blusys_wifi_event_t event,
-                                             const blusys_wifi_event_info_t * /*info*/,
-                                             void *user_ctx)
+void connectivity_capability::wifi_event_handler(blusys_wifi_t * /*wifi*/,
+                                                 blusys_wifi_event_t event,
+                                                 const blusys_wifi_event_info_t * /*info*/,
+                                                 void *user_ctx)
 {
-    auto *self = static_cast<connectivity_bundle *>(user_ctx);
+    auto *self = static_cast<connectivity_capability *>(user_ctx);
 
     switch (event) {
     case BLUSYS_WIFI_EVENT_CONNECTED:
@@ -153,7 +153,7 @@ void connectivity_bundle::wifi_event_handler(blusys_wifi_t * /*wifi*/,
     }
 }
 
-void connectivity_bundle::start_dependent_services()
+void connectivity_capability::start_dependent_services()
 {
     dependent_services_started_ = true;
 
@@ -222,7 +222,7 @@ void connectivity_bundle::start_dependent_services()
     }
 }
 
-void connectivity_bundle::post_event(connectivity_event ev)
+void connectivity_capability::post_event(connectivity_event ev)
 {
     if (rt_ != nullptr) {
         rt_->post_event(blusys::framework::make_integration_event(
@@ -230,7 +230,7 @@ void connectivity_bundle::post_event(connectivity_event ev)
     }
 }
 
-void connectivity_bundle::check_bundle_ready()
+void connectivity_capability::check_capability_ready()
 {
     if (status_.bundle_ready) {
         return;
@@ -251,7 +251,7 @@ void connectivity_bundle::check_bundle_ready()
     if (ready) {
         status_.bundle_ready = true;
         post_event(connectivity_event::bundle_ready);
-        BLUSYS_LOGI(TAG, "connectivity bundle ready (ip=%s)", status_.ip_info.ip);
+        BLUSYS_LOGI(TAG, "connectivity capability ready (ip=%s)", status_.ip_info.ip);
     }
 }
 

@@ -1,13 +1,13 @@
-// Connected headless product example — blusys::app with service bundles.
+// Connected headless product example — blusys::app with capabilities.
 //
 // Demonstrates the v7 product path for a headless connected device:
-//   - connectivity bundle handles Wi-Fi, SNTP, mDNS, and local control
-//   - storage bundle mounts SPIFFS for persistent data
+//   - connectivity capability handles Wi-Fi, SNTP, mDNS, and local control
+//   - storage capability mounts SPIFFS for persistent data
 //   - app code only declares config and reacts to events through the reducer
 
 #include "blusys/app/app.hpp"
-#include "blusys/app/bundles/connectivity.hpp"
-#include "blusys/app/bundles/storage.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
+#include "blusys/app/capabilities/storage.hpp"
 #include "blusys/log.h"
 
 #include <cstdio>
@@ -116,9 +116,9 @@ static blusys_err_t status_cb(char *json_buf, size_t buf_len,
     return BLUSYS_OK;
 }
 
-// ---- bundle configuration ----
+// ---- capability configuration ----
 
-static blusys::app::connectivity_bundle conn{{
+static blusys::app::connectivity_capability conn{{
     .wifi_ssid     = CONFIG_WIFI_SSID,
     .wifi_password = CONFIG_WIFI_PASSWORD,
 
@@ -131,11 +131,11 @@ static blusys::app::connectivity_bundle conn{{
     .local_ctrl_status_cb   = status_cb,
 }};
 
-static blusys::app::storage_bundle stor{{
+static blusys::app::storage_capability stor{{
     .spiffs_base_path = "/fs",
 }};
 
-static blusys::app::bundle_list bundles{&conn, &stor};
+static blusys::app::capability_list capabilities{&conn, &stor};
 
 // ---- app spec ----
 
@@ -145,7 +145,7 @@ static auto spec = blusys::app::app_spec<State, Action>{
     .on_tick       = on_tick,
     .map_event     = map_event,
     .tick_period_ms = 100,
-    .bundles       = &bundles,
+    .capabilities  = &capabilities,
 };
 
 BLUSYS_APP_MAIN_HEADLESS(spec)

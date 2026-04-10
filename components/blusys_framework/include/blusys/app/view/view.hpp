@@ -13,5 +13,7 @@
 #include "blusys/app/view/lvgl_scope.hpp"
 #include "blusys/app/view/overlay_manager.hpp"
 #include "blusys/app/view/page.hpp"
+#include "blusys/app/view/screen_registry.hpp"
+#include "blusys/app/view/screen_router.hpp"
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI

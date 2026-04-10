@@ -1,6 +1,6 @@
 #pragma once
 
-#include "blusys/app/bundle.hpp"
+#include "blusys/app/capability.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -11,7 +11,7 @@ namespace blusys::app {
 
 // ---- shared types (always available) ----
 
-// Well-known integration event IDs posted by the connectivity bundle.
+// Well-known integration event IDs posted by the connectivity capability.
 // Apps match on these in map_event() to convert into app-specific actions.
 enum class connectivity_event : std::uint32_t {
     wifi_started       = 0x0100,
@@ -90,11 +90,11 @@ struct connectivity_config {
     void *local_ctrl_user_ctx                    = nullptr;
 };
 
-class connectivity_bundle final : public bundle_base {
+class connectivity_capability final : public capability_base {
 public:
-    explicit connectivity_bundle(const connectivity_config &cfg);
+    explicit connectivity_capability(const connectivity_config &cfg);
 
-    [[nodiscard]] bundle_kind kind() const override { return bundle_kind::connectivity; }
+    [[nodiscard]] capability_kind kind() const override { return capability_kind::connectivity; }
 
     blusys_err_t start(blusys::framework::runtime &rt) override;
     void poll(std::uint32_t now_ms) override;
@@ -116,7 +116,7 @@ private:
 
     void start_dependent_services();
     void post_event(connectivity_event ev);
-    void check_bundle_ready();
+    void check_capability_ready();
 
     connectivity_config   cfg_;
     connectivity_status   status_{};
@@ -155,12 +155,12 @@ struct connectivity_config {
     std::uint16_t local_ctrl_port      = 80;
 };
 
-class connectivity_bundle final : public bundle_base {
+class connectivity_capability final : public capability_base {
 public:
-    explicit connectivity_bundle(const connectivity_config &cfg)
+    explicit connectivity_capability(const connectivity_config &cfg)
         : cfg_(cfg) {}
 
-    [[nodiscard]] bundle_kind kind() const override { return bundle_kind::connectivity; }
+    [[nodiscard]] capability_kind kind() const override { return capability_kind::connectivity; }
 
     blusys_err_t start(blusys::framework::runtime &rt) override;
     void poll(std::uint32_t now_ms) override;

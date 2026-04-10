@@ -16,6 +16,59 @@
 
 namespace blusys_app_platform {
 
+// ---- keyboard encoder indev ----
+
+// Accumulated encoder state, written by the SDL event watcher and
+// read/cleared by the LVGL encoder read callback.
+static struct {
+    int  diff       = 0;  // pending rotation ticks (+ = CW/increment, - = CCW/decrement)
+    bool enter_down = false;
+} g_encoder_state;
+
+// SDL event watcher — fires synchronously on every SDL_PushEvent / SDL_PollEvent
+// call. Captures arrow keys and Enter to build the encoder state.
+static int encoder_event_watch(void * /*user_data*/, SDL_Event *event)
+{
+    if (event->type == SDL_KEYDOWN) {
+        switch (event->key.keysym.sym) {
+        case SDLK_RIGHT:
+        case SDLK_UP:
+            g_encoder_state.diff++;
+            break;
+        case SDLK_LEFT:
+        case SDLK_DOWN:
+            g_encoder_state.diff--;
+            break;
+        case SDLK_RETURN:
+        case SDLK_KP_ENTER:
+            g_encoder_state.enter_down = true;
+            break;
+        default:
+            break;
+        }
+    } else if (event->type == SDL_KEYUP) {
+        switch (event->key.keysym.sym) {
+        case SDLK_RETURN:
+        case SDLK_KP_ENTER:
+            g_encoder_state.enter_down = false;
+            break;
+        default:
+            break;
+        }
+    }
+    return 0;  // 0 = pass event through to other handlers
+}
+
+// LVGL encoder read callback — drains the pending encoder state.
+static void encoder_read_cb(lv_indev_t * /*indev*/, lv_indev_data_t *data)
+{
+    data->enc_diff = static_cast<int16_t>(g_encoder_state.diff);
+    data->state    = g_encoder_state.enter_down
+                         ? LV_INDEV_STATE_PRESSED
+                         : LV_INDEV_STATE_RELEASED;
+    g_encoder_state.diff = 0;  // consumed
+}
+
 void host_init(int w, int h, const char *title)
 {
     lv_init();
@@ -27,6 +80,17 @@ void host_init(int w, int h, const char *title)
 
     (void)lv_sdl_mouse_create();
     (void)lv_sdl_keyboard_create();
+
+    // Register keyboard encoder indev so host interactive apps get the
+    // same focus navigation as hardware (arrow keys = encoder rotation,
+    // Enter = encoder press).
+    SDL_AddEventWatch(encoder_event_watch, nullptr);
+
+    lv_indev_t *enc = lv_indev_create();
+    lv_indev_set_type(enc, LV_INDEV_TYPE_ENCODER);
+    lv_indev_set_read_cb(enc, encoder_read_cb);
+    // The focus group is attached per-screen via page_load / screen_registry.
+    // No default group is set here; screens opt in via lv_indev_set_group.
 }
 
 std::uint32_t host_get_ticks_ms()

@@ -118,13 +118,15 @@ set(blusys_framework_host_sources
 
     # App layer — blusys::app product-facing API.
     ${BLUSYS_FRAMEWORK_DIR}/src/app/app_ctx.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/bundles/connectivity_host.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/bundles/storage_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/connectivity_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/storage_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/theme_presets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/action_widgets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/bindings.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/overlay_manager.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/page.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screen_registry.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screen_router.cpp
 
     # UI surface — LVGL-backed. Always on in the host harness
     # (device builds gate this behind BLUSYS_BUILD_UI).

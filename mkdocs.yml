@@ -62,7 +62,7 @@ nav:
       - app/index.md
       - Reducer Model: app/reducer-model.md
       - Views & Widgets: app/views-and-widgets.md
-      - Service Bundles: app/service-bundles.md
+      - Capabilities: app/capabilities.md
       - Profiles: app/profiles.md
   - Services:
       - services/index.md

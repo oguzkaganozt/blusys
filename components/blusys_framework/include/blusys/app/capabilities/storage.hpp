@@ -1,6 +1,6 @@
 #pragma once
 
-#include "blusys/app/bundle.hpp"
+#include "blusys/app/capability.hpp"
 
 #include <cstdint>
 
@@ -10,7 +10,7 @@ namespace blusys::app {
 
 // ---- shared types (always available) ----
 
-// Well-known integration event IDs posted by the storage bundle.
+// Well-known integration event IDs posted by the storage capability.
 enum class storage_event : std::uint32_t {
     spiffs_mounted = 0x0200,
     fatfs_mounted  = 0x0201,
@@ -43,11 +43,11 @@ struct storage_config {
 #include "blusys/system/fs.h"
 #include "blusys/system/fatfs.h"
 
-class storage_bundle final : public bundle_base {
+class storage_capability final : public capability_base {
 public:
-    explicit storage_bundle(const storage_config &cfg);
+    explicit storage_capability(const storage_config &cfg);
 
-    [[nodiscard]] bundle_kind kind() const override { return bundle_kind::storage; }
+    [[nodiscard]] capability_kind kind() const override { return capability_kind::storage; }
 
     blusys_err_t start(blusys::framework::runtime &rt) override;
     void poll(std::uint32_t now_ms) override;
@@ -73,12 +73,12 @@ private:
 
 #else  // host stub
 
-class storage_bundle final : public bundle_base {
+class storage_capability final : public capability_base {
 public:
-    explicit storage_bundle(const storage_config &cfg)
+    explicit storage_capability(const storage_config &cfg)
         : cfg_(cfg) {}
 
-    [[nodiscard]] bundle_kind kind() const override { return bundle_kind::storage; }
+    [[nodiscard]] capability_kind kind() const override { return capability_kind::storage; }
 
     blusys_err_t start(blusys::framework::runtime &rt) override;
     void poll(std::uint32_t now_ms) override;

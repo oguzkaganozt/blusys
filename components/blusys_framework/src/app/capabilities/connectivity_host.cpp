@@ -1,6 +1,6 @@
 #ifndef ESP_PLATFORM
 
-#include "blusys/app/bundles/connectivity.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/framework/core/intent.hpp"
 #include "blusys/framework/core/runtime.hpp"
 #include "blusys/log.h"
@@ -9,7 +9,7 @@ static const char *TAG = "blusys_conn";
 
 namespace blusys::app {
 
-blusys_err_t connectivity_bundle::start(blusys::framework::runtime &rt)
+blusys_err_t connectivity_capability::start(blusys::framework::runtime &rt)
 {
     rt_ = &rt;
     first_poll_ = true;
@@ -34,7 +34,7 @@ blusys_err_t connectivity_bundle::start(blusys::framework::runtime &rt)
     return BLUSYS_OK;
 }
 
-void connectivity_bundle::poll(std::uint32_t /*now_ms*/)
+void connectivity_capability::poll(std::uint32_t /*now_ms*/)
 {
     if (!first_poll_) {
         return;
@@ -59,13 +59,13 @@ void connectivity_bundle::poll(std::uint32_t /*now_ms*/)
     post_event(connectivity_event::bundle_ready);
 }
 
-void connectivity_bundle::stop()
+void connectivity_capability::stop()
 {
     status_ = {};
     rt_ = nullptr;
 }
 
-void connectivity_bundle::post_event(connectivity_event ev)
+void connectivity_capability::post_event(connectivity_event ev)
 {
     if (rt_ != nullptr) {
         rt_->post_event(blusys::framework::make_integration_event(

@@ -1,6 +1,6 @@
 #ifdef ESP_PLATFORM
 
-#include "blusys/app/bundles/storage.hpp"
+#include "blusys/app/capabilities/storage.hpp"
 #include "blusys/framework/core/intent.hpp"
 #include "blusys/framework/core/runtime.hpp"
 #include "blusys/log.h"
@@ -9,12 +9,12 @@ static const char *TAG = "blusys_stor";
 
 namespace blusys::app {
 
-storage_bundle::storage_bundle(const storage_config &cfg)
+storage_capability::storage_capability(const storage_config &cfg)
     : cfg_(cfg)
 {
 }
 
-blusys_err_t storage_bundle::start(blusys::framework::runtime &rt)
+blusys_err_t storage_capability::start(blusys::framework::runtime &rt)
 {
     rt_ = &rt;
 
@@ -69,12 +69,12 @@ blusys_err_t storage_bundle::start(blusys::framework::runtime &rt)
     return BLUSYS_OK;
 }
 
-void storage_bundle::poll(std::uint32_t /*now_ms*/)
+void storage_capability::poll(std::uint32_t /*now_ms*/)
 {
     // Storage operations are synchronous — nothing to poll.
 }
 
-void storage_bundle::stop()
+void storage_capability::stop()
 {
     if (fatfs_ != nullptr) {
         blusys_fatfs_unmount(fatfs_);
@@ -89,7 +89,7 @@ void storage_bundle::stop()
     rt_ = nullptr;
 }
 
-void storage_bundle::post_event(storage_event ev)
+void storage_capability::post_event(storage_event ev)
 {
     if (rt_ != nullptr) {
         rt_->post_event(blusys::framework::make_integration_event(

@@ -6,7 +6,10 @@
 #include <cstdint>
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-namespace blusys::app::view { class overlay_manager; }
+namespace blusys::app::view {
+class overlay_manager;
+class screen_router;
+}
 #endif
 
 #ifdef ESP_PLATFORM
@@ -21,11 +24,11 @@ namespace blusys::app {
 
 class app_runtime_base;
 
-// Forward declarations for bundle status types.
+// Forward declarations for capability status types.
 struct connectivity_status;
 struct storage_status;
-class connectivity_bundle;
-class storage_bundle;
+class connectivity_capability;
+class storage_capability;
 
 class app_ctx {
 public:
@@ -55,8 +58,11 @@ public:
     }
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    // ---- overlay manager access (for registering overlays in on_init) ----
-    [[nodiscard]] view::overlay_manager *overlay_manager() const { return overlay_mgr_; }
+    // ---- screen router access (for registering screens in on_init) ----
+    [[nodiscard]] view::screen_router *screen_router() const { return screen_router_; }
+
+    // ---- overlay manager access (delegates to the screen_router's overlay_manager) ----
+    [[nodiscard]] view::overlay_manager *overlay_manager() const;
 #endif
 
     // ---- bundle status queries ----
@@ -81,10 +87,10 @@ private:
     dispatch_fn                     dispatch_fn_   = nullptr;
     void                           *runtime_ptr_   = nullptr;
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    view::overlay_manager          *overlay_mgr_   = nullptr;
+    view::screen_router            *screen_router_ = nullptr;
 #endif
-    connectivity_bundle            *connectivity_   = nullptr;
-    storage_bundle                 *storage_        = nullptr;
+    connectivity_capability        *connectivity_   = nullptr;
+    storage_capability             *storage_        = nullptr;
 };
 
 }  // namespace blusys::app

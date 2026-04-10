@@ -628,17 +628,15 @@ cmd_create() {
     local project_name
     project_name="$(basename "$target_dir")"
 
-    # Check for existing project files. The Phase 7 scaffold ships four
-    # CMakeLists files (top-level + main/ + app/ + app/product_config.cmake)
-    # plus app_main.cpp and idf_component.yml.
+    # Check for existing project files.
     local existing_files=()
     for f in \
         CMakeLists.txt \
         sdkconfig.defaults \
         main/CMakeLists.txt \
-        main/app_main.cpp \
         main/idf_component.yml \
-        app/product_config.cmake; do
+        main/logic/app_logic.hpp \
+        main/system/app_main.cpp; do
         [[ -f "$target_dir/$f" ]] && existing_files+=("$f")
     done
 
@@ -655,14 +653,10 @@ cmd_create() {
         fi
     fi
 
-    mkdir -p \
-        "$target_dir/main" \
-        "$target_dir/app" \
-        "$target_dir/host"
+    mkdir -p "$target_dir/main" "$target_dir/host"
 
-    blusys_create_top_cmakelists "$target_dir"
+    blusys_create_top_cmakelists "$target_dir" "$project_name" "$starter"
     blusys_create_main "$target_dir" "$starter"
-    blusys_create_app "$target_dir" "$project_name" "$starter"
     blusys_create_host "$target_dir" "$project_name" "$starter"
 
     if [[ "$starter" == "interactive" ]]; then
@@ -688,31 +682,34 @@ DEFAULTS
     printf '  blusys build                # build for default target\n'
     printf '  blusys run                  # build, flash, and monitor\n'
     printf '\n'
-    printf 'Your app lives in main/app_main.cpp — edit state, actions, and\n'
-    printf 'update() to build your product. See app/product_config.cmake to\n'
-    printf 'change the product name, starter type, or supported targets.\n'
+    printf 'Product layout:\n'
+    printf '  main/logic/   — State, Action, update() (product behavior)\n'
+    if [[ "$starter" == "interactive" ]]; then
+        printf '  main/ui/      — on_init() and screen composition (rendering)\n'
+    fi
+    printf '  main/system/  — app_spec wiring and entry macro\n'
 }
 
 # ── cmd_create helpers ──────────────────────────────────────────────────────
 
 blusys_create_top_cmakelists() {
     local target_dir="$1"
-    cat > "$target_dir/CMakeLists.txt" <<'CMAKE'
+    local project_name="$2"
+    local starter="$3"
+    local build_ui="OFF"
+    if [[ "$starter" == "interactive" ]]; then
+        build_ui="ON"
+    fi
+
+    cat > "$target_dir/CMakeLists.txt" <<CMAKE
 cmake_minimum_required(VERSION 3.16)
 
-# Read product configuration (name, starter type, supported targets).
-include(${CMAKE_CURRENT_LIST_DIR}/app/product_config.cmake)
+# BLUSYS_BUILD_UI is baked in at scaffold time by blusys create.
+# The framework component reads this from cache during ESP-IDF's component scan.
+set(BLUSYS_BUILD_UI ${build_ui} CACHE BOOL "Build blusys_framework/ui")
 
-# Derive the framework UI build flag from the starter type. The framework
-# component reads BLUSYS_BUILD_UI from cache during ESP-IDF's component scan.
-if(BLUSYS_STARTER_TYPE STREQUAL "interactive")
-    set(BLUSYS_BUILD_UI ON CACHE BOOL "Build blusys_framework/ui")
-else()
-    set(BLUSYS_BUILD_UI OFF CACHE BOOL "Build blusys_framework/ui")
-endif()
-
-include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(${BLUSYS_PRODUCT_NAME})
+include(\$ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(${project_name})
 CMAKE
 }
 
@@ -720,19 +717,36 @@ blusys_create_main() {
     local target_dir="$1"
     local starter="$2"
 
-    cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
+    if [[ "$starter" == "interactive" ]]; then
+        mkdir -p "$target_dir/main/logic" "$target_dir/main/ui" "$target_dir/main/system"
+        cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
 idf_component_register(
-    SRCS "app_main.cpp"
+    SRCS
+        "logic/app_logic.cpp"
+        "ui/app_ui.cpp"
+        "system/app_main.cpp"
+    INCLUDE_DIRS "."
     REQUIRES blusys_framework
 )
 CMAKE
-
-    if [[ "$starter" == "interactive" ]]; then
         blusys_create_main_yml_interactive "$target_dir"
-        blusys_create_app_main_interactive "$target_dir"
+        blusys_create_logic_interactive "$target_dir"
+        blusys_create_ui_interactive "$target_dir"
+        blusys_create_system_interactive "$target_dir"
     else
+        mkdir -p "$target_dir/main/logic" "$target_dir/main/system"
+        cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
+idf_component_register(
+    SRCS
+        "logic/app_logic.cpp"
+        "system/app_main.cpp"
+    INCLUDE_DIRS "."
+    REQUIRES blusys_framework
+)
+CMAKE
         blusys_create_main_yml_headless "$target_dir"
-        blusys_create_app_main_headless "$target_dir"
+        blusys_create_logic_headless "$target_dir"
+        blusys_create_system_headless "$target_dir"
     fi
 }
 
@@ -753,15 +767,15 @@ dependencies:
 
   blusys:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v6.0.0"
+    version: "v7.0.0"
     path: "components/blusys"
   blusys_services:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v6.0.0"
+    version: "v7.0.0"
     path: "components/blusys_services"
   blusys_framework:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v6.0.0"
+    version: "v7.0.0"
     path: "components/blusys_framework"
 
   lvgl/lvgl:
@@ -786,52 +800,55 @@ dependencies:
 
   blusys:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v6.0.0"
+    version: "v7.0.0"
     path: "components/blusys"
   blusys_services:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v6.0.0"
+    version: "v7.0.0"
     path: "components/blusys_services"
   blusys_framework:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v6.0.0"
+    version: "v7.0.0"
     path: "components/blusys_framework"
 YAML
 }
 
-blusys_create_app_main_headless() {
+blusys_create_logic_headless() {
     local target_dir="$1"
-    cat > "$target_dir/main/app_main.cpp" <<'CPP'
-// app_main.cpp — headless product entry point.
-//
-// Defines a minimal blusys::app reducer product. Edit State, Action,
-// and update() to build your product logic. The framework owns the
-// runtime loop and tick cadence — no manual plumbing needed.
+    cat > "$target_dir/main/logic/app_logic.hpp" <<'HPP'
+#pragma once
+// State and Action for the headless product.
+// Edit these to define your product's data model and event vocabulary.
 
 #include "blusys/app/app.hpp"
-#include "blusys/log.h"
-
 #include <cstdint>
 
-namespace {
-
-using blusys::app::app_ctx;
-
-// ---- state ----
-
+// Product state — owned by the reducer, updated by update().
 struct State {
     int tick_count = 0;
 };
 
-// ---- actions ----
-
+// Product actions — dispatched by system/ hooks and capability events.
 enum class Action {
     periodic_tick,
 };
 
-// ---- reducer ----
+// Reducer and tick hook — implemented in app_logic.cpp.
+void update(blusys::app::app_ctx &ctx, State &state, const Action &action);
+void on_tick(blusys::app::app_ctx &ctx, State &state, std::uint32_t now_ms);
+HPP
 
-void update(app_ctx & /*ctx*/, State &state, const Action &action)
+    cat > "$target_dir/main/logic/app_logic.cpp" <<'CPP'
+// logic/app_logic.cpp — product reducer.
+//
+// update() is the single entry point for all state transitions.
+// on_tick() runs at the configured tick_period_ms interval.
+
+#include "logic/app_logic.hpp"
+#include "blusys/app/app.hpp"
+#include "blusys/log.h"
+
+void update(blusys::app::app_ctx & /*ctx*/, State &state, const Action &action)
 {
     switch (action) {
     case Action::periodic_tick:
@@ -843,18 +860,26 @@ void update(app_ctx & /*ctx*/, State &state, const Action &action)
     }
 }
 
-// ---- on_tick: periodic heartbeat ----
-
-void on_tick(app_ctx &ctx, State & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app::app_ctx &ctx, State & /*state*/, std::uint32_t /*now_ms*/)
 {
     ctx.dispatch(Action::periodic_tick);
 }
+CPP
+}
 
-}  // namespace
+blusys_create_system_headless() {
+    local target_dir="$1"
+    cat > "$target_dir/main/system/app_main.cpp" <<'CPP'
+// system/app_main.cpp — headless product entry point.
+//
+// Wires the reducer, tick hook, and optional capabilities into
+// an app_spec and hands it to the framework runtime.
+// The framework owns the runtime loop — no manual plumbing needed.
 
-// ---- app definition ----
+#include "logic/app_logic.hpp"
+#include "blusys/app/app.hpp"
 
-static auto spec = blusys::app::app_spec<State, Action>{
+static const blusys::app::app_spec<State, Action> spec{
     .initial_state  = {},
     .update         = update,
     .on_tick        = on_tick,
@@ -865,56 +890,48 @@ BLUSYS_APP_MAIN_HEADLESS(spec)
 CPP
 }
 
-blusys_create_app_main_interactive() {
+blusys_create_logic_interactive() {
     local target_dir="$1"
-    cat > "$target_dir/main/app_main.cpp" <<'CPP'
-// app_main.cpp — interactive product entry point.
-//
-// Defines a minimal blusys::app interactive product using the v7
-// reducer model. Edit State, Action, update(), and on_init() to
-// build your product. The framework owns display setup, LVGL
-// lifecycle, and the runtime loop — no manual plumbing needed.
-//
-// This file compiles for both host (SDL2 window) and device (ST7735
-// LCD). The entry macro at the bottom selects the right platform.
-//
-// To target a different display, change the profile in the
-// BLUSYS_APP_MAIN_DEVICE macro. Available profiles:
-//   blusys::app::profiles::st7735_160x128()
+    cat > "$target_dir/main/logic/app_logic.hpp" <<'HPP'
+#pragma once
+// State and Action for the interactive product.
+// Edit these to define your product's data model and event vocabulary.
 
 #include "blusys/app/app.hpp"
-#include "blusys/log.h"
-
+#include "lvgl.h"
 #include <cstdint>
-#include <cstdio>
 
-namespace {
-
-namespace view = blusys::app::view;
-using blusys::app::app_ctx;
-
-// ---- state ----
-
+// Product state — owned by the reducer, updated by update().
+// counter_label is a UI reference stored in State so the reducer
+// can update the display directly when the counter changes.
 struct State {
     std::int32_t counter       = 0;
     lv_obj_t    *counter_label = nullptr;
 };
 
-// ---- actions ----
+enum class Tag : std::uint8_t { increment, decrement, confirm };
+struct Action { Tag tag; };
 
-enum class Tag : std::uint8_t {
-    increment,
-    decrement,
-    confirm,
-};
+// Reducer and intent map — implemented in app_logic.cpp.
+void update(blusys::app::app_ctx &ctx, State &state, const Action &action);
+bool map_intent(blusys::framework::intent intent, Action *out);
+HPP
 
-struct Action {
-    Tag tag;
-};
+    cat > "$target_dir/main/logic/app_logic.cpp" <<'CPP'
+// logic/app_logic.cpp — product reducer.
+//
+// update() is the single entry point for all state transitions.
+// map_intent() translates encoder/keyboard events into product actions.
 
-// ---- reducer ----
+#include "logic/app_logic.hpp"
+#include "blusys/app/app.hpp"
+#include "blusys/log.h"
 
-void update(app_ctx &ctx, State &state, const Action &action)
+#include <cstdio>
+
+namespace view = blusys::app::view;
+
+void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
 {
     switch (action.tag) {
     case Tag::increment:
@@ -948,28 +965,37 @@ void update(app_ctx &ctx, State &state, const Action &action)
     }
 }
 
-// ---- intent map (encoder / keyboard input) ----
-
 bool map_intent(blusys::framework::intent intent, Action *out)
 {
     switch (intent) {
     case blusys::framework::intent::increment:
-        *out = Action{.tag = Tag::increment};
-        return true;
+        *out = Action{.tag = Tag::increment}; return true;
     case blusys::framework::intent::decrement:
-        *out = Action{.tag = Tag::decrement};
-        return true;
+        *out = Action{.tag = Tag::decrement}; return true;
     case blusys::framework::intent::confirm:
-        *out = Action{.tag = Tag::confirm};
-        return true;
+        *out = Action{.tag = Tag::confirm}; return true;
     default:
         return false;
     }
 }
+CPP
+}
 
-// ---- on_init: build the UI ----
+blusys_create_ui_interactive() {
+    local target_dir="$1"
+    cat > "$target_dir/main/ui/app_ui.cpp" <<'CPP'
+// ui/app_ui.cpp — interactive UI entry point.
+//
+// on_init() builds the initial screen. Add more screens by registering
+// them with ctx.screen_router() and navigating with ctx.navigate_to().
 
-void on_init(app_ctx &ctx, State &state)
+#include "logic/app_logic.hpp"
+#include "blusys/app/app.hpp"
+#include "blusys/log.h"
+
+namespace view = blusys::app::view;
+
+void on_init(blusys::app::app_ctx &ctx, State &state)
 {
     auto p = view::page_create();
 
@@ -987,12 +1013,32 @@ void on_init(app_ctx &ctx, State &state)
 
     view::page_load(p);
 
-    BLUSYS_LOGI("app", "interactive product initialized");
+    BLUSYS_LOGI("app", "UI initialized");
+}
+CPP
 }
 
-}  // namespace
+blusys_create_system_interactive() {
+    local target_dir="$1"
+    cat > "$target_dir/main/system/app_main.cpp" <<'CPP'
+// system/app_main.cpp — interactive product entry point.
+//
+// Wires State, Action, update(), on_init(), and map_intent() into
+// an app_spec and hands it to the framework runtime.
+//
+// The framework owns display setup, LVGL lifecycle, and the runtime
+// loop — no manual plumbing needed.
+//
+// Host-first: runs in an SDL2 window on the PC.
+// To target a device, swap the macro at the bottom for:
+//   #include "blusys/app/profiles/st7735.hpp"
+//   BLUSYS_APP_MAIN_DEVICE(spec, blusys::app::profiles::st7735_160x128())
 
-// ---- app definition ----
+#include "logic/app_logic.hpp"
+#include "blusys/app/app.hpp"
+
+// on_init is implemented in ui/app_ui.cpp.
+void on_init(blusys::app::app_ctx &ctx, State &state);
 
 static const blusys::app::app_spec<State, Action> spec{
     .initial_state = {},
@@ -1001,29 +1047,9 @@ static const blusys::app::app_spec<State, Action> spec{
     .map_intent    = map_intent,
 };
 
-// Host-first onboarding: runs in an SDL2 window on the PC.
-// To target a device, swap this for:
-//   #include "blusys/app/profiles/st7735.hpp"
-//   BLUSYS_APP_MAIN_DEVICE(spec, blusys::app::profiles::st7735_160x128())
 BLUSYS_APP_MAIN_HOST(spec)
 CPP
 }
-
-blusys_create_app() {
-    local target_dir="$1"
-    local project_name="$2"
-    local starter="$3"
-
-    cat > "$target_dir/app/product_config.cmake" <<CMAKE
-# Product configuration consumed by the top-level CMakeLists.txt before
-# project() runs. Edit these values rather than the top-level CMakeLists.
-
-set(BLUSYS_PRODUCT_NAME  "${project_name}")
-set(BLUSYS_STARTER_TYPE  "${starter}")
-set(BLUSYS_TARGETS       "esp32s3")
-CMAKE
-}
-
 
 blusys_create_host() {
     local target_dir="$1"
@@ -1102,13 +1128,15 @@ add_library(blusys_framework_host STATIC
 
     # App layer — blusys::app product-facing API
     ${BLUSYS_FW}/src/app/app_ctx.cpp
-    ${BLUSYS_FW}/src/app/bundles/connectivity_host.cpp
-    ${BLUSYS_FW}/src/app/bundles/storage_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/connectivity_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/storage_host.cpp
     ${BLUSYS_FW}/src/app/theme_presets.cpp
     ${BLUSYS_FW}/src/app/action_widgets.cpp
     ${BLUSYS_FW}/src/app/bindings.cpp
     ${BLUSYS_FW}/src/app/overlay_manager.cpp
     ${BLUSYS_FW}/src/app/page.cpp
+    ${BLUSYS_FW}/src/app/screen_registry.cpp
+    ${BLUSYS_FW}/src/app/screen_router.cpp
 
     # UI surface
     ${BLUSYS_FW}/src/ui/input/encoder.cpp
@@ -1138,11 +1166,16 @@ target_compile_options(blusys_framework_host PRIVATE
 target_link_libraries(blusys_framework_host PUBLIC lvgl)
 target_compile_definitions(blusys_framework_host PUBLIC BLUSYS_FRAMEWORK_HAS_UI=1)
 
-# App executable — compiles main/app_main.cpp which uses
-# BLUSYS_APP_MAIN_HOST(spec) to define int main().
+# App executable — compiles main/logic/ + main/ui/ + main/system/app_main.cpp
+# which uses BLUSYS_APP_MAIN_HOST(spec) to define int main().
 add_executable(BLUSYS_PRODUCT_HOST
-    "${CMAKE_CURRENT_LIST_DIR}/../main/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/logic/app_logic.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/ui/app_ui.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/system/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_host_platform.cpp"
+)
+target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../main"
 )
 target_link_libraries(BLUSYS_PRODUCT_HOST PRIVATE
     blusys_framework_host PkgConfig::SDL2 m
@@ -1198,8 +1231,8 @@ add_library(blusys_framework_core_host STATIC
 
     # App layer (headless subset — no view/UI sources)
     ${BLUSYS_FW}/src/app/app_ctx.cpp
-    ${BLUSYS_FW}/src/app/bundles/connectivity_host.cpp
-    ${BLUSYS_FW}/src/app/bundles/storage_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/connectivity_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/storage_host.cpp
     ${BLUSYS_FW}/src/app/theme_presets.cpp
 )
 target_include_directories(blusys_framework_core_host PUBLIC
@@ -1215,11 +1248,15 @@ target_compile_options(blusys_framework_core_host PRIVATE
 )
 target_link_libraries(blusys_framework_core_host PUBLIC PkgConfig::SDL2)
 
-# App executable — compiles main/app_main.cpp which uses
-# BLUSYS_APP_MAIN_HEADLESS(spec) to define int main().
+# App executable — compiles main/logic/ + main/system/app_main.cpp
+# which uses BLUSYS_APP_MAIN_HEADLESS(spec) to define int main().
 add_executable(BLUSYS_PRODUCT_HOST
-    "${CMAKE_CURRENT_LIST_DIR}/../main/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/logic/app_logic.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/system/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_headless_platform.cpp"
+)
+target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../main"
 )
 target_link_libraries(BLUSYS_PRODUCT_HOST PRIVATE
     blusys_framework_core_host PkgConfig::SDL2

@@ -1,12 +1,12 @@
-// Connected device example — interactive product with service bundles.
+// Connected device example — interactive product with capabilities.
 //
 // Demonstrates the v7 product path for a connected interactive device:
-//   - connectivity bundle handles Wi-Fi, SNTP, and mDNS
+//   - connectivity capability handles Wi-Fi, SNTP, and mDNS
 //   - app shows connection status on an ST7735 display
-//   - reducer reacts to both UI intents and service events
+//   - reducer reacts to both UI intents and capability events
 
 #include "blusys/app/app.hpp"
-#include "blusys/app/bundles/connectivity.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/profiles/st7735.hpp"
 #include "blusys/log.h"
 
@@ -162,16 +162,16 @@ void on_init(app_ctx &ctx, State &state)
     BLUSYS_LOGI(kTag, "UI initialized");
 }
 
-// ---- bundle configuration ----
+// ---- capability configuration ----
 
-static blusys::app::connectivity_bundle conn{{
+static blusys::app::connectivity_capability conn{{
     .wifi_ssid     = CONFIG_WIFI_SSID,
     .wifi_password = CONFIG_WIFI_PASSWORD,
     .sntp_server   = "pool.ntp.org",
     .mdns_hostname = "blusys-device",
 }};
 
-static blusys::app::bundle_list bundles{&conn};
+static blusys::app::capability_list capabilities{&conn};
 
 }  // namespace
 
@@ -183,7 +183,7 @@ static const blusys::app::app_spec<State, Action> spec{
     .on_init        = on_init,
     .map_intent     = map_intent,
     .map_event      = map_event,
-    .bundles        = &bundles,
+    .capabilities   = &capabilities,
 };
 
 BLUSYS_APP_MAIN_DEVICE(spec, blusys::app::profiles::st7735_160x128())

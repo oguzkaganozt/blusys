@@ -9,6 +9,14 @@ blusys create --starter headless my_sensor
 cd my_sensor
 ```
 
+## Run on host
+
+```bash
+blusys host-build my_sensor
+```
+
+The app runs in the terminal, printing heartbeat logs. No hardware needed.
+
 ## Build for a target
 
 ```bash
@@ -21,24 +29,30 @@ blusys monitor my_sensor /dev/ttyUSB0 esp32
 
 The scaffold generates a minimal headless app with:
 
-- an `app_spec` defining state, actions, and the reducer
-- service and timer effects for headless flows
-- connectivity and storage bundles ready to enable
+- a `State` with a tick counter, periodic heartbeat log
+- `on_tick` dispatching `Action::periodic_tick` every 100 ms
 - no UI or LVGL dependencies
 
 ## Project structure
 
 ```
 my_sensor/
-  main/
-    app.cpp          # Your app: state, actions, update(), effects
-    CMakeLists.txt
-  CMakeLists.txt
+  CMakeLists.txt       — bakes BLUSYS_BUILD_UI=OFF and project name
   sdkconfig.defaults
+  main/
+    CMakeLists.txt     — idf_component_register listing logic + system
+    idf_component.yml
+    logic/
+      app_logic.hpp    — State, Action, update(), on_tick() declarations
+      app_logic.cpp    — reducer and tick hook implementation
+    system/
+      app_main.cpp     — app_spec wiring + BLUSYS_APP_MAIN_HEADLESS(spec) macro
+  host/
+    CMakeLists.txt     — standalone PC build
 ```
 
 ## Next steps
 
 - [Reducer Model](../app/reducer-model.md) --- understand state, actions, and `update()`
-- [Service Bundles](../app/service-bundles.md) --- add WiFi, MQTT, storage, and SNTP
+- [Capabilities](../app/capabilities.md) --- add WiFi, SNTP, and storage
 - [Profiles](../app/profiles.md) --- understand headless and device profiles

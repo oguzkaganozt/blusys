@@ -35,6 +35,16 @@ void page_load(page &p)
 {
     blusys::ui::auto_focus_screen(p.screen, p.group);
     lv_screen_load(p.screen);
+
+    // Attach the focus group to all registered encoder indevs.
+    // Works on both host (keyboard encoder) and device (hardware encoder).
+    lv_indev_t *indev = lv_indev_get_next(nullptr);
+    while (indev != nullptr) {
+        if (lv_indev_get_type(indev) == LV_INDEV_TYPE_ENCODER) {
+            lv_indev_set_group(indev, p.group);
+        }
+        indev = lv_indev_get_next(indev);
+    }
 }
 
 }  // namespace blusys::app::view

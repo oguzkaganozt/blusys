@@ -5,9 +5,9 @@
 
 #include "blusys/app/app_ctx.hpp"
 #include "blusys/app/app_spec.hpp"
-#include "blusys/app/bundle_list.hpp"
-#include "blusys/app/bundles/connectivity.hpp"
-#include "blusys/app/bundles/storage.hpp"
+#include "blusys/app/capability_list.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
+#include "blusys/app/capabilities/storage.hpp"
 #include "blusys/framework/core/containers.hpp"
 #include "blusys/framework/core/controller.hpp"
 #include "blusys/framework/core/feedback.hpp"
@@ -20,7 +20,7 @@
 #include <cstdint>
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-#include "blusys/app/view/overlay_manager.hpp"
+#include "blusys/app/view/screen_router.hpp"
 #endif
 
 namespace blusys::app {
@@ -42,30 +42,30 @@ protected:
     }
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    static void bind_overlay_manager(app_ctx &ctx, view::overlay_manager *mgr)
+    static void bind_screen_router(app_ctx &ctx, view::screen_router *router)
     {
-        ctx.overlay_mgr_ = mgr;
+        ctx.screen_router_ = router;
     }
 #endif
 
-    static void bind_bundle_ptrs(app_ctx &ctx, bundle_list *bundles)
+    static void bind_capability_ptrs(app_ctx &ctx, capability_list *capabilities)
     {
-        if (bundles == nullptr) {
+        if (capabilities == nullptr) {
             return;
         }
-        for (std::size_t i = 0; i < bundles->count; ++i) {
-            bundle_base *b = bundles->items[i];
-            if (b == nullptr) {
+        for (std::size_t i = 0; i < capabilities->count; ++i) {
+            capability_base *c = capabilities->items[i];
+            if (c == nullptr) {
                 continue;
             }
-            switch (b->kind()) {
-            case bundle_kind::connectivity:
-                ctx.connectivity_ = static_cast<connectivity_bundle *>(b);
+            switch (c->kind()) {
+            case capability_kind::connectivity:
+                ctx.connectivity_ = static_cast<connectivity_capability *>(c);
                 break;
-            case bundle_kind::storage:
-                ctx.storage_ = static_cast<storage_bundle *>(b);
+            case capability_kind::storage:
+                ctx.storage_ = static_cast<storage_capability *>(c);
                 break;
-            case bundle_kind::custom:
+            case capability_kind::custom:
                 break;
             }
         }
@@ -142,11 +142,12 @@ public:
                  this);
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-        bind_overlay_manager(ctx_, &overlay_mgr_);
+        bind_screen_router(ctx_, &screen_router_);
+        screen_router_.bind_ctx(&ctx_);
 #endif
 
-        start_bundles();
-        bind_bundle_ptrs(ctx_, spec_.bundles);
+        start_capabilities();
+        bind_capability_ptrs(ctx_, spec_.capabilities);
 
         if (spec_.on_init != nullptr) {
             spec_.on_init(ctx_, state_);
@@ -158,14 +159,14 @@ public:
     void step(std::uint32_t now_ms)
     {
         drain_actions();
-        poll_bundles(now_ms);
+        poll_capabilities(now_ms);
         framework_runtime_.step(now_ms);
         drain_actions();  // process actions dispatched during tick/handle
     }
 
     void deinit()
     {
-        stop_bundles();
+        stop_capabilities();
         framework_runtime_.deinit();
         framework_runtime_.unregister_feedback_sink(&default_feedback_sink_);
     }
@@ -192,7 +193,7 @@ public:
     [[nodiscard]] app_ctx &ctx() { return ctx_; }
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    [[nodiscard]] view::overlay_manager &overlay_manager() { return overlay_mgr_; }
+    [[nodiscard]] view::screen_router &screen_router() { return screen_router_; }
 #endif
 
 private:
@@ -208,46 +209,46 @@ private:
         }
     }
 
-    void start_bundles()
+    void start_capabilities()
     {
-        if (spec_.bundles == nullptr) {
+        if (spec_.capabilities == nullptr) {
             return;
         }
-        for (std::size_t i = 0; i < spec_.bundles->count; ++i) {
-            bundle_base *b = spec_.bundles->items[i];
-            if (b == nullptr) {
+        for (std::size_t i = 0; i < spec_.capabilities->count; ++i) {
+            capability_base *c = spec_.capabilities->items[i];
+            if (c == nullptr) {
                 continue;
             }
-            blusys_err_t err = b->start(framework_runtime_);
+            blusys_err_t err = c->start(framework_runtime_);
             if (err != BLUSYS_OK) {
-                BLUSYS_LOGW("blusys_app", "bundle start failed: %d",
+                BLUSYS_LOGW("blusys_app", "capability start failed: %d",
                             static_cast<int>(err));
             }
         }
     }
 
-    void poll_bundles(std::uint32_t now_ms)
+    void poll_capabilities(std::uint32_t now_ms)
     {
-        if (spec_.bundles == nullptr) {
+        if (spec_.capabilities == nullptr) {
             return;
         }
-        for (std::size_t i = 0; i < spec_.bundles->count; ++i) {
-            bundle_base *b = spec_.bundles->items[i];
-            if (b != nullptr) {
-                b->poll(now_ms);
+        for (std::size_t i = 0; i < spec_.capabilities->count; ++i) {
+            capability_base *c = spec_.capabilities->items[i];
+            if (c != nullptr) {
+                c->poll(now_ms);
             }
         }
     }
 
-    void stop_bundles()
+    void stop_capabilities()
     {
-        if (spec_.bundles == nullptr) {
+        if (spec_.capabilities == nullptr) {
             return;
         }
-        for (std::size_t i = spec_.bundles->count; i > 0; --i) {
-            bundle_base *b = spec_.bundles->items[i - 1];
-            if (b != nullptr) {
-                b->stop();
+        for (std::size_t i = spec_.capabilities->count; i > 0; --i) {
+            capability_base *c = spec_.capabilities->items[i - 1];
+            if (c != nullptr) {
+                c->stop();
             }
         }
     }
@@ -310,7 +311,7 @@ private:
     blusys::framework::route_sink &route_sink_ref()
     {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-        return overlay_mgr_;
+        return screen_router_;
 #else
         return default_route_sink_;
 #endif
@@ -324,7 +325,7 @@ private:
     blusys::ring_buffer<Action, ActionQueueCap>          action_queue_{};
     detail::default_feedback_sink                        default_feedback_sink_{};
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    view::overlay_manager                                overlay_mgr_{};
+    view::screen_router                                  screen_router_{};
 #else
     detail::default_route_sink                           default_route_sink_{};
 #endif

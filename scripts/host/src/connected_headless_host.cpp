@@ -1,13 +1,13 @@
 // connected_headless_host — connected headless product running on host.
 //
 // Same reducer logic as the device connected_headless example, with
-// simulated connectivity and storage bundles. The host stubs post
+// simulated connectivity and storage capabilities. The host stubs post
 // fake wifi_got_ip / time_synced / bundle_ready events on the first
 // frame so the full app event flow exercises without hardware.
 
 #include "blusys/app/app.hpp"
-#include "blusys/app/bundles/connectivity.hpp"
-#include "blusys/app/bundles/storage.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
+#include "blusys/app/capabilities/storage.hpp"
 #include "blusys/log.h"
 
 #include <cstdint>
@@ -95,20 +95,20 @@ void on_tick(blusys::app::app_ctx &ctx, State & /*state*/, std::uint32_t /*now_m
     ctx.dispatch(Action::periodic_tick);
 }
 
-// ---- bundle configuration ----
+// ---- capability configuration ----
 
-blusys::app::connectivity_bundle conn{{
+blusys::app::connectivity_capability conn{{
     .wifi_ssid     = "demo-network",
     .wifi_password = "demo-password",
     .sntp_server   = "pool.ntp.org",
     .mdns_hostname = "blusys-headless",
 }};
 
-blusys::app::storage_bundle stor{{
+blusys::app::storage_capability stor{{
     .spiffs_base_path = "/fs",
 }};
 
-blusys::app::bundle_list bundles{&conn, &stor};
+blusys::app::capability_list capabilities{&conn, &stor};
 
 }  // namespace
 
@@ -120,7 +120,7 @@ static auto spec = blusys::app::app_spec<State, Action>{
     .on_tick        = on_tick,
     .map_event      = map_event,
     .tick_period_ms = 1000,
-    .bundles        = &bundles,
+    .capabilities   = &capabilities,
 };
 
 BLUSYS_APP_MAIN_HEADLESS(spec)

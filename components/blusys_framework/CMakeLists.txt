@@ -7,11 +7,11 @@ set(blusys_framework_sources
     src/app/app_ctx.cpp
 )
 
-# Service bundles — device-only (depend on blusys_services C APIs).
+# Capabilities — device-only (depend on blusys_services C APIs).
 if(ESP_PLATFORM)
     list(APPEND blusys_framework_sources
-        src/app/bundles/connectivity.cpp
-        src/app/bundles/storage.cpp
+        src/app/capabilities/connectivity.cpp
+        src/app/capabilities/storage.cpp
     )
 endif()
 
@@ -25,6 +25,8 @@ if(BLUSYS_BUILD_UI)
             src/app/bindings.cpp
             src/app/overlay_manager.cpp
             src/app/page.cpp
+            src/app/screen_registry.cpp
+            src/app/screen_router.cpp
             src/app/input_bridge.cpp
             src/app/app_device_platform.cpp
             src/ui/input/encoder.cpp
