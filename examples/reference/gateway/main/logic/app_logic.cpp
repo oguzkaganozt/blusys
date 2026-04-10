@@ -1,0 +1,277 @@
+#include "logic/app_logic.hpp"
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+#include "blusys/app/view/bindings.hpp"
+#include "blusys/framework/ui/primitives/key_value.hpp"
+#endif
+
+#include "blusys/log.h"
+
+#include <cstdio>
+
+namespace gateway {
+
+namespace {
+
+constexpr const char *kTag = "gateway";
+
+op_state compute_phase(const app_state &state)
+{
+    if (state.ota_in_progress) {
+        return op_state::updating;
+    }
+    if (!state.provisioned && !state.conn_ready) {
+        return op_state::provisioning;
+    }
+    if (!state.has_ip) {
+        return op_state::connecting;
+    }
+    if (state.has_ip && state.time_synced && state.conn_ready) {
+        return op_state::operational;
+    }
+    if (state.has_ip) {
+        return op_state::connected;
+    }
+    return op_state::idle;
+}
+
+void refresh_phase(app_state &state)
+{
+    op_state next = compute_phase(state);
+    if (next != state.phase) {
+        BLUSYS_LOGI(kTag, "phase: %s -> %s",
+                    op_state_name(state.phase), op_state_name(next));
+        state.phase = next;
+    }
+}
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+void sync_shell(app_state &state)
+{
+    if (state.shell_badge != nullptr) {
+        const bool ready = (state.phase == op_state::operational);
+        blusys::app::view::set_badge_text(state.shell_badge,
+                                          ready ? "Online" : op_state_name(state.phase));
+        blusys::app::view::set_badge_level(
+            state.shell_badge,
+            ready ? blusys::ui::badge_level::success : blusys::ui::badge_level::warning);
+    }
+
+    if (state.shell_detail != nullptr) {
+        char detail[48];
+        std::snprintf(detail, sizeof(detail), "%ld dev  %.0f msg/s",
+                      static_cast<long>(state.active_devices),
+                      static_cast<double>(state.agg_throughput));
+        blusys::app::view::set_text(state.shell_detail, detail);
+    }
+}
+
+void sync_dashboard(app_state &state)
+{
+    if (state.dash_devices != nullptr) {
+        char value[32];
+        std::snprintf(value, sizeof(value), "%ld / %ld",
+                      static_cast<long>(state.active_devices),
+                      static_cast<long>(state.device_count));
+        blusys::app::view::set_kv_value(state.dash_devices, value);
+    }
+    if (state.dash_throughput != nullptr) {
+        char value[16];
+        std::snprintf(value, sizeof(value), "%.1f msg/s",
+                      static_cast<double>(state.agg_throughput));
+        blusys::app::view::set_kv_value(state.dash_throughput, value);
+    }
+    if (state.dash_uplink != nullptr) {
+        blusys::app::view::set_kv_value(
+            state.dash_uplink,
+            state.conn_ready ? "Connected" : "Offline");
+    }
+    if (state.dash_storage != nullptr) {
+        blusys::app::view::set_kv_value(
+            state.dash_storage,
+            state.storage_ready ? "Mounted" : "Pending");
+    }
+}
+
+void sync_status(blusys::app::app_ctx &ctx, app_state &state)
+{
+    blusys::app::screens::status_screen_update(state.status_handles, ctx);
+}
+
+void sync_all(blusys::app::app_ctx &ctx, app_state &state)
+{
+    sync_shell(state);
+    sync_dashboard(state);
+    sync_status(ctx, state);
+}
+#endif  // BLUSYS_FRAMEWORK_HAS_UI
+
+}  // namespace
+
+const char *op_state_name(op_state s)
+{
+    switch (s) {
+    case op_state::idle:          return "idle";
+    case op_state::provisioning:  return "provisioning";
+    case op_state::connecting:    return "connecting";
+    case op_state::connected:     return "connected";
+    case op_state::operational:   return "operational";
+    case op_state::updating:      return "updating";
+    case op_state::error:         return "error";
+    }
+    return "unknown";
+}
+
+void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
+{
+    switch (event.tag) {
+
+    // ---- connectivity ----
+
+    case action_tag::wifi_got_ip:
+        state.has_ip = true;
+        if (const auto *conn = ctx.connectivity(); conn != nullptr) {
+            BLUSYS_LOGI(kTag, "uplink acquired: %s", conn->ip_info.ip);
+        }
+        break;
+
+    case action_tag::wifi_disconnected:
+        state.wifi_connected = false;
+        state.has_ip = false;
+        BLUSYS_LOGW(kTag, "uplink lost — buffering downstream telemetry");
+        break;
+
+    case action_tag::wifi_reconnecting:
+        BLUSYS_LOGI(kTag, "uplink reconnecting...");
+        break;
+
+    case action_tag::time_synced:
+        state.time_synced = true;
+        BLUSYS_LOGI(kTag, "time synchronized");
+        break;
+
+    case action_tag::conn_bundle_ready:
+        state.conn_ready = true;
+        state.wifi_connected = true;
+        BLUSYS_LOGI(kTag, "connectivity bundle ready — all services up");
+        break;
+
+    // ---- telemetry ----
+
+    case action_tag::telemetry_delivered:
+        if (const auto *tel = ctx.telemetry(); tel != nullptr) {
+            state.delivered = tel->total_delivered;
+        }
+        BLUSYS_LOGI(kTag, "aggregated telemetry delivered (total=%u)", state.delivered);
+        break;
+
+    case action_tag::telemetry_failed:
+        if (const auto *tel = ctx.telemetry(); tel != nullptr) {
+            state.delivery_fails = tel->total_failed;
+        }
+        BLUSYS_LOGW(kTag, "telemetry delivery failed (fails=%u)", state.delivery_fails);
+        break;
+
+    // ---- diagnostics ----
+
+    case action_tag::diag_snapshot:
+        if (const auto *diag = ctx.diagnostics(); diag != nullptr) {
+            state.diagnostics = *diag;
+        }
+        break;
+
+    case action_tag::diag_bundle_ready:
+        state.diag_ready = true;
+        BLUSYS_LOGI(kTag, "diagnostics ready");
+        break;
+
+    // ---- ota ----
+
+    case action_tag::ota_download_progress:
+        state.ota_in_progress = true;
+        state.ota_progress = static_cast<std::uint8_t>(event.value);
+        BLUSYS_LOGI(kTag, "ota: %u%%", state.ota_progress);
+        break;
+
+    case action_tag::ota_apply_complete:
+        state.ota_in_progress = false;
+        BLUSYS_LOGI(kTag, "ota: firmware applied — reboot pending");
+        break;
+
+    case action_tag::ota_apply_failed:
+        state.ota_in_progress = false;
+        BLUSYS_LOGE(kTag, "ota: apply failed — resuming normal operation");
+        break;
+
+    case action_tag::ota_bundle_ready:
+        state.ota_ready = true;
+        BLUSYS_LOGI(kTag, "ota ready");
+        break;
+
+    // ---- provisioning ----
+
+    case action_tag::prov_success:
+    case action_tag::prov_already_done:
+    case action_tag::prov_bundle_ready:
+        state.provisioned = true;
+        break;
+
+    // ---- storage ----
+
+    case action_tag::storage_bundle_ready:
+        state.storage_ready = true;
+        BLUSYS_LOGI(kTag, "storage mounted");
+        break;
+
+    // ---- navigation (interactive) ----
+
+    case action_tag::show_dashboard:
+        ctx.navigate_to(route_dashboard);
+        break;
+
+    case action_tag::show_status:
+        ctx.navigate_to(route_status);
+        break;
+
+    case action_tag::show_settings:
+        ctx.navigate_to(route_settings);
+        break;
+
+    case action_tag::open_about:
+        ctx.navigate_push(route_about);
+        break;
+
+    // ---- periodic ----
+
+    case action_tag::sample_tick:
+        break;
+    }
+
+    refresh_phase(state);
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+    sync_all(ctx, state);
+#endif
+}
+
+bool map_intent(blusys::framework::intent intent, action *out)
+{
+    switch (intent) {
+    case blusys::framework::intent::increment:
+        *out = action{.tag = action_tag::show_status};
+        return true;
+    case blusys::framework::intent::decrement:
+        *out = action{.tag = action_tag::show_dashboard};
+        return true;
+    case blusys::framework::intent::confirm:
+        *out = action{.tag = action_tag::show_settings};
+        return true;
+    case blusys::framework::intent::cancel:
+        *out = action{.tag = action_tag::show_dashboard};
+        return true;
+    default:
+        return false;
+    }
+}
+
+}  // namespace gateway

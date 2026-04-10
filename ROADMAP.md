@@ -478,6 +478,8 @@ Prove the platform can build strong local interactive products without adding a 
 
 ## Phase 6: Connected Archetype References
 
+Detailed execution plan: `docs/internals/phase-6-connected-archetypes-plan.md`
+
 ### Goal
 
 Prove the platform can build dependable connected products without adding a separate connectivity-specific architecture.

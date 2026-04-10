@@ -480,6 +480,14 @@ examples:
     ci_pr: false
     ci_nightly: true
 
+  - name: edge_node
+    category: quickstart
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: true
+    ci_nightly: true
+
   - name: framework_device_basic
     category: quickstart
     visibility: public
@@ -489,6 +497,14 @@ examples:
     ci_nightly: true
 
   # --- Reference (nightly only) ---
+  - name: gateway
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
   - name: interactive_panel
     category: reference
     visibility: public
