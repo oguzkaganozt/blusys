@@ -17,6 +17,8 @@ if(BLUSYS_BUILD_UI)
             src/app/bindings.cpp
             src/app/overlay_manager.cpp
             src/app/page.cpp
+            src/app/input_bridge.cpp
+            src/app/app_device_platform.cpp
             src/ui/input/encoder.cpp
             src/ui/primitives/col.cpp
             src/ui/primitives/divider.cpp

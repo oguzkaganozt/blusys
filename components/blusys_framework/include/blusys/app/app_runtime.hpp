@@ -144,6 +144,18 @@ public:
         return action_queue_.push_back(action);
     }
 
+    void post_intent(blusys::framework::intent intent,
+                     std::uint32_t source_id = 0,
+                     const void *payload = nullptr)
+    {
+        framework_runtime_.post_intent(intent, source_id, payload);
+    }
+
+    [[nodiscard]] blusys::framework::runtime &framework_runtime()
+    {
+        return framework_runtime_;
+    }
+
     [[nodiscard]] const State &state() const { return state_; }
     [[nodiscard]] State &state() { return state_; }
     [[nodiscard]] app_ctx &ctx() { return ctx_; }

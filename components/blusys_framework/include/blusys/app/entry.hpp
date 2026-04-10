@@ -9,15 +9,25 @@
 // The macros hide:
 //   - main() / app_main() definition
 //   - LVGL init and display setup (interactive path)
+//   - LCD and UI service bring-up (device path)
+//   - encoder input wiring (device path)
 //   - theme selection and application
 //   - runtime construction and main loop
 //
-// Phase 1 supports BLUSYS_APP_MAIN_HOST (interactive, SDL2) and
-// BLUSYS_APP_MAIN_HEADLESS (no UI, terminal). Device entry is
-// deferred to Phase 3 (platform profiles).
+// Available entry macros:
+//   BLUSYS_APP_MAIN_HOST(spec)            — interactive, SDL2 host
+//   BLUSYS_APP_MAIN_HEADLESS(spec)        — no UI, terminal
+//   BLUSYS_APP_MAIN_DEVICE(spec, profile) — device target with LCD + optional encoder
 
 #include "blusys/app/app_runtime.hpp"
 #include "blusys/log.h"
+
+// Device-specific headers — only available in the IDF component build
+// (the host harness does not have blusys_services on its include path).
+#if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM)
+#include "blusys/app/platform_profile.hpp"
+#include "blusys/app/input_bridge.hpp"
+#endif
 
 #include <cstdint>
 #include <cstdio>
@@ -30,6 +40,7 @@
 namespace blusys_app_platform {
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
+// Host platform (SDL2)
 void host_init(int w, int h, const char *title);
 std::uint32_t host_get_ticks_ms();
 void host_tick_inc(std::uint32_t ms);
@@ -37,6 +48,20 @@ std::uint32_t host_frame_step();
 void host_frame_delay(std::uint32_t ms);
 void host_set_default_theme();
 void host_set_theme(const void *tokens);
+
+#ifdef ESP_PLATFORM
+// Device platform (ESP-IDF)
+blusys_err_t device_init(blusys::app::device_profile &profile,
+                         blusys_lcd_t **lcd_out,
+                         blusys_ui_t **ui_out);
+void device_deinit(blusys_lcd_t *lcd, blusys_ui_t *ui);
+void device_set_default_theme();
+void device_set_theme(const void *tokens);
+std::uint32_t device_get_ticks_ms();
+void device_delay(std::uint32_t ms);
+void device_ui_lock(blusys_ui_t *ui);
+void device_ui_unlock(blusys_ui_t *ui);
+#endif  // ESP_PLATFORM
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
 
 std::uint32_t headless_get_ticks_ms();
@@ -89,6 +114,72 @@ void run_host(const app_spec<State, Action> &spec,
     runtime.deinit();
 }
 
+// ---- device entry (ESP-IDF + LCD + LVGL) ----
+
+#ifdef ESP_PLATFORM
+
+template <typename State, typename Action>
+void run_device(const app_spec<State, Action> &spec,
+                device_profile profile)
+{
+    blusys_lcd_t *lcd = nullptr;
+    blusys_ui_t  *ui  = nullptr;
+
+    blusys_err_t err = blusys_app_platform::device_init(profile, &lcd, &ui);
+    if (err != BLUSYS_OK) {
+        BLUSYS_LOGE("blusys_app", "device init failed: %d", static_cast<int>(err));
+        return;
+    }
+
+    if (spec.theme != nullptr) {
+        blusys_app_platform::device_set_theme(static_cast<const void *>(spec.theme));
+    } else {
+        blusys_app_platform::device_set_default_theme();
+    }
+
+    app_runtime<State, Action> runtime(spec);
+    err = runtime.init();
+    if (err != BLUSYS_OK) {
+        BLUSYS_LOGE("blusys_app", "app runtime init failed: %d", static_cast<int>(err));
+        blusys_app_platform::device_deinit(lcd, ui);
+        return;
+    }
+
+    // Input bridge (optional — only if profile declares an encoder).
+    input_bridge bridge{};
+    if (profile.has_encoder) {
+        input_bridge_config bridge_cfg{};
+        bridge_cfg.encoder_config = profile.encoder;
+        bridge_cfg.framework_runtime = &runtime.framework_runtime();
+        const blusys_err_t bridge_err = input_bridge_open(bridge_cfg, &bridge);
+        if (bridge_err != BLUSYS_OK) {
+            BLUSYS_LOGW("blusys_app",
+                        "input bridge open failed: %d — continuing without encoder",
+                        static_cast<int>(bridge_err));
+            profile.has_encoder = false;
+        }
+    }
+
+    BLUSYS_LOGI("blusys_app", "app running on device");
+
+    while (true) {
+        const std::uint32_t now = blusys_app_platform::device_get_ticks_ms();
+        blusys_app_platform::device_ui_lock(ui);
+        runtime.step(now);
+        blusys_app_platform::device_ui_unlock(ui);
+        blusys_app_platform::device_delay(spec.tick_period_ms);
+    }
+
+    // Unreachable in normal operation.
+    if (profile.has_encoder) {
+        input_bridge_close(&bridge);
+    }
+    runtime.deinit();
+    blusys_app_platform::device_deinit(lcd, ui);
+}
+
+#endif  // ESP_PLATFORM
+
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
 
 // ---- headless entry (no UI, no LVGL) ----
@@ -129,6 +220,15 @@ void run_headless(const app_spec<State, Action> &spec)
         ::blusys::app::detail::run_host(_blusys_spec);                      \
         return 0;                                                           \
     }
+
+#ifdef ESP_PLATFORM
+#define BLUSYS_APP_MAIN_DEVICE(spec_expr, profile_expr)                     \
+    extern "C" void app_main(void) {                                        \
+        auto _blusys_spec = (spec_expr);                                    \
+        auto _blusys_profile = (profile_expr);                              \
+        ::blusys::app::detail::run_device(_blusys_spec, _blusys_profile);   \
+    }
+#endif  // ESP_PLATFORM
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
 
