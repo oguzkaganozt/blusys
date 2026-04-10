@@ -1,421 +1,708 @@
-# V7 Refactor Roadmap
+# Roadmap
 
 ## Status
 
-Active planning document. This roadmap tracks the phased execution of the v7 product-surface reset.
+Active roadmap. This document defines the implementation sequence for the current product-platform reset.
 
 The companion product requirements document lives at `PRD.md`.
 
-## Guiding Principle
+## North Star
 
-This program is not about building a cleaner generic ESP32 framework.
+Blusys should become a unified internal product development platform, not a generic embedded framework.
 
-This program is about building the internal operating system for our product families.
+It should let teams build two different vertical lenses on one shared operating model:
 
-That means roadmap decisions should favor:
+- **Consumer products** with tactile, expressive, characterful interaction and concise, fluent flows
+- **Industrial and B2B products** with readable, dependable, operationally coherent flows and connected lifecycle management
 
-- recurring product archetypes over generic module sprawl
-- shared product flows over app-by-app wiring
-- strong default interaction and service behavior over many equal-looking choices
-- expressive consumer products and reliable industrial products on the same core runtime
+What must stay shared underneath both:
 
-## Milestone Status
-
-- [x] Phase 0: Freeze the v7 contract
-- [x] Phase 1: Build `blusys::app` core
-- [x] Phase 2: Build the view layer and widget contract
-- [x] Phase 3: Build platform profiles
-- [x] Phase 4: Build service bundles
-- [x] Phase 5: Reset scaffold and CLI
-- [x] Phase 6: Shrink docs, examples, metadata, and CI
-- [x] Phase 7: Cut over to v7
-
-## Reference Product Families
-
-The roadmap should continuously validate the v7 platform against these recurring families:
-
-- interactive consumer devices
-- interactive control surfaces
-- headless connected appliances and nodes
-- industrial telemetry and control products
-
-The first two canonical reference slices for implementation are:
-
-- one host-first interactive product
-- one headless connected product
-
-## Workstreams
-
-### Workstream A: App Core
-
-Scope:
-
-- `blusys::app` namespace
-- reducer model
-- product operating model
-- runtime ownership
-- navigation ownership
-- effects model
-- host, device, and headless entrypoints
-
-### Workstream B: View Layer
-
-Scope:
-
-- stock widgets
-- bindings
-- design-system primitives
-- page helpers
-- overlays and navigation surfaces
-- custom widget contract
-- explicit custom LVGL view scope
-
-### Workstream C: Platform And Services
-
-Scope:
-
-- host profile
-- headless profile
-- generic SPI ST7735 profile
-- connected-device bundle
-- storage bundle
+- reducer-driven app model: `update(ctx, state, action)`
+- app runtime and lifecycle ownership
+- routing and navigation ownership
+- capabilities and runtime-service orchestration model
 - shared operational flows
+- shared widget contract
+- shared scaffold and host-first workflow
 
-Ownership note:
+What should differ by product:
 
-- service bundles and shared operational flows are framework-owned product-path behavior built on top of `blusys_services`, not new responsibilities for the services tier
+- visual language
+- information density
+- interaction emphasis
+- reference archetype emphasis
 
-### Workstream D: Tooling And Scaffolding
+## Archetype Model
 
-Scope:
+The framework itself should only have two top-level runtime modes:
 
-- scaffold templates
-- `blusys create`
-- generated project shape
-- first-run experience
+- `interactive`
+- `headless`
 
-### Workstream E: Repo Surface
+Above that, the roadmap locks in four canonical archetypes.
 
-Scope:
+These archetypes are not framework branches. They are medium-strength starter compositions for:
 
-- docs structure
-- example taxonomy
-- reference-product coverage
-- metadata inventory
-- PR CI and nightly validation split
+- docs
+- examples
+- scaffold defaults
+- reference implementations
+
+They are built from shared platform ingredients such as:
+
+- capabilities
+- profiles
+- widgets
+- themes
+- flows
+- input bridges
+
+### Canonical Archetypes
+
+Interaction-led archetypes:
+
+- `interactive controller`
+- `interactive panel`
+
+Connected runtime archetypes:
+
+- `edge node`
+- `gateway/controller`
+
+Rules:
+
+- archetypes are optional starting shapes, not architecture boundaries
+- archetypes may exist in `interactive` or `headless` variants when appropriate
+- framework APIs should stay capability-based, not archetype-based
+- archetypes are allowed to mix traits across consumer and industrial usage if the product needs it
+
+### Starter Matrix
+
+Each archetype needs a stable starter shape so scaffolds, docs, and examples do not drift.
+
+- `interactive controller`
+  - mode bias: interactive
+  - default interaction: encoder, buttons, touch where appropriate
+  - default capability bias: storage, connectivity optional, bluetooth optional
+  - default flow bias: settings, pairing or setup, status, compact control flows
+- `interactive panel`
+  - mode bias: interactive
+  - default interaction: touch, button array, encoder where appropriate
+  - default capability bias: connectivity, storage, diagnostics optional
+  - default flow bias: dashboard, settings, status, diagnostics, local control
+- `edge node`
+  - mode bias: headless-first
+  - default interaction: no local UI by default, optional tiny status surface
+  - default capability bias: connectivity, telemetry, storage, OTA, provisioning, diagnostics
+  - default flow bias: provisioning, connectivity lifecycle, telemetry, diagnostics, maintenance
+- `gateway/controller`
+  - mode bias: headless or interactive depending on deployment
+  - default interaction: optional local panel or operator surface
+  - default capability bias: connectivity, telemetry, provisioning, diagnostics, OTA, local control
+  - default flow bias: orchestration, diagnostics, settings, connectivity, maintenance, operator status
+
+## Tier Model
+
+The roadmap keeps the repository's three-tier architecture intact:
+
+- `blusys` — HAL + drivers
+- `blusys_services` — runtime substrate in C
+- `blusys_framework` — product framework in C++
+
+Interpretation:
+
+- HAL + drivers own raw hardware-facing and device-near behavior
+- the runtime substrate owns stateful runtime services such as Wi-Fi, BLE, OTA, MQTT, HTTP, UI runtime, filesystems, provisioning, and local control
+- the framework owns reusable product-facing capabilities, flows, views, profiles, and app composition
+
+This is important because Wi-Fi, Bluetooth, OTA, and similar modules are not just hardware drivers. They are stateful runtime systems and should not be collapsed into the HAL.
+
+## Default Project Structure
+
+Every scaffolded app should use the same default directory structure.
+
+Archetypes should change the generated contents and defaults, not the project layout.
+
+Recommended shape:
+
+```text
+my_project/
+├── CMakeLists.txt
+├── sdkconfig.defaults
+├── README.md
+└── main/
+    ├── CMakeLists.txt
+    ├── idf_component.yml
+    ├── logic/
+    ├── ui/
+    └── system/
+```
+
+Folder meanings:
+
+- `logic/` — product logic: `state`, `action`, `update(ctx, state, action)`, domain rules, app-owned behavior
+- `ui/` — screens, custom widgets, theme or identity, view composition
+- `system/` — entrypoint wiring, selected profile, capability setup, runtime-service integration, mapping system events into app actions
+
+Rules:
+
+- this structure should be the same for interactive and headless projects
+- `ui/` still exists for headless projects even if lightly used
+- docs, examples, and scaffolds should all reinforce this same layout
+- avoid per-archetype directory layouts that force developers to relearn project structure
+
+### Directory Ownership Rules
+
+To keep this structure intuitive and maintainable, the ownership boundaries must stay strict.
+
+- `logic/` owns product state, actions, reducer logic, and business behavior
+- `logic/` should not own profile selection, capability setup, or direct runtime-service wiring
+- `ui/` owns screens, widgets, theme or identity, and rendering from state
+- `ui/` should dispatch actions and read state, but should not call runtime services directly
+- `ui/` should not contain business decisions that belong in the reducer
+- `system/` owns entrypoint assembly, profile selection, capability setup, bridges, and runtime-service integration
+- `system/` maps external events into app actions but should not become the home of product behavior
+- `system/` should not accumulate durable business state that belongs in `logic/`
+
+This separation is what makes the shared project structure scalable across all archetypes.
+
+### Build Model Decision
+
+The roadmap locks in one scaffold/build model for product apps:
+
+- scaffolded product apps should use `main/` as the single local ESP-IDF component
+- `main/CMakeLists.txt` should compile the files under `logic/`, `ui/`, and `system/`
+- `main/idf_component.yml` remains the place where the platform components are pulled in through the managed component flow
+- the current separate local `app/` component model should be removed from the recommended scaffold path during Phase 0
+- in-repo examples may keep their own build mechanics where needed, but scaffolded product apps should no longer have two competing local layouts
+
+This means the canonical scaffold shape is one local component with one internal folder structure, not a top-level `app/` component plus a different product layout inside it.
+
+### Naming Cutover Decision
+
+The roadmap also locks in the rename scope for `bundles` and `capabilities`:
+
+- `capabilities` becomes the product-facing term in the framework
+- the public recommended API, docs, scaffold output, examples, and quickstarts should use `capabilities`
+- the rename should be executed as one deliberate Phase 0 cutover across the product-facing surface
+- avoid keeping long-lived parallel `bundle` and `capability` names in the recommended path
+- low-level runtime-service names inside `blusys_services` do not need to be rewritten just to match the new product language unless they surface directly in the product-facing API
+
+This keeps the rename meaningful without turning it into unnecessary churn across unrelated internal layers.
+
+### Capability Contract Decision
+
+Every framework capability should follow one standard contract.
+
+Required shape:
+
+- each capability has a clear data-only configuration struct
+- each capability is composed in `system/`, not in `logic/` or `ui/`
+- framework or system wiring owns capability lifecycle and runtime-service integration
+- capability status is queryable through a consistent app-facing mechanism
+- product logic requests capability work through reducer-driven actions; `system/` translates those actions into capability calls
+- capability events are mapped into app actions in `system/`
+- `logic/` reacts to those actions in the reducer and owns product behavior
+- `ui/` renders from state and dispatches actions, but does not call runtime services directly
+- capabilities may expose advanced escape hatches, but the recommended path stays reducer- and event-driven
+
+This contract is mandatory before multiple capabilities are expanded in parallel.
+
+## Current-State Reality
+
+The repo already has a real v7 engine:
+
+- `blusys::app` exists and is structurally coherent
+- the reducer model is real
+- host, headless, and device entry points exist
+- the ST7735 canonical device profile exists
+- connectivity and storage capabilities already exist in early product-facing form
+- a thin product-facing view layer exists
+
+But the platform is not yet the finished product operating system we want.
+
+The most important current gaps are:
+
+- routing and screen ownership are incomplete
+- input and focus ownership are not fully integrated
+- the theme system is too small for either vertical
+- the stock widget set is too thin
+- shared operational flows are mostly not built
+- quickstarts, scaffold, docs, and examples are not yet fully canonicalized around the same path
+- validation is still mostly build-centric rather than product-behavior-centric
+
+This means the right sequencing is:
+
+1. close the remaining foundation gaps
+2. build the shared product operating system layer
+3. prove it through the canonical archetypes without turning them into framework branches
+4. package the proven model into broader profiles, scaffolds, and docs
+
+## Product Principles
+
+- push complexity down into the platform
+- keep product code centered on `state`, `action`, `update(ctx, state, action)`, views, capabilities, and profiles
+- keep the three-tier architecture intact
+- build shared foundations first, vertical specialization second
+- keep raw LVGL and raw services available, but visibly advanced
+- validate through archetype references, not only through abstractions and docs
+- keep one fixed app directory structure across all scaffolded projects
+- keep the runtime substrate in C; do not pull stateful runtime services down into the HAL
+- use one standard capability contract so all product-facing capabilities compose the same way
 
 ## Phase Plan
 
-## Phase 0: Freeze the v7 contract
+## Phase 0: Close The V7 Foundation
 
-Goal:
+### Goal
 
-Define the target before implementation so the refactor does not drift.
+Make the current `blusys::app` path truly canonical, internally coherent, and safe to build on.
 
-Deliverables:
+### Why this phase is mandatory first
 
-- v7 PRD
-- app model and reducer contract
-- product family archetypes and reference slices
-- shared operational flow inventory
-- design-system and interaction grammar scope
-- custom widget contract
-- support-tier classification for modules, docs, and examples
-- deprecation and removal list
-- success metrics and release criteria
+The current engine is real, but repo-level coherence still lags behind it. Expanding widgets, themes, and profiles before closing those gaps would increase breadth without increasing trust.
 
-Exit Criteria:
+### Deliverables
 
-- `PRD.md` exists
-- the product contract is written down and stable enough to implement against
-- the team can point to one source of truth for the refactor
+- finish real framework-owned route stack and screen ownership
+- move beyond overlay-only routing behavior
+- unify input and focus handling across host and hardware paths
+- make host and headless profiles meaningful product-facing configuration surfaces
+- align scaffold output, quickstarts, docs, and examples with the actual current app API
+- establish and enforce the fixed `logic/`, `ui/`, and `system/` app structure for every scaffolded project
+- remove the separate local `app/` component model from the canonical scaffolded product path and standardize on `main/` as the single local component
+- remove low-level framework examples from `examples/quickstart/` so quickstarts are purely product-facing
+- fix scaffold dependency drift and pinning issues in `blusys create`
+- resolve obvious docs drift around entry macros, capability APIs, and view APIs
+- cut over the product-facing API, docs, and scaffold language from `bundles` to `capabilities`
+- define and document the standard capability contract before expanding the capability catalog
 
-## Phase 1: Build `blusys::app` core
+### Exit Criteria
 
-Goal:
+- there is one unambiguous recommended product path
+- quickstarts, scaffold, docs, and code all point to the same current API
+- every scaffolded project uses the same fixed directory layout
+- every scaffolded project uses `main/` as the single local component
+- interactive routing is framework-owned, not mostly aspirational
+- input behavior is stable enough to trust as a default path
 
-Create the new product-facing app runtime on top of the existing framework substrate.
+## Phase 1: Design System And Product Identity Foundation
 
-Deliverables:
+### Goal
 
-- `blusys::app` namespace skeleton
-- `app_spec`
-- `app_ctx`
-- reducer-driven dispatch loop
-- app-level operating model for both interactive and headless products
-- internal navigation ownership
-- internal feedback ownership
-- entry macros for host, device, and headless
-- default theme presets
+Create one shared token and identity system that can express both verticals without splitting the platform.
 
-Dependencies:
+### Deliverables
 
-- Phase 0 complete
+- expand `theme_tokens` with:
+  - semantic colors
+  - state colors
+  - density controls
+  - richer typography scale
+  - motion tokens
+  - depth or elevation tokens
+- add a compact icon system suitable for small displays and dense status surfaces
+- define product identity hooks for theme, motion, feedback, and icon usage
+- ship at least two serious presets:
+  - `expressive_dark`
+  - `operational_light`
+- define framework-owned feedback presets for:
+  - click
+  - confirm
+  - success
+  - warning
+  - error
+  - notification
 
-Exit Criteria:
+### Exit Criteria
 
-- one interactive demo runs with no app-owned runtime plumbing
-- one headless demo runs with the same reducer model
-- normal app code no longer constructs low-level framework runtime objects directly
-- both demos clearly map to the intended product families rather than generic examples
+- the same widget code can look like a tactile interactive controller or an operational interactive panel just by changing identity and theme inputs
+- motion, density, and feedback are token-driven rather than ad hoc
+- widgets no longer assume one narrow visual language
 
-## Phase 2: Build the view layer and widget contract
+## Phase 2: Interaction Shell And Navigation Ownership
 
-Goal:
+### Goal
 
-Make common product UI simple while preserving bounded LVGL freedom.
+Make the framework own the common interaction grammar for interactive products.
 
-Deliverables:
+### Deliverables
 
-- action-bound stock widgets
-- simple bindings for text, value, enabled, and visible state
-- reusable design-system primitives
-- page and screen helpers
-- built-in overlay and route helpers
-- custom widget contract
-- explicit custom LVGL view blocks
+- real route stack and screen registry behavior
+- route transitions driven by motion tokens
+- persistent header and status surfaces
+- tab navigation support
+- stronger page lifecycle ownership
+- unified encoder flow across host and device
+- hardware button-array input bridge
+- touch input bridge
+- a consistent focus model for interactive widgets and screens
 
-Dependencies:
+### Exit Criteria
 
-- Phase 1 complete
+- interactive products no longer hand-roll navigation structure
+- focus and input behavior feel consistent across host and device
+- both verticals can use the same shell while presenting different personalities and densities
 
-Exit Criteria:
+## Phase 3: Shared Widget Library Expansion
 
-- canonical interactive app avoids raw widget handles for common flows
-- custom product widgets have a formal extension pattern
-- raw LVGL remains bounded to approved scopes
-- the view layer is suitable for both expressive consumer UI and clear industrial UI
+### Goal
 
-## Phase 3: Build platform profiles
+Cover the majority of normal product UI needs without dropping to raw LVGL.
 
-Goal:
+### Deliverables
 
-Make the new app model runnable on host, headless, and the first canonical interactive device path.
+Shared core widgets:
 
-Deliverables:
+- `progress`
+- `list`
+- `card`
+- `icon_label`
+- `status_badge`
+- `input_field`
+- `tabs`
+- `dropdown` or picker
 
-- host default profile
-- headless default profile
-- generic SPI ST7735 profile
-- framework-owned display and UI bring-up for the canonical path
-- framework-owned common input bridge
-- first product-family-aligned runtime slices on real targets
+Consumer-emphasis widgets:
 
-Dependencies:
+- `gauge`
+- `knob`
+- audio-control friendly display widgets
 
-- Phase 1 complete
-- Phase 2 complete enough to support the canonical interactive example
+Industrial-emphasis widgets:
 
-Exit Criteria:
+- `data_table`
+- `chart`
+- `key_value`
 
-- host-first interactive quickstart runs immediately
-- headless quickstart is first-class
-- ST7735 profile builds on ESP32, ESP32-C3, and ESP32-S3
-- at least one target has real hardware validation for the canonical ST7735 path
-- the platform proves the same app model works for both interactive and headless families
+All widgets must:
 
-Support note:
+- follow the six-rule widget contract
+- consume theme tokens only
+- preserve reducer-driven outward behavior
+- support the standard focus and disabled model where interactive
 
-- milestone support for the ST7735 profile means compile support on all three targets
-- release-ready support additionally requires staged real-hardware validation beyond the first validated target
+### Exit Criteria
 
-## Phase 4: Build service bundles
+- most normal app UI can stay inside `blusys::app`
+- interactive controller and panel screens can be built from stock widgets
+- edge-node and gateway local surfaces can be built from stock widgets where needed
 
-Goal:
+## Phase 4: Shared Operational Flows And Stock Product Screens
 
-Remove low-level service orchestration from common product apps.
+### Goal
 
-Deliverables:
+Turn the platform into a reusable product operating system instead of only a runtime engine.
 
-- connected-device bundle over Wi-Fi with optional local control, mDNS, and SNTP
-- unified storage bundle over the current storage surfaces
-- clear advanced-only positioning for raw services in the docs and examples
-- common diagnostics and control hooks for connected products
+### Deliverables
 
-Dependencies:
+Shared flows:
 
-- Phase 1 complete
+- boot and splash
+- loading and empty states
+- error and recovery states
+- settings and configuration
+- provisioning and setup
+- connectivity state and reconnect UX
+- diagnostics and local control entry points
+- OTA and maintenance flow
+- status, alerts, and confirmations
 
-Exit Criteria:
+Framework-owned stock screens and builders:
 
-- canonical connected examples use bundles rather than raw service orchestration
-- headless and interactive app paths can use services through app effects and bundles
-- common connected product flows are shared across consumer and industrial examples
+- settings screen builder
+- about or device-info screen
+- status screen
+- diagnostics screen
+- provisioning flow screens for interactive products
+- headless equivalents through capability events and reducer integration
 
-## Phase 5: Reset scaffold and CLI
+Framework-owned capabilities on top of the runtime substrate:
 
-Goal:
+- `connectivity_capability` — Wi-Fi, SNTP, mDNS, local control, and reconnect behavior
+- `bluetooth_capability` — BLE-oriented setup and device communication paths where applicable
+- `storage_capability` — persistent local data management
+- `ota_capability` — firmware update lifecycle
+- `diagnostics_capability` — health, system info, and diagnostic surfaces
+- `telemetry_capability` — metric collection, buffering, and delivery
+- `provisioning_capability` — first-run setup and reprovisioning flows
 
-Make the new app model the first and most obvious user path.
+Capability contract requirements:
 
-Deliverables:
+- capability configuration lives in `system/`
+- capability lifecycle is owned by framework or system wiring, not by screens
+- product logic requests capability work through reducer-driven actions; `system/` performs the capability call
+- capability status and events cross into product code only through the standard app-facing contract
+- business decisions stay in `logic/`
+- view behavior stays in `ui/`
 
-- scaffold templates extracted from the monolithic CLI script
-- new generated project shape aligned with `blusys::app`
-- runnable host-first interactive scaffold
-- runnable headless scaffold
-- simplified CLI surface for product creation
-- scaffold outputs that map onto known product-family reference slices
+### Exit Criteria
 
-Dependencies:
+- products stop rebuilding system flows app by app
+- both consumer and industrial products use the same flow ownership model
+- product code customizes behavior through reducer actions and events rather than forking platform flows
 
-- Phases 1 through 3 complete enough to scaffold against
+## Phase 5: Interactive Archetype References
 
-Exit Criteria:
+### Goal
 
-- `blusys create` generates the new app model by default
-- generated projects clearly separate framework glue from app-owned code
-- getting-started can be rewritten around the new scaffold without caveats
-- users can identify which quickstart matches their product family quickly
+Prove the platform can build strong local interactive products without adding a separate interaction-specific architecture.
 
-## Phase 6: Shrink docs, examples, metadata, and CI
+### Canonical Interactive Archetypes
 
-Goal:
+- `interactive controller`
+- `interactive panel`
 
-Reduce repo sprawl and validation cost once the new product path is real.
+### What these references must prove
 
-Deliverables:
+- strong visual identity
+- tactile-feeling interaction
+- expressive transitions and feedback behavior
+- compact and fluent navigation
+- host-first iteration that feels close to the device experience
+- no raw LVGL in normal app code
 
-- docs reorganized into `Start`, `App`, `Services`, `HAL + Drivers`, `Internals`, `Archive`
-- examples reorganized into `quickstart`, `reference`, `validation`
-- curated public example set
-- reference products and family-oriented docs replacing generic sprawl where possible
-- metadata-driven support and inventory checks
-- PR CI narrowed to curated core builds and docs checks
-- broader validation moved to nightly or release jobs
+### Deliverables
 
-Dependencies:
+- a primary reference implementation for `interactive controller`
+- a secondary archetype starter or reference for `interactive panel`
+- interaction and design guidance derived from the actual archetype work
+- refinement of tokens, icons, widgets, and feedback discovered from real product pressure
 
-- the new app path is stable enough to document and validate as canonical
+### Exit Criteria
 
-Exit Criteria:
+- the interactive archetypes feel like real product starting points, not framework samples
+- a product team can fork either archetype and quickly produce a differentiated product
 
-- public docs are scan-fast and consistent
-- public example list is curated rather than exhaustive
-- PR CI is materially smaller and faster than the current full example matrix
-- docs and examples describe product families and common flows, not only module catalogs
+## Phase 6: Connected Archetype References
 
-## Phase 7: Cut over to v7
+### Goal
 
-Goal:
+Prove the platform can build dependable connected products without adding a separate connectivity-specific architecture.
 
-Complete the reset and avoid carrying two product stories.
+### Canonical Connected Archetypes
 
-Deliverables:
+- `edge node`
+- `gateway/controller`
 
-- canonical quickstarts migrated to `blusys::app`
-- old public app path archived or clearly demoted
-- short `v6 -> v7` migration guide
-- final cleanup of overlapping examples and stale docs
-- the product-family operating-system mindset is reflected across the repo surface
+### What these references must prove
 
-Dependencies:
+- clear operational state at a glance
+- reliable connectivity behavior and recovery
+- diagnostics and operational status visibility
+- OTA, telemetry, and local control readiness
+- headless-first viability with an optional local UI surface where appropriate
+- no repeated low-level orchestration in app code
 
-- prior phases complete
+### Deliverables
 
-Exit Criteria:
+- a primary reference implementation for `edge node`
+- a secondary archetype starter or reference for `gateway/controller`
+- connected-product guidance derived from the actual archetype work
+- telemetry capability maturity driven by real product needs
+- proof that the same operating model supports both headless deployment paths and interactive local-surface variants where useful
 
-- `blusys::app` is the only recommended product-facing API
-- the old product path no longer appears as a peer path in onboarding materials
+### Exit Criteria
 
-## First Milestone
+- the connected archetypes feel operationally complete, not like technical demos
+- a product team can fork either archetype and quickly produce a differentiated product
 
-The first implementation milestone combines the minimum work needed to make the reset real.
+## Phase 7: Hardware Breadth And Platform Packaging
 
-Scope:
+### Goal
 
-- finish Phase 0
-- complete the first cut of Phase 1
-- produce one canonical interactive quickstart
-- produce one canonical headless quickstart
-- establish compile support for the generic SPI ST7735 profile on all three targets
-- rewrite getting-started around the new path
-- validate the milestone against the first two reference product families
+Support the hardware and packaging breadth that the proven product model actually needs.
 
-Success Criteria:
+### Deliverables
 
-- the new app model exists in code
-- both canonical quickstarts run through the new reducer-driven framework path
-- no scaffolded app-owned low-level runtime wiring remains in the new quickstarts
-- the quickstarts already feel like the foundation of a product operating system, not just framework demos
+- ST7789 profile
+- SSD1306 or SH1106 profile
+- ILI9341 profile
+- ILI9488 profile
+- layout helpers for density, rotation, and resolution adaptation
+- archetype-aligned packaging of profiles, widgets, and flows for the four canonical starting shapes
 
-## Tracking Checklist
+### Exit Criteria
 
-### Product Strategy
+- the reference products run across more than one profile without app rewrites
+- adding a new profile does not require new product architecture
+- display and input breadth follows validated product pressure rather than speculative catalog expansion
 
-- [x] Define canonical product families
-- [x] Define first reference product slices
-- [x] Define shared interaction grammar
-- [x] Define shared operational flows
-- [x] Define design-system scope for v7
+## Phase 8: Ecosystem, Archetype Scaffolds, And Docs
 
-### App Core
+### Goal
 
-- [x] Define `app_spec`
-- [x] Define `app_ctx`
-- [x] Define reducer dispatch lifecycle
-- [x] Add host entry macro
-- [x] Add device entry macro
-- [x] Add headless entry macro
-- [x] Move route ownership inside the app runtime
-- [x] Move feedback ownership inside the app runtime
+Make the proven platform discoverable directly from `blusys create` and easy to adopt without repo archaeology.
 
-### View Layer
+### Deliverables
 
-- [x] Add action-bound button API
-- [x] Add simple value and text binding helpers
-- [x] Define reusable feedback primitives
-- [x] Add page helpers
-- [x] Add overlay helper path
-- [x] Define custom widget contract
-- [x] Define explicit custom LVGL scope
+- starter compositions for the four canonical archetypes
+- archetype starters that all keep the same `logic/`, `ui/`, and `system/` project structure
+- archetype starters that all use `main/` as the single local component
+- docs paths that explain the four archetypes clearly while still preserving consumer and industrial design guidance on top of the shared foundation
+- widget gallery and capability composition guides
+- quickstart and scaffold flows centered on known archetypes instead of blank technical shells
 
-### Platform Profiles
+### Exit Criteria
 
-- [x] Add host default profile
-- [x] Add headless default profile
-- [x] Add generic SPI ST7735 profile
-- [x] Confirm ESP32 compile support
-- [x] Confirm ESP32-C3 compile support
-- [x] Confirm ESP32-S3 compile support
-- [x] Complete first hardware smoke on ST7735 profile
+- a new developer can identify the right product family quickly
+- a new product starts from an archetype, not from a blank technical shell
+- the archetype choice changes defaults and starter content, not the project layout
+- the public repo surface reflects the platform mindset consistently
 
-### Services
+## Cross-Cutting Workstream: Validation And Developer Loop
 
-- [x] Define connected-device bundle API
-- [x] Define storage bundle API
-- [x] Map bundles onto existing services
-- [x] Define diagnostics and local-control hooks for shared product flows
+This should not wait until the end. It should progress alongside the core phases.
 
-### Tooling
+Required validation direction:
 
-- [x] Extract scaffold templates from `blusys`
-- [x] Create new interactive scaffold
-- [x] Create new headless scaffold
-- [x] Update CLI create flow
+- host-runnable reducer tests for app logic
+- capability integration tests with simulated runtime-service events
+- screenshot or visual smoke coverage for shared screens and reference products where practical
+- scaffold smoke validation for generated starters
+- curated CI coverage aligned with the canonical product path
 
-### Repo Cleanup
+Required developer-loop direction:
 
-- [x] Define new docs IA
-- [x] Define new example taxonomy
-- [x] Add metadata inventory source
-- [x] Add docs build gate to CI
-- [x] Reduce PR build matrix
+- keep host-first iteration fast and central
+- improve quickstart clarity before adding more breadth
+- prefer small, direct tooling improvements over a premature large CLI rewrite
+
+## Workstream View
+
+### Workstream A: Foundation Closure
+
+- canonical app path completion
+- routing completion
+- input and focus completion
+- docs, scaffold, and example alignment
+
+### Workstream B: Design System And Identity
+
+- token expansion
+- presets
+- motion and feedback semantics
+- icon and typography system
+
+### Workstream C: Interaction And Widgets
+
+- navigation shell
+- input bridges
+- stock widget expansion
+
+### Workstream D: Product Operating Flows
+
+- settings
+- provisioning
+- diagnostics
+- OTA
+- status and alerts
+- reusable runtime capabilities
+
+### Workstream E: Archetype Proof
+
+- interactive controller archetype
+- interactive panel archetype
+- edge node archetype
+- gateway/controller archetype
+
+### Workstream F: Validation And Developer Loop
+
+- reducer tests
+- capability tests
+- visual smoke
+- scaffold validation
+- host iteration quality
+
+### Workstream G: Hardware And Ecosystem
+
+- additional profiles
+- archetype-based scaffolds
+- docs and gallery system
+
+## Dependency Order
+
+The practical dependency order should be:
+
+```text
+Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4
+                               |         |
+                               |         +-> Phase 5
+                               |         +-> Phase 6
+                               |
+                               +---------------> Phase 7
+
+Phase 5 + Phase 6 -> Phase 8
+```
+
+Interpretation:
+
+- Phase 0 is mandatory first
+- Phase 1 unlocks meaningful vertical expression
+- Phases 2 and 3 can overlap carefully
+- Phase 4 should land before the reference products are considered complete
+- Phase 7 should follow proven reference-product pressure, not lead it
+- Phase 8 should package what has already been validated by real product references
 
 ## Success Metrics
 
-- interactive scaffold runs on host immediately
-- headless scaffold is similarly minimal
-- canonical product code avoids `runtime.init`, `route_sink`, `feedback_sink`, `blusys_ui_lock`, and `lv_screen_load`
-- public examples are reduced to a curated set
-- PR CI becomes materially smaller and faster
-- docs are fast to scan from `App` to `Services` to `HAL + Drivers` to `Internals`
-- new products can map onto a known product family and shared flow model quickly
+### Platform Metrics
+
+- one shared reducer-based runtime powers interactive and headless products across consumer and industrial use cases
+- most product code stays inside `blusys::app`
+- common flows are framework-owned rather than rebuilt per app
+- widget coverage handles most product needs without raw LVGL
+
+### Interactive Metrics
+
+- the interactive controller archetype feels tactile, expressive, and productized
+- the interactive panel archetype feels coherent and product-ready
+- the host path supports rapid iteration without losing interaction fidelity
+- product teams can fork the archetypes and differentiate quickly
+
+### Connected Metrics
+
+- the edge node archetype feels dependable, connected, and operationally clear
+- the gateway/controller archetype feels reliable and operationally coherent
+- diagnostics, telemetry, OTA, and status flows are reusable and coherent
+- the same product model supports headless and local-surface variants where needed
+
+### Repo Metrics
+
+- quickstarts are truly canonical and product-facing
+- docs are current and scan-fast
+- scaffold output matches the recommended path exactly
+- every generated project uses the same fixed directory structure
+- every generated project uses the same canonical build model
+- CI validates the curated, intentional product surface rather than a confused mixture of old and new stories
 
 ## Guardrails
 
 - do not collapse the three-tier architecture
-- do not add a heavy compatibility layer for the old product path
-- do not allow direct service calls from UI code in the new model
-- do not let raw LVGL escape outside approved custom scopes
-- do not keep old and new public app models alive in parallel longer than necessary
+- do not redesign HAL or services unless a concrete blocker requires it
+- keep capabilities and operating flows in `blusys::app`, built on top of the runtime substrate
+- do not allow raw LVGL to become the normal path again
+- do not let UI code call services directly in the default model
+- build shared foundations first, vertical specialization second
+- require the archetype references to be proven before declaring the platform finished
+- require the four canonical archetypes to be reflected in docs, examples, and starters before declaring the platform stable
+
+## Out Of Scope For This Core Roadmap
+
+These are not forbidden forever, but they should not define the core platform program right now:
+
+- migrating the services tier to C++ or adding broad C++ service facades as a mainline dependency
+- major target expansion beyond `esp32`, `esp32c3`, and `esp32s3`
+- a ground-up CLI rewrite before the canonical product path is fully stable
+- cloud-platform breadth that outruns the shared product model
+
+## Final End-State
+
+The platform is successful when:
+
+- consumer products and industrial products are built on the same operating model
+- the framework stays centered on `interactive` and `headless`, while archetypes remain optional starter compositions above that layer
+- consumer products can feel fluent, tactile, and memorable without repeated low-level reinvention
+- industrial products can feel clear, dependable, and connected without repeated orchestration work
+- new teams start from shared product grammar, not from plumbing
+- Blusys behaves like an internal product operating system rather than a loose collection of modules

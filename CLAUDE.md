@@ -1,13 +1,13 @@
 # CLAUDE.md
 
-This file provides guidance for working in this repository during the v7 refactor.
+This file provides guidance for working in this repository during the current product-platform reset.
 
 ## Read First
 
 Before changing public API, docs, repo structure, examples, scaffolding, or project status, read these files first:
 
-- `PRD.md` — canonical product requirements for the v7 refactor
-- `ROADMAP.md` — canonical execution roadmap for the v7 refactor
+- `PRD.md` — canonical product requirements for the current platform reset
+- `ROADMAP.md` — canonical execution roadmap for the current platform reset
 - `docs/internals/architecture.md` — current code architecture and tiering
 - `docs/internals/guidelines.md` — public API design rules and contribution workflow
 - `inventory.yml` — module, example, and doc classification manifest
@@ -16,15 +16,15 @@ Trust executable sources over prose when they disagree: the `blusys` shell scrip
 
 ## Repository Mission
 
-This repository has one active mission: execute the v7 refactor.
+This repository has one active mission: execute the current product-platform reset.
 
-The refactor is a breaking reset of the product-facing surface. The goal is to make app code dramatically simpler, move complexity into the framework, preserve low-level escape hatches as advanced paths, and reduce repo-wide maintenance burden.
+The reset is a breaking redefinition of the product-facing surface. The goal is to make product code dramatically simpler, move complexity into the framework, preserve low-level escape hatches as advanced paths, and reduce repo-wide maintenance burden.
 
 This repository is not trying to become a cleaner generic ESP32 framework. It is trying to become the internal operating system for our recurring product families.
 
 When making decisions, favor reusable product operating flows over generic module sprawl.
 
-## Locked v7 Decisions
+## Locked Decisions
 
 These are already decided and should be treated as constraints unless explicitly changed by the user:
 
@@ -34,21 +34,29 @@ These are already decided and should be treated as constraints unless explicitly
 - Reducers mutate state in place
 - Default onboarding is host-first interactive
 - Secondary canonical path is headless-first hardware
+- The only core runtime modes are `interactive` and `headless`
+- Consumer and industrial are product lenses, not framework branches
+- The four canonical archetypes are `interactive controller`, `interactive panel`, `edge node`, and `gateway/controller`
 - First canonical interactive hardware profile is generic SPI ST7735
 - ST7735 profile should support ESP32, ESP32-C3, and ESP32-S3
-- Hardware and service configuration for the product path is code-first; Kconfig is advanced tuning only
+- Product-facing term is `capabilities`, not `bundles`
+- Hardware and capability configuration for the product path is code-first; Kconfig is advanced tuning only
 - Raw LVGL is allowed only inside custom widget implementations or explicit custom view scope
-- UI outward behavior must go only through `dispatch(...)` and app effects
+- UI outward behavior must go only through actions and approved framework behavior
+- Scaffolded product apps use `main/` as the single local ESP-IDF component
+- Scaffolded product apps use the fixed internal structure `logic/`, `ui/`, and `system/`
+- `logic/` owns product behavior, `ui/` owns rendering and widgets, `system/` owns wiring and runtime-service integration
+- Capability work is requested by reducer-driven actions and translated into capability calls in `system/`
 - The three-tier architecture stays in place
-- HAL, services, `blusys_ui`, and low-level framework primitives remain available as advanced escape hatches
+- HAL, runtime services, `blusys_ui`, and low-level framework primitives remain available as advanced escape hatches
 
 ## Architecture Constraints
 
 The three-tier structure remains the base architecture:
 
 - `components/blusys/` — HAL + drivers (C)
-- `components/blusys_services/` — runtime services (C)
-- `components/blusys_framework/` — framework layer (C++)
+- `components/blusys_services/` — runtime substrate (C)
+- `components/blusys_framework/` — product framework (C++)
 
 Dependency direction remains:
 
@@ -66,20 +74,20 @@ When deciding what to work on, prioritize these outcomes:
 2. Remove framework and UI lifecycle plumbing from normal app code.
 3. Make host-first interactive onboarding actually runnable by default.
 4. Build the headless path on the same app runtime model.
-5. Build reusable product-family flows instead of one-off app wiring.
-6. Replace low-level product orchestration with framework-owned defaults and bundles.
+5. Build reusable product operating flows instead of one-off app wiring.
+6. Replace low-level product orchestration with framework-owned defaults and capabilities.
 7. Shrink docs, examples, and CI burden after the new path is real.
 
-## Product Families
+## Archetypes
 
-The refactor should stay grounded in the product families this brand actually builds:
+The reset should stay grounded in the four canonical archetypes:
 
-- interactive consumer devices
-- interactive control surfaces and dashboards
-- headless connected appliances and nodes
-- industrial telemetry and control products
+- interactive controller
+- interactive panel
+- edge node
+- gateway/controller
 
-Work should be evaluated against whether it makes those families easier to build on one shared operating model.
+Work should be evaluated against whether it makes those archetypes easier to build on one shared operating model.
 
 ## Product Model Target
 
@@ -90,7 +98,7 @@ The intended v7 product path centers on these app-owned concepts:
 - `update(ctx, state, action)`
 - screens and views
 - optional hardware profiles
-- optional service bundles
+- optional capabilities
 
 The framework should own:
 
@@ -102,7 +110,8 @@ The framework should own:
 - screen activation and overlays
 - host, device, and headless adapters
 - common input bridges
-- common service orchestration for the default path
+- common runtime-service orchestration for the default path
+- reusable operating flows for common product behaviors
 
 Normal product code should not need to touch these concepts directly:
 
@@ -113,6 +122,25 @@ Normal product code should not need to touch these concepts directly:
 - `lv_screen_load`
 - raw LCD bring-up in the canonical interactive path
 - raw Wi-Fi lifecycle orchestration in the canonical connected path
+
+## Scaffold Shape
+
+The canonical scaffold shape for product apps is:
+
+```text
+my_project/
+├── CMakeLists.txt
+├── sdkconfig.defaults
+├── README.md
+└── main/
+    ├── CMakeLists.txt
+    ├── idf_component.yml
+    ├── logic/
+    ├── ui/
+    └── system/
+```
+
+Do not introduce competing default project layouts for different archetypes.
 
 ## UI Rules For v7 Work
 
@@ -139,7 +167,7 @@ Raw LVGL is allowed only in approved custom scopes. It must not:
 
 - manage app screens directly
 - manage UI locks directly
-- call services directly from UI code
+- call runtime services directly from UI code
 - manipulate routing or runtime internals directly
 
 ## Code Direction
@@ -223,7 +251,7 @@ When adding or refactoring docs:
 
 ## Module Work Guidance
 
-If the task touches HAL, services, or framework internals:
+If the task touches HAL, runtime services, or framework internals:
 
 - keep return types as `blusys_err_t` in public C APIs
 - keep public C headers free of ESP-IDF types and macros
@@ -240,10 +268,10 @@ If the task touches the framework:
 ## What Not To Do
 
 - do not collapse the three-tier architecture
-- do not migrate services to C++ as part of the v7 reset unless explicitly directed
+- do not migrate runtime services to C++ as part of the reset unless explicitly directed
 - do not build a heavy compatibility layer for the old product path
 - do not let raw LVGL become the normal product path again
-- do not let UI code call services directly in the new model
+- do not let UI code call runtime services directly in the new model
 - do not keep old and new public app models alive in parallel longer than necessary
 
 ## Generated Files
