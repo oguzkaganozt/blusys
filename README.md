@@ -72,32 +72,40 @@ is enforced by `blusys lint`.
 | **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
 | **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl` |
 
-### Framework
+### Framework + App Layer
 
-C++ tier shipping the V1 widget kit and the product spine:
+C++ tier shipping the `blusys::app` product API and the internal
+framework spine:
 
-- **Core spine:** `router`, `intent`, `feedback`, `controller`, `runtime`
-  (queued events, route delivery, feedback bus, tick cadence).
+- **App model:** `app_spec`, `app_ctx`, reducer-driven dispatch
+  (`update(ctx, state, action)`), entry macros (`BLUSYS_APP_MAIN_HOST`,
+  `_HEADLESS`, `_DEVICE`).
+- **View layer:** action-bound widgets, reactive bindings, page helpers,
+  custom widget contract, bounded LVGL scope.
+- **Platform profiles:** host (SDL2), headless, generic SPI ST7735.
+- **Service bundles:** connectivity (Wi-Fi, SNTP, mDNS, local control),
+  storage (SPIFFS, FAT).
 - **Widget kit:** `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`,
   `bu_overlay`, plus layout primitives `screen` / `row` / `col` /
   `label` / `divider`.
 - **Theme system:** single `theme_tokens` struct populated at boot.
-- **Encoder helpers:** `create_encoder_group` + `auto_focus_screen` for
-  encoder-driven focus traversal across the widget kit.
 
 See [`components/blusys_framework/widget-author-guide.md`](components/blusys_framework/widget-author-guide.md)
 for the six-rule widget contract.
 
 ## Usage
 
+Product code (recommended):
+
+```cpp
+#include "blusys/app/app.hpp"          /* app model, entry macros, view layer */
+```
+
+HAL and services (direct access):
+
 ```c
 #include "blusys/blusys.h"             /* HAL + drivers */
 #include "blusys/blusys_services.h"    /* services */
-```
-
-```cpp
-#include "blusys/framework/framework.hpp"  /* framework core */
-#include "blusys/framework/ui/widgets.hpp" /* widget kit */
 ```
 
 ```cmake
@@ -148,8 +156,8 @@ mkdocs serve
 
 ## Project Status
 
-Current release: **v6.1.0**. See [`ROADMAP.md`](ROADMAP.md) for current state,
-release history, and planned work. See [`CLAUDE.md`](CLAUDE.md) for repo conventions.
+Current release: **v7.0.0**. See [`ROADMAP.md`](ROADMAP.md) for current state
+and release history. See [`CLAUDE.md`](CLAUDE.md) for repo conventions.
 
 ## License
 

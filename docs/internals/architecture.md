@@ -102,27 +102,59 @@ Umbrella header:
 
 ### Framework (`components/blusys_framework/`)
 
-The framework tier is the only C++ component in V1, with `-fno-exceptions -fno-rtti` and a fixed-capacity allocation policy. It ships the V1 product surface in full:
+The framework tier is the only C++ component, with `-fno-exceptions -fno-rtti` and a fixed-capacity allocation policy. It ships two layers: the product-facing `blusys::app` API and the internal framework spine that powers it.
 
-**Core spine** (`include/blusys/framework/core/`):
+#### Product layer — `blusys::app` (`include/blusys/app/`)
+
+This is the recommended product-facing API. Normal product code only touches this layer.
+
+- `app.hpp` — umbrella include for the product API
+- `app_spec.hpp` — `app_spec<State, Action>` template: initial state, `update()` reducer, lifecycle hooks (`on_init`, `on_tick`), intent and event bridges, bundle config, theme
+- `app_ctx.hpp` — `app_ctx`: dispatch actions, navigate (`navigate_to`, `navigate_push`, `navigate_back`), show/hide overlays, emit feedback, query bundle status
+- `entry.hpp` — entry macros: `BLUSYS_APP_MAIN_HOST(spec)`, `BLUSYS_APP_MAIN_HEADLESS(spec)`, `BLUSYS_APP_MAIN_DEVICE(spec, profile)`
+- `app_runtime.hpp` — runtime engine (internal, driven by the entry macros)
+
+**View layer** (`include/blusys/app/view/`, gated by `BLUSYS_BUILD_UI`):
+- `view.hpp` — view definition and lifecycle
+- `bindings.hpp` — reactive data bindings for text, value, enabled, visible
+- `action_widgets.hpp` — pre-built action-dispatching widgets
+- `page.hpp` — page and screen helpers
+- `overlay_manager.hpp` — overlay registration and control
+- `custom_widget.hpp` — formal custom widget contract
+- `lvgl_scope.hpp` — bounded raw LVGL access blocks
+
+**Platform profiles** (`include/blusys/app/profiles/`):
+- `host.hpp` — SDL2 host simulator profile
+- `headless.hpp` — no-display marker profile
+- `st7735.hpp` — generic SPI ST7735 TFT profile (ESP32, ESP32-C3, ESP32-S3)
+
+**Service bundles** (`include/blusys/app/bundles/`):
+- `connectivity.hpp` — Wi-Fi, SNTP, mDNS, local control lifecycle
+- `storage.hpp` — SPIFFS and FAT filesystem mounting
+
+#### Internal spine (`include/blusys/framework/core/`)
+
+The core spine is internal framework machinery. Product code does not interact with it directly — the `blusys::app` layer wraps it.
+
 - `router.hpp` — six route commands (`set_root`, `push`, `replace`, `pop`, `show_overlay`, `hide_overlay`) plus a `route_sink` interface
 - `intent.hpp` — nine semantic intents (`press`/`long_press`/`release`/`confirm`/`cancel`/`increment`/`decrement`/`focus_next`/`focus_prev`) and the `app_event` envelope
 - `feedback.hpp` — three channels (`visual`/`audio`/`haptic`), six patterns, fixed-capacity bus
-- `controller.hpp` — `init`/`handle`/`tick`/`deinit` lifecycle base class with `submit_route` and `emit_feedback` helpers
+- `controller.hpp` — `init`/`handle`/`tick`/`deinit` lifecycle base class (used internally by `app_runtime`)
 - `runtime.hpp` — event/route ring buffers, 10 ms default tick cadence, `route_sink` and `feedback_bus` integration
 - `containers.hpp` — `static_vector`, `ring_buffer`, `array`, `string`
 
-**UI layer** (`include/blusys/framework/ui/`, gated by `BLUSYS_BUILD_UI`):
+#### Widget kit (`include/blusys/framework/ui/`, gated by `BLUSYS_BUILD_UI`)
+
 - `theme.hpp` — single `theme_tokens` struct populated at boot, `set_theme()` / `theme()` accessors
 - `callbacks.hpp` — semantic callback types (`press_cb_t`, `toggle_cb_t`, `change_cb_t`, ...) — products never see `lv_event_cb_t`
 - `widgets.hpp` — umbrella over all widget kit headers
 - Layout primitives: `screen`, `row`, `col`, `label`, `divider`
-- V1 widget kit: `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay` (`bu_knob` deferred to V2)
+- Stock widgets: `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`
 - `input/encoder.hpp` — `create_encoder_group` + `auto_focus_screen` for encoder-driven focus traversal
 
-Authoring contract: every widget follows the six-rule contract (theme tokens only, config struct interface, setters own state transitions, standard state set, one folder per widget, header is the spec). Camp 2 stock-backed widgets use a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` for callback storage. See `components/blusys_framework/widget-author-guide.md`.
+Authoring contract: every widget follows the six-rule contract (theme tokens only, config struct interface, setters own state transitions, standard state set, one folder per widget, header is the spec). Stock-backed widgets use a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` for callback storage. See `components/blusys_framework/widget-author-guide.md`.
 
-End-to-end validation: `examples/framework_app_basic/` exercises the full chain (`button.on_press` → `runtime.post_intent` → `controller.handle` → `slider_set_value` / `submit_route` → `ui_route_sink` → `overlay_show`).
+End-to-end validation: `examples/quickstart/framework_app_basic/` exercises the full framework validation chain. `examples/quickstart/connected_headless/` validates the headless path with service bundles and the reducer model.
 
 Host iteration: `scripts/host/` builds LVGL against SDL2 on Linux via `blusys host-build`, pinned to the same upstream LVGL tag as the ESP-IDF managed component. Lets the widget kit be iterated on without flashing hardware on every change.
 
@@ -180,9 +212,8 @@ Two consumption models, deliberately separated:
   manager from `main/idf_component.yml`. The scaffolded top-level
   `CMakeLists.txt` scopes `EXTRA_COMPONENT_DIRS` to `${CMAKE_CURRENT_LIST_DIR}/app`
   so ESP-IDF discovers the local `app/` component without re-including the
-  project root. See [Getting Started](guides/getting-started.md) for the
-  scaffold layout and the [Framework guide](guides/framework.md#scaffolding-a-new-product)
-  for the starter-type semantics.
+  project root. See [Interactive Quickstart](../start/quickstart-interactive.md) for the
+  scaffold layout and [App](../app/index.md) for the product model.
 
 ## Design Rationale
 

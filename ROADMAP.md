@@ -21,14 +21,14 @@ That means roadmap decisions should favor:
 
 ## Milestone Status
 
-- [ ] Phase 0: Freeze the v7 contract
-- [ ] Phase 1: Build `blusys::app` core
-- [ ] Phase 2: Build the view layer and widget contract
-- [ ] Phase 3: Build platform profiles
-- [ ] Phase 4: Build service bundles
-- [ ] Phase 5: Reset scaffold and CLI
-- [ ] Phase 6: Shrink docs, examples, metadata, and CI
-- [ ] Phase 7: Cut over to v7
+- [x] Phase 0: Freeze the v7 contract
+- [x] Phase 1: Build `blusys::app` core
+- [x] Phase 2: Build the view layer and widget contract
+- [x] Phase 3: Build platform profiles
+- [x] Phase 4: Build service bundles
+- [x] Phase 5: Reset scaffold and CLI
+- [x] Phase 6: Shrink docs, examples, metadata, and CI
+- [x] Phase 7: Cut over to v7
 
 ## Reference Product Families
 
@@ -343,56 +343,56 @@ Success Criteria:
 
 ### Product Strategy
 
-- [ ] Define canonical product families
-- [ ] Define first reference product slices
-- [ ] Define shared interaction grammar
-- [ ] Define shared operational flows
-- [ ] Define design-system scope for v7
+- [x] Define canonical product families
+- [x] Define first reference product slices
+- [x] Define shared interaction grammar
+- [x] Define shared operational flows
+- [x] Define design-system scope for v7
 
 ### App Core
 
-- [ ] Define `app_spec`
-- [ ] Define `app_ctx`
-- [ ] Define reducer dispatch lifecycle
-- [ ] Add host entry macro
-- [ ] Add device entry macro
-- [ ] Add headless entry macro
-- [ ] Move route ownership inside the app runtime
-- [ ] Move feedback ownership inside the app runtime
+- [x] Define `app_spec`
+- [x] Define `app_ctx`
+- [x] Define reducer dispatch lifecycle
+- [x] Add host entry macro
+- [x] Add device entry macro
+- [x] Add headless entry macro
+- [x] Move route ownership inside the app runtime
+- [x] Move feedback ownership inside the app runtime
 
 ### View Layer
 
-- [ ] Add action-bound button API
-- [ ] Add simple value and text binding helpers
-- [ ] Define reusable feedback primitives
-- [ ] Add page helpers
-- [ ] Add overlay helper path
-- [ ] Define custom widget contract
-- [ ] Define explicit custom LVGL scope
+- [x] Add action-bound button API
+- [x] Add simple value and text binding helpers
+- [x] Define reusable feedback primitives
+- [x] Add page helpers
+- [x] Add overlay helper path
+- [x] Define custom widget contract
+- [x] Define explicit custom LVGL scope
 
 ### Platform Profiles
 
-- [ ] Add host default profile
-- [ ] Add headless default profile
-- [ ] Add generic SPI ST7735 profile
-- [ ] Confirm ESP32 compile support
-- [ ] Confirm ESP32-C3 compile support
-- [ ] Confirm ESP32-S3 compile support
-- [ ] Complete first hardware smoke on ST7735 profile
+- [x] Add host default profile
+- [x] Add headless default profile
+- [x] Add generic SPI ST7735 profile
+- [x] Confirm ESP32 compile support
+- [x] Confirm ESP32-C3 compile support
+- [x] Confirm ESP32-S3 compile support
+- [x] Complete first hardware smoke on ST7735 profile
 
 ### Services
 
-- [ ] Define connected-device bundle API
-- [ ] Define storage bundle API
-- [ ] Map bundles onto existing services
-- [ ] Define diagnostics and local-control hooks for shared product flows
+- [x] Define connected-device bundle API
+- [x] Define storage bundle API
+- [x] Map bundles onto existing services
+- [x] Define diagnostics and local-control hooks for shared product flows
 
 ### Tooling
 
-- [ ] Extract scaffold templates from `blusys`
-- [ ] Create new interactive scaffold
-- [ ] Create new headless scaffold
-- [ ] Update CLI create flow
+- [x] Extract scaffold templates from `blusys`
+- [x] Create new interactive scaffold
+- [x] Create new headless scaffold
+- [x] Update CLI create flow
 
 ### Repo Cleanup
 

@@ -1,5 +1,8 @@
 # UI
 
+!!! note "Internal service"
+    This is a low-level service used internally by the framework. Product code should use [`blusys::app` profiles](../app/profiles.md) and the [view layer](../app/views-and-widgets.md) instead of calling these APIs directly.
+
 LVGL-based UI service. Opens an LCD handle, initialises LVGL, allocates draw buffers, and runs a dedicated render task. Widget access from other tasks is serialised through `blusys_ui_lock()` / `blusys_ui_unlock()`.
 
 ## Target Support

@@ -1348,6 +1348,10 @@ docs:
     section: archive
     visibility: public
 
+  - path: docs/archive/migration-v6-v7.md
+    section: archive
+    visibility: public
+
   - path: docs/archive/migration-v5-v6.md
     section: archive
     visibility: public

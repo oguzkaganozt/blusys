@@ -113,7 +113,7 @@ remotes) opt in by setting `BLUSYS_STARTER_TYPE=interactive` in
 `app/product_config.cmake`, which turns on `BLUSYS_BUILD_UI` and pulls
 LVGL in as a managed component.
 
-Full surface reference: [`docs/guides/framework.md`](guides/framework.md).
+Full surface reference: [`App`](../app/index.md) (supersedes the v6 framework guide).
 
 ### 5. Scaffold layout and `idf_component.yml` consumption
 
@@ -267,7 +267,7 @@ Keep your existing layout and pull in only what you need.
 
 5. In your new `app_main.cpp`, call `blusys::framework::init()` and wire
    up a `controller` subclass + `runtime.init(...)`. The minimum wiring
-   is in [`docs/guides/framework.md`](guides/framework.md) and in
+   is in [`App`](../app/index.md) and in
    `examples/framework_core_basic/` (headless) or
    `examples/framework_app_basic/` (full spine + widgets).
 
@@ -360,8 +360,8 @@ for a headless product.
 
 ## Related references
 
-- [Architecture](architecture.md) — the current three-tier layout.
-- [Framework guide](guides/framework.md) — widget kit + core spine surface.
+- [Architecture](../internals/architecture.md) — the current three-tier layout.
+- [App](../app/index.md) — v7 product-facing API (supersedes the v6 framework guide).
 - [Platform transition docs](https://github.com/oguzkaganozt/blusys/tree/main/platform-transition) — full planning
   history, decisions log, and phase-by-phase rationale.
 - [`PROGRESS.md`](https://github.com/oguzkaganozt/blusys/blob/main/PROGRESS.md) — current transition phase and verification snapshot.

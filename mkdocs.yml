@@ -143,6 +143,7 @@ nav:
           - Validation Template: internals/testing/hardware-validation-report-template.md
   - Archive:
       - archive/index.md
+      - V6 to V7 Migration: archive/migration-v6-v7.md
       - V5 to V6 Migration: archive/migration-v5-v6.md
       - V6 Validation Report: archive/validation-report-v6.md
       - USB Support Plan: archive/plans/usb-support-plan.md
