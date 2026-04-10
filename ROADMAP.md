@@ -104,11 +104,12 @@ power cycle. Fix: before `i2c_new_master_bus`, if SDA reads low pulse SCL 9 time
 issue a manual STOP condition, then release the GPIOs. Blocked on a deliberate stuck-
 state reproduction (~20-line change once reproducible).
 
-### `widget_kit_demo` keyboard encoder simulation
+### ~~`widget_kit_demo` keyboard encoder simulation~~ ✅
 
-Map arrow keys to `LV_INDEV_TYPE_ENCODER` events in
-`scripts/host/src/widget_kit_demo.cpp` so encoder focus traversal can be validated
-visually on host. Currently only `framework_encoder_basic` does this on-device.
+Done. Arrow keys (Left/Right/Up/Down) map to encoder rotation, Space/Enter map to
+encoder press. An `lv_indev_t` of type `LV_INDEV_TYPE_ENCODER` drives LVGL focus
+traversal via `create_encoder_group` + `auto_focus_screen`, mirroring the on-device
+`framework_encoder_basic` pattern. Both mouse and keyboard input work simultaneously.
 
 ---
 

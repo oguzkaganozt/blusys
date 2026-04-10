@@ -18,11 +18,16 @@
 //      submits a `show_overlay` route command in response — i.e. the
 //      same chain framework_app_basic validates on device.
 //
-// The mouse acts as the "encoder" on host: clicking a button drives the
-// runtime exactly the way a rotary encoder + press would on hardware.
-// (The encoder_basic example wires a real lv_indev_t of type
-// LV_INDEV_TYPE_ENCODER; adding keyboard-driven encoder simulation to
-// this demo is a later task.)
+// Input works two ways on host:
+//
+//   Mouse — clicking a button drives the runtime exactly the way a
+//   rotary encoder + press would on hardware.
+//
+//   Keyboard encoder simulation — arrow keys (Left/Right or Up/Down)
+//   map to LV_INDEV_TYPE_ENCODER rotation, Space/Enter maps to the
+//   encoder button press. This drives LVGL focus traversal and widget
+//   activation through the same create_encoder_group + auto_focus_screen
+//   helpers used on real hardware (framework_encoder_basic).
 
 #include <SDL2/SDL.h>
 #include <cstdint>
@@ -34,6 +39,7 @@
 #include "src/drivers/sdl/lv_sdl_keyboard.h"
 
 #include "blusys/framework/framework.hpp"
+#include "blusys/framework/ui/input/encoder.hpp"
 #include "blusys/framework/ui/widgets.hpp"
 #include "blusys/log.h"
 
@@ -56,9 +62,67 @@ int32_t clamp_slider(int32_t value)
     return value;
 }
 
+// ---- keyboard → encoder bridge ----------------------------------------------
+//
+// Maps SDL keyboard events to LVGL encoder state. Same pattern as
+// framework_encoder_basic's hardware encoder bridge, but fed by
+// keyboard instead of quadrature hardware.
+
+struct encoder_state {
+    int32_t          pending_diff = 0;
+    lv_indev_state_t button_state = LV_INDEV_STATE_RELEASED;
+};
+
+encoder_state g_encoder_state{};
+
+int sdl_encoder_key_watch(void * /*userdata*/, SDL_Event *event)
+{
+    if (event->type != SDL_KEYDOWN && event->type != SDL_KEYUP) return 0;
+
+    const SDL_Keycode key = event->key.keysym.sym;
+
+    if (event->type == SDL_KEYDOWN) {
+        switch (key) {
+        case SDLK_LEFT:  // fallthrough
+        case SDLK_DOWN:
+            g_encoder_state.pending_diff -= 1;
+            break;
+        case SDLK_RIGHT: // fallthrough
+        case SDLK_UP:
+            g_encoder_state.pending_diff += 1;
+            break;
+        case SDLK_SPACE:  // fallthrough
+        case SDLK_RETURN:
+            if (event->key.repeat == 0)
+                g_encoder_state.button_state = LV_INDEV_STATE_PRESSED;
+            break;
+        default:
+            break;
+        }
+    } else if (event->type == SDL_KEYUP) {
+        switch (key) {
+        case SDLK_SPACE:  // fallthrough
+        case SDLK_RETURN:
+            g_encoder_state.button_state = LV_INDEV_STATE_RELEASED;
+            break;
+        default:
+            break;
+        }
+    }
+    return 0;  // non-consuming — let LVGL's own SDL driver see events too
+}
+
+void encoder_indev_read_cb(lv_indev_t * /*indev*/, lv_indev_data_t *data)
+{
+    data->enc_diff               = g_encoder_state.pending_diff;
+    data->state                  = g_encoder_state.button_state;
+    g_encoder_state.pending_diff = 0;
+}
+
 // ---- shared app state -------------------------------------------------------
 
 struct app_state {
+    lv_obj_t *screen = nullptr;
     lv_obj_t *slider = nullptr;
     lv_obj_t *toast  = nullptr;
 };
@@ -207,6 +271,7 @@ void build_demo_screen()
     });
 
     lv_obj_t *screen = blusys::ui::screen_create({});
+    g_state.screen = screen;
     lv_obj_t *col = blusys::ui::col_create(screen, {
         .gap     = blusys::ui::theme().spacing_md,
         .padding = blusys::ui::theme().spacing_lg,
@@ -264,6 +329,11 @@ void build_demo_screen()
         .user_data = g_runtime_ptr,
     });
 
+    blusys::ui::label_create(col, {
+        .text = "Keys: Arrow keys = focus  |  Space/Enter = press",
+        .font = blusys::ui::theme().font_body,
+    });
+
     g_state.toast = blusys::ui::overlay_create(screen, {
         .text        = "Confirmed",
         .duration_ms = 1500,
@@ -293,6 +363,21 @@ int main(void)
     blusys::framework::init();
     build_demo_screen();
 
+    // ---- keyboard encoder simulation -------------------------------------------
+    //
+    // Create an LVGL encoder indev fed by keyboard events, wire it to a
+    // focus group built from the screen's focusable widgets. This is the
+    // host equivalent of framework_encoder_basic's hardware encoder bridge.
+    SDL_AddEventWatch(sdl_encoder_key_watch, nullptr);
+
+    lv_group_t *encoder_group = blusys::ui::create_encoder_group();
+    blusys::ui::auto_focus_screen(g_state.screen, encoder_group);
+
+    lv_indev_t *encoder_indev = lv_indev_create();
+    lv_indev_set_type(encoder_indev, LV_INDEV_TYPE_ENCODER);
+    lv_indev_set_read_cb(encoder_indev, encoder_indev_read_cb);
+    lv_indev_set_group(encoder_indev, encoder_group);
+
     // Spine wiring — same order as framework_app_basic.
     g_controller.bind(&g_state);
     g_route_sink.bind(&g_state);
@@ -304,7 +389,7 @@ int main(void)
         return 1;
     }
 
-    BLUSYS_LOGI(kTag, "widget kit demo running. close the window to exit.");
+    BLUSYS_LOGI(kTag, "widget kit demo running — arrow keys=focus, space/enter=press, mouse=click");
     BLUSYS_LOGI(kTag, "initial slider = %ld",
                 static_cast<long>(blusys::ui::slider_get_value(g_state.slider)));
 
