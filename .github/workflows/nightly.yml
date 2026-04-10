@@ -1,31 +1,12 @@
-name: CI
+name: Nightly Validation
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "components/**"
-      - "examples/**"
-      - "blusys"
-      - "scripts/**"
-      - "inventory.yml"
-      - "docs/**"
-      - "mkdocs.yml"
-      - ".github/workflows/ci.yml"
-  pull_request:
-    paths:
-      - "components/**"
-      - "examples/**"
-      - "blusys"
-      - "scripts/**"
-      - "inventory.yml"
-      - "docs/**"
-      - "mkdocs.yml"
-      - ".github/workflows/ci.yml"
+  schedule:
+    - cron: "0 3 * * *"
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: nightly-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -45,52 +26,10 @@ jobs:
         shell: bash
         run: bash scripts/lint-layering.sh
 
-  # ── Tier 0: Inventory Validation ───────────────────────────────────────────
-  inventory:
-    name: "Inventory check"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install PyYAML
-        run: pip install pyyaml
-
-      - name: Validate inventory
-        run: python scripts/check-inventory.py
-
-  # ── Tier 0: Docs Build ────────────────────────────────────────────────────
-  docs:
-    name: "Docs build"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-          cache-dependency-path: requirements-docs.txt
-
-      - name: Install docs dependencies
-        run: pip install -r requirements-docs.txt
-
-      - name: Build docs (strict)
-        run: mkdocs build --strict
-
-  # ── Tier 1: Build Curated Examples ─────────────────────────────────────────
-  build:
-    name: "Build PR (${{ matrix.target }})"
-    needs: [lint, inventory]
+  # ── Tier 1: Build All Examples ─────────────────────────────────────────────
+  build-all:
+    name: "Build all (${{ matrix.target }})"
+    needs: lint
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4
@@ -114,27 +53,75 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: ccache-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
+          key: ccache-nightly-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
           restore-keys: |
-            ccache-${{ matrix.target }}-
+            ccache-nightly-${{ matrix.target }}-
 
-      - name: Install PyYAML
-        run: pip install pyyaml
-
-      - name: Build curated examples (ci_pr=true)
+      - name: Build all examples
         shell: bash
         run: |
-          chmod +x scripts/build-from-inventory.sh
-          scripts/build-from-inventory.sh "${{ matrix.target }}" ci_pr
+          set -uo pipefail
+
+          TARGET="${{ matrix.target }}"
+          pass=0
+          fail=0
+          failed_list=""
+
+          for cmakelists in examples/*/CMakeLists.txt examples/*/*/CMakeLists.txt; do
+              [ -f "$cmakelists" ] || continue
+              example_dir="$(realpath "$(dirname "$cmakelists")")"
+              example_name="$(basename "$example_dir")"
+              build_dir="$example_dir/build-$TARGET"
+
+              # Compute sdkconfig args (mirrors blusys_sdkconfig_args)
+              sdkconfig_args=("-DSDKCONFIG=$build_dir/sdkconfig")
+              defaults=""
+              [ -f "$example_dir/sdkconfig.defaults" ] && defaults="$example_dir/sdkconfig.defaults"
+              if [ -f "$example_dir/sdkconfig.$TARGET" ]; then
+                  if [ -n "$defaults" ]; then
+                      defaults="$defaults;$example_dir/sdkconfig.$TARGET"
+                  else
+                      defaults="$example_dir/sdkconfig.$TARGET"
+                  fi
+              fi
+              [ -n "$defaults" ] && sdkconfig_args+=("-DSDKCONFIG_DEFAULTS=$defaults")
+
+              printf '::group::Build %s for %s\n' "$example_name" "$TARGET"
+
+              build_ok=true
+              if [ ! -f "$build_dir/CMakeCache.txt" ]; then
+                  if ! idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" set-target "$TARGET"; then
+                      build_ok=false
+                  fi
+              fi
+
+              if $build_ok && idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" build; then
+                  printf 'OK\n'
+                  ((pass++)) || true
+              else
+                  printf '::error::Build failed: %s / %s\n' "$example_name" "$TARGET"
+                  failed_list="$failed_list $example_name"
+                  ((fail++)) || true
+              fi
+
+              printf '::endgroup::\n'
+          done
+
+          printf '\n=== Nightly Build Results for %s ===\n' "$TARGET"
+          printf 'Pass: %d  Fail: %d  Total: %d\n' "$pass" "$fail" "$((pass + fail))"
+          if [ "$fail" -gt 0 ]; then
+              printf 'Failed:%s\n' "$failed_list"
+              exit 1
+          fi
 
       - name: ccache stats
         if: always()
         run: ccache -s 2>/dev/null || true
 
-  # ── Tier 2: QEMU Smoke Tests (reduced) ────────────────────────────────────
+  # ── Tier 2: QEMU Smoke Tests ───────────────────────────────────────────────
   qemu:
     name: "QEMU smoke (${{ matrix.target }})"
-    needs: build
+    needs: build-all
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4
@@ -158,9 +145,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: ccache-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
+          key: ccache-nightly-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
           restore-keys: |
-            ccache-${{ matrix.target }}-
+            ccache-nightly-${{ matrix.target }}-
 
       - name: Restore QEMU tools
         id: qemu-cache
@@ -205,6 +192,9 @@ jobs:
 
           run_test validation/smoke              15 "status_ok_string: OK"
           run_test validation/system_info        15 "free_heap_bytes:"
+          run_test reference/timer_basic         30 "callback_swap_result: ok"
+          run_test reference/nvs_basic           20 "Done\\."
+          run_test validation/wdt_basic          30 "wdt_deinit: ok"
           run_test validation/concurrency_timer  30 "concurrent_result: ok"
 
           printf '\n=== QEMU Results for %s ===\n' "$TARGET"

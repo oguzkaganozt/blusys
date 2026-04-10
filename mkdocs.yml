@@ -54,176 +54,95 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Home:
-      - index.md
-      - Getting Started: guides/getting-started.md
-      - Compatibility: target-matrix.md
-  - Guides:
-      - guides/index.md
-      - HAL:
-          - I/O & Communication:
-              - GPIO: guides/gpio-basic.md
-              - UART (Blocking): guides/uart-loopback.md
-              - UART (Async): guides/uart-async.md
-              - I2C Master: guides/i2c-scan.md
-              - I2C Slave: guides/i2c-slave-basic.md
-              - SPI Master: guides/spi-loopback.md
-              - SPI Slave: guides/spi-slave-basic.md
-              - TWAI: guides/twai-basic.md
-              - I2S TX: guides/i2s-basic.md
-              - I2S RX: guides/i2s-rx-basic.md
-              - 1-Wire: guides/one-wire-basic.md
-              - GPIO Expander: guides/gpio-expander-basic.md
-              - Touch: guides/touch-basic.md
-              - RMT TX: guides/rmt-basic.md
-              - RMT RX: guides/rmt-rx-basic.md
-          - Analog:
-              - ADC: guides/adc-basic.md
-              - DAC: guides/dac-basic.md
-              - SDM: guides/sdm-basic.md
-              - PWM: guides/pwm-basic.md
-          - Timers & Counters:
-              - Timer: guides/timer-basic.md
-              - PCNT: guides/pcnt-basic.md
-              - MCPWM: guides/mcpwm-basic.md
-          - Storage:
-              - NVS: guides/nvs-basic.md
-              - SD/MMC: guides/sdmmc-basic.md
-              - SD over SPI: guides/sd-spi-basic.md
-          - Device:
-              - System Info: guides/system-info.md
-              - Sleep: guides/sleep-basic.md
-              - Watchdog: guides/wdt-basic.md
-              - Temperature: guides/temp-sensor-basic.md
-              - eFuse: guides/efuse-basic.md
-              - ULP GPIO Watch: guides/ulp-gpio-watch.md
-              - USB Host: guides/usb-host-basic.md
-              - USB Device: guides/usb-device-basic.md
+  - Start:
+      - start/index.md
+      - Interactive Quickstart: start/quickstart-interactive.md
+      - Headless Quickstart: start/quickstart-headless.md
+  - App:
+      - app/index.md
+      - Reducer Model: app/reducer-model.md
+      - Views & Widgets: app/views-and-widgets.md
+      - Service Bundles: app/service-bundles.md
+      - Profiles: app/profiles.md
+  - Services:
+      - services/index.md
+      - Connectivity:
+          - WiFi: services/wifi.md
+          - WiFi Provisioning: services/wifi_prov.md
+          - WiFi Mesh: services/wifi_mesh.md
+          - ESP-NOW: services/espnow.md
+          - Bluetooth: services/bluetooth.md
+          - BLE GATT: services/ble_gatt.md
+          - mDNS: services/mdns.md
+      - Protocol:
+          - HTTP: services/http.md
+          - MQTT: services/mqtt.md
+          - WebSocket: services/ws_client.md
+      - Display & Input:
+          - UI (LVGL): services/ui.md
+          - USB HID: services/usb_hid.md
+      - System:
+          - Console: services/console.md
+          - Filesystem: services/fs.md
+          - FAT Filesystem: services/fatfs.md
+          - Local Control: services/local_ctrl.md
+          - Power Management: services/power_mgmt.md
+          - SNTP: services/sntp.md
+          - OTA: services/ota.md
+  - HAL + Drivers:
+      - hal/index.md
+      - I/O & Communication:
+          - GPIO: hal/gpio.md
+          - UART: hal/uart.md
+          - I2C: hal/i2c.md
+          - SPI: hal/spi.md
+          - TWAI: hal/twai.md
+          - I2S: hal/i2s.md
+          - RMT: hal/rmt.md
+          - 1-Wire: hal/one_wire.md
+          - GPIO Expander: hal/gpio_expander.md
+          - Touch: hal/touch.md
+      - Analog:
+          - ADC: hal/adc.md
+          - DAC: hal/dac.md
+          - SDM: hal/sdm.md
+          - PWM: hal/pwm.md
+      - Timers & Counters:
+          - Timer: hal/timer.md
+          - PCNT: hal/pcnt.md
+          - MCPWM: hal/mcpwm.md
+      - Storage:
+          - NVS: hal/nvs.md
+          - SD/MMC: hal/sdmmc.md
+          - SD over SPI: hal/sd_spi.md
+      - Device:
+          - System: hal/system.md
+          - Sleep: hal/sleep.md
+          - Watchdog: hal/wdt.md
+          - Temp Sensor: hal/temp_sensor.md
+          - eFuse: hal/efuse.md
+          - ULP: hal/ulp.md
+          - USB Host: hal/usb_host.md
+          - USB Device: hal/usb_device.md
       - Drivers:
-          - Display:
-              - LCD: guides/lcd-basic.md
-              - LED Strip: guides/led-strip-basic.md
-              - 7-Segment: guides/seven-seg-basic.md
-          - Input:
-              - Button: guides/button-basic.md
-              - Encoder: guides/encoder-basic.md
-          - Sensor:
-              - DHT: guides/dht-basic.md
-          - Actuator:
-              - Buzzer: guides/buzzer-basic.md
-      - Services:
-          - Display / Runtime:
-              - UI (LVGL): guides/ui-basic.md
-          - Input / Runtime:
-              - USB HID: guides/usb-hid-basic.md
-          - Connectivity:
-              - WiFi: guides/wifi-connect.md
-              - WiFi Provisioning: guides/wifi-prov-basic.md
-              - WiFi Mesh: guides/wifi-mesh-basic.md
-              - ESP-NOW: guides/espnow-basic.md
-              - Bluetooth: guides/bluetooth-basic.md
-              - BLE GATT: guides/ble_gatt-basic.md
-              - mDNS: guides/mdns-basic.md
-          - Protocol:
-              - HTTP Client: guides/http-basic.md
-              - HTTP Server: guides/http-server-basic.md
-              - MQTT: guides/mqtt-basic.md
-              - WebSocket Client: guides/ws-client-basic.md
-          - System:
-              - Console: guides/console-basic.md
-              - Filesystem: guides/fs-basic.md
-              - FAT Filesystem: guides/fatfs-basic.md
-              - Local Control: guides/local-ctrl-basic.md
-              - Power Management: guides/power-mgmt-basic.md
-              - SNTP: guides/sntp-basic.md
-              - OTA: guides/ota-basic.md
-      - Framework:
-          - Overview: guides/framework.md
-          - Widget Authoring Guide: guides/ui-widget-guide.md
+          - LCD: hal/lcd.md
+          - LED Strip: hal/led_strip.md
+          - 7-Segment: hal/seven_seg.md
+          - Button: hal/button.md
+          - Encoder: hal/encoder.md
+          - DHT: hal/dht.md
+          - Buzzer: hal/buzzer.md
+  - Internals:
+      - internals/index.md
+      - Architecture: internals/architecture.md
+      - Guidelines: internals/guidelines.md
+      - Target Matrix: internals/target-matrix.md
       - Testing:
-          - Hardware Smoke Tests: guides/hardware-smoke-tests.md
-          - Concurrency Tests: guides/concurrency-tests.md
-          - Validation Template: guides/hardware-validation-report-template.md
-  - API Reference:
-      - modules/index.md
-      - HAL:
-          - I/O & Communication:
-              - GPIO: modules/gpio.md
-              - UART: modules/uart.md
-              - I2C Master: modules/i2c.md
-              - I2C Slave: modules/i2c_slave.md
-              - SPI Master: modules/spi.md
-              - SPI Slave: modules/spi_slave.md
-              - TWAI: modules/twai.md
-              - I2S: modules/i2s.md
-              - 1-Wire: modules/one_wire.md
-              - GPIO Expander: modules/gpio_expander.md
-              - Touch: modules/touch.md
-              - RMT: modules/rmt.md
-          - Analog:
-              - ADC: modules/adc.md
-              - DAC: modules/dac.md
-              - SDM: modules/sdm.md
-              - PWM: modules/pwm.md
-          - Timers & Counters:
-              - Timer: modules/timer.md
-              - PCNT: modules/pcnt.md
-              - MCPWM: modules/mcpwm.md
-          - Storage:
-              - NVS: modules/nvs.md
-              - SD/MMC: modules/sdmmc.md
-              - SD over SPI: modules/sd_spi.md
-          - Device:
-              - System: modules/system.md
-              - Sleep: modules/sleep.md
-              - Watchdog: modules/wdt.md
-              - Temperature: modules/temp_sensor.md
-              - eFuse: modules/efuse.md
-              - ULP: modules/ulp.md
-              - USB Host: modules/usb_host.md
-              - USB Device: modules/usb_device.md
-      - Drivers:
-          - Display:
-              - LCD: modules/lcd.md
-              - LED Strip: modules/led_strip.md
-              - 7-Segment: modules/seven_seg.md
-          - Input:
-              - Button: modules/button.md
-              - Encoder: modules/encoder.md
-          - Sensor:
-              - DHT: modules/dht.md
-          - Actuator:
-              - Buzzer: modules/buzzer.md
-      - Services:
-          - Display / Runtime:
-              - UI (LVGL): modules/ui.md
-          - Input / Runtime:
-              - USB HID: modules/usb_hid.md
-          - Connectivity:
-              - WiFi: modules/wifi.md
-              - WiFi Provisioning: modules/wifi_prov.md
-              - WiFi Mesh: modules/wifi_mesh.md
-              - ESP-NOW: modules/espnow.md
-              - Bluetooth: modules/bluetooth.md
-              - BLE GATT: modules/ble_gatt.md
-              - mDNS: modules/mdns.md
-          - Protocol:
-              - HTTP Client: modules/http_client.md
-              - HTTP Server: modules/http_server.md
-              - MQTT: modules/mqtt.md
-              - WebSocket Client: modules/ws_client.md
-          - System:
-              - Console: modules/console.md
-              - Filesystem: modules/fs.md
-              - FAT Filesystem: modules/fatfs.md
-              - Local Control: modules/local_ctrl.md
-              - Power Management: modules/power_mgmt.md
-              - SNTP: modules/sntp.md
-              - OTA: modules/ota.md
-      - Framework:
-          - Overview: modules/framework.md
-  - Project:
-      - Architecture: architecture.md
-      - Guidelines: guidelines.md
-      - Migration (V5 → V6): migration-guide.md
-      - V6 Validation Report: validation-report-v6.md
+          - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md
+          - Concurrency Tests: internals/testing/concurrency-tests.md
+          - Validation Template: internals/testing/hardware-validation-report-template.md
+  - Archive:
+      - archive/index.md
+      - V5 to V6 Migration: archive/migration-v5-v6.md
+      - V6 Validation Report: archive/validation-report-v6.md
+      - USB Support Plan: archive/plans/usb-support-plan.md

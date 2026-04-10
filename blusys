@@ -1481,28 +1481,48 @@ cmd_fullclean() {
 cmd_example() {
     local examples_dir="$BLUSYS_REPO_ROOT/examples"
 
+    # Find all example directories (supports flat and categorized layouts)
+    _find_examples() {
+        for f in "$examples_dir"/*/CMakeLists.txt "$examples_dir"/*/*/CMakeLists.txt; do
+            [[ -f "$f" ]] || continue
+            printf '%s\n' "$(dirname "$f")"
+        done | sort
+    }
+
+    # Resolve an example name to its path
+    _resolve_example() {
+        local target_name="$1"
+        local found=""
+        while IFS= read -r dir; do
+            if [[ "$(basename "$dir")" == "$target_name" ]]; then
+                found="$dir"
+                break
+            fi
+        done < <(_find_examples)
+        printf '%s' "$found"
+    }
+
     # No args: list available examples
     if [[ $# -eq 0 ]]; then
         printf 'Available examples:\n'
-        for dir in "$examples_dir"/*/CMakeLists.txt; do
-            [[ -f "$dir" ]] || continue
-            printf '  %s\n' "$(basename "$(dirname "$dir")")"
-        done
+        while IFS= read -r dir; do
+            printf '  %s\n' "$(basename "$dir")"
+        done < <(_find_examples)
         printf '\nUsage: blusys example <name> [command] [args...]\n'
         return
     fi
 
     local name="$1"
     shift
-    local example_path="$examples_dir/$name"
+    local example_path
+    example_path="$(_resolve_example "$name")"
 
-    if [[ ! -d "$example_path" ]]; then
+    if [[ -z "$example_path" || ! -d "$example_path" ]]; then
         printf 'error: example not found: %s\n' "$name" >&2
         printf '\nAvailable examples:\n' >&2
-        for dir in "$examples_dir"/*/CMakeLists.txt; do
-            [[ -f "$dir" ]] || continue
-            printf '  %s\n' "$(basename "$(dirname "$dir")")" >&2
-        done
+        while IFS= read -r dir; do
+            printf '  %s\n' "$(basename "$dir")" >&2
+        done < <(_find_examples)
         exit 1
     fi
 
@@ -1787,7 +1807,9 @@ cmd_build_examples() {
     local targets=(esp32 esp32c3 esp32s3)
 
     mapfile -t examples < <(
-        for f in "$BLUSYS_REPO_ROOT"/examples/*/CMakeLists.txt; do
+        for f in "$BLUSYS_REPO_ROOT"/examples/*/CMakeLists.txt \
+                 "$BLUSYS_REPO_ROOT"/examples/*/*/CMakeLists.txt; do
+            [[ -f "$f" ]] || continue
             printf '%s\n' "$(dirname "$f")"
         done | sort
     )

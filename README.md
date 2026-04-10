@@ -20,11 +20,9 @@ blusys create --starter interactive   # or --starter headless
 blusys run /dev/ttyACM0 esp32s3
 ```
 
-Requires ESP-IDF v5.5+ (auto-detected). `blusys create` generates the
-four-CMakeLists product layout (top-level + `main/` + `app/` +
-`app/product_config.cmake`); platform components are pulled by ESP-IDF's
-managed component manager from `main/idf_component.yml`. See
-[Getting Started](docs/guides/getting-started.md) for the full walkthrough.
+Requires ESP-IDF v5.5+ (auto-detected). `blusys create` generates a
+minimal app using the `blusys::app` reducer model. See
+[Getting Started](docs/start/index.md) for the full walkthrough.
 
 ## Architecture
 
@@ -126,10 +124,20 @@ blusys host-build
 ./scripts/host/build-host/hello_lvgl
 ```
 
+## Examples
+
+Examples are organized into three categories:
+
+- `examples/quickstart/` --- canonical product starters using `blusys::app`
+- `examples/reference/` --- scoped capability demos for specific modules
+- `examples/validation/` --- internal stress tests and smoke tests
+
+See `inventory.yml` for the full classification and CI inclusion flags.
+
 ## Documentation
 
 [**oguzkaganozt.github.io/blusys**](https://oguzkaganozt.github.io/blusys/) —
-guides, API reference, and architecture docs.
+organized as Start, App, Services, HAL + Drivers, Internals, Archive.
 
 Build locally:
 

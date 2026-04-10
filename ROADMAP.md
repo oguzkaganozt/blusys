@@ -396,11 +396,11 @@ Success Criteria:
 
 ### Repo Cleanup
 
-- [ ] Define new docs IA
-- [ ] Define new example taxonomy
-- [ ] Add metadata inventory source
-- [ ] Add docs build gate to CI
-- [ ] Reduce PR build matrix
+- [x] Define new docs IA
+- [x] Define new example taxonomy
+- [x] Add metadata inventory source
+- [x] Add docs build gate to CI
+- [x] Reduce PR build matrix
 
 ## Success Metrics
 

@@ -8,8 +8,9 @@ Before changing public API, docs, repo structure, examples, scaffolding, or proj
 
 - `PRD.md` — canonical product requirements for the v7 refactor
 - `ROADMAP.md` — canonical execution roadmap for the v7 refactor
-- `docs/architecture.md` — current code architecture and tiering
-- `docs/guidelines.md` — public API design rules and contribution workflow
+- `docs/internals/architecture.md` — current code architecture and tiering
+- `docs/internals/guidelines.md` — public API design rules and contribution workflow
+- `inventory.yml` — module, example, and doc classification manifest
 
 Trust executable sources over prose when they disagree: the `blusys` shell script, `components/*/CMakeLists.txt`, example `idf_component.yml` files, and `.github/workflows/*.yml` are authoritative about current behavior.
 
@@ -182,14 +183,16 @@ These commands reflect current repository behavior, not the final v7 shape. Part
 
 ## Validation Guidance
 
-Until CI and examples are reworked, the current validation gates still matter.
-
 Use these checks proportionally to the change:
 
 1. `blusys lint` for layering-sensitive work
 2. targeted `blusys build` or `blusys host-build` for the affected path
 3. `mkdocs build --strict` for docs or nav changes
-4. broader example or QEMU validation only when the touched area warrants it
+4. `python scripts/check-inventory.py` when adding or removing examples, docs, or modules
+5. `python scripts/example-health.py` when modifying example structure
+6. broader nightly validation only when the touched area warrants it
+
+PR CI only builds curated quickstart examples (ci_pr=true in inventory.yml). Full example validation runs nightly.
 
 When the refactor changes public app flow, prioritize validating:
 
@@ -200,16 +203,23 @@ When the refactor changes public app flow, prioritize validating:
 
 ## Examples And Docs Guidance
 
-The repo is expected to move toward a curated surface.
+Examples are organized into three categories under `examples/`:
 
-When adding or refactoring docs and examples:
+- `quickstart/` — canonical product starters using `blusys::app` (public, PR CI)
+- `reference/` — scoped capability demos for one module each (public, nightly CI)
+- `validation/` — internal stress and smoke tests (internal, nightly CI)
+
+When adding new examples, add an entry to `inventory.yml` with the correct category, visibility, and CI flags.
+
+Docs follow the IA: `Start` → `App` → `Services` → `HAL + Drivers` → `Internals` → `Archive`.
+
+When adding or refactoring docs:
 
 - favor canonical quickstarts over proliferating near-duplicate examples
 - favor family- or task-oriented docs over page-per-everything sprawl
 - keep advanced and validation-only material clearly separated from the main user path
-- align changes with the IA direction in `PRD.md` and `ROADMAP.md`
-
-Do not preserve old docs/example structure just because it already exists.
+- add new doc pages to both `inventory.yml` (docs section) and `mkdocs.yml` (nav)
+- consolidate guide and API reference into a single page per module
 
 ## Module Work Guidance
 
