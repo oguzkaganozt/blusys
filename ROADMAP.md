@@ -81,35 +81,32 @@ Migration guide: `docs/migration-guide.md`.
 
 Near-term items that don't block v6.1.0 but should land before V2.
 
-### End-to-end encoder + LCD rig
-
-Each piece is individually validated but no single session has wired a physical EC11
-encoder, an ST7735 panel, and the framework spine into one rig end-to-end
-(encoder-rotation → focus-traversal → confirm-press → overlay-show).
-
-Target: esp32-s3 + ST7735 SPI + EC11 encoder. Use the interactive scaffold
-`app_main.cpp` LCD init TODO block as the reference.
-
-### Scope-based input → feedback latency
-
-Wire `intent::confirm` to a debug GPIO toggle inside `controller::handle`. Tap that GPIO
-+ the first `blusys_lcd_draw_bitmap` SPI CS edge with a Saleae or oscilloscope. Record
-median + p99 over a few hundred presses. File under `docs/guides/` using the
-hardware-validation report template.
-
-### SSD1306 bus recovery
-
-A failed boot can leave SDA held low mid-transaction, locking the I2C bus for the next
-power cycle. Fix: before `i2c_new_master_bus`, if SDA reads low pulse SCL 9 times,
-issue a manual STOP condition, then release the GPIOs. Blocked on a deliberate stuck-
-state reproduction (~20-line change once reproducible).
-
 ### ~~`widget_kit_demo` keyboard encoder simulation~~ ✅
 
 Done. Arrow keys (Left/Right/Up/Down) map to encoder rotation, Space/Enter map to
 encoder press. An `lv_indev_t` of type `LV_INDEV_TYPE_ENCODER` drives LVGL focus
 traversal via `create_encoder_group` + `auto_focus_screen`, mirroring the on-device
 `framework_encoder_basic` pattern. Both mouse and keyboard input work simultaneously.
+
+### Deferred — hardware required
+
+The remaining V1.1 items all require physical hardware and are parked until a bench
+session is available.
+
+**End-to-end encoder + LCD rig** — Wire a physical EC11 encoder, ST7735 SPI panel, and
+the framework spine into one rig on esp32-s3 end-to-end (encoder-rotation →
+focus-traversal → confirm-press → overlay-show). Use the interactive scaffold
+`app_main.cpp` LCD init TODO block as the reference.
+
+**Scope-based input → feedback latency** — Wire `intent::confirm` to a debug GPIO
+toggle inside `controller::handle`. Tap that GPIO + the first `blusys_lcd_draw_bitmap`
+SPI CS edge with a Saleae or oscilloscope. Record median + p99 over a few hundred
+presses. Depends on the encoder+LCD rig above.
+
+**SSD1306 bus recovery** — A failed boot can leave SDA held low mid-transaction,
+locking the I2C bus for the next power cycle. Fix: before `i2c_new_master_bus`, if SDA
+reads low pulse SCL 9 times, issue a manual STOP condition, then release the GPIOs.
+Blocked on a deliberate stuck-state reproduction (~20-line change once reproducible).
 
 ---
 
