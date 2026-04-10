@@ -222,6 +222,16 @@ void connectivity_capability::start_dependent_services()
     }
 }
 
+blusys_err_t connectivity_capability::request_reconnect()
+{
+    if (wifi_ == nullptr) {
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+    BLUSYS_LOGI(TAG, "manual reconnect requested");
+    blusys_wifi_disconnect(wifi_);
+    return blusys_wifi_connect(wifi_, cfg_.connect_timeout_ms);
+}
+
 void connectivity_capability::post_event(connectivity_event ev)
 {
     if (rt_ != nullptr) {

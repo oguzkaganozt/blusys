@@ -48,6 +48,7 @@ struct connectivity_status {
     bool local_ctrl_running = false;
     bool bundle_ready       = false;
     connectivity_ip_info ip_info{};
+    std::int8_t wifi_rssi   = 0;
 };
 
 // ---- device implementation ----
@@ -101,6 +102,10 @@ public:
     void stop() override;
 
     [[nodiscard]] const connectivity_status &status() const { return status_; }
+
+    // Explicitly trigger a reconnect attempt. Products call this from
+    // system/ in response to a reducer action.
+    blusys_err_t request_reconnect();
 
 private:
     static constexpr std::uint32_t kPendingNone         = 0;
@@ -167,6 +172,8 @@ public:
     void stop() override;
 
     [[nodiscard]] const connectivity_status &status() const { return status_; }
+
+    blusys_err_t request_reconnect();
 
 private:
     void post_event(connectivity_event ev);

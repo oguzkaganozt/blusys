@@ -13,9 +13,18 @@ if(ESP_PLATFORM)
     list(APPEND blusys_framework_sources
         src/app/capabilities/connectivity.cpp
         src/app/capabilities/storage.cpp
+        src/app/capabilities/bluetooth.cpp
+        src/app/capabilities/ota.cpp
+        src/app/capabilities/diagnostics.cpp
+        src/app/capabilities/provisioning.cpp
         src/app/button_array_bridge.cpp
     )
 endif()
+
+# Telemetry capability — same implementation on device and host.
+list(APPEND blusys_framework_sources
+    src/app/capabilities/telemetry.cpp
+)
 
 idf_build_get_property(build_components BUILD_COMPONENTS)
 
@@ -61,6 +70,18 @@ if(BLUSYS_BUILD_UI)
             src/app/touch_bridge.cpp
             src/ui/transition.cpp
             src/ui/input/focus_scope.cpp
+            src/app/flows/boot.cpp
+            src/app/flows/loading.cpp
+            src/app/flows/error.cpp
+            src/app/flows/status.cpp
+            src/app/flows/settings.cpp
+            src/app/flows/ota_flow.cpp
+            src/app/flows/provisioning_flow.cpp
+            src/app/flows/connectivity_flow.cpp
+            src/app/flows/diagnostics_flow.cpp
+            src/app/screens/about_screen.cpp
+            src/app/screens/status_screen.cpp
+            src/app/screens/diagnostics_screen.cpp
         )
     else()
         message(FATAL_ERROR "BLUSYS_BUILD_UI=ON requires the lvgl/lvgl managed component")

@@ -7,7 +7,7 @@
 
 namespace blusys::app {
 
-static constexpr std::size_t kMaxCapabilities = 4;
+static constexpr std::size_t kMaxCapabilities = 8;
 
 struct capability_list {
     capability_base *items[kMaxCapabilities]{};

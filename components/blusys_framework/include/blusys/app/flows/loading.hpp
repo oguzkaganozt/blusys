@@ -1,0 +1,28 @@
+#pragma once
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+
+#include "lvgl.h"
+
+namespace blusys::app::flows {
+
+struct loading_config {
+    const char *message      = "Loading...";
+    bool        show_spinner = true;
+};
+
+// Create a loading indicator as a child of parent.
+// Not a standalone screen — products embed this in their own screens.
+lv_obj_t *loading_create(lv_obj_t *parent, const loading_config &config = {});
+
+struct empty_state_config {
+    const char *title   = "No Data";
+    const char *message = nullptr;
+};
+
+// Create an empty-state placeholder as a child of parent.
+lv_obj_t *empty_state_create(lv_obj_t *parent, const empty_state_config &config = {});
+
+}  // namespace blusys::app::flows
+
+#endif  // BLUSYS_FRAMEWORK_HAS_UI

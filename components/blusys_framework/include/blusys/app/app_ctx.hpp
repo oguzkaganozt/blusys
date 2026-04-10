@@ -28,8 +28,18 @@ class app_runtime_base;
 // Forward declarations for capability status types.
 struct connectivity_status;
 struct storage_status;
+struct bluetooth_status;
+struct ota_status;
+struct diagnostics_status;
+struct telemetry_status;
+struct provisioning_status;
 class connectivity_capability;
 class storage_capability;
+class bluetooth_capability;
+class ota_capability;
+class diagnostics_capability;
+class telemetry_capability;
+class provisioning_capability;
 
 class app_ctx {
 public:
@@ -73,6 +83,11 @@ public:
 
     [[nodiscard]] const connectivity_status *connectivity() const;
     [[nodiscard]] const storage_status *storage() const;
+    [[nodiscard]] const bluetooth_status *bluetooth() const;
+    [[nodiscard]] const ota_status *ota() const;
+    [[nodiscard]] const diagnostics_status *diagnostics() const;
+    [[nodiscard]] const telemetry_status *telemetry() const;
+    [[nodiscard]] const provisioning_status *provisioning() const;
 
 #ifdef ESP_PLATFORM
     // Direct storage handle access — nullptr if the bundle is absent
@@ -96,6 +111,11 @@ private:
 #endif
     connectivity_capability        *connectivity_   = nullptr;
     storage_capability             *storage_        = nullptr;
+    bluetooth_capability           *bluetooth_      = nullptr;
+    ota_capability                 *ota_            = nullptr;
+    diagnostics_capability         *diagnostics_    = nullptr;
+    telemetry_capability           *telemetry_      = nullptr;
+    provisioning_capability        *provisioning_   = nullptr;
 };
 
 }  // namespace blusys::app

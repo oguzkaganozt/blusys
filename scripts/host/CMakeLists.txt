@@ -121,6 +121,11 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/app/app_ctx.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/connectivity_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/storage_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/bluetooth_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/ota_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/diagnostics_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/provisioning_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/telemetry.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/theme_presets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/action_widgets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/bindings.cpp
@@ -139,15 +144,44 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/row.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/screen.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/theme.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/icon_label.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/status_badge.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/key_value.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/button/button.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/card/card.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/chart/chart.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/data_table/data_table.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/dropdown/dropdown.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/gauge/gauge.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/input_field/input_field.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/knob/knob.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/list/list.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/modal/modal.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/overlay/overlay.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/progress/progress.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/slider/slider.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/tabs/tabs.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/toggle/toggle.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/shell.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/touch_bridge.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/transition.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/input/focus_scope.cpp
+
+    # Phase 4 — shared operational flows
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/boot.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/loading.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/error.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/status.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/settings.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/ota_flow.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/provisioning_flow.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/connectivity_flow.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/diagnostics_flow.cpp
+
+    # Phase 4 — stock product screens
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/about_screen.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/status_screen.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/diagnostics_screen.cpp
 )
 
 add_library(blusys_framework_host STATIC ${blusys_framework_host_sources})

@@ -8,6 +8,11 @@
 #include "blusys/app/capability_list.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/storage.hpp"
+#include "blusys/app/capabilities/bluetooth.hpp"
+#include "blusys/app/capabilities/ota.hpp"
+#include "blusys/app/capabilities/diagnostics.hpp"
+#include "blusys/app/capabilities/telemetry.hpp"
+#include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/framework/core/containers.hpp"
 #include "blusys/framework/core/controller.hpp"
 #include "blusys/framework/core/feedback.hpp"
@@ -70,6 +75,21 @@ protected:
                 break;
             case capability_kind::storage:
                 ctx.storage_ = static_cast<storage_capability *>(c);
+                break;
+            case capability_kind::bluetooth:
+                ctx.bluetooth_ = static_cast<bluetooth_capability *>(c);
+                break;
+            case capability_kind::ota:
+                ctx.ota_ = static_cast<ota_capability *>(c);
+                break;
+            case capability_kind::diagnostics:
+                ctx.diagnostics_ = static_cast<diagnostics_capability *>(c);
+                break;
+            case capability_kind::telemetry:
+                ctx.telemetry_ = static_cast<telemetry_capability *>(c);
+                break;
+            case capability_kind::provisioning:
+                ctx.provisioning_ = static_cast<provisioning_capability *>(c);
                 break;
             case capability_kind::custom:
                 break;

@@ -1,0 +1,119 @@
+#pragma once
+
+#include "blusys/app/capability.hpp"
+
+#include <cstddef>
+#include <cstdint>
+
+namespace blusys::framework { class runtime; }
+
+namespace blusys::app {
+
+// ---- shared types (always available) ----
+
+enum class bluetooth_event : std::uint32_t {
+    gap_ready              = 0x0300,
+    advertising_started    = 0x0301,
+    advertising_stopped    = 0x0302,
+    scan_result            = 0x0303,
+    gatt_ready             = 0x0310,
+    client_connected       = 0x0311,
+    client_disconnected    = 0x0312,
+    characteristic_written = 0x0313,
+    bundle_ready           = 0x03FF,
+};
+
+struct bluetooth_status {
+    bool    gap_ready        = false;
+    bool    advertising      = false;
+    bool    gatt_ready       = false;
+    bool    client_connected = false;
+    bool    bundle_ready     = false;
+    std::uint8_t connected_count = 0;
+};
+
+// ---- device implementation ----
+
+#ifdef ESP_PLATFORM
+
+#include "blusys/connectivity/bluetooth.h"
+#include "blusys/connectivity/ble_gatt.h"
+
+#include <atomic>
+
+struct bluetooth_config {
+    const char *device_name = nullptr;
+    bool auto_advertise     = true;
+
+    // GATT server (enabled when services != nullptr)
+    const blusys_ble_gatt_svc_def_t *services = nullptr;
+    std::size_t svc_count = 0;
+    blusys_ble_gatt_conn_cb_t conn_cb     = nullptr;
+    void *conn_user_ctx                    = nullptr;
+};
+
+class bluetooth_capability final : public capability_base {
+public:
+    explicit bluetooth_capability(const bluetooth_config &cfg);
+
+    [[nodiscard]] capability_kind kind() const override { return capability_kind::bluetooth; }
+
+    blusys_err_t start(blusys::framework::runtime &rt) override;
+    void poll(std::uint32_t now_ms) override;
+    void stop() override;
+
+    [[nodiscard]] const bluetooth_status &status() const { return status_; }
+
+private:
+    static constexpr std::uint32_t kPendingNone            = 0;
+    static constexpr std::uint32_t kPendingGapReady         = 1 << 0;
+    static constexpr std::uint32_t kPendingGattReady        = 1 << 1;
+    static constexpr std::uint32_t kPendingClientConnected  = 1 << 2;
+    static constexpr std::uint32_t kPendingClientDisconnected = 1 << 3;
+
+    static void gatt_conn_handler(std::uint16_t conn_handle, bool connected,
+                                  void *user_ctx);
+
+    void post_event(bluetooth_event ev);
+    void check_capability_ready();
+
+    bluetooth_config cfg_;
+    bluetooth_status status_{};
+    blusys::framework::runtime *rt_ = nullptr;
+    blusys_bluetooth_t  *bt_   = nullptr;
+    blusys_ble_gatt_t   *gatt_ = nullptr;
+    std::atomic<std::uint32_t> pending_flags_{kPendingNone};
+};
+
+#else  // host stub
+
+struct bluetooth_config {
+    const char *device_name = nullptr;
+    bool auto_advertise     = true;
+};
+
+class bluetooth_capability final : public capability_base {
+public:
+    explicit bluetooth_capability(const bluetooth_config &cfg)
+        : cfg_(cfg) {}
+
+    [[nodiscard]] capability_kind kind() const override { return capability_kind::bluetooth; }
+
+    blusys_err_t start(blusys::framework::runtime &rt) override;
+    void poll(std::uint32_t now_ms) override;
+    void stop() override;
+
+    [[nodiscard]] const bluetooth_status &status() const { return status_; }
+
+private:
+    void post_event(bluetooth_event ev);
+
+    bluetooth_config cfg_;
+    bluetooth_status status_{};
+    blusys::framework::runtime *rt_ = nullptr;
+    bool first_poll_ = true;
+};
+
+#endif  // ESP_PLATFORM
+
+}  // namespace blusys::app

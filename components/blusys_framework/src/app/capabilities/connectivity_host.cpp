@@ -65,6 +65,14 @@ void connectivity_capability::stop()
     rt_ = nullptr;
 }
 
+blusys_err_t connectivity_capability::request_reconnect()
+{
+    BLUSYS_LOGI(TAG, "host stub: reconnect requested (simulated)");
+    post_event(connectivity_event::wifi_connected);
+    post_event(connectivity_event::wifi_got_ip);
+    return BLUSYS_OK;
+}
+
 void connectivity_capability::post_event(connectivity_event ev)
 {
     if (rt_ != nullptr) {

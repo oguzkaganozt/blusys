@@ -1,6 +1,11 @@
 #include "blusys/app/app_ctx.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/storage.hpp"
+#include "blusys/app/capabilities/bluetooth.hpp"
+#include "blusys/app/capabilities/ota.hpp"
+#include "blusys/app/capabilities/diagnostics.hpp"
+#include "blusys/app/capabilities/telemetry.hpp"
+#include "blusys/app/capabilities/provisioning.hpp"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/app/view/screen_router.hpp"
@@ -94,6 +99,46 @@ const storage_status *app_ctx::storage() const
 {
     if (storage_ != nullptr) {
         return &storage_->status();
+    }
+    return nullptr;
+}
+
+const bluetooth_status *app_ctx::bluetooth() const
+{
+    if (bluetooth_ != nullptr) {
+        return &bluetooth_->status();
+    }
+    return nullptr;
+}
+
+const ota_status *app_ctx::ota() const
+{
+    if (ota_ != nullptr) {
+        return &ota_->status();
+    }
+    return nullptr;
+}
+
+const diagnostics_status *app_ctx::diagnostics() const
+{
+    if (diagnostics_ != nullptr) {
+        return &diagnostics_->status();
+    }
+    return nullptr;
+}
+
+const telemetry_status *app_ctx::telemetry() const
+{
+    if (telemetry_ != nullptr) {
+        return &telemetry_->status();
+    }
+    return nullptr;
+}
+
+const provisioning_status *app_ctx::provisioning() const
+{
+    if (provisioning_ != nullptr) {
+        return &provisioning_->status();
     }
     return nullptr;
 }
