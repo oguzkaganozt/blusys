@@ -64,7 +64,7 @@ lv_color_t background_for(button_variant variant, const theme_tokens &t)
         case button_variant::primary:   return t.color_primary;
         case button_variant::secondary: return t.color_surface;
         case button_variant::ghost:     return t.color_surface;
-        case button_variant::danger:    return t.color_accent;
+        case button_variant::danger:    return t.color_error;
     }
     return t.color_primary;
 }
@@ -79,7 +79,20 @@ void apply_variant(lv_obj_t *button, button_variant variant)
     lv_obj_set_style_border_width(button,
                                   variant == button_variant::ghost ? 1 : 0,
                                   0);
-    lv_obj_set_style_border_color(button, t.color_on_primary, 0);
+    lv_obj_set_style_border_color(button, t.color_outline, 0);
+
+    // Pressed state — darken via token-driven opacity.
+    lv_obj_set_style_bg_opa(button, t.opa_pressed,
+                            static_cast<lv_style_selector_t>(LV_PART_MAIN) | LV_STATE_PRESSED);
+
+    // Disabled state — token-driven opacity.
+    lv_obj_set_style_opa(button, t.opa_disabled,
+                         static_cast<lv_style_selector_t>(LV_PART_MAIN) | LV_STATE_DISABLED);
+
+    // Focus ring.
+    lv_obj_set_style_outline_width(button, t.focus_ring_width, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_color(button, t.color_focus_ring, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_pad(button, 2, LV_STATE_FOCUSED);
 }
 
 void on_lvgl_clicked(lv_event_t *e)

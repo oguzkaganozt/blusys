@@ -6,14 +6,17 @@
 
 namespace blusys::app::presets {
 
-// Dark theme — default for interactive products.
-const blusys::ui::theme_tokens &dark();
+// Expressive dark — saturated, tactile, characterful.
+// Default for consumer/controller interactive products.
+const blusys::ui::theme_tokens &expressive_dark();
 
-// OLED theme — white-on-black, zero radii, compact spacing.
+// Operational light — clean, readable, professionally restrained.
+// Default for industrial/panel interactive products.
+const blusys::ui::theme_tokens &operational_light();
+
+// OLED — pure white-on-black, zero radii, ultra-compact.
+// Display-specific variant for monochrome or OLED panels.
 const blusys::ui::theme_tokens &oled();
-
-// Light theme — daylight-readable, inverted dark palette.
-const blusys::ui::theme_tokens &light();
 
 }  // namespace blusys::app::presets
 

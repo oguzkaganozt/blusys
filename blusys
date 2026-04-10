@@ -1122,6 +1122,7 @@ add_library(blusys_framework_host STATIC
     # Core spine
     ${BLUSYS_FW}/src/core/controller.cpp
     ${BLUSYS_FW}/src/core/feedback.cpp
+    ${BLUSYS_FW}/src/core/feedback_presets.cpp
     ${BLUSYS_FW}/src/core/framework.cpp
     ${BLUSYS_FW}/src/core/router.cpp
     ${BLUSYS_FW}/src/core/runtime.cpp
@@ -1139,6 +1140,7 @@ add_library(blusys_framework_host STATIC
     ${BLUSYS_FW}/src/app/screen_router.cpp
 
     # UI surface
+    ${BLUSYS_FW}/src/ui/icons/icon_set_minimal.cpp
     ${BLUSYS_FW}/src/ui/input/encoder.cpp
     ${BLUSYS_FW}/src/ui/primitives/col.cpp
     ${BLUSYS_FW}/src/ui/primitives/divider.cpp
@@ -1225,6 +1227,7 @@ add_library(blusys_framework_core_host STATIC
     # Core spine
     ${BLUSYS_FW}/src/core/controller.cpp
     ${BLUSYS_FW}/src/core/feedback.cpp
+    ${BLUSYS_FW}/src/core/feedback_presets.cpp
     ${BLUSYS_FW}/src/core/framework.cpp
     ${BLUSYS_FW}/src/core/router.cpp
     ${BLUSYS_FW}/src/core/runtime.cpp

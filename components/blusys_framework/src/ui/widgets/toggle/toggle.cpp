@@ -73,6 +73,14 @@ void apply_theme(lv_obj_t *toggle)
     // Knob.
     lv_obj_set_style_bg_color(toggle, t.color_on_primary, LV_PART_KNOB);
     lv_obj_set_style_bg_opa(toggle, LV_OPA_COVER, LV_PART_KNOB);
+
+    // Disabled state.
+    lv_obj_set_style_opa(toggle, t.opa_disabled, LV_STATE_DISABLED);
+
+    // Focus ring.
+    lv_obj_set_style_outline_width(toggle, t.focus_ring_width, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_color(toggle, t.color_focus_ring, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_pad(toggle, 2, LV_STATE_FOCUSED);
 }
 
 void on_lvgl_value_changed(lv_event_t *e)

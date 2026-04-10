@@ -1,6 +1,7 @@
 #pragma once
 
 #include "blusys/app/app_ctx.hpp"
+#include "blusys/app/app_identity.hpp"
 #include "blusys/framework/core/intent.hpp"
 
 #include <cstdint>
@@ -44,9 +45,15 @@ struct app_spec {
     // Must outlive the app runtime.
     capability_list *capabilities = nullptr;
 
+    // ---- product identity (optional) ----
+    // When set, the runtime applies theme and feedback preset at boot.
+    // identity->theme takes precedence over the legacy .theme field.
+    const app_identity *identity = nullptr;
+
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     // ---- theme (interactive path only) ----
-    // nullptr = use default dark preset.
+    // nullptr = use default expressive_dark preset.
+    // Prefer setting identity->theme instead of this field.
     const blusys::ui::theme_tokens *theme = nullptr;
 #endif
 };

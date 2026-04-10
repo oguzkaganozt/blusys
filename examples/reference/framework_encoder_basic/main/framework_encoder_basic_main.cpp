@@ -51,6 +51,7 @@
 
 #include "blusys/framework/framework.hpp"
 #include "blusys/framework/ui/widgets.hpp"
+#include "blusys/app/theme_presets.hpp"
 #include "blusys/log.h"
 
 #include "blusys/drivers/input/encoder.h"
@@ -179,21 +180,7 @@ extern "C" void app_main(void)
 
     // ---- theme + screen layout ----------------------------------------------
 
-    blusys::ui::set_theme({
-        .color_primary    = lv_color_hex(0x2A62FF),
-        .color_surface    = lv_color_hex(0x11141D),
-        .color_on_primary = lv_color_hex(0xF7F9FF),
-        .color_accent     = lv_color_hex(0x69D6C8),
-        .color_disabled   = lv_color_hex(0x667089),
-        .spacing_sm  = 8,
-        .spacing_md  = 12,
-        .spacing_lg  = 20,
-        .radius_card = 14,
-        .radius_button = 999,
-        .font_body   = LV_FONT_DEFAULT,
-        .font_title  = LV_FONT_DEFAULT,
-        .font_mono   = LV_FONT_DEFAULT,
-    });
+    blusys::ui::set_theme(blusys::app::presets::expressive_dark());
 
     lv_obj_t *screen = blusys::ui::screen_create({});
     lv_obj_t *col = blusys::ui::col_create(screen, {

@@ -81,6 +81,8 @@ const char *feedback_pattern_name(feedback_pattern pattern)
         return "warning";
     case feedback_pattern::error:
         return "error";
+    case feedback_pattern::notification:
+        return "notification";
     }
 
     return "unknown";

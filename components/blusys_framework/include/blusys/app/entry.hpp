@@ -100,8 +100,15 @@ void run_host(const app_spec<State, Action> &spec,
 {
     blusys_app_platform::host_init(hor_res, ver_res, title);
 
-    if (spec.theme != nullptr) {
-        blusys_app_platform::host_set_theme(static_cast<const void *>(spec.theme));
+    // Resolve theme: identity->theme takes precedence, then spec.theme, then default.
+    const blusys::ui::theme_tokens *resolved_theme = nullptr;
+    if (spec.identity != nullptr && spec.identity->theme != nullptr) {
+        resolved_theme = spec.identity->theme;
+    } else if (spec.theme != nullptr) {
+        resolved_theme = spec.theme;
+    }
+    if (resolved_theme != nullptr) {
+        blusys_app_platform::host_set_theme(static_cast<const void *>(resolved_theme));
     } else {
         blusys_app_platform::host_set_default_theme();
     }
@@ -148,8 +155,15 @@ void run_device(const app_spec<State, Action> &spec,
         return;
     }
 
-    if (spec.theme != nullptr) {
-        blusys_app_platform::device_set_theme(static_cast<const void *>(spec.theme));
+    // Resolve theme: identity->theme takes precedence, then spec.theme, then default.
+    const blusys::ui::theme_tokens *resolved_theme = nullptr;
+    if (spec.identity != nullptr && spec.identity->theme != nullptr) {
+        resolved_theme = spec.identity->theme;
+    } else if (spec.theme != nullptr) {
+        resolved_theme = spec.theme;
+    }
+    if (resolved_theme != nullptr) {
+        blusys_app_platform::device_set_theme(static_cast<const void *>(resolved_theme));
     } else {
         blusys_app_platform::device_set_default_theme();
     }

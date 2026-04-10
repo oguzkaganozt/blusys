@@ -112,6 +112,7 @@ set(blusys_framework_host_sources
     # Core spine — C++, pure logic, no LVGL deps.
     ${BLUSYS_FRAMEWORK_DIR}/src/core/controller.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback_presets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/framework.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/router.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/runtime.cpp
@@ -130,6 +131,7 @@ set(blusys_framework_host_sources
 
     # UI surface — LVGL-backed. Always on in the host harness
     # (device builds gate this behind BLUSYS_BUILD_UI).
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/icons/icon_set_minimal.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/input/encoder.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/col.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/divider.cpp

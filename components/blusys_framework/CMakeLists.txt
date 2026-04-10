@@ -1,6 +1,7 @@
 set(blusys_framework_sources
     src/core/controller.cpp
     src/core/feedback.cpp
+    src/core/feedback_presets.cpp
     src/core/framework.cpp
     src/core/router.cpp
     src/core/runtime.cpp
@@ -29,6 +30,7 @@ if(BLUSYS_BUILD_UI)
             src/app/screen_router.cpp
             src/app/input_bridge.cpp
             src/app/app_device_platform.cpp
+            src/ui/icons/icon_set_minimal.cpp
             src/ui/input/encoder.cpp
             src/ui/primitives/col.cpp
             src/ui/primitives/divider.cpp

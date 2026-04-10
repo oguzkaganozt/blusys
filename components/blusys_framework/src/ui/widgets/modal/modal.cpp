@@ -61,8 +61,8 @@ void style_backdrop(lv_obj_t *backdrop)
 {
     const auto &t = theme();
     lv_obj_set_size(backdrop, LV_PCT(100), LV_PCT(100));
-    lv_obj_set_style_bg_color(backdrop, t.color_surface, 0);
-    lv_obj_set_style_bg_opa(backdrop, LV_OPA_70, 0);
+    lv_obj_set_style_bg_color(backdrop, t.color_background, 0);
+    lv_obj_set_style_bg_opa(backdrop, t.opa_backdrop, 0);
     lv_obj_set_style_border_width(backdrop, 0, 0);
     lv_obj_set_style_radius(backdrop, 0, 0);
     lv_obj_set_style_pad_all(backdrop, 0, 0);
@@ -82,14 +82,20 @@ void style_panel(lv_obj_t *panel)
     lv_obj_set_height(panel, LV_SIZE_CONTENT);
     lv_obj_set_style_bg_color(panel, t.color_surface, 0);
     lv_obj_set_style_bg_opa(panel, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_color(panel, t.color_primary, 0);
-    lv_obj_set_style_border_width(panel, 2, 0);
+    lv_obj_set_style_border_color(panel, t.color_outline, 0);
+    lv_obj_set_style_border_width(panel, 1, 0);
     lv_obj_set_style_radius(panel, t.radius_card, 0);
     lv_obj_set_style_pad_all(panel, t.spacing_lg, 0);
     lv_obj_set_layout(panel, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(panel, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(panel, t.spacing_md, 0);
     lv_obj_remove_flag(panel, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Shadow from tokens.
+    lv_obj_set_style_shadow_width(panel, t.shadow_overlay_width, 0);
+    lv_obj_set_style_shadow_offset_y(panel, t.shadow_overlay_ofs_y, 0);
+    lv_obj_set_style_shadow_color(panel, t.shadow_color, 0);
+    lv_obj_set_style_shadow_opa(panel, LV_OPA_40, 0);
 }
 
 void on_lvgl_clicked(lv_event_t *e)
@@ -137,13 +143,13 @@ lv_obj_t *modal_create(lv_obj_t *parent, const modal_config &config)
     if (config.title != nullptr) {
         lv_obj_t *title_label = lv_label_create(panel);
         lv_label_set_text(title_label, config.title);
-        lv_obj_set_style_text_color(title_label, t.color_on_primary, 0);
+        lv_obj_set_style_text_color(title_label, t.color_on_surface, 0);
         lv_obj_set_style_text_font(title_label, t.font_title, 0);
     }
     if (config.body != nullptr) {
         lv_obj_t *body_label = lv_label_create(panel);
         lv_label_set_text(body_label, config.body);
-        lv_obj_set_style_text_color(body_label, t.color_on_primary, 0);
+        lv_obj_set_style_text_color(body_label, t.color_on_surface, 0);
         lv_obj_set_style_text_font(body_label, t.font_body, 0);
         lv_obj_set_width(body_label, LV_PCT(100));
         lv_label_set_long_mode(body_label, LV_LABEL_LONG_WRAP);

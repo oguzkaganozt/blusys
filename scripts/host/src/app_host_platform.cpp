@@ -115,7 +115,7 @@ void host_frame_delay(std::uint32_t ms)
 
 void host_set_default_theme()
 {
-    blusys::ui::set_theme(blusys::app::presets::dark());
+    blusys::ui::set_theme(blusys::app::presets::expressive_dark());
 }
 
 void host_set_theme(const void *tokens)

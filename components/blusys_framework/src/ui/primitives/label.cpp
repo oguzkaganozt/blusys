@@ -10,7 +10,7 @@ lv_obj_t *label_create(lv_obj_t *parent, const label_config &config)
     const auto &t = theme();
 
     lv_label_set_text(label, config.text != nullptr ? config.text : "");
-    lv_obj_set_style_text_color(label, t.color_on_primary, 0);
+    lv_obj_set_style_text_color(label, t.color_on_surface, 0);
     lv_obj_set_style_text_font(label,
                                config.font != nullptr ? config.font : t.font_body,
                                0);

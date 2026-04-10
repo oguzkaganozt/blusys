@@ -79,7 +79,7 @@ void device_deinit(blusys_lcd_t *lcd, blusys_ui_t *ui)
 
 void device_set_default_theme()
 {
-    blusys::ui::set_theme(blusys::app::presets::dark());
+    blusys::ui::set_theme(blusys::app::presets::expressive_dark());
 }
 
 void device_set_theme(const void *tokens)
