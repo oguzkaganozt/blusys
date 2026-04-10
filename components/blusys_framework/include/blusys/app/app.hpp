@@ -13,6 +13,7 @@
 
 #include "blusys/app/app_spec.hpp"
 #include "blusys/app/app_ctx.hpp"
+#include "blusys/app/bundle_list.hpp"
 #include "blusys/app/entry.hpp"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI

@@ -5,6 +5,9 @@
 
 #include "blusys/app/app_ctx.hpp"
 #include "blusys/app/app_spec.hpp"
+#include "blusys/app/bundle_list.hpp"
+#include "blusys/app/bundles/connectivity.hpp"
+#include "blusys/app/bundles/storage.hpp"
 #include "blusys/framework/core/containers.hpp"
 #include "blusys/framework/core/controller.hpp"
 #include "blusys/framework/core/feedback.hpp"
@@ -44,6 +47,29 @@ protected:
         ctx.overlay_mgr_ = mgr;
     }
 #endif
+
+    static void bind_bundle_ptrs(app_ctx &ctx, bundle_list *bundles)
+    {
+        if (bundles == nullptr) {
+            return;
+        }
+        for (std::size_t i = 0; i < bundles->count; ++i) {
+            bundle_base *b = bundles->items[i];
+            if (b == nullptr) {
+                continue;
+            }
+            switch (b->kind()) {
+            case bundle_kind::connectivity:
+                ctx.connectivity_ = static_cast<connectivity_bundle *>(b);
+                break;
+            case bundle_kind::storage:
+                ctx.storage_ = static_cast<storage_bundle *>(b);
+                break;
+            case bundle_kind::custom:
+                break;
+            }
+        }
+    }
 };
 
 namespace detail {
@@ -119,6 +145,9 @@ public:
         bind_overlay_manager(ctx_, &overlay_mgr_);
 #endif
 
+        start_bundles();
+        bind_bundle_ptrs(ctx_, spec_.bundles);
+
         if (spec_.on_init != nullptr) {
             spec_.on_init(ctx_, state_);
         }
@@ -129,12 +158,14 @@ public:
     void step(std::uint32_t now_ms)
     {
         drain_actions();
+        poll_bundles(now_ms);
         framework_runtime_.step(now_ms);
         drain_actions();  // process actions dispatched during tick/handle
     }
 
     void deinit()
     {
+        stop_bundles();
         framework_runtime_.deinit();
         framework_runtime_.unregister_feedback_sink(&default_feedback_sink_);
     }
@@ -177,6 +208,50 @@ private:
         }
     }
 
+    void start_bundles()
+    {
+        if (spec_.bundles == nullptr) {
+            return;
+        }
+        for (std::size_t i = 0; i < spec_.bundles->count; ++i) {
+            bundle_base *b = spec_.bundles->items[i];
+            if (b == nullptr) {
+                continue;
+            }
+            blusys_err_t err = b->start(framework_runtime_);
+            if (err != BLUSYS_OK) {
+                BLUSYS_LOGW("blusys_app", "bundle start failed: %d",
+                            static_cast<int>(err));
+            }
+        }
+    }
+
+    void poll_bundles(std::uint32_t now_ms)
+    {
+        if (spec_.bundles == nullptr) {
+            return;
+        }
+        for (std::size_t i = 0; i < spec_.bundles->count; ++i) {
+            bundle_base *b = spec_.bundles->items[i];
+            if (b != nullptr) {
+                b->poll(now_ms);
+            }
+        }
+    }
+
+    void stop_bundles()
+    {
+        if (spec_.bundles == nullptr) {
+            return;
+        }
+        for (std::size_t i = spec_.bundles->count; i > 0; --i) {
+            bundle_base *b = spec_.bundles->items[i - 1];
+            if (b != nullptr) {
+                b->stop();
+            }
+        }
+    }
+
     static void dispatch_trampoline(void *self, const void *action_ptr)
     {
         auto *rt = static_cast<app_runtime *>(self);
@@ -202,16 +277,22 @@ private:
 
         void handle(const blusys::framework::app_event &event) override
         {
-            if (event.kind != blusys::framework::app_event_kind::intent) {
-                return;
-            }
-            if (owner_.spec_.map_intent == nullptr) {
-                return;
-            }
-
-            Action action;
-            if (owner_.spec_.map_intent(blusys::framework::app_event_intent(event), &action)) {
-                owner_.post_action(action);
+            if (event.kind == blusys::framework::app_event_kind::intent) {
+                if (owner_.spec_.map_intent == nullptr) {
+                    return;
+                }
+                Action action;
+                if (owner_.spec_.map_intent(blusys::framework::app_event_intent(event), &action)) {
+                    owner_.post_action(action);
+                }
+            } else if (event.kind == blusys::framework::app_event_kind::integration) {
+                if (owner_.spec_.map_event == nullptr) {
+                    return;
+                }
+                Action action;
+                if (owner_.spec_.map_event(event.id, event.code, event.payload, &action)) {
+                    owner_.post_action(action);
+                }
             }
         }
 

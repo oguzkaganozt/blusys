@@ -1,4 +1,6 @@
 #include "blusys/app/app_ctx.hpp"
+#include "blusys/app/bundles/connectivity.hpp"
+#include "blusys/app/bundles/storage.hpp"
 
 namespace blusys::app {
 
@@ -61,5 +63,41 @@ void app_ctx::emit_feedback(blusys::framework::feedback_channel channel,
         });
     }
 }
+
+// ---- bundle queries ----
+
+const connectivity_status *app_ctx::connectivity() const
+{
+    if (connectivity_ != nullptr) {
+        return &connectivity_->status();
+    }
+    return nullptr;
+}
+
+const storage_status *app_ctx::storage() const
+{
+    if (storage_ != nullptr) {
+        return &storage_->status();
+    }
+    return nullptr;
+}
+
+#ifdef ESP_PLATFORM
+blusys_fs_t *app_ctx::spiffs() const
+{
+    if (storage_ != nullptr) {
+        return storage_->spiffs();
+    }
+    return nullptr;
+}
+
+blusys_fatfs_t *app_ctx::fatfs() const
+{
+    if (storage_ != nullptr) {
+        return storage_->fatfs();
+    }
+    return nullptr;
+}
+#endif
 
 }  // namespace blusys::app

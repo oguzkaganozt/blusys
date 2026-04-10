@@ -7,6 +7,14 @@ set(blusys_framework_sources
     src/app/app_ctx.cpp
 )
 
+# Service bundles — device-only (depend on blusys_services C APIs).
+if(ESP_PLATFORM)
+    list(APPEND blusys_framework_sources
+        src/app/bundles/connectivity.cpp
+        src/app/bundles/storage.cpp
+    )
+endif()
+
 idf_build_get_property(build_components BUILD_COMPONENTS)
 
 if(BLUSYS_BUILD_UI)

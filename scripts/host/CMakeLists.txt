@@ -118,6 +118,8 @@ set(blusys_framework_host_sources
 
     # App layer — blusys::app product-facing API.
     ${BLUSYS_FRAMEWORK_DIR}/src/app/app_ctx.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/bundles/connectivity_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/bundles/storage_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/theme_presets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/action_widgets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/bindings.cpp
@@ -229,6 +231,29 @@ target_compile_options(app_headless_demo PRIVATE
 )
 # Prevent SDL from hijacking main() — the headless path owns its own entry.
 target_compile_definitions(app_headless_demo PRIVATE SDL_MAIN_HANDLED)
+
+# ── connected_headless_host (Phase 4 — connected product on host) ───────────
+#
+# Exercises the connectivity and storage bundle host stubs through the
+# same reducer event flow used on device. Proves the full bundle
+# lifecycle runs on host without hardware.
+add_executable(connected_headless_host
+    src/connected_headless_host.cpp
+    src/app_headless_platform.cpp
+)
+target_link_libraries(connected_headless_host PRIVATE
+    blusys_framework_host
+    PkgConfig::SDL2
+    m
+)
+target_compile_options(connected_headless_host PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+target_compile_definitions(connected_headless_host PRIVATE SDL_MAIN_HANDLED)
 
 # ── pomodoro_host (oled_encoder_basic ported to host) ────────────────────────
 #

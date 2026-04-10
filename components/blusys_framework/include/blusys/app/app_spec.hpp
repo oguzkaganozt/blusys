@@ -11,6 +11,8 @@
 
 namespace blusys::app {
 
+struct bundle_list;  // forward declaration — include bundle_list.hpp to use
+
 template <typename State, typename Action>
 struct app_spec {
     // ---- required ----
@@ -26,8 +28,21 @@ struct app_spec {
     // If nullptr, framework intents are silently ignored (headless default).
     bool (*map_intent)(blusys::framework::intent intent, Action *out) = nullptr;
 
+    // ---- integration event bridge (service bundles → app actions) ----
+    // Called when a bundle posts an integration event.
+    // Return true and fill *out to convert it to an app action.
+    // If nullptr, integration events are silently ignored.
+    bool (*map_event)(std::uint32_t event_id, std::uint32_t event_code,
+                      const void *payload, Action *out) = nullptr;
+
     // ---- runtime tuning ----
     std::uint32_t tick_period_ms = 10;
+
+    // ---- bundles (device path — ignored on host) ----
+    // Pointer to a bundle_list. The framework starts, polls, and stops
+    // registered bundles. nullptr = no bundles.
+    // Must outlive the app runtime.
+    bundle_list *bundles = nullptr;
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     // ---- theme (interactive path only) ----

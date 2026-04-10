@@ -9,9 +9,23 @@
 namespace blusys::app::view { class overlay_manager; }
 #endif
 
+#ifdef ESP_PLATFORM
+// Forward declarations for C service handle types used by bundle accessors.
+struct blusys_fs;
+typedef struct blusys_fs blusys_fs_t;
+struct blusys_fatfs;
+typedef struct blusys_fatfs blusys_fatfs_t;
+#endif
+
 namespace blusys::app {
 
 class app_runtime_base;
+
+// Forward declarations for bundle status types.
+struct connectivity_status;
+struct storage_status;
+class connectivity_bundle;
+class storage_bundle;
 
 class app_ctx {
 public:
@@ -45,6 +59,18 @@ public:
     [[nodiscard]] view::overlay_manager *overlay_manager() const { return overlay_mgr_; }
 #endif
 
+    // ---- bundle status queries ----
+
+    [[nodiscard]] const connectivity_status *connectivity() const;
+    [[nodiscard]] const storage_status *storage() const;
+
+#ifdef ESP_PLATFORM
+    // Direct storage handle access — nullptr if the bundle is absent
+    // or the filesystem was not configured / failed to mount.
+    [[nodiscard]] blusys_fs_t    *spiffs() const;
+    [[nodiscard]] blusys_fatfs_t *fatfs()  const;
+#endif
+
 private:
     friend class app_runtime_base;
 
@@ -57,6 +83,8 @@ private:
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     view::overlay_manager          *overlay_mgr_   = nullptr;
 #endif
+    connectivity_bundle            *connectivity_   = nullptr;
+    storage_bundle                 *storage_        = nullptr;
 };
 
 }  // namespace blusys::app
