@@ -112,36 +112,8 @@ Blocked on a deliberate stuck-state reproduction (~20-line change once reproduci
 
 ## What's Planned — V2
 
-Not yet scheduled. Captured to preserve the reasoning.
+Full plan: [`docs/plans/v2-plan.md`](docs/plans/v2-plan.md).
 
-### `bu_knob` — Camp 3 rotary widget
-
-A knob widget using `lv_obj_class_t` embedded storage (Camp 3) instead of the external
-slot pool (Camp 2). Deferred from V1 so the Camp 2 pattern could stabilize across five
-widgets before introducing a second implementation pattern.
-
-### Services → C++ migration
-
-`blusys_services` is C. Migrating it to C++ would enable captureless lambdas in service
-callbacks and align it with the framework tier. Deferred because the existing
-implementations are already clean and well-factored, and no concrete pain point has
-appeared that C cannot address. Should be driven by a real need, not cleanup.
-
-### Per-module build gating
-
-V1 gates the entire UI tier with a binary `BLUSYS_STARTER_TYPE` flag. V2 could
-introduce per-module flags (`BLUSYS_MODULE_WIFI`, `BLUSYS_MODULE_BLE`, etc.) so
-products can strip unused services. Worth revisiting once there are three or more
-products with different module subsets.
-
-### Latency tooling
-
-Formalize the input → feedback latency measurement methodology — GPIO-toggle + scope
-integration as a standard validation step, with a template report and expected
-thresholds. Currently measured ad-hoc.
-
-### LVGL version track
-
-LVGL v9.2.2 is pinned in `scripts/host/CMakeLists.txt` and each interactive example's
-`idf_component.yml`. Review when v9.3+ or v10.x stabilize. Risk areas: `lv_arc`,
-`lv_switch`, and the `LV_EVENT_*` set the widget kit directly uses.
+Seven items in execution order: doc cleanup → scaffold production-ready → host-side test
+foundation → widget source auto-discovery → `bu_knob` (Camp 3) → sanitizer builds →
+headless snapshot renderer. Estimated ~2 weeks total.

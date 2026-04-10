@@ -104,11 +104,8 @@ Subsequent builds reuse the cache.
 
 ## What's coming next
 
-1. Keyboard-driven encoder simulation in `widget_kit_demo` (map arrow keys to
-   `LV_INDEV_TYPE_ENCODER` events) so encoder focus traversal can be
-   exercised without hardware.
-2. Per-widget visual snapshot tests once a headless display driver is wired
-   in alongside the SDL2 one.
+1. Per-widget visual snapshot tests once a headless display driver is wired
+   in alongside the SDL2 one. See [`docs/plans/v2-plan.md`](../../docs/plans/v2-plan.md) item 7.
 
 ## Troubleshooting
 

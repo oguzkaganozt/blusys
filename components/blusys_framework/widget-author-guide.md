@@ -4,7 +4,7 @@ This guide is the contract for writing widgets in `blusys_framework/ui/widgets/`
 
 The reference implementation is `bu_button` (`include/blusys/framework/ui/widgets/button/button.hpp`, `src/ui/widgets/button/button.cpp`). When in doubt, copy that file pair.
 
-For the architectural background see [`platform-transition/UI-system.md`](../../platform-transition/UI-system.md).
+For the architectural background see the [Framework guide](../../docs/guides/framework.md).
 
 ## Two categories of widgets
 
@@ -21,7 +21,7 @@ This guide focuses on the interactive-widget rules. Layout primitives only need 
 
 ## The six-rule contract
 
-Every widget in the kit obeys these rules. They are restated from [`UI-system.md`](../../platform-transition/UI-system.md), with implementation guidance below each.
+Every widget in the kit obeys these rules, with implementation guidance below each.
 
 ### 1. Theme tokens are the only source of visual values
 

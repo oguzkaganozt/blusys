@@ -187,19 +187,11 @@ walkthrough.
 
 ## Status
 
-Phase 5 (V1 widget kit) is substantially complete (`bu_knob` deferred to
-V2). Phase 6 (framework core spine) is closed and validated end-to-end by
-`framework_app_basic`. Phase 4.5 (host harness) is closed. Phase 7 is
-closed: `blusys create --starter <headless|interactive>` generates the
-four-CMakeLists product scaffold, with both starter types verified
-buildable against the local platform checkout via `override_path`.
-Phase 8 is closed: the example ecosystem migrated to per-tier umbrella
-headers, the `blusys_all.h` umbrella was deleted, and a fourth framework
-example (`framework_encoder_basic`) was added covering real
-`lv_indev_t` encoder traversal. The next in-flight work is Phase 9
-(validation chain: PC + LVGL + SDL2 → ESP-IDF QEMU → real hardware). See
-[`PROGRESS.md`](https://github.com/oguzkaganozt/blusys/blob/main/PROGRESS.md)
-for the current phase tracker.
+The V5 → V6 platform transition is complete and validated on real hardware
+across all three targets (ESP32, ESP32-C3, ESP32-S3). The V1 widget kit
+ships five Camp 2 widgets (`bu_button`, `bu_toggle`, `bu_slider`,
+`bu_modal`, `bu_overlay`); `bu_knob` (Camp 3) is planned for V2. The full
+validation record is in [`ROADMAP.md`](https://github.com/oguzkaganozt/blusys/blob/main/ROADMAP.md).
 
 For the API reference, see the [Framework API page](../modules/framework.md).
 For the layering rules and dependency direction, see
