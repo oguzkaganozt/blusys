@@ -1,0 +1,65 @@
+#include "blusys/app/app_ctx.hpp"
+
+namespace blusys::app {
+
+// ---- navigation ----
+
+void app_ctx::navigate_to(std::uint32_t route_id, const void *params)
+{
+    if (route_sink_ != nullptr) {
+        route_sink_->submit(blusys::framework::route::set_root(route_id, params));
+    }
+}
+
+void app_ctx::navigate_push(std::uint32_t route_id, const void *params)
+{
+    if (route_sink_ != nullptr) {
+        route_sink_->submit(blusys::framework::route::push(route_id, params));
+    }
+}
+
+void app_ctx::navigate_replace(std::uint32_t route_id, const void *params)
+{
+    if (route_sink_ != nullptr) {
+        route_sink_->submit(blusys::framework::route::replace(route_id, params));
+    }
+}
+
+void app_ctx::navigate_back()
+{
+    if (route_sink_ != nullptr) {
+        route_sink_->submit(blusys::framework::route::pop());
+    }
+}
+
+void app_ctx::show_overlay(std::uint32_t overlay_id, const void *params)
+{
+    if (route_sink_ != nullptr) {
+        route_sink_->submit(blusys::framework::route::show_overlay(overlay_id, params));
+    }
+}
+
+void app_ctx::hide_overlay(std::uint32_t overlay_id)
+{
+    if (route_sink_ != nullptr) {
+        route_sink_->submit(blusys::framework::route::hide_overlay(overlay_id));
+    }
+}
+
+// ---- feedback ----
+
+void app_ctx::emit_feedback(blusys::framework::feedback_channel channel,
+                            blusys::framework::feedback_pattern pattern,
+                            std::uint32_t value)
+{
+    if (feedback_bus_ != nullptr) {
+        feedback_bus_->emit({
+            .channel = channel,
+            .pattern = pattern,
+            .value   = value,
+            .payload = nullptr,
+        });
+    }
+}
+
+}  // namespace blusys::app

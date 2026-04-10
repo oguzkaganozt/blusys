@@ -4,6 +4,7 @@ set(blusys_framework_sources
     src/core/framework.cpp
     src/core/router.cpp
     src/core/runtime.cpp
+    src/app/app_ctx.cpp
 )
 
 idf_build_get_property(build_components BUILD_COMPONENTS)
@@ -11,6 +12,11 @@ idf_build_get_property(build_components BUILD_COMPONENTS)
 if(BLUSYS_BUILD_UI)
     if("lvgl__lvgl" IN_LIST build_components)
         list(APPEND blusys_framework_sources
+            src/app/theme_presets.cpp
+            src/app/action_widgets.cpp
+            src/app/bindings.cpp
+            src/app/overlay_manager.cpp
+            src/app/page.cpp
             src/ui/input/encoder.cpp
             src/ui/primitives/col.cpp
             src/ui/primitives/divider.cpp

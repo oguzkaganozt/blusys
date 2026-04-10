@@ -116,6 +116,14 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/core/router.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/runtime.cpp
 
+    # App layer — blusys::app product-facing API.
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/app_ctx.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/theme_presets.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/action_widgets.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/bindings.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/overlay_manager.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/page.cpp
+
     # UI surface — LVGL-backed. Always on in the host harness
     # (device builds gate this behind BLUSYS_BUILD_UI).
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/input/encoder.cpp
@@ -155,6 +163,7 @@ target_compile_options(blusys_framework_host PRIVATE
 )
 
 target_link_libraries(blusys_framework_host PUBLIC lvgl)
+target_compile_definitions(blusys_framework_host PUBLIC BLUSYS_FRAMEWORK_HAS_UI=1)
 
 # ── hello_lvgl smoke test (Phase 4.5) ────────────────────────────────────────
 add_executable(hello_lvgl src/hello_lvgl.c)
@@ -182,6 +191,44 @@ target_compile_options(widget_kit_demo PRIVATE
     -Wall
     -Wextra
 )
+
+# ── app_interactive_demo (Phase 1 — blusys::app interactive consumer) ────────
+add_executable(app_interactive_demo
+    src/app_interactive_demo.cpp
+    src/app_host_platform.cpp
+)
+target_link_libraries(app_interactive_demo PRIVATE
+    blusys_framework_host
+    PkgConfig::SDL2
+    m
+)
+target_compile_options(app_interactive_demo PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+
+# ── app_headless_demo (Phase 1 — blusys::app headless sensor node) ───────────
+add_executable(app_headless_demo
+    src/app_headless_demo.cpp
+    src/app_headless_platform.cpp
+)
+target_link_libraries(app_headless_demo PRIVATE
+    blusys_framework_host
+    PkgConfig::SDL2
+    m
+)
+target_compile_options(app_headless_demo PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+# Prevent SDL from hijacking main() — the headless path owns its own entry.
+target_compile_definitions(app_headless_demo PRIVATE SDL_MAIN_HANDLED)
 
 # ── pomodoro_host (oled_encoder_basic ported to host) ────────────────────────
 #
