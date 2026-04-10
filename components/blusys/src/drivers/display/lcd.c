@@ -32,12 +32,15 @@ struct blusys_lcd {
     esp_lcd_panel_handle_t    panel_handle;
     blusys_lock_t             lock;
     SemaphoreHandle_t         color_done_sem;
+    SemaphoreHandle_t         draw_idle_sem;
     int                       bl_pin;
     int                       bl_ledc_channel;  /* -1 = plain GPIO, >=0 = LEDC PWM */
     ledc_mode_t               bl_ledc_mode;
     blusys_lcd_driver_t       driver;
     spi_host_device_t         spi_host;
     i2c_master_bus_handle_t   i2c_bus;
+    bool                      closing;
+    bool                      draw_in_progress;
     bool                      spi_bus_owned;
     bool                      wait_color_trans_done;
     uint32_t                  width;
@@ -503,6 +506,9 @@ static void blusys_lcd_teardown(blusys_lcd_t *lcd)
     if (lcd->color_done_sem != NULL) {
         vSemaphoreDelete(lcd->color_done_sem);
     }
+    if (lcd->draw_idle_sem != NULL) {
+        vSemaphoreDelete(lcd->draw_idle_sem);
+    }
     if (lcd->i2c_bus != NULL) {
         i2c_del_master_bus(lcd->i2c_bus);
     } else if (lcd->spi_bus_owned) {
@@ -726,6 +732,14 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
         return err;
     }
 
+    lcd->draw_idle_sem = xSemaphoreCreateBinary();
+    if (lcd->draw_idle_sem == NULL) {
+        blusys_lock_deinit(&lcd->lock);
+        free(lcd);
+        return BLUSYS_ERR_NO_MEM;
+    }
+    xSemaphoreGive(lcd->draw_idle_sem);
+
     if ((config->driver == BLUSYS_LCD_DRIVER_ST7789) ||
         (config->driver == BLUSYS_LCD_DRIVER_NT35510) ||
         (config->driver == BLUSYS_LCD_DRIVER_ST7735)) {
@@ -735,6 +749,7 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
         err = blusys_lcd_open_i2c(config, lcd);
     }
     if (err != BLUSYS_OK) {
+        vSemaphoreDelete(lcd->draw_idle_sem);
         blusys_lock_deinit(&lcd->lock);
         free(lcd);
         return err;
@@ -835,6 +850,7 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
 blusys_err_t blusys_lcd_close(blusys_lcd_t *lcd)
 {
     blusys_err_t err;
+    bool wait_for_draw;
 
     if (lcd == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -845,8 +861,21 @@ blusys_err_t blusys_lcd_close(blusys_lcd_t *lcd)
         return err;
     }
 
-    esp_lcd_panel_disp_on_off(lcd->panel_handle, false);
+    if (lcd->closing) {
+        blusys_lock_give(&lcd->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    lcd->closing = true;
+    wait_for_draw = lcd->draw_in_progress;
+
     blusys_lock_give(&lcd->lock);
+
+    if (wait_for_draw) {
+        xSemaphoreTake(lcd->draw_idle_sem, portMAX_DELAY);
+    }
+
+    esp_lcd_panel_disp_on_off(lcd->panel_handle, false);
     blusys_lcd_teardown(lcd);
     return BLUSYS_OK;
 }
@@ -857,6 +886,7 @@ blusys_err_t blusys_lcd_draw_bitmap(blusys_lcd_t *lcd,
                                     const void *color_data)
 {
     blusys_err_t err;
+    bool wait_for_color_done;
     esp_err_t esp_err;
 
     if ((lcd == NULL) || (color_data == NULL) ||
@@ -870,10 +900,26 @@ blusys_err_t blusys_lcd_draw_bitmap(blusys_lcd_t *lcd,
         return err;
     }
 
+    if (lcd->closing) {
+        blusys_lock_give(&lcd->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    if (lcd->draw_in_progress) {
+        blusys_lock_give(&lcd->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    lcd->draw_in_progress = true;
+    xSemaphoreTake(lcd->draw_idle_sem, 0);
+
     esp_err = esp_lcd_panel_draw_bitmap(lcd->panel_handle,
                                         x_start, y_start,
                                         x_end, y_end,
                                         color_data);
+    wait_for_color_done = (esp_err == ESP_OK) &&
+                          lcd->wait_color_trans_done &&
+                          (lcd->color_done_sem != NULL);
 
     /* Release the lock before blocking on DMA completion.  Holding a
      * blusys_lock_t across a blocking wait violates the project threading
@@ -882,21 +928,28 @@ blusys_err_t blusys_lcd_draw_bitmap(blusys_lcd_t *lcd,
      * in flight. */
     blusys_lock_give(&lcd->lock);
 
-    if ((esp_err == ESP_OK) &&
-        lcd->wait_color_trans_done &&
-        (lcd->color_done_sem != NULL)) {
+    if (wait_for_color_done) {
         if (xSemaphoreTake(lcd->color_done_sem, portMAX_DELAY) != pdTRUE) {
-            return BLUSYS_ERR_TIMEOUT;
+            err = BLUSYS_ERR_TIMEOUT;
+        } else {
+            /* Drain any stale signal that an ISR may have posted between the
+             * take above and now (e.g. a late callback from a previous
+             * transaction).  color_done_sem is binary so this never loops
+             * more than once. */
+            while (xSemaphoreTake(lcd->color_done_sem, 0) == pdTRUE) {}
+            err = BLUSYS_OK;
         }
-        /* Drain any stale signal that an ISR may have posted between the
-         * take above and now (e.g. a late callback from a previous
-         * transaction).  color_done_sem is binary so this never loops
-         * more than once. */
-        while (xSemaphoreTake(lcd->color_done_sem, 0) == pdTRUE) {}
-        return BLUSYS_OK;
+    } else {
+        err = blusys_translate_esp_err(esp_err);
     }
 
-    return blusys_translate_esp_err(esp_err);
+    if (blusys_lock_take(&lcd->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+        lcd->draw_in_progress = false;
+        blusys_lock_give(&lcd->lock);
+    }
+    xSemaphoreGive(lcd->draw_idle_sem);
+
+    return err;
 }
 
 blusys_err_t blusys_lcd_on(blusys_lcd_t *lcd)
