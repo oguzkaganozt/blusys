@@ -12,6 +12,7 @@
 
 #include "soc/soc_caps.h"
 #include "driver/gpio.h"
+#include "driver/ledc.h"
 #include "driver/spi_master.h"
 #include "driver/spi_common.h"
 #include "driver/i2c_master.h"
@@ -31,10 +32,15 @@ struct blusys_lcd {
     esp_lcd_panel_handle_t    panel_handle;
     blusys_lock_t             lock;
     SemaphoreHandle_t         color_done_sem;
+    SemaphoreHandle_t         draw_idle_sem;
     int                       bl_pin;
+    int                       bl_ledc_channel;  /* -1 = plain GPIO, >=0 = LEDC PWM */
+    ledc_mode_t               bl_ledc_mode;
     blusys_lcd_driver_t       driver;
     spi_host_device_t         spi_host;
     i2c_master_bus_handle_t   i2c_bus;
+    bool                      closing;
+    bool                      draw_in_progress;
     bool                      spi_bus_owned;
     bool                      wait_color_trans_done;
     uint32_t                  width;
@@ -79,16 +85,6 @@ static bool IRAM_ATTR blusys_lcd_spi_color_done_cb(esp_lcd_panel_io_handle_t pan
 static blusys_st7735_panel_t *blusys_st7735_from_panel(esp_lcd_panel_t *panel)
 {
     return (blusys_st7735_panel_t *)panel;
-}
-
-static int blusys_st7735_effective_x_gap(const blusys_st7735_panel_t *panel)
-{
-    return panel->x_gap;
-}
-
-static int blusys_st7735_effective_y_gap(const blusys_st7735_panel_t *panel)
-{
-    return panel->y_gap;
 }
 
 static esp_err_t blusys_st7735_panel_del(esp_lcd_panel_t *panel)
@@ -220,8 +216,8 @@ static esp_err_t blusys_st7735_panel_draw_bitmap(esp_lcd_panel_t *panel,
     blusys_st7735_panel_t *st7735 = blusys_st7735_from_panel(panel);
     esp_lcd_panel_io_handle_t io_handle = st7735->io_handle;
     esp_err_t esp_err;
-    int x_gap = blusys_st7735_effective_x_gap(st7735);
-    int y_gap = blusys_st7735_effective_y_gap(st7735);
+    int x_gap = st7735->x_gap;
+    int y_gap = st7735->y_gap;
     size_t row_bytes;
     size_t max_rows_per_tx;
     const uint8_t *src = color_data;
@@ -396,7 +392,6 @@ static esp_err_t blusys_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io_
     blusys_st7735_panel_t *st7735;
     gpio_config_t reset_cfg = {0};
     esp_err_t esp_err;
-    bool reset_gpio_configured = false;
 
     if ((io_handle == NULL) || (panel_cfg == NULL) || (ret_panel == NULL)) {
         return ESP_ERR_INVALID_ARG;
@@ -415,7 +410,6 @@ static esp_err_t blusys_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io_
             free(st7735);
             return esp_err;
         }
-        reset_gpio_configured = true;
     }
 
     switch (panel_cfg->rgb_ele_order) {
@@ -426,7 +420,7 @@ static esp_err_t blusys_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io_
         st7735->madctl_val = LCD_CMD_BGR_BIT;
         break;
     default:
-        if (reset_gpio_configured) {
+        if (panel_cfg->reset_gpio_num >= 0) {
             gpio_reset_pin((gpio_num_t)panel_cfg->reset_gpio_num);
         }
         free(st7735);
@@ -443,7 +437,7 @@ static esp_err_t blusys_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io_
         st7735->fb_bits_per_pixel = 24;
         break;
     default:
-        if (reset_gpio_configured) {
+        if (panel_cfg->reset_gpio_num >= 0) {
             gpio_reset_pin((gpio_num_t)panel_cfg->reset_gpio_num);
         }
         free(st7735);
@@ -496,6 +490,10 @@ static spi_host_device_t blusys_lcd_spi_bus_to_host(int bus)
 static void blusys_lcd_teardown(blusys_lcd_t *lcd)
 {
     if (lcd->bl_pin != -1) {
+        if (lcd->bl_ledc_channel >= 0) {
+            ledc_stop(lcd->bl_ledc_mode,
+                      (ledc_channel_t)lcd->bl_ledc_channel, 0);
+        }
         gpio_set_level((gpio_num_t)lcd->bl_pin, 0);
         gpio_reset_pin((gpio_num_t)lcd->bl_pin);
     }
@@ -507,6 +505,9 @@ static void blusys_lcd_teardown(blusys_lcd_t *lcd)
     }
     if (lcd->color_done_sem != NULL) {
         vSemaphoreDelete(lcd->color_done_sem);
+    }
+    if (lcd->draw_idle_sem != NULL) {
+        vSemaphoreDelete(lcd->draw_idle_sem);
     }
     if (lcd->i2c_bus != NULL) {
         i2c_del_master_bus(lcd->i2c_bus);
@@ -719,16 +720,25 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
         return BLUSYS_ERR_NO_MEM;
     }
 
-    lcd->driver = config->driver;
-    lcd->bl_pin = -1;
-    lcd->width  = config->width;
-    lcd->height = config->height;
+    lcd->driver          = config->driver;
+    lcd->bl_pin          = -1;
+    lcd->bl_ledc_channel = -1;
+    lcd->width           = config->width;
+    lcd->height          = config->height;
 
     err = blusys_lock_init(&lcd->lock);
     if (err != BLUSYS_OK) {
         free(lcd);
         return err;
     }
+
+    lcd->draw_idle_sem = xSemaphoreCreateBinary();
+    if (lcd->draw_idle_sem == NULL) {
+        blusys_lock_deinit(&lcd->lock);
+        free(lcd);
+        return BLUSYS_ERR_NO_MEM;
+    }
+    xSemaphoreGive(lcd->draw_idle_sem);
 
     if ((config->driver == BLUSYS_LCD_DRIVER_ST7789) ||
         (config->driver == BLUSYS_LCD_DRIVER_NT35510) ||
@@ -739,6 +749,7 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
         err = blusys_lcd_open_i2c(config, lcd);
     }
     if (err != BLUSYS_OK) {
+        vSemaphoreDelete(lcd->draw_idle_sem);
         blusys_lock_deinit(&lcd->lock);
         free(lcd);
         return err;
@@ -776,20 +787,60 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
     }
 
     if (lcd->bl_pin != -1) {
-        gpio_config_t bl_cfg = {
-            .pin_bit_mask = 1ULL << (uint32_t)lcd->bl_pin,
-            .mode         = GPIO_MODE_OUTPUT,
-            .pull_up_en   = GPIO_PULLUP_DISABLE,
-            .pull_down_en = GPIO_PULLDOWN_DISABLE,
-            .intr_type    = GPIO_INTR_DISABLE,
-        };
-        esp_err = gpio_config(&bl_cfg);
-        if (esp_err != ESP_OK) {
-            err = blusys_translate_esp_err(esp_err);
-            blusys_lcd_teardown(lcd);
-            return err;
+        if (config->spi.bl_ledc_enabled) {
+            /* PWM backlight via LEDC.  Use a 10-bit duty resolution which
+             * gives 1024 steps at up to ~78 kHz, well above the visible
+             * flicker threshold for any reasonable frequency. */
+            ledc_timer_config_t bl_timer = {
+                .speed_mode      = LEDC_LOW_SPEED_MODE,
+                .timer_num       = (ledc_timer_t)config->spi.bl_ledc_timer,
+                .duty_resolution = LEDC_TIMER_10_BIT,
+                .freq_hz         = config->spi.bl_ledc_freq_hz > 0u
+                                       ? config->spi.bl_ledc_freq_hz
+                                       : 5000u,
+                .clk_cfg         = LEDC_AUTO_CLK,
+            };
+            esp_err = ledc_timer_config(&bl_timer);
+            if (esp_err != ESP_OK) {
+                err = blusys_translate_esp_err(esp_err);
+                blusys_lcd_teardown(lcd);
+                return err;
+            }
+
+            ledc_channel_config_t bl_ch = {
+                .gpio_num   = lcd->bl_pin,
+                .speed_mode = LEDC_LOW_SPEED_MODE,
+                .channel    = (ledc_channel_t)config->spi.bl_ledc_channel,
+                .timer_sel  = (ledc_timer_t)config->spi.bl_ledc_timer,
+                .duty       = (1u << 10) - 1u,  /* full brightness at open */
+                .hpoint     = 0,
+            };
+            esp_err = ledc_channel_config(&bl_ch);
+            if (esp_err != ESP_OK) {
+                err = blusys_translate_esp_err(esp_err);
+                blusys_lcd_teardown(lcd);
+                return err;
+            }
+
+            lcd->bl_ledc_channel = config->spi.bl_ledc_channel;
+            lcd->bl_ledc_mode    = LEDC_LOW_SPEED_MODE;
+        } else {
+            /* Binary GPIO backlight (default) */
+            gpio_config_t bl_cfg = {
+                .pin_bit_mask = 1ULL << (uint32_t)lcd->bl_pin,
+                .mode         = GPIO_MODE_OUTPUT,
+                .pull_up_en   = GPIO_PULLUP_DISABLE,
+                .pull_down_en = GPIO_PULLDOWN_DISABLE,
+                .intr_type    = GPIO_INTR_DISABLE,
+            };
+            esp_err = gpio_config(&bl_cfg);
+            if (esp_err != ESP_OK) {
+                err = blusys_translate_esp_err(esp_err);
+                blusys_lcd_teardown(lcd);
+                return err;
+            }
+            gpio_set_level((gpio_num_t)lcd->bl_pin, 1);
         }
-        gpio_set_level((gpio_num_t)lcd->bl_pin, 1);
     }
 
     *out_lcd = lcd;
@@ -799,6 +850,7 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
 blusys_err_t blusys_lcd_close(blusys_lcd_t *lcd)
 {
     blusys_err_t err;
+    bool wait_for_draw;
 
     if (lcd == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -809,8 +861,21 @@ blusys_err_t blusys_lcd_close(blusys_lcd_t *lcd)
         return err;
     }
 
-    esp_lcd_panel_disp_on_off(lcd->panel_handle, false);
+    if (lcd->closing) {
+        blusys_lock_give(&lcd->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    lcd->closing = true;
+    wait_for_draw = lcd->draw_in_progress;
+
     blusys_lock_give(&lcd->lock);
+
+    if (wait_for_draw) {
+        xSemaphoreTake(lcd->draw_idle_sem, portMAX_DELAY);
+    }
+
+    esp_lcd_panel_disp_on_off(lcd->panel_handle, false);
     blusys_lcd_teardown(lcd);
     return BLUSYS_OK;
 }
@@ -821,6 +886,7 @@ blusys_err_t blusys_lcd_draw_bitmap(blusys_lcd_t *lcd,
                                     const void *color_data)
 {
     blusys_err_t err;
+    bool wait_for_color_done;
     esp_err_t esp_err;
 
     if ((lcd == NULL) || (color_data == NULL) ||
@@ -834,17 +900,42 @@ blusys_err_t blusys_lcd_draw_bitmap(blusys_lcd_t *lcd,
         return err;
     }
 
+    if (lcd->closing) {
+        blusys_lock_give(&lcd->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    if (lcd->draw_in_progress) {
+        blusys_lock_give(&lcd->lock);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    lcd->draw_in_progress = true;
+    xSemaphoreTake(lcd->draw_idle_sem, 0);
+
     esp_err = esp_lcd_panel_draw_bitmap(lcd->panel_handle,
                                         x_start, y_start,
                                         x_end, y_end,
                                         color_data);
-    if ((esp_err == ESP_OK) &&
-        lcd->wait_color_trans_done &&
-        (lcd->color_done_sem != NULL)) {
+    wait_for_color_done = (esp_err == ESP_OK) &&
+                          lcd->wait_color_trans_done &&
+                          (lcd->color_done_sem != NULL);
+
+    /* Release the lock before blocking on DMA completion.  Holding a
+     * blusys_lock_t across a blocking wait violates the project threading
+     * contract and would deadlock any concurrent caller (e.g. lcd_on/off,
+     * set_brightness) that tries to acquire the same lock while DMA is
+     * in flight. */
+    blusys_lock_give(&lcd->lock);
+
+    if (wait_for_color_done) {
         if (xSemaphoreTake(lcd->color_done_sem, portMAX_DELAY) != pdTRUE) {
             err = BLUSYS_ERR_TIMEOUT;
         } else {
-            /* Drain callbacks from any remaining chunks in a multi-chunk transfer. */
+            /* Drain any stale signal that an ISR may have posted between the
+             * take above and now (e.g. a late callback from a previous
+             * transaction).  color_done_sem is binary so this never loops
+             * more than once. */
             while (xSemaphoreTake(lcd->color_done_sem, 0) == pdTRUE) {}
             err = BLUSYS_OK;
         }
@@ -852,7 +943,12 @@ blusys_err_t blusys_lcd_draw_bitmap(blusys_lcd_t *lcd,
         err = blusys_translate_esp_err(esp_err);
     }
 
-    blusys_lock_give(&lcd->lock);
+    if (blusys_lock_take(&lcd->lock, BLUSYS_LOCK_WAIT_FOREVER) == BLUSYS_OK) {
+        lcd->draw_in_progress = false;
+        blusys_lock_give(&lcd->lock);
+    }
+    xSemaphoreGive(lcd->draw_idle_sem);
+
     return err;
 }
 
@@ -975,7 +1071,18 @@ blusys_err_t blusys_lcd_set_brightness(blusys_lcd_t *lcd, int percent)
     }
 
     if (lcd->bl_pin != -1) {
-        gpio_set_level((gpio_num_t)lcd->bl_pin, percent > 0 ? 1 : 0);
+        if (lcd->bl_ledc_channel >= 0) {
+            /* Map 0–100 % linearly onto the 10-bit LEDC duty range. */
+            const uint32_t max_duty = (1u << 10) - 1u;
+            uint32_t duty = (uint32_t)percent * max_duty / 100u;
+            ledc_set_duty(lcd->bl_ledc_mode,
+                          (ledc_channel_t)lcd->bl_ledc_channel, duty);
+            ledc_update_duty(lcd->bl_ledc_mode,
+                             (ledc_channel_t)lcd->bl_ledc_channel);
+        } else {
+            /* Binary GPIO: any non-zero percent is fully on. */
+            gpio_set_level((gpio_num_t)lcd->bl_pin, percent > 0 ? 1 : 0);
+        }
     }
 
     blusys_lock_give(&lcd->lock);

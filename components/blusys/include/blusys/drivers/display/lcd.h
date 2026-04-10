@@ -30,6 +30,23 @@ typedef struct {
     uint32_t pclk_hz;
     int      x_offset;  /* GRAM column offset (default 0) */
     int      y_offset;  /* GRAM row offset (default 0) */
+
+    /* Optional LEDC PWM backlight dimming.
+     *
+     * When bl_ledc_enabled is false (the default for zero-initialized
+     * configs) the driver controls bl_pin as a plain GPIO — backlight is
+     * either fully on or fully off and blusys_lcd_set_brightness() maps
+     * any non-zero value to full on.
+     *
+     * When bl_ledc_enabled is true the driver programs the LEDC peripheral
+     * at open time and blusys_lcd_set_brightness() maps the 0–100 range
+     * linearly to the PWM duty cycle.  The caller must pick a timer and
+     * channel that do not conflict with other LEDC users in the application.
+     * bl_ledc_freq_hz = 0 defaults to 5000 Hz. */
+    bool     bl_ledc_enabled;
+    int      bl_ledc_channel;  /* LEDC channel 0–7 */
+    int      bl_ledc_timer;    /* LEDC timer   0–3 */
+    uint32_t bl_ledc_freq_hz;  /* PWM frequency (0 → 5000 Hz) */
 } blusys_lcd_spi_config_t;
 
 typedef struct {
