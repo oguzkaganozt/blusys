@@ -39,10 +39,23 @@ if(BLUSYS_BUILD_UI)
             src/ui/primitives/row.cpp
             src/ui/primitives/screen.cpp
             src/ui/theme.cpp
+            src/ui/primitives/icon_label.cpp
+            src/ui/primitives/status_badge.cpp
+            src/ui/primitives/key_value.cpp
             src/ui/widgets/button/button.cpp
+            src/ui/widgets/card/card.cpp
+            src/ui/widgets/chart/chart.cpp
+            src/ui/widgets/data_table/data_table.cpp
+            src/ui/widgets/dropdown/dropdown.cpp
+            src/ui/widgets/gauge/gauge.cpp
+            src/ui/widgets/input_field/input_field.cpp
+            src/ui/widgets/knob/knob.cpp
+            src/ui/widgets/list/list.cpp
             src/ui/widgets/modal/modal.cpp
             src/ui/widgets/overlay/overlay.cpp
+            src/ui/widgets/progress/progress.cpp
             src/ui/widgets/slider/slider.cpp
+            src/ui/widgets/tabs/tabs.cpp
             src/ui/widgets/toggle/toggle.cpp
             src/app/shell.cpp
             src/app/touch_bridge.cpp

@@ -19,4 +19,10 @@ using long_press_cb_t = void (*)(void *user_data);
 using toggle_cb_t = void (*)(bool new_state, void *user_data);
 using change_cb_t = void (*)(int32_t new_value, void *user_data);
 
+// Discrete selection from a set of items (list, dropdown, tabs, data_table).
+using select_cb_t = void (*)(int32_t index, void *user_data);
+
+// Text submission (input_field).
+using text_cb_t = void (*)(const char *text, void *user_data);
+
 }  // namespace blusys::ui

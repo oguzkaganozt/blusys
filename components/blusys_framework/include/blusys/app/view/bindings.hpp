@@ -2,6 +2,7 @@
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
+#include "blusys/framework/ui/primitives/status_badge.hpp"
 #include "lvgl.h"
 
 #include <cstdint>
@@ -35,6 +36,33 @@ void set_enabled(lv_obj_t *widget, bool enabled);
 
 // Visibility
 void set_visible(lv_obj_t *widget, bool visible);
+
+// ---- Phase 3 binding helpers ----
+
+// Progress
+void set_progress(lv_obj_t *progress, std::int32_t value);
+std::int32_t get_progress(lv_obj_t *progress);
+
+// List / dropdown / tabs selected index
+void set_selected_index(lv_obj_t *widget, std::int32_t index);
+std::int32_t get_selected_index(lv_obj_t *widget);
+
+// Tabs active tab
+void set_active_tab(lv_obj_t *tabs, std::int32_t index);
+
+// Input field text
+void set_input_text(lv_obj_t *input, const char *text);
+const char *get_input_text(lv_obj_t *input);
+
+// Status badge
+void set_badge_text(lv_obj_t *badge, const char *text);
+void set_badge_level(lv_obj_t *badge, blusys::ui::badge_level level);
+
+// Key-value
+void set_kv_value(lv_obj_t *kv, const char *value);
+
+// Data table cell
+void set_cell_text(lv_obj_t *table, std::int32_t row, std::int32_t col, const char *text);
 
 }  // namespace blusys::app::view
 
