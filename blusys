@@ -526,8 +526,8 @@ blusys_help_host_build() {
     printf '            when it contains a host/ subdirectory, otherwise falls\n'
     printf '            back to the monorepo scripts/host/ harness.\n'
     printf '\nWorks for both starter types:\n'
-    printf '  interactive  SDL2 window, same LVGL screen as the device build\n'
-    printf '  headless     terminal-only, framework runtime + controller, no display\n'
+    printf '  interactive  SDL2 window, same blusys::app UI as the device build\n'
+    printf '  headless     terminal-only, blusys::app reducer runtime, no display\n'
     printf '\nRequires: cmake, pkg-config.\n'
     printf 'Interactive apps additionally require libsdl2-dev (or equivalent).\n'
     printf 'See scripts/host/README.md for install instructions.\n'
@@ -638,10 +638,7 @@ cmd_create() {
         main/CMakeLists.txt \
         main/app_main.cpp \
         main/idf_component.yml \
-        app/CMakeLists.txt \
-        app/product_config.cmake \
-        app/controllers/home_controller.hpp \
-        app/controllers/home_controller.cpp; do
+        app/product_config.cmake; do
         [[ -f "$target_dir/$f" ]] && existing_files+=("$f")
     done
 
@@ -660,33 +657,13 @@ cmd_create() {
 
     mkdir -p \
         "$target_dir/main" \
-        "$target_dir/app/controllers" \
-        "$target_dir/app/integrations" \
-        "$target_dir/app/config" \
+        "$target_dir/app" \
         "$target_dir/host"
-
-    if [[ "$starter" == "interactive" ]]; then
-        mkdir -p \
-            "$target_dir/app/ui/screens" \
-            "$target_dir/app/ui/widgets"
-    fi
 
     blusys_create_top_cmakelists "$target_dir"
     blusys_create_main "$target_dir" "$starter"
     blusys_create_app "$target_dir" "$project_name" "$starter"
-    blusys_create_sample_controller "$target_dir"
-    if [[ "$starter" == "interactive" ]]; then
-        blusys_create_sample_ui "$target_dir"
-    fi
     blusys_create_host "$target_dir" "$project_name" "$starter"
-
-    # Empty marker files so empty directories survive git add.
-    touch \
-        "$target_dir/app/integrations/.keep" \
-        "$target_dir/app/config/.keep"
-    if [[ "$starter" == "interactive" ]]; then
-        touch "$target_dir/app/ui/widgets/.keep"
-    fi
 
     if [[ "$starter" == "interactive" ]]; then
         # The interactive starter compiles blusys_framework/ui, which drives
@@ -710,11 +687,10 @@ DEFAULTS
     printf '  blusys host-build           # build + run on PC (no hardware needed)\n'
     printf '  blusys build                # build for default target\n'
     printf '  blusys run                  # build, flash, and monitor\n'
-    printf '  blusys config               # open menuconfig\n'
     printf '\n'
-    printf 'Platform components are pulled by ESP-IDF managed components from\n'
-    printf 'main/idf_component.yml. See app/product_config.cmake to change the\n'
-    printf 'product name, starter type, or supported targets.\n'
+    printf 'Your app lives in main/app_main.cpp — edit state, actions, and\n'
+    printf 'update() to build your product. See app/product_config.cmake to\n'
+    printf 'change the product name, starter type, or supported targets.\n'
 }
 
 # ── cmd_create helpers ──────────────────────────────────────────────────────
@@ -735,15 +711,6 @@ else()
     set(BLUSYS_BUILD_UI OFF CACHE BOOL "Build blusys_framework/ui")
 endif()
 
-# Discover the local app/ component. ESP-IDF's __project_component_dir helper
-# treats the path as a component itself when the directory contains a
-# CMakeLists.txt — so we point it at app/ directly, not at the project root
-# (which would otherwise recursively include this top-level CMakeLists.txt).
-# Platform components come from main/idf_component.yml via the managed
-# component manager — NOT from $ENV{BLUSYS_PATH}.
-# See platform-transition/DECISIONS.md decision 15.
-set(EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/app")
-
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(${BLUSYS_PRODUCT_NAME})
 CMAKE
@@ -756,7 +723,7 @@ blusys_create_main() {
     cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
 idf_component_register(
     SRCS "app_main.cpp"
-    REQUIRES app blusys_framework
+    REQUIRES blusys_framework
 )
 CMAKE
 
@@ -837,44 +804,64 @@ blusys_create_app_main_headless() {
     cat > "$target_dir/main/app_main.cpp" <<'CPP'
 // app_main.cpp — headless product entry point.
 //
-// Brings up the framework runtime, registers a single home_controller, and
-// drives the runtime tick from the main task. Headless products still go
-// through blusys_framework/core; only blusys_framework/ui is excluded.
+// Defines a minimal blusys::app reducer product. Edit State, Action,
+// and update() to build your product logic. The framework owns the
+// runtime loop and tick cadence — no manual plumbing needed.
 
-#include "blusys/framework/framework.hpp"
+#include "blusys/app/app.hpp"
 #include "blusys/log.h"
-#include "controllers/home_controller.hpp"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_timer.h"
+#include <cstdint>
 
 namespace {
-constexpr const char *kTag = "app_main";
-}
 
-extern "C" void app_main(void)
+using blusys::app::app_ctx;
+
+// ---- state ----
+
+struct State {
+    int tick_count = 0;
+};
+
+// ---- actions ----
+
+enum class Action {
+    periodic_tick,
+};
+
+// ---- reducer ----
+
+void update(app_ctx & /*ctx*/, State &state, const Action &action)
 {
-    blusys::framework::init();
-
-    static home_controller controller;
-    static blusys::framework::runtime runtime;
-
-    const blusys_err_t err = runtime.init(&controller, /*output_route_sink=*/nullptr, 10);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(err));
-        return;
-    }
-
-    BLUSYS_LOGI(kTag, "headless product running");
-
-    // Main loop: tick the runtime, drive integrations from here. A real
-    // headless product would post integration events from MQTT/sensor tasks.
-    while (true) {
-        runtime.step(static_cast<std::uint32_t>(esp_timer_get_time() / 1000));
-        vTaskDelay(pdMS_TO_TICKS(10));
+    switch (action) {
+    case Action::periodic_tick:
+        ++state.tick_count;
+        if (state.tick_count % 100 == 0) {
+            BLUSYS_LOGI("app", "heartbeat #%d", state.tick_count);
+        }
+        break;
     }
 }
+
+// ---- on_tick: periodic heartbeat ----
+
+void on_tick(app_ctx &ctx, State & /*state*/, std::uint32_t /*now_ms*/)
+{
+    ctx.dispatch(Action::periodic_tick);
+}
+
+}  // namespace
+
+// ---- app definition ----
+
+static auto spec = blusys::app::app_spec<State, Action>{
+    .initial_state  = {},
+    .update         = update,
+    .on_tick        = on_tick,
+    .tick_period_ms = 100,
+};
+
+BLUSYS_APP_MAIN_HEADLESS(spec)
 CPP
 }
 
@@ -883,126 +870,142 @@ blusys_create_app_main_interactive() {
     cat > "$target_dir/main/app_main.cpp" <<'CPP'
 // app_main.cpp — interactive product entry point.
 //
-// Brings up the framework runtime, opens the product's display through
-// blusys_ui, builds the widget-kit screen under the UI lock, and ticks
-// the runtime in the main loop.
+// Defines a minimal blusys::app interactive product using the v7
+// reducer model. Edit State, Action, update(), and on_init() to
+// build your product. The framework owns display setup, LVGL
+// lifecycle, and the runtime loop — no manual plumbing needed.
 //
-// IMPORTANT: this template ships *without* a concrete LCD driver init —
-// LCD pin assignments, panel driver selection (ST7735/ILI9341/SSD1306/…),
-// orientation, and color order are all board-specific. The TODO block
-// below is the single place product teams fill in. Until it is filled,
-// the framework spine runs headless-style and nothing is drawn.
+// This file compiles for both host (SDL2 window) and device (ST7735
+// LCD). The entry macro at the bottom selects the right platform.
 //
-// Reference working LCD init patterns:
-//   - examples/ui_basic/ (ST7735 SPI, Kconfig-driven pins, raw LVGL)
-//   - scripts/host/src/widget_kit_demo.cpp (host SDL2 + widget kit)
-//
-// Lock discipline (do not break these):
-//   1. lv_init() is called *inside* blusys_ui_open — DO NOT call it here.
-//   2. The blusys_ui render task owns lv_timer_handler() — DO NOT call
-//      it from the main loop.
-//   3. Every widget mutation (including initial screen creation and
-//      runtime.step, which may mutate widgets via the controller) MUST
-//      run under blusys_ui_lock / blusys_ui_unlock. See the main loop
-//      below.
-//   4. CONFIG_LV_OS_FREERTOS must be set in sdkconfig.defaults — the
-//      scaffold writes it for you, do not remove it.
+// To target a different display, change the profile in the
+// BLUSYS_APP_MAIN_DEVICE macro. Available profiles:
+//   blusys::app::profiles::st7735_160x128()
 
-#include "blusys/blusys.h"
-#include "blusys/blusys_services.h"
-#include "blusys/framework/framework.hpp"
-#include "blusys/framework/ui/widgets.hpp"
+#include "blusys/app/app.hpp"
 #include "blusys/log.h"
-#include "controllers/home_controller.hpp"
-#include "ui/theme_init.hpp"
-#include "ui/screens/main_screen.hpp"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_timer.h"
+#include <cstdint>
+#include <cstdio>
 
 namespace {
-constexpr const char *kTag = "app_main";
-}
 
-extern "C" void app_main(void)
+namespace view = blusys::app::view;
+using blusys::app::app_ctx;
+
+// ---- state ----
+
+struct State {
+    std::int32_t counter       = 0;
+    lv_obj_t    *counter_label = nullptr;
+};
+
+// ---- actions ----
+
+enum class Tag : std::uint8_t {
+    increment,
+    decrement,
+    confirm,
+};
+
+struct Action {
+    Tag tag;
+};
+
+// ---- reducer ----
+
+void update(app_ctx &ctx, State &state, const Action &action)
 {
-    blusys::framework::init();
-
-    // ─── TODO: open your LCD + blusys_ui here ─────────────────────────
-    //
-    // Example (ST7735 SPI on esp32-c3, pins from examples/ui_basic):
-    //
-    //     blusys_lcd_t            *lcd = nullptr;
-    //     const blusys_lcd_config_t lcd_config = {
-    //         .driver = BLUSYS_LCD_DRIVER_ST7735,
-    //         .width = 160, .height = 128,
-    //         .bits_per_pixel = 16, .bgr_order = false,
-    //         .swap_xy = true, .mirror_x = true,
-    //         .mirror_y = false, .invert_color = false,
-    //         .spi = { .bus = 0,
-    //                  .sclk_pin = 4, .mosi_pin = 6,
-    //                  .cs_pin = 7, .dc_pin = 3,
-    //                  .rst_pin = -1, .bl_pin = -1,
-    //                  .pclk_hz = 8000000,
-    //                  .x_offset = 0, .y_offset = 0 },
-    //     };
-    //     if (blusys_lcd_open(&lcd_config, &lcd) != BLUSYS_OK) { return; }
-    //
-    //     blusys_ui_t            *ui = nullptr;
-    //     const blusys_ui_config_t ui_config = {
-    //         .lcd = lcd, .buf_lines = 20,
-    //         .full_refresh = false,
-    //         .task_priority = 0, .task_stack = 0,
-    //     };
-    //     if (blusys_ui_open(&ui_config, &ui) != BLUSYS_OK) {
-    //         blusys_lcd_close(lcd);
-    //         return;
-    //     }
-    //
-    // Product teams: replace the stub below with the real init, keep the
-    // resulting `blusys_ui_t *ui` in scope for the main loop.
-    blusys_ui_t *ui = nullptr;
-    BLUSYS_LOGW(kTag,
-                "interactive starter: LCD not opened — fill in the TODO "
-                "block in app_main.cpp before this board will draw anything");
-    // ──────────────────────────────────────────────────────────────────
-
-    static home_controller           controller;
-    static blusys::framework::runtime runtime;
-
-    const blusys_err_t init_err = runtime.init(
-        &controller, /*output_route_sink=*/nullptr, /*queue_depth=*/10);
-    if (init_err != BLUSYS_OK) {
-        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(init_err));
-        return;
-    }
-
-    // Build the widget-kit screen under the UI lock so the blusys_ui
-    // render task never sees a half-constructed screen. If the TODO
-    // block above is still a stub, `ui` is nullptr and we skip the
-    // widget kit entirely — the framework spine still runs so sensor
-    // integrations and headless flows keep working.
-    if (ui != nullptr) {
-        blusys_ui_lock(ui);
-        app::ui::theme_init();
-        app::ui::main_screen_create(&runtime);
-        blusys_ui_unlock(ui);
-    }
-
-    BLUSYS_LOGI(kTag, "interactive product running");
-
-    while (true) {
-        if (ui != nullptr) {
-            blusys_ui_lock(ui);
-            runtime.step(static_cast<std::uint32_t>(esp_timer_get_time() / 1000));
-            blusys_ui_unlock(ui);
-        } else {
-            runtime.step(static_cast<std::uint32_t>(esp_timer_get_time() / 1000));
+    switch (action.tag) {
+    case Tag::increment:
+        ++state.counter;
+        {
+            char buf[16];
+            std::snprintf(buf, sizeof(buf), "%ld", static_cast<long>(state.counter));
+            view::set_text(state.counter_label, buf);
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
+                          blusys::framework::feedback_pattern::click);
+        break;
+
+    case Tag::decrement:
+        --state.counter;
+        {
+            char buf[16];
+            std::snprintf(buf, sizeof(buf), "%ld", static_cast<long>(state.counter));
+            view::set_text(state.counter_label, buf);
+        }
+        ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
+                          blusys::framework::feedback_pattern::click);
+        break;
+
+    case Tag::confirm:
+        ctx.emit_feedback(blusys::framework::feedback_channel::audio,
+                          blusys::framework::feedback_pattern::confirm);
+        BLUSYS_LOGI("app", "confirmed — counter=%ld",
+                    static_cast<long>(state.counter));
+        break;
     }
 }
+
+// ---- intent map (encoder / keyboard input) ----
+
+bool map_intent(blusys::framework::intent intent, Action *out)
+{
+    switch (intent) {
+    case blusys::framework::intent::increment:
+        *out = Action{.tag = Tag::increment};
+        return true;
+    case blusys::framework::intent::decrement:
+        *out = Action{.tag = Tag::decrement};
+        return true;
+    case blusys::framework::intent::confirm:
+        *out = Action{.tag = Tag::confirm};
+        return true;
+    default:
+        return false;
+    }
+}
+
+// ---- on_init: build the UI ----
+
+void on_init(app_ctx &ctx, State &state)
+{
+    auto p = view::page_create();
+
+    view::title(p.content, "Hello, blusys");
+    view::divider(p.content);
+
+    state.counter_label = view::label(p.content, "0");
+
+    auto *btn_row = view::row(p.content);
+    view::button(btn_row, "-", Action{.tag = Tag::decrement}, &ctx,
+                 blusys::ui::button_variant::secondary);
+    view::button(btn_row, "+", Action{.tag = Tag::increment}, &ctx,
+                 blusys::ui::button_variant::secondary);
+    view::button(btn_row, "OK", Action{.tag = Tag::confirm}, &ctx);
+
+    view::page_load(p);
+
+    BLUSYS_LOGI("app", "interactive product initialized");
+}
+
+}  // namespace
+
+// ---- app definition ----
+
+static const blusys::app::app_spec<State, Action> spec{
+    .initial_state = {},
+    .update        = update,
+    .on_init       = on_init,
+    .map_intent    = map_intent,
+};
+
+// Host-first onboarding: runs in an SDL2 window on the PC.
+// To target a device, swap this for:
+//   #include "blusys/app/profiles/st7735.hpp"
+//   BLUSYS_APP_MAIN_DEVICE(spec, blusys::app::profiles::st7735_160x128())
+BLUSYS_APP_MAIN_HOST(spec)
 CPP
 }
 
@@ -1010,24 +1013,6 @@ blusys_create_app() {
     local target_dir="$1"
     local project_name="$2"
     local starter="$3"
-
-    cat > "$target_dir/app/CMakeLists.txt" <<'CMAKE'
-set(src_dirs "controllers" "integrations")
-
-if(BLUSYS_BUILD_UI)
-    # ui/widgets is included so products can drop in product-specific
-    # widgets (files that aren't part of the platform widget kit) without
-    # editing CMakeLists. The directory is scaffolded empty; sources only
-    # appear if the product team adds them.
-    list(APPEND src_dirs "ui" "ui/screens" "ui/widgets")
-endif()
-
-idf_component_register(
-    SRC_DIRS ${src_dirs}
-    INCLUDE_DIRS "."
-    REQUIRES blusys blusys_services blusys_framework
-)
-CMAKE
 
     cat > "$target_dir/app/product_config.cmake" <<CMAKE
 # Product configuration consumed by the top-level CMakeLists.txt before
@@ -1039,198 +1024,6 @@ set(BLUSYS_TARGETS       "esp32s3")
 CMAKE
 }
 
-blusys_create_sample_controller() {
-    local target_dir="$1"
-    cat > "$target_dir/app/controllers/home_controller.hpp" <<'HPP'
-#pragma once
-
-#include "blusys/framework/core/controller.hpp"
-
-class home_controller final : public blusys::framework::controller {
-public:
-    blusys_err_t init() override;
-    void handle(const blusys::framework::app_event &event) override;
-    void tick(std::uint32_t now_ms) override;
-
-    int counter() const { return counter_; }
-
-private:
-    int counter_ = 0;
-};
-HPP
-
-    cat > "$target_dir/app/controllers/home_controller.cpp" <<'CPP'
-#include "controllers/home_controller.hpp"
-
-#include "blusys/log.h"
-
-namespace {
-constexpr const char *kTag = "home_controller";
-}
-
-blusys_err_t home_controller::init()
-{
-    counter_ = 0;
-    BLUSYS_LOGI(kTag, "home_controller initialized");
-    return BLUSYS_OK;
-}
-
-void home_controller::handle(const blusys::framework::app_event &event)
-{
-    if (event.kind != blusys::framework::app_event_kind::intent) {
-        return;
-    }
-
-    switch (blusys::framework::app_event_intent(event)) {
-    case blusys::framework::intent::increment:
-        ++counter_;
-        BLUSYS_LOGI(kTag, "counter=%d", counter_);
-        emit_feedback({
-            .channel = blusys::framework::feedback_channel::haptic,
-            .pattern = blusys::framework::feedback_pattern::click,
-            .value   = 1,
-            .payload = nullptr,
-        });
-        break;
-    case blusys::framework::intent::decrement:
-        --counter_;
-        BLUSYS_LOGI(kTag, "counter=%d", counter_);
-        emit_feedback({
-            .channel = blusys::framework::feedback_channel::haptic,
-            .pattern = blusys::framework::feedback_pattern::click,
-            .value   = 1,
-            .payload = nullptr,
-        });
-        break;
-    case blusys::framework::intent::confirm:
-        BLUSYS_LOGI(kTag, "confirm at counter=%d", counter_);
-        emit_feedback({
-            .channel = blusys::framework::feedback_channel::audio,
-            .pattern = blusys::framework::feedback_pattern::confirm,
-            .value   = 1,
-            .payload = nullptr,
-        });
-        break;
-    default:
-        break;
-    }
-}
-
-void home_controller::tick(std::uint32_t /*now_ms*/)
-{
-    // Periodic work goes here. Called once per runtime tick.
-}
-CPP
-}
-
-blusys_create_sample_ui() {
-    local target_dir="$1"
-
-    cat > "$target_dir/app/ui/theme_init.hpp" <<'HPP'
-#pragma once
-
-namespace app::ui {
-void theme_init();
-}
-HPP
-
-    cat > "$target_dir/app/ui/theme_init.cpp" <<'CPP'
-#include "ui/theme_init.hpp"
-
-#include "blusys/framework/ui/theme.hpp"
-
-namespace app::ui {
-
-void theme_init()
-{
-    blusys::ui::set_theme({
-        .color_primary    = lv_color_hex(0x2A62FF),
-        .color_surface    = lv_color_hex(0x11141D),
-        .color_on_primary = lv_color_hex(0xF7F9FF),
-        .color_accent     = lv_color_hex(0x69D6C8),
-        .color_disabled   = lv_color_hex(0x667089),
-        .spacing_sm   = 8,
-        .spacing_md   = 12,
-        .spacing_lg   = 20,
-        .radius_card  = 14,
-        .radius_button = 999,
-        .font_body    = LV_FONT_DEFAULT,
-        .font_title   = LV_FONT_DEFAULT,
-        .font_mono    = LV_FONT_DEFAULT,
-    });
-}
-
-}  // namespace app::ui
-CPP
-
-    cat > "$target_dir/app/ui/screens/main_screen.hpp" <<'HPP'
-#pragma once
-
-namespace blusys::framework { class runtime; }
-
-namespace app::ui {
-void main_screen_create(blusys::framework::runtime *runtime);
-}
-HPP
-
-    cat > "$target_dir/app/ui/screens/main_screen.cpp" <<'CPP'
-#include "ui/screens/main_screen.hpp"
-
-#include "blusys/framework/core/runtime.hpp"
-#include "blusys/framework/ui/widgets.hpp"
-
-namespace app::ui {
-
-void main_screen_create(blusys::framework::runtime *runtime)
-{
-    lv_obj_t *screen = blusys::ui::screen_create({});
-
-    lv_obj_t *col = blusys::ui::col_create(screen, {
-        .gap     = blusys::ui::theme().spacing_md,
-        .padding = blusys::ui::theme().spacing_lg,
-    });
-
-    blusys::ui::label_create(col, {
-        .text = "Hello, blusys",
-        .font = blusys::ui::theme().font_title,
-    });
-    blusys::ui::divider_create(col, {});
-
-    lv_obj_t *row = blusys::ui::row_create(col, {
-        .gap     = blusys::ui::theme().spacing_sm,
-        .padding = 0,
-    });
-
-    blusys::ui::button_create(row, {
-        .label    = "-",
-        .variant  = blusys::ui::button_variant::secondary,
-        .on_press = +[](void *user_data) {
-            auto *rt = static_cast<blusys::framework::runtime *>(user_data);
-            rt->post_intent(blusys::framework::intent::decrement);
-        },
-        .user_data = runtime,
-    });
-    blusys::ui::button_create(row, {
-        .label    = "+",
-        .variant  = blusys::ui::button_variant::primary,
-        .on_press = +[](void *user_data) {
-            auto *rt = static_cast<blusys::framework::runtime *>(user_data);
-            rt->post_intent(blusys::framework::intent::increment);
-        },
-        .user_data = runtime,
-    });
-
-    lv_group_t *group = blusys::ui::create_encoder_group();
-    blusys::ui::auto_focus_screen(screen, group);
-
-    // Activate the freshly-built screen. Without this call the display
-    // keeps showing whatever default screen LVGL created, not our widgets.
-    lv_screen_load(screen);
-}
-
-}  // namespace app::ui
-CPP
-}
 
 blusys_create_host() {
     local target_dir="$1"
@@ -1239,10 +1032,8 @@ blusys_create_host() {
 
     if [[ "$starter" == "interactive" ]]; then
         blusys_create_host_cmakelists_interactive "$target_dir" "$project_name"
-        blusys_create_host_main_interactive "$target_dir" "$project_name"
     else
         blusys_create_host_cmakelists_headless "$target_dir" "$project_name"
-        blusys_create_host_main_headless "$target_dir" "$project_name"
     fi
 }
 
@@ -1299,12 +1090,27 @@ set(BLUSYS_COMP "${BLUSYS_PATH}/components/blusys")
 set(BLUSYS_FW   "${BLUSYS_PATH}/components/blusys_framework")
 
 add_library(blusys_framework_host STATIC
+    # Minimal HAL dependency
     ${BLUSYS_COMP}/src/common/error.c
+
+    # Core spine
     ${BLUSYS_FW}/src/core/controller.cpp
     ${BLUSYS_FW}/src/core/feedback.cpp
     ${BLUSYS_FW}/src/core/framework.cpp
     ${BLUSYS_FW}/src/core/router.cpp
     ${BLUSYS_FW}/src/core/runtime.cpp
+
+    # App layer — blusys::app product-facing API
+    ${BLUSYS_FW}/src/app/app_ctx.cpp
+    ${BLUSYS_FW}/src/app/bundles/connectivity_host.cpp
+    ${BLUSYS_FW}/src/app/bundles/storage_host.cpp
+    ${BLUSYS_FW}/src/app/theme_presets.cpp
+    ${BLUSYS_FW}/src/app/action_widgets.cpp
+    ${BLUSYS_FW}/src/app/bindings.cpp
+    ${BLUSYS_FW}/src/app/overlay_manager.cpp
+    ${BLUSYS_FW}/src/app/page.cpp
+
+    # UI surface
     ${BLUSYS_FW}/src/ui/input/encoder.cpp
     ${BLUSYS_FW}/src/ui/primitives/col.cpp
     ${BLUSYS_FW}/src/ui/primitives/divider.cpp
@@ -1330,21 +1136,13 @@ target_compile_options(blusys_framework_host PRIVATE
     -Wall -Wextra
 )
 target_link_libraries(blusys_framework_host PUBLIC lvgl)
+target_compile_definitions(blusys_framework_host PUBLIC BLUSYS_FRAMEWORK_HAS_UI=1)
 
-# App sources — platform-free LVGL code, compiles unchanged on host.
-# CMake collects all .cpp files under app/ui/ and app/controllers/
-# so new screens and controllers are picked up automatically.
-file(GLOB_RECURSE APP_SOURCES
-    "${CMAKE_CURRENT_LIST_DIR}/../app/ui/*.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../app/controllers/*.cpp"
-)
-
+# App executable — compiles main/app_main.cpp which uses
+# BLUSYS_APP_MAIN_HOST(spec) to define int main().
 add_executable(BLUSYS_PRODUCT_HOST
-    "${CMAKE_CURRENT_LIST_DIR}/main.cpp"
-    ${APP_SOURCES}
-)
-target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE
-    "${CMAKE_CURRENT_LIST_DIR}/../app"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/app_main.cpp"
+    "${BLUSYS_PATH}/scripts/host/src/app_host_platform.cpp"
 )
 target_link_libraries(BLUSYS_PRODUCT_HOST PRIVATE
     blusys_framework_host PkgConfig::SDL2 m
@@ -1378,19 +1176,31 @@ if(NOT DEFINED ENV{BLUSYS_PATH})
 endif()
 set(BLUSYS_PATH "$ENV{BLUSYS_PATH}")
 
-# blusys_framework_core_host — framework core only, no LVGL, no SDL2.
-# Headless apps need the runtime/controller/router/feedback spine but
-# no UI surface.
+# SDL2 — needed for timer functions in the headless platform helper.
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
+
+# blusys_framework_core_host — framework core + app layer, no LVGL.
+# Headless apps need the runtime spine and app_ctx but no UI surface.
 set(BLUSYS_COMP "${BLUSYS_PATH}/components/blusys")
 set(BLUSYS_FW   "${BLUSYS_PATH}/components/blusys_framework")
 
 add_library(blusys_framework_core_host STATIC
+    # Minimal HAL dependency
     ${BLUSYS_COMP}/src/common/error.c
+
+    # Core spine
     ${BLUSYS_FW}/src/core/controller.cpp
     ${BLUSYS_FW}/src/core/feedback.cpp
     ${BLUSYS_FW}/src/core/framework.cpp
     ${BLUSYS_FW}/src/core/router.cpp
     ${BLUSYS_FW}/src/core/runtime.cpp
+
+    # App layer (headless subset — no view/UI sources)
+    ${BLUSYS_FW}/src/app/app_ctx.cpp
+    ${BLUSYS_FW}/src/app/bundles/connectivity_host.cpp
+    ${BLUSYS_FW}/src/app/bundles/storage_host.cpp
+    ${BLUSYS_FW}/src/app/theme_presets.cpp
 )
 target_include_directories(blusys_framework_core_host PUBLIC
     ${BLUSYS_COMP}/include
@@ -1403,182 +1213,26 @@ target_compile_options(blusys_framework_core_host PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
     -Wall -Wextra
 )
+target_link_libraries(blusys_framework_core_host PUBLIC PkgConfig::SDL2)
 
-# App controller sources
-file(GLOB_RECURSE APP_SOURCES
-    "${CMAKE_CURRENT_LIST_DIR}/../app/controllers/*.cpp"
-)
-
+# App executable — compiles main/app_main.cpp which uses
+# BLUSYS_APP_MAIN_HEADLESS(spec) to define int main().
 add_executable(BLUSYS_PRODUCT_HOST
-    "${CMAKE_CURRENT_LIST_DIR}/main.cpp"
-    ${APP_SOURCES}
+    "${CMAKE_CURRENT_LIST_DIR}/../main/app_main.cpp"
+    "${BLUSYS_PATH}/scripts/host/src/app_headless_platform.cpp"
 )
-target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE
-    "${CMAKE_CURRENT_LIST_DIR}/../app"
+target_link_libraries(BLUSYS_PRODUCT_HOST PRIVATE
+    blusys_framework_core_host PkgConfig::SDL2
 )
-target_link_libraries(BLUSYS_PRODUCT_HOST PRIVATE blusys_framework_core_host)
 target_compile_options(BLUSYS_PRODUCT_HOST PRIVATE
     -fno-exceptions -fno-rtti -fno-threadsafe-statics -Wall -Wextra
 )
+# Prevent SDL from hijacking main() — the headless path owns its own entry.
+target_compile_definitions(BLUSYS_PRODUCT_HOST PRIVATE SDL_MAIN_HANDLED)
 CMAKE
     sed -i "s/BLUSYS_PRODUCT_HOST/${project_name}_host/g" "$target_dir/host/CMakeLists.txt"
 }
 
-blusys_create_host_main_interactive() {
-    local target_dir="$1"
-    local project_name="$2"
-    cat > "$target_dir/host/main.cpp" <<CPP
-// host/main.cpp — interactive host entry point for ${project_name}.
-//
-// Brings up LVGL + SDL2, calls the same app::ui functions used on
-// device, and runs the main loop. The window resolution defaults to
-// 480×320 — adjust kHorRes / kVerRes to match your target LCD.
-//
-// This file is intentionally thin. All UI code lives in app/ui/ and
-// compiles unchanged on both device and host. Only the platform init
-// (SDL2 window vs blusys_lcd) differs.
-
-#include <SDL2/SDL.h>
-#include <cstdint>
-#include <cstdio>
-
-#include "lvgl.h"
-#include "src/drivers/sdl/lv_sdl_window.h"
-#include "src/drivers/sdl/lv_sdl_mouse.h"
-#include "src/drivers/sdl/lv_sdl_keyboard.h"
-
-#include "blusys/framework/framework.hpp"
-#include "blusys/log.h"
-#include "controllers/home_controller.hpp"
-#include "ui/theme_init.hpp"
-#include "ui/screens/main_screen.hpp"
-
-namespace {
-constexpr const char *kTag   = "host_main";
-constexpr int32_t    kHorRes = 480;   /* match your target LCD */
-constexpr int32_t    kVerRes = 320;
-}  // namespace
-
-int main(void)
-{
-    lv_init();
-
-    lv_display_t *display = lv_sdl_window_create(kHorRes, kVerRes);
-    if (display == nullptr) {
-        std::fprintf(stderr, "lv_sdl_window_create failed\n");
-        return 1;
-    }
-    lv_sdl_window_set_title(display, "${project_name} — host");
-    (void)lv_sdl_mouse_create();
-    (void)lv_sdl_keyboard_create();
-
-    blusys::framework::init();
-
-    static home_controller            controller;
-    static blusys::framework::runtime runtime;
-
-    const blusys_err_t err = runtime.init(&controller, nullptr, 10);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(err));
-        return 1;
-    }
-
-    app::ui::theme_init();
-    app::ui::main_screen_create(&runtime);
-
-    BLUSYS_LOGI(kTag, "${project_name} host running. close the window to exit.");
-
-    std::uint32_t last_ticks = SDL_GetTicks();
-    while (true) {
-        const std::uint32_t now     = SDL_GetTicks();
-        const std::uint32_t elapsed = now - last_ticks;
-        if (elapsed > 0) {
-            lv_tick_inc(elapsed);
-            last_ticks = now;
-        }
-        runtime.step(now);
-        const std::uint32_t sleep_ms = lv_timer_handler();
-        SDL_Delay(sleep_ms < 5 ? 5 : (sleep_ms > 33 ? 33 : sleep_ms));
-    }
-    return 0;
-}
-CPP
-}
-
-blusys_create_host_main_headless() {
-    local target_dir="$1"
-    local project_name="$2"
-    cat > "$target_dir/host/main.cpp" <<CPP
-// host/main.cpp — headless host entry point for ${project_name}.
-//
-// Runs the framework runtime + home_controller on the PC with no
-// display required. Output goes to stdout / stderr via the esp_log
-// shim. Useful for testing controller logic, intent routing, and
-// integration flows without touching hardware.
-//
-// Time source: POSIX clock_gettime (monotonic). Delay: nanosleep.
-// No ESP-IDF, no FreeRTOS, no SDL2 required.
-
-#include <cstdint>
-#include <cstdio>
-#include <time.h>
-#include <csignal>
-
-#include "blusys/framework/framework.hpp"
-#include "blusys/log.h"
-#include "controllers/home_controller.hpp"
-
-namespace {
-constexpr const char *kTag = "host_main";
-
-static bool s_running = true;
-
-static std::uint32_t now_ms()
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return static_cast<std::uint32_t>(
-        static_cast<std::uint64_t>(ts.tv_sec) * 1000u
-        + static_cast<std::uint32_t>(ts.tv_nsec / 1000000u));
-}
-
-static void delay_ms(std::uint32_t ms)
-{
-    struct timespec ts;
-    ts.tv_sec  = ms / 1000;
-    ts.tv_nsec = static_cast<long>((ms % 1000u) * 1000000u);
-    nanosleep(&ts, nullptr);
-}
-}  // namespace
-
-int main(void)
-{
-    signal(SIGINT,  [](int) { s_running = false; });
-    signal(SIGTERM, [](int) { s_running = false; });
-
-    blusys::framework::init();
-
-    static home_controller            controller;
-    static blusys::framework::runtime runtime;
-
-    const blusys_err_t err = runtime.init(&controller, nullptr, 10);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(err));
-        return 1;
-    }
-
-    BLUSYS_LOGI(kTag, "${project_name} host running — Ctrl+C to exit");
-
-    while (s_running) {
-        runtime.step(now_ms());
-        delay_ms(10);
-    }
-
-    BLUSYS_LOGI(kTag, "shutting down");
-    return 0;
-}
-CPP
-}
 
 cmd_version() {
     local blusys_version
