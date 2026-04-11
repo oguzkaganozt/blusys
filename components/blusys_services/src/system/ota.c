@@ -19,6 +19,8 @@ struct blusys_ota {
     const char *url;
     const char *cert_pem;
     int         timeout_ms;
+    blusys_ota_progress_cb_t on_progress;
+    void       *progress_ctx;
 };
 
 blusys_err_t blusys_ota_open(const blusys_ota_config_t *config, blusys_ota_t **out_handle)
@@ -32,9 +34,11 @@ blusys_err_t blusys_ota_open(const blusys_ota_config_t *config, blusys_ota_t **o
         return BLUSYS_ERR_NO_MEM;
     }
 
-    h->url        = config->url;
-    h->cert_pem   = config->cert_pem;
-    h->timeout_ms = config->timeout_ms;
+    h->url           = config->url;
+    h->cert_pem      = config->cert_pem;
+    h->timeout_ms    = config->timeout_ms;
+    h->on_progress   = config->on_progress;
+    h->progress_ctx  = config->progress_ctx;
 
     *out_handle = h;
     return BLUSYS_OK;
@@ -63,6 +67,25 @@ blusys_err_t blusys_ota_perform(blusys_ota_t *handle)
 
     while (true) {
         err = esp_https_ota_perform(esp_ota_handle);
+
+        if (handle->on_progress != NULL) {
+            uint8_t pct = 0;
+            if (err == ESP_OK) {
+                pct = 100;
+            } else {
+                int total = esp_https_ota_get_image_size(esp_ota_handle);
+                int read  = esp_https_ota_get_image_len_read(esp_ota_handle);
+                if (total > 0 && read >= 0) {
+                    unsigned long long num = (unsigned long long) read * 100ULL;
+                    pct = (uint8_t)(num / (unsigned) total);
+                    if (pct > 100) {
+                        pct = 100;
+                    }
+                }
+            }
+            handle->on_progress(pct, handle->progress_ctx);
+        }
+
         if (err != ESP_ERR_HTTPS_OTA_IN_PROGRESS) {
             break;
         }

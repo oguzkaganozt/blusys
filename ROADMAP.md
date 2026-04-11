@@ -6,6 +6,8 @@ Active roadmap. This document defines the implementation sequence for the curren
 
 The companion product requirements document lives at `PRD.md`.
 
+**Program position:** Phase 4 (shared operational flows, stock screens, and framework capabilities) is **complete**. Execution focus is **Phase 5** — interactive archetype references. Plan: `docs/internals/phase-5-interactive-archetypes-plan.md`.
+
 ## North Star
 
 Blusys should become a unified internal product development platform, not a generic embedded framework.
@@ -442,9 +444,17 @@ Capability contract requirements:
 - both consumer and industrial products use the same flow ownership model
 - product code customizes behavior through reducer actions and events rather than forking platform flows
 
+### Status
+
+**Closed** — Phase 4 deliverables are in the tree. Cross-cutting validation (tests, CI breadth, host iteration) continues on the [Validation And Developer Loop](#cross-cutting-workstream-validation-and-developer-loop) workstream, not as a Phase 4 gate.
+
 ## Phase 5: Interactive Archetype References
 
 Detailed execution plan: `docs/internals/phase-5-interactive-archetypes-plan.md`
+
+### Status
+
+**Active** — primary reference for `interactive controller`, secondary for `interactive panel`.
 
 ### Goal
 

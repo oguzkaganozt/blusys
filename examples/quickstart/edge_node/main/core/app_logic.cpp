@@ -71,6 +71,10 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         BLUSYS_LOGI(kTag, "wifi associated");
         break;
 
+    case action_tag::wifi_connecting:
+        BLUSYS_LOGI(kTag, "wifi connecting…");
+        break;
+
     case action_tag::wifi_got_ip:
         state.has_ip = true;
         if (const auto *conn = ctx.connectivity(); conn != nullptr) {
@@ -91,6 +95,18 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
     case action_tag::time_synced:
         state.time_synced = true;
         BLUSYS_LOGI(kTag, "time synchronized");
+        break;
+
+    case action_tag::time_sync_failed:
+        BLUSYS_LOGW(kTag, "SNTP time sync failed (continuing)");
+        break;
+
+    case action_tag::mdns_ready:
+        BLUSYS_LOGI(kTag, "mDNS advertising ready");
+        break;
+
+    case action_tag::local_ctrl_ready:
+        BLUSYS_LOGI(kTag, "local control endpoint ready");
         break;
 
     case action_tag::conn_capability_ready:
@@ -116,6 +132,14 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 
     case action_tag::telemetry_buffer_full:
         BLUSYS_LOGW(kTag, "telemetry buffer full — oldest samples dropped");
+        break;
+
+    case action_tag::telemetry_capability_ready:
+        BLUSYS_LOGI(kTag, "telemetry capability ready");
+        break;
+
+    case action_tag::telemetry_buffer_flushed:
+        BLUSYS_LOGD(kTag, "telemetry buffer flushed to delivery path");
         break;
 
     // ---- diagnostics ----
@@ -183,6 +207,10 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         BLUSYS_LOGI(kTag, "provisioning started — awaiting credentials");
         break;
 
+    case action_tag::prov_credentials_received:
+        BLUSYS_LOGI(kTag, "provisioning: credentials received");
+        break;
+
     case action_tag::prov_success:
         state.provisioned = true;
         BLUSYS_LOGI(kTag, "provisioning succeeded");
@@ -197,6 +225,11 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         BLUSYS_LOGI(kTag, "already provisioned — skipping setup");
         break;
 
+    case action_tag::prov_reset_complete:
+        state.provisioned = false;
+        BLUSYS_LOGW(kTag, "provisioning credentials cleared");
+        break;
+
     case action_tag::prov_capability_ready:
         state.provisioned = true;
         BLUSYS_LOGI(kTag, "provisioning capability ready");
@@ -204,9 +237,17 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 
     // ---- storage ----
 
+    case action_tag::storage_spiffs_mounted:
+        BLUSYS_LOGI(kTag, "SPIFFS mounted");
+        break;
+
+    case action_tag::storage_fatfs_mounted:
+        BLUSYS_LOGI(kTag, "FATFS mounted");
+        break;
+
     case action_tag::storage_capability_ready:
         state.storage_ready = true;
-        BLUSYS_LOGI(kTag, "storage mounted");
+        BLUSYS_LOGI(kTag, "storage capability ready");
         break;
 
     // ---- periodic tick ----

@@ -66,6 +66,9 @@ public:
     // Blocks until the OTA download + flash completes or fails.
     blusys_err_t request_update();
 
+    // Used by the services-layer OTA progress callback (not a general app API).
+    void emit_download_progress(std::uint8_t pct);
+
 private:
     static constexpr std::uint32_t kPendingNone          = 0;
     static constexpr std::uint32_t kPendingApplyComplete  = 1 << 0;
@@ -75,12 +78,13 @@ private:
     static constexpr std::uint32_t kPendingCapabilityReady    = 1 << 4;
     static constexpr std::uint32_t kPendingDownloadStarted = 1 << 5;
 
-    void post_event(ota_event ev);
+    void post_event(ota_event ev, std::uint32_t code = 0);
 
     ota_config cfg_;
     ota_status status_{};
     blusys::framework::runtime *rt_ = nullptr;
     std::atomic<std::uint32_t> pending_flags_{kPendingNone};
+    std::uint8_t last_progress_posted_ = 255;
 };
 
 #else  // host stub
@@ -107,13 +111,16 @@ public:
 
     blusys_err_t request_update();
 
+    void emit_download_progress(std::uint8_t pct);
+
 private:
-    void post_event(ota_event ev);
+    void post_event(ota_event ev, std::uint32_t code = 0);
 
     ota_config cfg_;
     ota_status status_{};
     blusys::framework::runtime *rt_ = nullptr;
     bool first_poll_ = true;
+    std::uint8_t last_progress_posted_ = 255;
 };
 
 #endif  // ESP_PLATFORM

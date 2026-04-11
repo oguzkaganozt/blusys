@@ -74,24 +74,45 @@ void connectivity_capability::poll(std::uint32_t /*now_ms*/)
         return;
     }
 
+    if (flags & kPendingManualConnecting) {
+        status_.wifi_connecting = true;
+        post_event(connectivity_event::wifi_connecting);
+    }
+
+    if (flags & kPendingDriverStarted) {
+        post_event(connectivity_event::wifi_started);
+    }
+    if (flags & kPendingDriverConnecting) {
+        status_.wifi_connecting = true;
+        post_event(connectivity_event::wifi_connecting);
+    }
+
     if (flags & kPendingDisconnected) {
         status_.wifi_connected = false;
         status_.has_ip         = false;
+        status_.wifi_connecting = false;
+        status_.wifi_reconnecting = false;
         status_.capability_ready   = false;
         post_event(connectivity_event::wifi_disconnected);
     }
 
     if (flags & kPendingReconnecting) {
+        status_.wifi_reconnecting = true;
+        status_.wifi_connecting = false;
         post_event(connectivity_event::wifi_reconnecting);
     }
 
     if (flags & kPendingConnected) {
         status_.wifi_connected = true;
+        status_.wifi_connecting = false;
+        status_.wifi_reconnecting = false;
         post_event(connectivity_event::wifi_connected);
     }
 
     if (flags & kPendingGotIp) {
         status_.has_ip = true;
+        status_.wifi_connecting = false;
+        status_.wifi_reconnecting = false;
         blusys_wifi_get_ip_info(wifi_, &status_.ip_info);
         post_event(connectivity_event::wifi_got_ip);
 
@@ -136,6 +157,12 @@ void connectivity_capability::wifi_event_handler(blusys_wifi_t * /*wifi*/,
     auto *self = static_cast<connectivity_capability *>(user_ctx);
 
     switch (event) {
+    case BLUSYS_WIFI_EVENT_STARTED:
+        self->pending_flags_.fetch_or(kPendingDriverStarted, std::memory_order_release);
+        break;
+    case BLUSYS_WIFI_EVENT_CONNECTING:
+        self->pending_flags_.fetch_or(kPendingDriverConnecting, std::memory_order_release);
+        break;
     case BLUSYS_WIFI_EVENT_CONNECTED:
         self->pending_flags_.fetch_or(kPendingConnected, std::memory_order_release);
         break;
@@ -228,6 +255,9 @@ blusys_err_t connectivity_capability::request_reconnect()
         return BLUSYS_ERR_INVALID_STATE;
     }
     BLUSYS_LOGI(TAG, "manual reconnect requested");
+    status_.wifi_connecting = true;
+    status_.wifi_reconnecting = false;
+    pending_flags_.fetch_or(kPendingManualConnecting, std::memory_order_release);
     blusys_wifi_disconnect(wifi_);
     return blusys_wifi_connect(wifi_, cfg_.connect_timeout_ms);
 }

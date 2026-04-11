@@ -11,6 +11,15 @@ static const char *TAG = "blusys_ota";
 
 namespace blusys::app {
 
+namespace {
+
+extern "C" void blusys_ota_c_progress(uint8_t percent, void *user_ctx)
+{
+    static_cast<ota_capability *>(user_ctx)->emit_download_progress(percent);
+}
+
+}  // namespace
+
 ota_capability::ota_capability(const ota_config &cfg)
     : cfg_(cfg)
 {
@@ -59,29 +68,29 @@ void ota_capability::poll(std::uint32_t /*now_ms*/)
     }
 
     if (flags & kPendingRollback) {
-        post_event(ota_event::rollback_pending);
+        post_event(ota_event::rollback_pending, 0);
     }
     if (flags & kPendingMarkedValid) {
-        post_event(ota_event::marked_valid);
+        post_event(ota_event::marked_valid, 0);
     }
     if (flags & kPendingDownloadStarted) {
-        post_event(ota_event::download_started);
+        post_event(ota_event::download_started, 0);
     }
     if (flags & kPendingApplyComplete) {
         status_.downloading = false;
         status_.download_complete = true;
         status_.apply_complete = true;
-        post_event(ota_event::download_complete);
-        post_event(ota_event::apply_complete);
+        post_event(ota_event::download_complete, 0);
+        post_event(ota_event::apply_complete, 0);
     }
     if (flags & kPendingApplyFailed) {
         status_.downloading = false;
-        post_event(ota_event::download_failed);
-        post_event(ota_event::apply_failed);
+        post_event(ota_event::download_failed, 0);
+        post_event(ota_event::apply_failed, 0);
     }
     if (flags & kPendingCapabilityReady) {
         status_.capability_ready = true;
-        post_event(ota_event::capability_ready);
+        post_event(ota_event::capability_ready, 0);
     }
 }
 
@@ -98,13 +107,16 @@ blusys_err_t ota_capability::request_update()
         return BLUSYS_ERR_INVALID_ARG;
     }
 
+    last_progress_posted_ = 255;
     status_.downloading = true;
     pending_flags_.fetch_or(kPendingDownloadStarted, std::memory_order_release);
 
     blusys_ota_config_t ota_cfg{};
-    ota_cfg.url        = cfg_.firmware_url;
-    ota_cfg.cert_pem   = cfg_.cert_pem;
-    ota_cfg.timeout_ms = cfg_.timeout_ms;
+    ota_cfg.url           = cfg_.firmware_url;
+    ota_cfg.cert_pem      = cfg_.cert_pem;
+    ota_cfg.timeout_ms    = cfg_.timeout_ms;
+    ota_cfg.on_progress   = blusys_ota_c_progress;
+    ota_cfg.progress_ctx  = this;
 
     blusys_ota_t *handle = nullptr;
     blusys_err_t err = blusys_ota_open(&ota_cfg, &handle);
@@ -128,11 +140,25 @@ blusys_err_t ota_capability::request_update()
     return err;
 }
 
-void ota_capability::post_event(ota_event ev)
+void ota_capability::emit_download_progress(std::uint8_t pct)
+{
+    status_.progress_pct = pct;
+    if (last_progress_posted_ != 255 && pct < 100 &&
+        pct < static_cast<std::uint8_t>(last_progress_posted_ + 5)) {
+        return;
+    }
+    if (last_progress_posted_ == pct && pct < 100) {
+        return;
+    }
+    last_progress_posted_ = pct;
+    post_event(ota_event::download_progress, pct);
+}
+
+void ota_capability::post_event(ota_event ev, std::uint32_t code)
 {
     if (rt_ != nullptr) {
         rt_->post_event(blusys::framework::make_integration_event(
-            static_cast<std::uint32_t>(ev)));
+            static_cast<std::uint32_t>(ev), code));
     }
 }
 

@@ -2,6 +2,10 @@
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
+// Settings screen builder — declarative `setting_item` rows plus a single
+// `on_changed` bridge. Compose in `ui/` or register as a router screen via
+// `settings_screen_config` params.
+
 #include "blusys/app/app_ctx.hpp"
 #include "lvgl.h"
 

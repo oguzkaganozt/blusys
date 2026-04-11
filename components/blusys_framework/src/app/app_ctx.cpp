@@ -143,6 +143,14 @@ const provisioning_status *app_ctx::provisioning() const
     return nullptr;
 }
 
+blusys_err_t app_ctx::request_connectivity_reconnect()
+{
+    if (connectivity_ == nullptr) {
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+    return connectivity_->request_reconnect();
+}
+
 #ifdef ESP_PLATFORM
 blusys_fs_t *app_ctx::spiffs() const
 {

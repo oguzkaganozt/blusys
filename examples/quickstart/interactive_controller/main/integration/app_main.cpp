@@ -112,6 +112,7 @@ bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*
 }
 
 static blusys::app::storage_capability storage{{
+    .init_nvs        = true,
     .spiffs_base_path = "/controller",
 }};
 

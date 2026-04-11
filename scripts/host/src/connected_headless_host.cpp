@@ -2,8 +2,8 @@
 //
 // Same reducer logic as the device connected_headless example, with
 // simulated connectivity and storage capabilities. The host stubs post
-// fake wifi_got_ip / time_synced / capability_ready events on the first
-// frame so the full app event flow exercises without hardware.
+// integration events on the first poll so the reducer exercises the same
+// bridge as on-device (Phase 4).
 
 #include "blusys/app/app.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
@@ -19,19 +19,29 @@ constexpr const char *kTag = "app";
 // ---- state ----
 
 struct State {
-    bool connected    = false;
-    bool time_synced  = false;
-    bool capability_ready = false;
-    int  tick_count   = 0;
+    bool saw_wifi_started    = false;
+    bool saw_wifi_connecting = false;
+    bool connected           = false;
+    bool time_synced         = false;
+    bool mdns_ready          = false;
+    bool conn_capability_ready = false;
+    bool storage_ready       = false;
+    bool saw_spiffs          = false;
+    int  tick_count          = 0;
 };
 
 // ---- actions ----
 
 enum class Action {
+    wifi_started,
+    wifi_connecting,
     wifi_got_ip,
     wifi_disconnected,
     time_synced,
-    capability_ready,
+    mdns_ready,
+    conn_capability_ready,
+    storage_spiffs_mounted,
+    storage_capability_ready,
     periodic_tick,
 };
 
@@ -40,6 +50,16 @@ enum class Action {
 void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
 {
     switch (action) {
+    case Action::wifi_started:
+        state.saw_wifi_started = true;
+        BLUSYS_LOGI(kTag, "wifi started");
+        break;
+
+    case Action::wifi_connecting:
+        state.saw_wifi_connecting = true;
+        BLUSYS_LOGI(kTag, "wifi connecting");
+        break;
+
     case Action::wifi_got_ip:
         state.connected = true;
         if (auto *conn = ctx.connectivity(); conn != nullptr) {
@@ -57,9 +77,24 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
         BLUSYS_LOGI(kTag, "Time synced (simulated)");
         break;
 
-    case Action::capability_ready:
-        state.capability_ready = true;
-        BLUSYS_LOGI(kTag, "All services ready — product operational");
+    case Action::mdns_ready:
+        state.mdns_ready = true;
+        BLUSYS_LOGI(kTag, "mDNS ready");
+        break;
+
+    case Action::conn_capability_ready:
+        state.conn_capability_ready = true;
+        BLUSYS_LOGI(kTag, "connectivity capability ready");
+        break;
+
+    case Action::storage_spiffs_mounted:
+        state.saw_spiffs = true;
+        BLUSYS_LOGI(kTag, "SPIFFS mounted (simulated)");
+        break;
+
+    case Action::storage_capability_ready:
+        state.storage_ready = true;
+        BLUSYS_LOGI(kTag, "storage capability ready");
         break;
 
     case Action::periodic_tick:
@@ -80,12 +115,26 @@ bool map_event(std::uint32_t id, std::uint32_t /*code*/,
 {
     using CE = blusys::app::connectivity_event;
     switch (static_cast<CE>(id)) {
-    case CE::wifi_got_ip:       *out = Action::wifi_got_ip;      return true;
-    case CE::wifi_disconnected: *out = Action::wifi_disconnected; return true;
-    case CE::time_synced:       *out = Action::time_synced;      return true;
-    case CE::capability_ready:      *out = Action::capability_ready;     return true;
-    default: return false;
+    case CE::wifi_started:       *out = Action::wifi_started;       return true;
+    case CE::wifi_connecting:    *out = Action::wifi_connecting;    return true;
+    case CE::wifi_got_ip:        *out = Action::wifi_got_ip;        return true;
+    case CE::wifi_disconnected:  *out = Action::wifi_disconnected; return true;
+    case CE::time_synced:        *out = Action::time_synced;        return true;
+    case CE::mdns_ready:         *out = Action::mdns_ready;         return true;
+    case CE::capability_ready:   *out = Action::conn_capability_ready; return true;
+    default:
+        break;
     }
+
+    using SE = blusys::app::storage_event;
+    switch (static_cast<SE>(id)) {
+    case SE::spiffs_mounted:     *out = Action::storage_spiffs_mounted; return true;
+    case SE::capability_ready:   *out = Action::storage_capability_ready; return true;
+    default:
+        break;
+    }
+
+    return false;
 }
 
 // ---- on_tick ----

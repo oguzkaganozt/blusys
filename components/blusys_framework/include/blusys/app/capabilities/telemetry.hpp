@@ -75,6 +75,7 @@ private:
     telemetry_metric  buffer_[kMaxTelemetryBuffer]{};
     std::size_t       write_pos_   = 0;
     std::uint32_t     last_flush_ms_ = 0;
+    bool              first_poll_ready_ = true;
 };
 
 }  // namespace blusys::app

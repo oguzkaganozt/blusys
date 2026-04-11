@@ -316,6 +316,28 @@ target_compile_options(connected_headless_host PRIVATE
 )
 target_compile_definitions(connected_headless_host PRIVATE SDL_MAIN_HANDLED)
 
+# ── capability_contract_smoke (Phase 4 — enum range sanity) ───────────────────
+add_executable(capability_contract_smoke src/capability_contract_smoke.cpp)
+target_include_directories(capability_contract_smoke PRIVATE
+    ${BLUSYS_COMPONENT_DIR}/include
+    ${BLUSYS_FRAMEWORK_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}/include_host
+)
+target_compile_options(capability_contract_smoke PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+
+# ── operational_phase_smoke (Phase 4 — edge-node phase machine parity) ────────
+add_executable(operational_phase_smoke src/operational_phase_smoke.cpp)
+target_compile_options(operational_phase_smoke PRIVATE
+    -Wall
+    -Wextra
+)
+
 # ── pomodoro_host (oled_encoder_basic ported to host) ────────────────────────
 #
 # Pixel-identical 128×32 OLED layout running on the PC + SDL2 stack.

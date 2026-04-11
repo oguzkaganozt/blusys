@@ -69,6 +69,7 @@ add_library(blusys_framework_host STATIC
     ${BLUSYS_FW}/src/app/screen_router.cpp
     ${BLUSYS_FW}/src/app/touch_bridge.cpp
     ${BLUSYS_FW}/src/app/shell.cpp
+    ${BLUSYS_FW}/src/app/flows/loading.cpp
     ${BLUSYS_FW}/src/app/flows/settings.cpp
     ${BLUSYS_FW}/src/app/flows/provisioning_flow.cpp
     ${BLUSYS_FW}/src/app/screens/about_screen.cpp

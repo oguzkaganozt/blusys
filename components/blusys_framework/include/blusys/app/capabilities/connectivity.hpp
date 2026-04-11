@@ -49,6 +49,8 @@ struct connectivity_ip_info {
 // Current connectivity state, queryable via ctx.connectivity().
 struct connectivity_status {
     bool wifi_connected     = false;
+    bool wifi_connecting    = false;  // initial association or reconnect in progress
+    bool wifi_reconnecting  = false;  // driver reported reconnecting after loss
     bool has_ip             = false;
     bool time_synced        = false;
     bool mdns_running       = false;
@@ -114,6 +116,9 @@ private:
     static constexpr std::uint32_t kPendingGotIp        = 1 << 1;
     static constexpr std::uint32_t kPendingDisconnected = 1 << 2;
     static constexpr std::uint32_t kPendingReconnecting = 1 << 3;
+    static constexpr std::uint32_t kPendingManualConnecting = 1 << 4;
+    static constexpr std::uint32_t kPendingDriverStarted    = 1 << 5;
+    static constexpr std::uint32_t kPendingDriverConnecting = 1 << 6;
 
     static void wifi_event_handler(blusys_wifi_t *wifi,
                                    blusys_wifi_event_t event,

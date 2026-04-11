@@ -14,6 +14,8 @@ blusys_err_t storage_capability::start(blusys::framework::runtime &rt)
     rt_ = &rt;
     first_poll_ = true;
 
+    (void)cfg_.init_nvs;  // no-op on host — NVS is device-only
+
     if (cfg_.spiffs_base_path != nullptr) {
         status_.spiffs_mounted = true;
     }

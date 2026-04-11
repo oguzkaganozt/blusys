@@ -1,11 +1,13 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/app/flows/connectivity_flow.hpp"
+#include "blusys/app/app_ctx.hpp"
 #include "blusys/framework/ui/theme.hpp"
 #include "blusys/framework/ui/primitives/status_badge.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #include "blusys/framework/ui/primitives/label.hpp"
 #include "blusys/framework/ui/primitives/divider.hpp"
+#include "blusys/framework/ui/widgets/button/button.hpp"
 
 namespace blusys::app::flows {
 
@@ -65,11 +67,20 @@ void connectivity_panel_update(connectivity_panel_handles &handles,
                                 const connectivity_status &status)
 {
     if (handles.wifi_badge != nullptr) {
-        blusys::ui::status_badge_set_level(handles.wifi_badge,
-            status.wifi_connected ? blusys::ui::badge_level::success
-                                  : blusys::ui::badge_level::error);
-        blusys::ui::status_badge_set_text(handles.wifi_badge,
-            status.wifi_connected ? "WiFi: Connected" : "WiFi: Disconnected");
+        blusys::ui::badge_level lvl = blusys::ui::badge_level::error;
+        const char *txt = "WiFi: Disconnected";
+        if (status.wifi_reconnecting) {
+            lvl = blusys::ui::badge_level::warning;
+            txt = "WiFi: Reconnecting…";
+        } else if (status.wifi_connecting && !status.has_ip) {
+            lvl = blusys::ui::badge_level::warning;
+            txt = "WiFi: Connecting…";
+        } else if (status.wifi_connected) {
+            lvl = blusys::ui::badge_level::success;
+            txt = "WiFi: Connected";
+        }
+        blusys::ui::status_badge_set_level(handles.wifi_badge, lvl);
+        blusys::ui::status_badge_set_text(handles.wifi_badge, txt);
     }
 
     if (handles.ip_label != nullptr && status.has_ip) {
@@ -93,6 +104,32 @@ void connectivity_panel_update(connectivity_panel_handles &handles,
             status.local_ctrl_running ? blusys::ui::badge_level::success
                                       : blusys::ui::badge_level::warning);
     }
+}
+
+namespace {
+
+blusys::app::app_ctx *g_reconnect_ctx = nullptr;
+
+void on_reconnect_press(void * /*user_data*/)
+{
+    if (g_reconnect_ctx != nullptr) {
+        g_reconnect_ctx->request_connectivity_reconnect();
+    }
+}
+
+}  // namespace
+
+lv_obj_t *connectivity_reconnect_button_create(lv_obj_t *parent, blusys::app::app_ctx &ctx,
+                                                const char *label)
+{
+    g_reconnect_ctx = &ctx;
+
+    blusys::ui::button_config btn{};
+    btn.label     = (label != nullptr) ? label : "Reconnect";
+    btn.variant   = blusys::ui::button_variant::secondary;
+    btn.on_press  = on_reconnect_press;
+    btn.user_data = nullptr;
+    return blusys::ui::button_create(parent, btn);
 }
 
 }  // namespace blusys::app::flows

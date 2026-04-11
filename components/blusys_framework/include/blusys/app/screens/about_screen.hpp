@@ -22,6 +22,10 @@ struct about_screen_config {
     const char *build_date        = nullptr;
     const about_extra_field *extras = nullptr;
     std::size_t extra_count        = 0;
+
+    // When true, appends chip model, free heap, min heap, uptime, and IDF
+    // version from `ctx.diagnostics()` when the diagnostics capability is composed.
+    bool fill_diagnostics_from_ctx = false;
 };
 
 // screen_create_fn compatible — register with screen_router.

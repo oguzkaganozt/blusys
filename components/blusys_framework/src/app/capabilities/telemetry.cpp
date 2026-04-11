@@ -21,9 +21,9 @@ blusys_err_t telemetry_capability::start(blusys::framework::runtime &rt)
     write_pos_ = 0;
     last_flush_ms_ = 0;
     status_ = {};
-    status_.capability_ready = true;
+    first_poll_ready_ = true;
 
-    BLUSYS_LOGI(TAG, "telemetry ready (threshold=%u, interval=%lums)",
+    BLUSYS_LOGI(TAG, "telemetry starting (threshold=%u, interval=%lums)",
                 static_cast<unsigned>(cfg_.flush_threshold),
                 static_cast<unsigned long>(cfg_.flush_interval_ms));
     return BLUSYS_OK;
@@ -31,6 +31,12 @@ blusys_err_t telemetry_capability::start(blusys::framework::runtime &rt)
 
 void telemetry_capability::poll(std::uint32_t now_ms)
 {
+    if (first_poll_ready_) {
+        first_poll_ready_ = false;
+        status_.capability_ready = true;
+        post_event(telemetry_event::capability_ready);
+    }
+
     if (write_pos_ == 0) {
         // Update the flush timer even with an empty buffer so the
         // first recorded metric doesn't trigger an immediate flush.
@@ -63,6 +69,7 @@ void telemetry_capability::stop()
         flush();
     }
     status_ = {};
+    first_poll_ready_ = true;
     rt_ = nullptr;
 }
 

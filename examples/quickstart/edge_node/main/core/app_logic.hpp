@@ -24,16 +24,22 @@ enum class action_tag : std::uint8_t {
     // connectivity
     wifi_started,
     wifi_connected,
+    wifi_connecting,
     wifi_got_ip,
     wifi_disconnected,
     wifi_reconnecting,
     time_synced,
+    time_sync_failed,
+    mdns_ready,
+    local_ctrl_ready,
     conn_capability_ready,
 
     // telemetry
     telemetry_delivered,
     telemetry_failed,
     telemetry_buffer_full,
+    telemetry_capability_ready,
+    telemetry_buffer_flushed,
 
     // diagnostics
     diag_snapshot,
@@ -52,12 +58,16 @@ enum class action_tag : std::uint8_t {
 
     // provisioning
     prov_started,
+    prov_credentials_received,
     prov_success,
     prov_failed,
     prov_already_done,
+    prov_reset_complete,
     prov_capability_ready,
 
     // storage
+    storage_spiffs_mounted,
+    storage_fatfs_mounted,
     storage_capability_ready,
 
     // periodic

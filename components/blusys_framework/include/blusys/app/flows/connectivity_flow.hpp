@@ -5,6 +5,10 @@
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "lvgl.h"
 
+namespace blusys::app {
+class app_ctx;
+}
+
 namespace blusys::app::flows {
 
 struct connectivity_display_config {
@@ -30,6 +34,11 @@ lv_obj_t *connectivity_panel_create(lv_obj_t *parent,
 // Update the panel widgets from the current connectivity_status.
 void connectivity_panel_update(connectivity_panel_handles &handles,
                                 const connectivity_status &status);
+
+// Primary action wired to `app_ctx::request_connectivity_reconnect()`.
+// Uses a single static bridge — only one reconnect control per screen tree.
+lv_obj_t *connectivity_reconnect_button_create(lv_obj_t *parent, blusys::app::app_ctx &ctx,
+                                                const char *label = "Reconnect");
 
 }  // namespace blusys::app::flows
 

@@ -32,6 +32,10 @@ struct storage_status {
 // Declarative storage configuration.
 // Each filesystem is optional — enabled when its base_path is non-null.
 struct storage_config {
+    // When true, runs `nvs_flash_init()` before mounting filesystems. Use when
+    // the app does not compose `connectivity_capability` (which also inits NVS).
+    bool init_nvs = false;
+
     const char *spiffs_base_path       = nullptr;
     const char *spiffs_partition_label  = nullptr;
     bool        spiffs_format_on_fail   = true;

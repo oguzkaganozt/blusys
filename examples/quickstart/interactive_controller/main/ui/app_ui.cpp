@@ -1,5 +1,6 @@
 #include "ui/app_ui.hpp"
 
+#include "blusys/app/flows/loading.hpp"
 #include "blusys/app/flows/settings.hpp"
 #include "blusys/app/screens/about_screen.hpp"
 #include "blusys/app/view/action_widgets.hpp"
@@ -108,6 +109,14 @@ void on_about_show(lv_obj_t * /*screen*/, void *user_data)
     }
 }
 
+void on_status_empty_setup(void *user_data)
+{
+    auto *ctx = static_cast<blusys::app::app_ctx *>(user_data);
+    if (ctx != nullptr) {
+        ctx->dispatch(action{.tag = action_tag::open_setup});
+    }
+}
+
 void on_settings_changed(void *user_ctx, std::size_t item_index, std::int32_t value)
 {
     auto *ctx = static_cast<blusys::app::app_ctx *>(user_ctx);
@@ -177,6 +186,19 @@ lv_obj_t *create_home(blusys::app::app_ctx &ctx, const void * /*params*/, lv_gro
 lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
 {
     auto page = make_page(ctx, true);
+
+    if (!g_state->provisioning.capability_ready) {
+        lv_obj_t *empty = blusys::app::flows::empty_state_create(
+            page.content,
+            {
+                .title = "Provisioning pending",
+                .message = "Finish setup to enable live status and storage.",
+                .primary_label = "Run setup",
+                .on_primary = on_status_empty_setup,
+                .primary_user_data = &ctx,
+            });
+        lv_obj_set_width(empty, LV_PCT(100));
+    }
 
     auto *summary = view::card(page.content, "Snapshot");
     lv_obj_set_width(summary, LV_PCT(100));

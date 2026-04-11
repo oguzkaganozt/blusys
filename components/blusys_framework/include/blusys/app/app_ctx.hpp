@@ -3,6 +3,8 @@
 #include "blusys/framework/core/feedback.hpp"
 #include "blusys/framework/core/router.hpp"
 
+#include "blusys/error.h"
+
 #include <cstdint>
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
@@ -95,6 +97,11 @@ public:
     [[nodiscard]] blusys_fs_t    *spiffs() const;
     [[nodiscard]] blusys_fatfs_t *fatfs()  const;
 #endif
+
+    // ---- capability requests (integration calls from intent bridges) ----
+    // These forward to the composed capability when present; otherwise return
+    // BLUSYS_ERR_INVALID_STATE.
+    blusys_err_t request_connectivity_reconnect();
 
 private:
     friend class app_runtime_base;

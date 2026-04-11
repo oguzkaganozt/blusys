@@ -16,14 +16,20 @@ Over-the-Air firmware update: download a firmware binary from a URL and flash it
 ### `blusys_ota_config_t`
 
 ```c
+typedef void (*blusys_ota_progress_cb_t)(uint8_t percent, void *user_ctx);
+
 typedef struct {
     const char *url;        /* firmware URL; required; HTTP or HTTPS */
     const char *cert_pem;   /* server CA certificate (PEM); NULL disables TLS verification */
     int         timeout_ms; /* per-operation network timeout; 0 = default (30 000 ms) */
+    blusys_ota_progress_cb_t on_progress; /* optional; NULL to ignore */
+    void        *progress_ctx;            /* passed to on_progress */
 } blusys_ota_config_t;
 ```
 
 `url` and `cert_pem` pointers must remain valid until `blusys_ota_perform()` returns.
+
+If `on_progress` is non-NULL, it may be called repeatedly during `blusys_ota_perform()` with `percent` in the range 0–100 (implementation-defined frequency). Use `progress_ctx` for your own state.
 
 ## Functions
 

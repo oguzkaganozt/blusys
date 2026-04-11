@@ -43,6 +43,12 @@ void connectivity_capability::poll(std::uint32_t /*now_ms*/)
 
     // Post simulated events on the first poll so the app reducer
     // receives them through the normal event flow (not during init).
+    status_.wifi_connecting = true;
+    post_event(connectivity_event::wifi_started);
+    post_event(connectivity_event::wifi_connecting);
+    status_.wifi_connected = true;
+    status_.wifi_connecting = false;
+    status_.wifi_reconnecting = false;
     post_event(connectivity_event::wifi_connected);
     post_event(connectivity_event::wifi_got_ip);
 
@@ -68,6 +74,11 @@ void connectivity_capability::stop()
 blusys_err_t connectivity_capability::request_reconnect()
 {
     BLUSYS_LOGI(TAG, "host stub: reconnect requested (simulated)");
+    status_.wifi_connecting = true;
+    status_.wifi_reconnecting = false;
+    post_event(connectivity_event::wifi_connecting);
+    status_.wifi_connected = true;
+    status_.wifi_connecting = false;
     post_event(connectivity_event::wifi_connected);
     post_event(connectivity_event::wifi_got_ip);
     return BLUSYS_OK;

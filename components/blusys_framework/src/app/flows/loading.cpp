@@ -2,6 +2,7 @@
 
 #include "blusys/app/flows/loading.hpp"
 #include "blusys/framework/ui/theme.hpp"
+#include "blusys/framework/ui/widgets/button/button.hpp"
 
 namespace blusys::app::flows {
 
@@ -70,6 +71,16 @@ lv_obj_t *empty_state_create(lv_obj_t *parent, const empty_state_config &config)
         lv_obj_set_style_text_color(msg, t.color_on_surface, 0);
         lv_obj_set_style_text_opa(msg, LV_OPA_60, 0);
         lv_obj_set_style_text_align(msg, LV_TEXT_ALIGN_CENTER, 0);
+    }
+
+    if (config.primary_label != nullptr && config.on_primary != nullptr) {
+        blusys::ui::button_config btn{};
+        btn.label     = config.primary_label;
+        btn.variant   = blusys::ui::button_variant::secondary;
+        btn.on_press  = config.on_primary;
+        btn.user_data = config.primary_user_data;
+        lv_obj_set_style_pad_top(container, t.spacing_md, 0);
+        blusys::ui::button_create(container, btn);
     }
 
     return container;

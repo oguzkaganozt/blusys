@@ -47,6 +47,16 @@ sudo pacman -S base-devel cmake pkgconf sdl2
 brew install cmake pkg-config sdl2
 ```
 
+## Phase 4 validation targets
+
+These ship with the host harness and do not require hardware:
+
+| Binary | Purpose |
+|--------|---------|
+| `capability_contract_smoke` | Static checks that capability integration event IDs stay in their reserved bands |
+| `operational_phase_smoke` | Runtime checks for the edge-node-style operational phase state machine |
+| `connected_headless_host` | Headless `blusys::app` loop with connectivity + storage host stubs and a broad `map_event` bridge |
+
 ## Build and run
 
 The wrapper goes through the `blusys` CLI:
@@ -55,6 +65,8 @@ The wrapper goes through the `blusys` CLI:
 blusys host-build                                  # configure + build
 ./scripts/host/build-host/hello_lvgl               # LVGL-only smoke test
 ./scripts/host/build-host/widget_kit_demo          # framework widget kit demo
+./scripts/host/build-host/operational_phase_smoke  # Phase 4 phase-machine smoke
+./scripts/host/build-host/connected_headless_host  # headless capability + reducer smoke
 ```
 
 `hello_lvgl` opens a 480×320 SDL2 window with a centred rounded card and a

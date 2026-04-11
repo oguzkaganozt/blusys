@@ -1,4 +1,5 @@
 .vscode/
+.cursor/
 .venv-docs/
 site/
 __pycache__/
