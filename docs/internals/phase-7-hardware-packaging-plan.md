@@ -60,10 +60,10 @@ This section tracks progress against this plan in the repo. Update it when works
   - Optional: map `surface_hints` into theme token scaling or stock widget presets when repetition appears beyond the current shell-chrome helper.
 
 - **Workstreams D–E — references (remainder)**  
-  - `edge_node` — **done**: Kconfig `BLUSYS_EDGE_NODE_LOCAL_UI` enables `BLUSYS_APP_MAIN_DEVICE` + `profiles/ssd1306_128x64()` and minimal mono status UI in `main/ui/` (same `logic/` + capabilities). Default remains headless. Project sets `BLUSYS_BUILD_UI` when the optional UI path is used.  
+  - `edge_node` — **done**: Kconfig `BLUSYS_EDGE_NODE_LOCAL_UI` enables `BLUSYS_APP_MAIN_DEVICE` + `profiles/ssd1306_128x64()` and minimal mono status UI in `main/ui/` (same `core/` + capabilities). Default remains headless. Project sets `BLUSYS_BUILD_UI` when the optional UI path is used.  
   - `gateway` — optional **headless** vs interactive (large product fork; still deferred).  
   - **Gateway packaging** — `partitions.csv` added (aligned with other 4 MB + SPIFFS quickstarts).  
-  - Hardware proof: run the same `logic/` on at least two physical profile variants per archetype (manual).
+  - Hardware proof: run the same `core/` on at least two physical profile variants per archetype (manual).
 
 - **Workstream F — docs and discoverability**  
   - **Done**: `docs/app/profiles.md` extended with Phase 7 profile table, layout hints, Kconfig pointers, and archetype→profile table. No new nav entries (`profiles.md` already listed in `mkdocs.yml` / `inventory.yml`).
@@ -98,8 +98,8 @@ The following decisions are already locked by `PRD.md` and `ROADMAP.md` and must
 - archetypes stay starter compositions, not framework branches
 - product-facing code stays reducer-driven: `update(ctx, state, action)`
 - product-facing namespace remains `blusys::app`
-- capabilities stay composed in `system/`, not in `logic/` or `ui/`
-- scaffold and product structure stay `main/`, `logic/`, `ui/`, and `system/`
+- capabilities stay composed in `integration/`, not in `core/` or `ui/`
+- scaffold and product structure stay `main/`, `core/`, `ui/`, and `integration/`
 - raw LVGL is allowed only inside custom widget implementations or explicit bounded custom view scope
 - the three-tier architecture stays intact; display-controller support belongs in HAL or services, while profiles and packaging belong in the framework
 - hardware breadth must follow validated product pressure rather than speculative board-catalog growth
@@ -270,7 +270,7 @@ Phase 7 is only complete if the proven reference products can actually move acro
 Required proof points:
 
 - at least one interactive reference app runs on more than one color profile without app-architecture changes
-- at least one connected reference can stay headless while also supporting an optional local surface profile without moving product behavior out of `logic/`
+- at least one connected reference can stay headless while also supporting an optional local surface profile without moving product behavior out of `core/`
 - profile swaps change hardware config and layout adaptation behavior, not the reducer model or capability ownership model
 
 Recommended proof strategy:

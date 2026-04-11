@@ -133,16 +133,16 @@ my_project/
 └── main/
     ├── CMakeLists.txt
     ├── idf_component.yml
-    ├── logic/
+    ├── core/
     ├── ui/
-    └── system/
+    └── integration/
 ```
 
 Folder meanings:
 
-- `logic/` — product logic: `state`, `action`, `update(ctx, state, action)`, domain rules, app-owned behavior
+- `core/` — product logic: `state`, `action`, `update(ctx, state, action)`, domain rules, app-owned behavior
 - `ui/` — screens, custom widgets, theme or identity, view composition
-- `system/` — entrypoint wiring, selected profile, capability setup, runtime-service integration, mapping system events into app actions
+- `integration/` — entrypoint wiring, selected profile, capability setup, runtime-service integration, mapping system events into app actions
 
 Rules:
 
@@ -155,14 +155,14 @@ Rules:
 
 To keep this structure intuitive and maintainable, the ownership boundaries must stay strict.
 
-- `logic/` owns product state, actions, reducer logic, and business behavior
-- `logic/` should not own profile selection, capability setup, or direct runtime-service wiring
+- `core/` owns product state, actions, reducer logic, and business behavior
+- `core/` should not own profile selection, capability setup, or direct runtime-service wiring
 - `ui/` owns screens, widgets, theme or identity, and rendering from state
 - `ui/` should dispatch actions and read state, but should not call runtime services directly
 - `ui/` should not contain business decisions that belong in the reducer
-- `system/` owns entrypoint assembly, profile selection, capability setup, bridges, and runtime-service integration
-- `system/` maps external events into app actions but should not become the home of product behavior
-- `system/` should not accumulate durable business state that belongs in `logic/`
+- `integration/` owns entrypoint assembly, profile selection, capability setup, bridges, and runtime-service integration
+- `integration/` maps external events into app actions but should not become the home of product behavior
+- `integration/` should not accumulate durable business state that belongs in `core/`
 
 This separation is what makes the shared project structure scalable across all archetypes.
 
@@ -171,7 +171,7 @@ This separation is what makes the shared project structure scalable across all a
 The roadmap locks in one scaffold/build model for product apps:
 
 - scaffolded product apps should use `main/` as the single local ESP-IDF component
-- `main/CMakeLists.txt` should compile the files under `logic/`, `ui/`, and `system/`
+- `main/CMakeLists.txt` should compile the files under `core/`, `ui/`, and `integration/`
 - `main/idf_component.yml` remains the place where the platform components are pulled in through the managed component flow
 - the current separate local `app/` component model should be removed from the recommended scaffold path during Phase 0
 - in-repo examples may keep their own build mechanics where needed, but scaffolded product apps should no longer have two competing local layouts
@@ -197,12 +197,12 @@ Every framework capability should follow one standard contract.
 Required shape:
 
 - each capability has a clear data-only configuration struct
-- each capability is composed in `system/`, not in `logic/` or `ui/`
-- framework or system wiring owns capability lifecycle and runtime-service integration
+- each capability is composed in `integration/`, not in `core/` or `ui/`
+- framework or integration wiring owns capability lifecycle and runtime-service integration
 - capability status is queryable through a consistent app-facing mechanism
-- product logic requests capability work through reducer-driven actions; `system/` translates those actions into capability calls
-- capability events are mapped into app actions in `system/`
-- `logic/` reacts to those actions in the reducer and owns product behavior
+- product logic requests capability work through reducer-driven actions; `integration/` translates those actions into capability calls
+- capability events are mapped into app actions in `integration/`
+- `core/` reacts to those actions in the reducer and owns product behavior
 - `ui/` renders from state and dispatches actions, but does not call runtime services directly
 - capabilities may expose advanced escape hatches, but the recommended path stays reducer- and event-driven
 
@@ -269,7 +269,7 @@ The current engine is real, but repo-level coherence still lags behind it. Expan
 - unify input and focus handling across host and hardware paths
 - make host and headless profiles meaningful product-facing configuration surfaces
 - align scaffold output, quickstarts, docs, and examples with the actual current app API
-- establish and enforce the fixed `logic/`, `ui/`, and `system/` app structure for every scaffolded project
+- establish and enforce the fixed `core/`, `ui/`, and `integration/` app structure for every scaffolded project
 - remove the separate local `app/` component model from the canonical scaffolded product path and standardize on `main/` as the single local component
 - remove low-level framework examples from `examples/quickstart/` so quickstarts are purely product-facing
 - fix scaffold dependency drift and pinning issues in `blusys create`
@@ -429,11 +429,11 @@ Framework-owned capabilities on top of the runtime substrate:
 
 Capability contract requirements:
 
-- capability configuration lives in `system/`
+- capability configuration lives in `integration/`
 - capability lifecycle is owned by framework or system wiring, not by screens
-- product logic requests capability work through reducer-driven actions; `system/` performs the capability call
+- product logic requests capability work through reducer-driven actions; `integration/` performs the capability call
 - capability status and events cross into product code only through the standard app-facing contract
-- business decisions stay in `logic/`
+- business decisions stay in `core/`
 - view behavior stays in `ui/`
 
 ### Exit Criteria
@@ -541,7 +541,7 @@ Make the proven platform discoverable directly from `blusys create` and easy to 
 ### Deliverables
 
 - starter compositions for the four canonical archetypes
-- archetype starters that all keep the same `logic/`, `ui/`, and `system/` project structure
+- archetype starters that all keep the same `core/`, `ui/`, and `integration/` project structure
 - archetype starters that all use `main/` as the single local component
 - docs paths that explain the four archetypes clearly while still preserving consumer and industrial design guidance on top of the shared foundation
 - widget gallery and capability composition guides

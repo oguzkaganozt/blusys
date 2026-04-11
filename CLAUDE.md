@@ -44,9 +44,9 @@ These are already decided and should be treated as constraints unless explicitly
 - Raw LVGL is allowed only inside custom widget implementations or explicit custom view scope
 - UI outward behavior must go only through actions and approved framework behavior
 - Scaffolded product apps use `main/` as the single local ESP-IDF component
-- Scaffolded product apps use the fixed internal structure `logic/`, `ui/`, and `system/`
-- `logic/` owns product behavior, `ui/` owns rendering and widgets, `system/` owns wiring and runtime-service integration
-- Capability work is requested by reducer-driven actions and translated into capability calls in `system/`
+- Scaffolded product apps use the fixed internal structure `core/`, `ui/`, and `integration/`
+- `core/` owns product behavior, `ui/` owns rendering and widgets, `integration/` owns wiring and runtime-service integration
+- Capability work is requested by reducer-driven actions and translated into capability calls in `integration/`
 - The three-tier architecture stays in place
 - HAL, runtime services, `blusys_ui`, and low-level framework primitives remain available as advanced escape hatches
 
@@ -135,9 +135,9 @@ my_project/
 └── main/
     ├── CMakeLists.txt
     ├── idf_component.yml
-    ├── logic/
+    ├── core/
     ├── ui/
-    └── system/
+    └── integration/
 ```
 
 Do not introduce competing default project layouts for different archetypes.

@@ -26,8 +26,8 @@ The following decisions are already locked by `PRD.md` and `ROADMAP.md` and must
 - archetypes stay starter compositions, not framework branches
 - product-facing code stays reducer-driven: `update(ctx, state, action)`
 - product-facing namespace remains `blusys::app`
-- capabilities are composed in `system/`, not in `logic/` or `ui/`
-- scaffold and product structure stay `main/`, `logic/`, `ui/`, and `system/`
+- capabilities are composed in `integration/`, not in `core/` or `ui/`
+- scaffold and product structure stay `main/`, `core/`, `ui/`, and `integration/`
 - `main/` remains the single local component for scaffolded product apps
 - raw LVGL is allowed only inside custom widget implementations or explicit bounded custom view scope
 - the three-tier architecture stays intact

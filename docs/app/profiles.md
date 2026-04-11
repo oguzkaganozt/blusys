@@ -68,7 +68,7 @@ The first canonical interactive hardware profile. Framework-owned display and UI
 | `BLUSYS_APP_MAIN_DEVICE(spec, profile)` | Device | Real hardware |
 | `BLUSYS_APP_MAIN_HEADLESS(spec)` | Headless | None |
 
-The same `app_spec`, State, Actions, and `update()` compile for all entries. Swap the macro at the bottom of `system/app_main.cpp` to switch targets.
+The same `app_spec`, State, Actions, and `update()` compile for all entries. Swap the macro at the bottom of `integration/app_main.cpp` to switch targets.
 
 ## Phase 7 device profile headers
 
@@ -90,7 +90,7 @@ SPI defaults use target-gated pins where common; I2C defaults follow the `lcd_ss
 
 ## Kconfig in reference examples
 
-Several archetype examples expose **menuconfig** choices so you can compile the same `logic/` against different display families without editing source:
+Several archetype examples expose **menuconfig** choices so you can compile the same `core/` against different display families without editing source:
 
 - **Interactive controller** (`quickstart/interactive_controller`): ST7735 vs ST7789.
 - **Interactive panel** (`reference/interactive_panel`): ILI9341 vs ILI9488.
@@ -105,5 +105,5 @@ Host SDL builds use CMake cache variables (e.g. `BLUSYS_IC_HOST_DISPLAY_PROFILE`
 |-----------|------------------|--------|
 | Interactive controller | ST7735, ST7789 | Compact color; expressive theme bias |
 | Interactive panel | ILI9341, ILI9488 | Operational / dashboard density |
-| Edge node | Headless, or SSD1306 for local status | Same reducer; `system/` chooses entry |
+| Edge node | Headless, or SSD1306 for local status | Same reducer; `integration/` chooses entry |
 | Gateway/controller | Headless, ILI9341, ILI9488 | Headless default; optional local operator UI |

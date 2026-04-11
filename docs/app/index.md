@@ -31,7 +31,7 @@ These are handled by the framework runtime, profiles, and capabilities.
 - [Reducer Model](reducer-model.md) --- state, actions, `update()`, dispatch lifecycle, intent map
 - [Views & Widgets](views-and-widgets.md) --- stock widgets, page helpers, custom widget contract, bounded LVGL
 - [Widget Gallery](widget-gallery.md) --- stock widgets by product use case
-- [Capability Composition](capability-composition.md) --- how capabilities fit together in `system/`
+- [Capability Composition](capability-composition.md) --- how capabilities fit together in `integration/`
 - [Capabilities](capabilities.md) --- connectivity, storage
 - [Profiles](profiles.md) --- host, headless, and device platform profiles
 
@@ -41,4 +41,4 @@ These are handled by the framework runtime, profiles, and capabilities.
 - [`examples/reference/interactive_panel/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/interactive_panel) --- operational panel reference using the same app runtime and shell
 - [`examples/quickstart/edge_node/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/edge_node) --- headless-first connected archetype
 - [`examples/reference/gateway/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/gateway) --- coordinator/operator archetype with an optional local surface
-- [`examples/quickstart/framework_device_basic/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/framework_device_basic) --- minimal interactive app
+- [`examples/quickstart/framework_device_basic/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/framework_device_basic) --- minimal interactive app for framework validation

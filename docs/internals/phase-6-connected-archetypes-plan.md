@@ -36,9 +36,9 @@ The following decisions are already locked by `PRD.md` and must not be reopened 
 - archetypes stay starter compositions, not framework branches
 - product-facing code stays reducer-driven: `update(ctx, state, action)`
 - product-facing namespace remains `blusys::app`
-- capabilities are composed in `system/`, not in `logic/` or `ui/`
+- capabilities are composed in `integration/`, not in `core/` or `ui/`
 - capability events cross into product code only through the standard event bridge and reducer
-- scaffold and product structure stay `main/`, `logic/`, `ui/`, and `system/`
+- scaffold and product structure stay `main/`, `core/`, `ui/`, and `integration/`
 - the three-tier architecture stays intact; capabilities live in the framework, built on top of `blusys_services`
 - raw LVGL is allowed only inside custom widget implementations or explicit bounded custom view scope
 
@@ -165,8 +165,8 @@ Recommended scope:
 
 Implementation rules:
 
-- keep operational state machine and business logic in `logic/`
-- keep capability setup, event bridges, and runtime-service integration in `system/`
+- keep operational state machine and business logic in `core/`
+- keep capability setup, event bridges, and runtime-service integration in `integration/`
 - `ui/` should exist but remain minimal for the headless-first variant; it may contain a tiny status screen for the optional interactive variant
 - use all capabilities through the standard event bridge and reducer contract
 - demonstrate sustained operation: the app should be designed to run indefinitely, not just complete a demo sequence
@@ -248,7 +248,7 @@ Selection rule:
 Each archetype app should reinforce:
 
 - `main/` as the single local component
-- `logic/`, `ui/`, and `system/` ownership boundaries
+- `core/`, `ui/`, and `integration/` ownership boundaries
 - `blusys::app` as the only recommended product-facing API
 
 Internal structure for the edge node (headless-first):
@@ -261,13 +261,13 @@ examples/quickstart/edge_node/
 └── main/
     ├── CMakeLists.txt
     ├── idf_component.yml
-    ├── logic/
+    ├── core/
     │   ├── state.hpp
     │   ├── actions.hpp
     │   └── reducer.cpp
     ├── ui/
     │   └── (minimal or empty for headless-first)
-    └── system/
+    └── integration/
         ├── capabilities.hpp
         ├── event_bridge.cpp
         └── main.cpp
@@ -283,14 +283,14 @@ examples/reference/gateway/
 └── main/
     ├── CMakeLists.txt
     ├── idf_component.yml
-    ├── logic/
+    ├── core/
     │   ├── state.hpp
     │   ├── actions.hpp
     │   └── reducer.cpp
     ├── ui/
     │   ├── dashboard_screen.cpp  (optional interactive variant)
     │   └── screens.hpp
-    └── system/
+    └── integration/
         ├── capabilities.hpp
         ├── event_bridge.cpp
         └── main.cpp

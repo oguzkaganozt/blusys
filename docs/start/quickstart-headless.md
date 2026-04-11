@@ -42,12 +42,12 @@ my_sensor/
   CMakeLists.txt       — bakes BLUSYS_BUILD_UI=OFF and project name
   sdkconfig.defaults
   main/
-    CMakeLists.txt     — idf_component_register listing logic + system
+    CMakeLists.txt     — idf_component_register listing core + integration
     idf_component.yml
-    logic/
-      app_logic.hpp    — State, Action, update(), on_tick() declarations
-      app_logic.cpp    — reducer and tick hook implementation
-    system/
+    core/
+      app.hpp          — State, Action, update(), on_tick() declarations
+      app.cpp          — reducer and tick hook implementation
+    integration/
       app_main.cpp     — app_spec wiring + BLUSYS_APP_MAIN_HEADLESS(spec) macro
   host/
     CMakeLists.txt     — standalone PC build

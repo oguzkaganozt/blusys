@@ -180,28 +180,29 @@ my_project/
 └── main/
     ├── CMakeLists.txt
     ├── idf_component.yml
-    ├── logic/
+    ├── core/
     ├── ui/
-    └── system/
+    └── integration/
 ```
 
 Folder meanings:
 
-- `logic/` — product state, actions, reducer logic, and business behavior
+- `core/` — product state, actions, reducer logic, and business behavior
 - `ui/` — screens, widgets, theme or identity, and rendering from state
-- `system/` — entrypoint wiring, selected profile, capability setup, runtime-service integration, and mapping system events into app actions
+- `integration/` — entrypoint wiring, selected profile, capability setup, runtime-service integration, and mapping external events into app actions
 
 Directory ownership rules:
 
-- `logic/` owns product behavior and should not own direct runtime-service wiring
+- `core/` owns product behavior and should not own direct runtime-service wiring
 - `ui/` renders from state and dispatches actions, but should not call runtime services directly
-- `system/` owns setup, wiring, bridges, and runtime integration, but should not become the home of product behavior
+- `integration/` owns setup, wiring, bridges, and runtime integration, but should not become the home of product behavior
+- `integration/` should stay thin and mostly contain assembly code
 
 ### Build Model
 
 Scaffolded product apps should use `main/` as the single local ESP-IDF component.
 
-- `main/CMakeLists.txt` compiles the files under `logic/`, `ui/`, and `system/`
+- `main/CMakeLists.txt` compiles the files under `core/`, `ui/`, and `integration/`
 - `main/idf_component.yml` remains the place where platform components are pulled in through the managed component flow
 - the separate local `app/` component model is not part of the canonical scaffold path
 
@@ -231,12 +232,12 @@ Every framework capability must follow one standard contract.
 Required shape:
 
 - each capability has a clear data-only configuration struct
-- each capability is composed in `system/`, not in `logic/` or `ui/`
-- framework or system wiring owns capability lifecycle and runtime-service integration
+- each capability is composed in `integration/`, not in `core/` or `ui/`
+- framework or integration wiring owns capability lifecycle and runtime-service integration
 - capability status is queryable through a consistent app-facing mechanism
-- product logic requests capability work through reducer-driven actions; `system/` translates those actions into capability calls
-- capability events are mapped into app actions in `system/`
-- `logic/` reacts to those actions in the reducer and owns product behavior
+- product logic requests capability work through reducer-driven actions; `integration/` translates those actions into capability calls
+- capability events are mapped into app actions in `integration/`
+- `core/` reacts to those actions in the reducer and owns product behavior
 - `ui/` renders from state and dispatches actions, but does not call runtime services directly
 - capabilities may expose advanced escape hatches, but the recommended path stays reducer- and event-driven
 
@@ -388,7 +389,7 @@ Required capabilities:
 - `blusys create` generates a runnable host-first interactive product by default
 - headless scaffold is equally first-class
 - generated glue is clearly separated from user-owned product logic
-- generated projects use the fixed `logic/`, `ui/`, and `system/` structure
+- generated projects use the fixed `core/`, `ui/`, and `integration/` structure
 - scaffold templates live as real files, not inline heredocs inside a large script
 - the first-run path uses the new app model only
 
@@ -483,7 +484,7 @@ Developer experience metrics:
 - over-designing the new app layer instead of keeping it minimal
 - building a cleaner framework that is still too generic for our real product work
 - allowing raw LVGL or raw runtime services to leak back into the default path
-- allowing `system/` to become a junk drawer for business logic
+- allowing `integration/` to become a junk drawer for business logic
 - carrying old and new product paths in parallel for too long
 - delaying the scaffold and docs cutover until after too many lower-level changes pile up
 
@@ -503,6 +504,6 @@ The reset is ready for cutover when:
 - interactive and headless quickstarts both use the new app model
 - the generic SPI ST7735 profile exists and builds on all three targets
 - the scaffold and getting-started flow use the new model
-- the default scaffold uses `main/` as the single local component and the fixed `logic/`, `ui/`, `system/` structure
+- the default scaffold uses `main/` as the single local component and the fixed `core/`, `ui/`, `integration/` structure
 - the product-facing language has cut over from `bundles` to `capabilities`
 - the platform clearly supports the four canonical archetypes through shared app and operating flows

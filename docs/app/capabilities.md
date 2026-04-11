@@ -7,7 +7,7 @@ Capabilities provide higher-level product flows so apps stop assembling low-leve
 Every capability:
 
 1. Is configured with a plain config struct
-2. Is declared in `system/` and passed to `app_spec.capabilities`
+2. Is declared in `integration/` and passed to `app_spec.capabilities`
 3. Notifies the app of state changes by posting framework integration events
 4. Is queried via `app_ctx` after initialization
 
@@ -44,7 +44,7 @@ blusys::app::connectivity_config conn_cfg{
 };
 ```
 
-### Wiring (in `system/app_main.cpp`)
+### Wiring (in `integration/app_main.cpp`)
 
 ```cpp
 #include "blusys/app/capabilities/connectivity.hpp"

@@ -38,7 +38,7 @@ The following decisions are already locked by `PRD.md` and must not be reopened 
 - canonical interactive hardware profile remains generic SPI ST7735
 - UI outward behavior goes through actions and approved framework behavior only
 - raw LVGL is allowed only inside custom widget implementations or explicit bounded custom view scope
-- scaffold and product structure stay `main/`, `logic/`, `ui/`, and `system/`
+- scaffold and product structure stay `main/`, `core/`, `ui/`, and `integration/`
 
 ## Current Repo Baseline
 
@@ -125,9 +125,9 @@ Recommended scope:
 
 Implementation rules:
 
-- keep product behavior in `logic/`
+- keep product behavior in `core/`
 - keep rendering and widgets in `ui/`
-- keep capability setup and integration in `system/`
+- keep capability setup and integration in `integration/`
 - use stock widgets and approved custom widgets only where necessary
 - use framework shell and navigation ownership rather than custom routing
 - use reducer actions for all user-visible behavior changes
@@ -196,7 +196,7 @@ Selection rule:
 Each archetype app should still reinforce:
 
 - `main/` as the single local component
-- `logic/`, `ui/`, and `system/` ownership boundaries
+- `core/`, `ui/`, and `integration/` ownership boundaries
 - `blusys::app` as the only recommended product-facing API
 
 ## Milestone Order

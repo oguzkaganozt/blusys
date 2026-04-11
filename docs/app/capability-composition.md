@@ -1,13 +1,13 @@
 # Capability Composition
 
-Capabilities are composed in `system/` and translated into app actions.
+Capabilities are composed in `integration/` and translated into app actions.
 
 ## Composition Rules
 
-- keep capability config in `system/`
-- keep product decisions in `logic/`
+- keep capability config in `integration/`
+- keep product decisions in `core/`
 - keep rendering in `ui/`
-- map capability events into reducer actions in `system/`
+- map capability events into reducer actions in `integration/`
 - query capability status through `app_ctx` or the app-facing status bridge
 
 ## Typical Stacks
@@ -45,4 +45,4 @@ Capabilities are composed in `system/` and translated into app actions.
 ## Rule Of Thumb
 
 If a capability changes app behavior, emit an action.
-If it only wires runtime services, keep it in `system/`.
+If it only wires runtime services, keep it in `integration/`.

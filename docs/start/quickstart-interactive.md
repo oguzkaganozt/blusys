@@ -29,7 +29,7 @@ The app launches in a host SDL2 window with the default theme. Arrow keys move f
 The scaffold generates a host-first interactive app with:
 
 - framework-owned boot, LVGL lifecycle, shell, and focus wiring
-- the canonical `logic/`, `ui/`, and `system/` product structure
+- the canonical `core/`, `ui/`, and `integration/` product structure
 - a reducer-owned control flow that can be retargeted to host or ST7735 device profiles
 
 If you want a concrete product-shaped reference immediately, start from:
@@ -44,14 +44,14 @@ my_product/
   CMakeLists.txt       — bakes BLUSYS_BUILD_UI=ON and project name
   sdkconfig.defaults
   main/
-    CMakeLists.txt     — idf_component_register listing all three layers
+    CMakeLists.txt     — idf_component_register listing core, ui, and integration
     idf_component.yml
-    logic/
-      app_logic.hpp    — State, Action, update(), map_intent() declarations
-      app_logic.cpp    — reducer implementation
+    core/
+      app.hpp          — State, Action, update() declarations
+      app.cpp          — reducer implementation
     ui/
-      app_ui.cpp       — on_init(): screen composition with stock widgets
-    system/
+      app_ui.cpp       — screen composition with stock widgets
+    integration/
       app_main.cpp     — app_spec wiring + BLUSYS_APP_MAIN_HOST(spec) macro
   host/
     CMakeLists.txt     — standalone PC build (cmake -S host -B build-host)

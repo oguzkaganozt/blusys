@@ -65,9 +65,9 @@ Canonical example:
 
 All four archetypes keep the same ownership rules:
 
-- `logic/` owns state, actions, and reducer behavior
+- `core/` owns state, actions, and reducer behavior
 - `ui/` owns screens and rendering
-- `system/` owns capabilities, profiles, and wiring
+- `integration/` owns capabilities, profiles, and wiring
 
 All four also keep the same runtime model:
 
