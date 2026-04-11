@@ -3,7 +3,7 @@
 // Same reducer logic as the device connected_headless example, with
 // simulated connectivity and storage capabilities. The host stubs post
 // integration events on the first poll so the reducer exercises the same
-// bridge as on-device (Phase 4).
+// bridge as on-device.
 
 #include "blusys/app/app.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"

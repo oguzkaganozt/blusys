@@ -14,7 +14,7 @@ menu "Gateway Example"
 
 endmenu
 
-menu "Gateway (Phase 7 display)"
+menu "Gateway (display)"
 
 choice BLUSYS_GW_DISPLAY_PROFILE
     prompt "Local operator display profile"

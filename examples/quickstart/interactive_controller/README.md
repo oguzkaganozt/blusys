@@ -1,6 +1,6 @@
 # Interactive controller (primary archetype reference)
 
-Forkable **interactive controller** reference for Phase 5: compact, tactile, encoder-first control on the shared `blusys::app` model.
+Forkable **interactive controller** reference: compact, tactile, encoder-first control on the shared `blusys::app` model.
 
 ## Locked brief
 

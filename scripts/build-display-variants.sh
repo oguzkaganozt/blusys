@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
-    printf 'Usage: build-phase7-variants.sh <target>\n' >&2
+    printf 'Usage: build-display-variants.sh <target>\n' >&2
     exit 2
 fi
 
@@ -47,7 +47,7 @@ build_variant() {
             build; then
         printf 'OK\n'
     else
-        printf '::error::Phase 7 variant build failed: %s\n' "$label"
+        printf '::error::Display variant build failed: %s\n' "$label"
         printf '::endgroup::\n'
         return 1
     fi
@@ -72,24 +72,24 @@ edge_fragment="$(make_fragment \
 
 build_variant \
     "$REPO_ROOT/examples/quickstart/interactive_controller" \
-    "build-$TARGET-phase7-st7789" \
+    "build-$TARGET-display-st7789" \
     "$controller_fragment" \
     "interactive_controller $TARGET ST7789"
 
 build_variant \
     "$REPO_ROOT/examples/reference/interactive_panel" \
-    "build-$TARGET-phase7-ili9488" \
+    "build-$TARGET-display-ili9488" \
     "$panel_fragment" \
     "interactive_panel $TARGET ILI9488"
 
 build_variant \
     "$REPO_ROOT/examples/reference/gateway" \
-    "build-$TARGET-phase7-ili9488" \
+    "build-$TARGET-display-ili9488" \
     "$gateway_fragment" \
     "gateway $TARGET ILI9488"
 
 build_variant \
     "$REPO_ROOT/examples/quickstart/edge_node" \
-    "build-$TARGET-phase7-local-ui" \
+    "build-$TARGET-display-local-ui" \
     "$edge_fragment" \
     "edge_node $TARGET SSD1306 local UI"

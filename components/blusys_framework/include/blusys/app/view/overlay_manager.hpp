@@ -12,7 +12,7 @@
 namespace blusys::app::view {
 
 // Manages overlay widgets and applies route commands (show_overlay / hide_overlay)
-// to real LVGL overlay handles. Replaces the Phase 1 logging-only route sink.
+// to real LVGL overlay handles. Replaces the earlier logging-only route sink.
 //
 // Products register overlays by ID during on_init. When the reducer calls
 // ctx.show_overlay(id) or ctx.hide_overlay(id), the route command flows

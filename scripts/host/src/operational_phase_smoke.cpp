@@ -1,5 +1,5 @@
 // operational_phase_smoke — host-only assertions for the edge-node-style
-// operational phase machine (Phase 4 validation). Keeps logic aligned with
+// operational phase machine. Keeps logic aligned with
 // examples/quickstart/edge_node/main/core/app_logic.cpp compute_phase().
 
 #include <cstdint>

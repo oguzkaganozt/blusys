@@ -1,7 +1,7 @@
-// app_interactive_demo — Phase 2 blusys::app interactive consumer device.
+// app_interactive_demo — blusys::app interactive consumer device.
 //
 // A volume control product demonstrating the full blusys::app model
-// with the Phase 2 view layer:
+// with the framework view layer:
 //   - action-bound widgets (no callback boilerplate)
 //   - page helper (no manual screen/col/focus wiring)
 //   - overlay manager (route commands actually show/hide overlays)

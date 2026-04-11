@@ -1,4 +1,4 @@
-// scripts/host/src/widget_kit_demo.cpp — Phase 9 framework bridge demo.
+// scripts/host/src/widget_kit_demo.cpp — framework bridge demo.
 //
 // Opens an SDL2 window via LVGL's bundled SDL display driver, just like
 // `hello_lvgl`, but builds the screen through the blusys framework's
@@ -11,7 +11,7 @@
 //      require flashing hardware — product designers can tweak the
 //      theme tokens here and see the result in seconds.
 //   3. Exercise the full spine (runtime → controller → route sink)
-//      end-to-end on host so Phase 9 stage-1 (PC + LVGL + SDL2) has
+//      end-to-end on host (PC + LVGL + SDL2) so CI and local dev have
 //      a concrete artifact. The screen has three buttons that post
 //      `intent::decrement`, `intent::increment`, and `intent::confirm`
 //      to a runtime, and a small controller mutates the slider /

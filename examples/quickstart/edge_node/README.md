@@ -1,6 +1,6 @@
 # Edge node (quickstart)
 
-Primary **Phase 6** connected archetype reference: headless-first connected product with provisioning, connectivity, telemetry, diagnostics, OTA, and storage — all through `blusys::app` capabilities and a reducer-driven operational phase machine.
+Primary **connected archetype** reference: headless-first connected product with provisioning, connectivity, telemetry, diagnostics, OTA, and storage — all through `blusys::app` capabilities and a reducer-driven operational phase machine.
 
 ## Layout
 

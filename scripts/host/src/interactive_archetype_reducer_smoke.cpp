@@ -1,5 +1,5 @@
 // interactive_archetype_reducer_smoke — host-only assertions using the same
-// clamp_percent helper as the Phase 5 interactive archetype examples
+// clamp_percent helper as the interactive archetype examples
 // (`examples/include/blusys_examples/archetype_percent.hpp`).
 
 #include "blusys_examples/archetype_percent.hpp"

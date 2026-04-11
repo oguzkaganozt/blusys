@@ -15,7 +15,7 @@
 
 ## Display targets
 
-Device builds default to **ILI9341** or **ILI9488** (see `main/Kconfig.projbuild`) for medium/large panels; host SDL matches via `BLUSYS_IP_HOST_DISPLAY_PROFILE`. This is separate from the canonical ST7735 **controller** path in Phase 5 validation.
+Device builds default to **ILI9341** or **ILI9488** (see `main/Kconfig.projbuild`) for medium/large panels; host SDL matches via `BLUSYS_IP_HOST_DISPLAY_PROFILE`. This is separate from the canonical ST7735 **controller** path used by the interactive controller quickstart.
 
 ## Layout
 

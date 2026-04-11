@@ -1,4 +1,4 @@
-# scripts/host — PC + SDL2 host harness for Phase 4.5 + Phase 9.
+# scripts/host — PC + SDL2 host harness.
 #
 # Builds LVGL against SDL2 on Linux so the Blusys widget kit can be
 # iterated against without flashing hardware on every change. The
@@ -7,8 +7,8 @@
 # resolving to v9.2.2 — see examples/framework_*/dependencies.lock).
 #
 # Two executables:
-#   hello_lvgl        — Phase 4.5 LVGL-only smoke test.
-#   widget_kit_demo   — Phase 9 framework bridge: compiles the full
+#   hello_lvgl        — LVGL-only smoke test.
+#   widget_kit_demo   — framework bridge: compiles the full
 #                       blusys_framework C++ surface (core spine +
 #                       widget kit) against the host LVGL + SDL2 and
 #                       exercises the V1 widgets through the same
@@ -84,7 +84,7 @@ set_property(TARGET lvgl PROPERTY SOURCES ${_lvgl_sources})
 # so downstream targets like hello_lvgl get them transitively.
 target_link_libraries(lvgl PUBLIC PkgConfig::SDL2)
 
-# ── blusys_framework bridge (Phase 9) ────────────────────────────────────────
+# ── blusys_framework bridge ───────────────────────────────────────────────────
 #
 # Compiles the framework C++ sources + the small C dependency they
 # need from the HAL component (`blusys_err_string`) into a single
@@ -171,7 +171,7 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/transition.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/input/focus_scope.cpp
 
-    # Phase 4 — shared operational flows
+    # Shared operational flows
     ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/boot.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/loading.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/error.cpp
@@ -182,7 +182,7 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/connectivity_flow.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/diagnostics_flow.cpp
 
-    # Phase 4 — stock product screens
+    # Stock product screens
     ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/about_screen.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/status_screen.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/diagnostics_screen.cpp
@@ -213,12 +213,12 @@ target_compile_options(blusys_framework_host PRIVATE
 target_link_libraries(blusys_framework_host PUBLIC lvgl)
 target_compile_definitions(blusys_framework_host PUBLIC BLUSYS_FRAMEWORK_HAS_UI=1)
 
-# ── hello_lvgl smoke test (Phase 4.5) ────────────────────────────────────────
+# ── hello_lvgl smoke test ───────────────────────────────────────────────────
 add_executable(hello_lvgl src/hello_lvgl.c)
 target_link_libraries(hello_lvgl PRIVATE lvgl PkgConfig::SDL2 m)
 target_compile_options(hello_lvgl PRIVATE -Wall -Wextra)
 
-# ── widget_kit_demo (Phase 9) ────────────────────────────────────────────────
+# ── widget_kit_demo ───────────────────────────────────────────────────────────
 #
 # Same LVGL + SDL2 stack as hello_lvgl, but the screen is built with
 # `blusys::ui::screen_create` / `col_create` / `button_create` /
@@ -240,7 +240,7 @@ target_compile_options(widget_kit_demo PRIVATE
     -Wextra
 )
 
-# ── app_interactive_demo (Phase 1 — blusys::app interactive consumer) ────────
+# ── app_interactive_demo (blusys::app interactive consumer) ───────────────────
 add_executable(app_interactive_demo
     src/app_interactive_demo.cpp
     src/app_host_platform.cpp
@@ -258,7 +258,7 @@ target_compile_options(app_interactive_demo PRIVATE
     -Wextra
 )
 
-# ── app_headless_demo (Phase 1 — blusys::app headless sensor node) ───────────
+# ── app_headless_demo (blusys::app headless sensor node) ────────────────────
 add_executable(app_headless_demo
     src/app_headless_demo.cpp
     src/app_headless_platform.cpp
@@ -278,7 +278,7 @@ target_compile_options(app_headless_demo PRIVATE
 # Prevent SDL from hijacking main() — the headless path owns its own entry.
 target_compile_definitions(app_headless_demo PRIVATE SDL_MAIN_HANDLED)
 
-# ── theme_presets_smoke (Phase 1 — preset + visual feedback token sanity) ───
+# ── theme_presets_smoke (preset + visual feedback token sanity) ──────────────
 add_executable(theme_presets_smoke src/theme_presets_smoke.cpp)
 target_link_libraries(theme_presets_smoke PRIVATE
     blusys_framework_host
@@ -293,7 +293,7 @@ target_compile_options(theme_presets_smoke PRIVATE
     -Wextra
 )
 
-# ── connected_headless_host (Phase 4 — connected product on host) ───────────
+# ── connected_headless_host (connected product on host) ─────────────────────
 #
 # Exercises the connectivity and storage capability host stubs through the
 # same reducer event flow used on device. Proves the full capability
@@ -316,7 +316,7 @@ target_compile_options(connected_headless_host PRIVATE
 )
 target_compile_definitions(connected_headless_host PRIVATE SDL_MAIN_HANDLED)
 
-# ── capability_contract_smoke (Phase 4 — enum range sanity) ───────────────────
+# ── capability_contract_smoke (enum range sanity) ─────────────────────────────
 add_executable(capability_contract_smoke src/capability_contract_smoke.cpp)
 target_include_directories(capability_contract_smoke PRIVATE
     ${BLUSYS_COMPONENT_DIR}/include
@@ -331,14 +331,14 @@ target_compile_options(capability_contract_smoke PRIVATE
     -Wextra
 )
 
-# ── operational_phase_smoke (Phase 4 — edge-node phase machine parity) ────────
+# ── operational_phase_smoke (edge-node operational phase machine parity) ─────
 add_executable(operational_phase_smoke src/operational_phase_smoke.cpp)
 target_compile_options(operational_phase_smoke PRIVATE
     -Wall
     -Wextra
 )
 
-# ── interactive_archetype_reducer_smoke (Phase 5 — shared clamp_percent) ───────
+# ── interactive_archetype_reducer_smoke (shared clamp_percent) ───────────────
 add_executable(interactive_archetype_reducer_smoke src/interactive_archetype_reducer_smoke.cpp)
 target_include_directories(interactive_archetype_reducer_smoke PRIVATE
     ${BLUSYS_REPO_ROOT}/examples/include
@@ -348,7 +348,7 @@ target_compile_options(interactive_archetype_reducer_smoke PRIVATE
     -Wextra
 )
 
-# ── panel_connectivity_map_smoke (Phase 5 — panel map_event connectivity band) ─
+# ── panel_connectivity_map_smoke (panel map_event connectivity band) ──────────
 add_executable(panel_connectivity_map_smoke src/panel_connectivity_map_smoke.cpp)
 target_include_directories(panel_connectivity_map_smoke PRIVATE
     ${BLUSYS_REPO_ROOT}/examples/include

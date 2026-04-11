@@ -1,4 +1,4 @@
-// app_headless_demo — Phase 1 blusys::app headless sensor node.
+// app_headless_demo — blusys::app headless sensor node.
 //
 // A temperature monitoring product that demonstrates the headless path:
 //   - same app_spec / update() model as the interactive demo

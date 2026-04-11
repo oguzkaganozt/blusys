@@ -1,11 +1,11 @@
-// framework_device_basic — Phase 3 canonical device quickstart.
+// framework_device_basic — canonical device quickstart.
 //
 // The same volume control app as the host interactive demo
 // (scripts/host/src/app_interactive_demo.cpp), running on a real
 // ESP32 + ST7735 panel via BLUSYS_APP_MAIN_DEVICE. The app code is
 // identical — only the entry macro and profile differ.
 //
-// This validates the Phase 3 exit criterion: the same blusys::app
+// This validates that the same blusys::app
 // model works on host, headless, and device targets.
 
 #include "blusys/app/app.hpp"

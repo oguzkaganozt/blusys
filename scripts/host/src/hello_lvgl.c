@@ -1,5 +1,5 @@
 /*
- * scripts/host/src/hello_lvgl.c — Phase 4.5 smoke test.
+ * scripts/host/src/hello_lvgl.c — LVGL-only smoke test.
  *
  * Opens a single SDL2 window via LVGL's bundled SDL display driver,
  * draws a centered rounded rectangle using a small inline theme that
@@ -42,7 +42,7 @@ static void build_demo_screen(void)
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 24);
 
     /* Centered rounded card — the canonical "hello LVGL" rectangle
-     * required by the Phase 4.5 done-when criterion. */
+     * used as the canonical “hello LVGL” card on host. */
     lv_obj_t *card = lv_obj_create(screen);
     lv_obj_set_size(card, 240, 120);
     lv_obj_align(card, LV_ALIGN_CENTER, 0, 0);

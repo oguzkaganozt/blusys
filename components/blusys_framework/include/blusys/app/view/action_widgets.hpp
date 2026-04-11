@@ -92,7 +92,7 @@ action_dispatch_slot *make_action_slot(const Action &action, app_ctx *ctx)
 // ---- action-bound button ----
 //
 // Dispatches the given action through app_ctx on press.
-// Eliminates the DispatchBridge boilerplate from Phase 1.
+// Eliminates the DispatchBridge boilerplate from the early interactive path.
 
 template <typename Action>
 lv_obj_t *button(lv_obj_t *parent,
@@ -259,7 +259,7 @@ inline lv_obj_t *row(lv_obj_t *parent, int gap = -1, int padding = 0)
     });
 }
 
-// ---- Phase 3: passive display convenience wrappers (no action slots) ----
+// ---- passive display convenience wrappers (no action slots) ----
 
 inline lv_obj_t *progress(lv_obj_t *parent, int32_t min = 0, int32_t max = 100,
                           int32_t initial = 0, const char *lbl = nullptr,
@@ -353,7 +353,7 @@ inline lv_obj_t *chart(lv_obj_t *parent,
     });
 }
 
-// ---- Phase 3: action-bound interactive wrappers ----
+// ---- action-bound interactive wrappers ----
 
 // Action-bound list: calls maker(selected_index) to produce an action.
 template <typename Action>

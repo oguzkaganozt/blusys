@@ -37,7 +37,7 @@ void set_enabled(lv_obj_t *widget, bool enabled);
 // Visibility
 void set_visible(lv_obj_t *widget, bool visible);
 
-// ---- Phase 3 binding helpers ----
+// ---- binding helpers ----
 
 // Progress
 void set_progress(lv_obj_t *progress, std::int32_t value);

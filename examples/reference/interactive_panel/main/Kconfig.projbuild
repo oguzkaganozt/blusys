@@ -14,7 +14,7 @@ menu "Interactive Panel Wi-Fi"
 
 endmenu
 
-menu "Interactive Panel (Phase 7 display)"
+menu "Interactive Panel (display)"
 
 choice BLUSYS_IP_DISPLAY_PROFILE
     prompt "Device display profile"

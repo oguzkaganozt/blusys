@@ -1,6 +1,6 @@
-// framework_app_basic — end-to-end Phase 6 validation.
+// framework_app_basic — end-to-end framework spine validation.
 //
-// Closes the Phase 6 "done when" criterion: a sample app that runs
+// Demonstrates a sample app that runs
 // the full chain from input → intent → controller → route command →
 // screen update → feedback. Encoder hardware is intentionally not
 // involved (no QEMU encoder driver) — the example uses three

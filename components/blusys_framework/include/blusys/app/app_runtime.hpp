@@ -101,7 +101,7 @@ protected:
 
 namespace detail {
 
-// ---- logging route sink (Phase 1 — logs route commands) ----
+// ---- logging route sink (logs route commands) ----
 
 class default_route_sink final : public blusys::framework::route_sink {
 public:

@@ -1,6 +1,6 @@
 // framework_encoder_basic — real lv_indev_t encoder traversal end-to-end.
 //
-// Closes the fourth scenario in the Phase 8 framework example matrix:
+// Fourth scenario in the framework example set:
 // a real LVGL encoder input device wired into the framework's encoder
 // helpers, driving focus traversal and activation across the V1 widget
 // kit. The other three framework examples cover spine in isolation

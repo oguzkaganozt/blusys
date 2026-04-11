@@ -1,6 +1,6 @@
 # Gateway / controller (reference)
 
-Secondary **Phase 6** connected archetype: coordinator-style product with the same capability stack as [edge node](../../quickstart/edge_node/README.md), plus an operator-oriented shell and dashboard (stock screens, `operational_light` theme).
+Secondary **connected archetype** (coordinator-style): same capability stack as [edge node](../../quickstart/edge_node/README.md), plus an operator-oriented shell and dashboard (stock screens, `operational_light` theme).
 
 ## Layout
 

@@ -1,4 +1,4 @@
-menu "Interactive Controller (Phase 7 display)"
+menu "Interactive Controller (display)"
 
 choice BLUSYS_IC_DISPLAY_PROFILE
     prompt "Device display profile"

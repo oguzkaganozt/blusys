@@ -54,7 +54,7 @@ struct shell_tab_item {
 //
 // Tab bar (shell chrome) vs in-page tabs: shell tabs are top-level section
 // switches (same stack, `navigate_to` per tab). The stock `tabs` widget
-// (Phase 3) is for content inside a single screen — do not mix the two roles.
+// is for content inside a single screen — do not mix the two roles.
 struct shell {
     lv_obj_t *root         = nullptr; // the real lv_screen
     lv_obj_t *header       = nullptr; // persistent header (nullptr if disabled)

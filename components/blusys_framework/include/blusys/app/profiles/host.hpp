@@ -3,7 +3,7 @@
 // Host platform profile for blusys::app products.
 //
 // Names the implicit configuration that BLUSYS_APP_MAIN_HOST already
-// uses. Useful for Phase 5 scaffold uniformity and for products that
+// uses. Useful for scaffold uniformity and for products that
 // want to customise the host window size or title.
 
 namespace blusys::app::profiles {
