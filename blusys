@@ -10,6 +10,10 @@ BLUSYS_DEFAULT_PROJECT="."
 BLUSYS_MIN_IDF_MAJOR=5
 BLUSYS_MIN_IDF_MINOR=5
 
+# Pin for `blusys create` generated main/idf_component.yml (all three tiers same tag).
+# Override when testing against a fork or pre-release: BLUSYS_SCAFFOLD_PLATFORM_VERSION=v7.x ...
+BLUSYS_SCAFFOLD_PLATFORM_VERSION="${BLUSYS_SCAFFOLD_PLATFORM_VERSION:-v7.0.0}"
+
 BLUSYS_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/blusys"
 BLUSYS_CONFIG_FILE="$BLUSYS_CONFIG_DIR/config"
 
@@ -447,8 +451,10 @@ blusys_help_create() {
     printf '  --starter <type>    legacy mode alias (interactive|headless)\n'
     printf '\nIf path is given, creates the project there; otherwise uses the current directory.\n'
     printf 'Asks before overwriting existing files.\n'
-    printf '\nGenerates the fixed product layout: top-level + main/logic + main/ui + main/system.\n'
+    printf '\nGenerates the fixed product layout: top-level + main/core + main/ui + main/integration.\n'
     printf 'Platform components are pulled via main/idf_component.yml.\n'
+    printf '\nEnvironment:\n'
+    printf '  BLUSYS_SCAFFOLD_PLATFORM_VERSION   git tag for blusys_* deps (default: v7.0.0)\n'
 }
 
 blusys_help_build() {
@@ -744,9 +750,9 @@ cmd_create() {
         main/CMakeLists.txt \
         main/idf_component.yml \
         main/Kconfig.projbuild \
-        main/logic/app_logic.hpp \
+        main/core/app_logic.hpp \
         main/ui/app_ui.cpp \
-        main/system/app_main.cpp \
+        main/integration/app_main.cpp \
         host/CMakeLists.txt; do
         [[ -f "$target_dir/$f" ]] && existing_files+=("$f")
     done
@@ -778,12 +784,28 @@ cmd_create() {
         sed -i "s/${template_host_target}/${project_name}_host/g" "$target_dir/host/CMakeLists.txt"
     fi
 
+    # Replace stub idf_component.yml from in-repo examples with managed git pins
+    # so projects build outside the monorepo (single env-controlled tag).
+    case "$archetype" in
+        interactive-controller|interactive-panel)
+            blusys_create_main_yml_interactive "$target_dir"
+            ;;
+        edge-node)
+            blusys_create_main_yml_headless "$target_dir"
+            ;;
+        gateway-controller)
+            if [[ "$starter_kind" == "interactive" ]]; then
+                blusys_create_main_yml_interactive_mdns "$target_dir"
+            fi
+            ;;
+    esac
+
     if [[ "$archetype" == "gateway-controller" && "$starter_kind" == "headless" ]]; then
         cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
 idf_component_register(
     SRCS
-        "logic/app_logic.cpp"
-        "system/app_main.cpp"
+        "core/app_logic.cpp"
+        "integration/app_main.cpp"
     INCLUDE_DIRS "."
     REQUIRES blusys_framework
 )
@@ -805,9 +827,9 @@ Canonical starter: __ARCHETYPE_LABEL__
 
 ## Layout
 
-- `main/logic/` owns product state and reducer behavior
+- `main/core/` owns product state and reducer behavior
 - `main/ui/` owns screens and rendering when the archetype uses UI
-- `main/system/` owns entry wiring, capabilities, and runtime integration
+- `main/integration/` owns entry wiring, capabilities, and runtime integration
 
 ## Next steps
 
@@ -832,11 +854,11 @@ EOF
     printf '  blusys run                  # build, flash, and monitor\n'
     printf '\n'
     printf 'Product layout:\n'
-    printf '  main/logic/   — State, Action, update() (product behavior)\n'
+    printf '  main/core/   — State, Action, update() (product behavior)\n'
     if [[ "$starter_kind" == "interactive" ]]; then
         printf '  main/ui/      — on_init() and screen composition (rendering)\n'
     fi
-    printf '  main/system/  — app_spec wiring and entry macro\n'
+    printf '  main/integration/  — app_spec wiring and entry macro\n'
 }
 
 # ── cmd_create helpers ──────────────────────────────────────────────────────
@@ -867,13 +889,13 @@ blusys_create_main() {
     local starter="$2"
 
     if [[ "$starter" == "interactive" ]]; then
-        mkdir -p "$target_dir/main/logic" "$target_dir/main/ui" "$target_dir/main/system"
+        mkdir -p "$target_dir/main/core" "$target_dir/main/ui" "$target_dir/main/integration"
         cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
 idf_component_register(
     SRCS
-        "logic/app_logic.cpp"
+        "core/app_logic.cpp"
         "ui/app_ui.cpp"
-        "system/app_main.cpp"
+        "integration/app_main.cpp"
     INCLUDE_DIRS "."
     REQUIRES blusys_framework
 )
@@ -883,12 +905,12 @@ CMAKE
         blusys_create_ui_interactive_controller "$target_dir"
         blusys_create_system_interactive_controller "$target_dir"
     else
-        mkdir -p "$target_dir/main/logic" "$target_dir/main/system"
+        mkdir -p "$target_dir/main/core" "$target_dir/main/integration"
         cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
 idf_component_register(
     SRCS
-        "logic/app_logic.cpp"
-        "system/app_main.cpp"
+        "core/app_logic.cpp"
+        "integration/app_main.cpp"
     INCLUDE_DIRS "."
     REQUIRES blusys_framework
 )
@@ -908,28 +930,30 @@ blusys_create_main_yml_interactive() {
 ## Mixing tiers across versions is not supported (decision 7).
 ##
 ## To test against a local platform checkout instead of the pinned tag,
-## replace `git`/`version`/`path` for each blusys_* dep with:
-##     override_path: "../../path/to/blusys/components/<component>"
+## replace git/version/path for each blusys_* dep with override_path, e.g.:
+##     override_path: "../../path/to/blusys/components/COMPONENT_NAME"
 dependencies:
   idf:
     version: ">=5.5"
 
   blusys:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v7.0.0"
+    version: "__BLUSYS_SCAFFOLD_TAG__"
     path: "components/blusys"
   blusys_services:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v7.0.0"
+    version: "__BLUSYS_SCAFFOLD_TAG__"
     path: "components/blusys_services"
   blusys_framework:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v7.0.0"
+    version: "__BLUSYS_SCAFFOLD_TAG__"
     path: "components/blusys_framework"
 
   lvgl/lvgl:
     version: "~9.2"
 YAML
+    sed -i "s/__BLUSYS_SCAFFOLD_TAG__/${BLUSYS_SCAFFOLD_PLATFORM_VERSION}/g" \
+        "$target_dir/main/idf_component.yml"
 }
 
 blusys_create_main_yml_headless() {
@@ -941,30 +965,74 @@ blusys_create_main_yml_headless() {
 ## Mixing tiers across versions is not supported (decision 7).
 ##
 ## To test against a local platform checkout instead of the pinned tag,
-## replace `git`/`version`/`path` for each blusys_* dep with:
-##     override_path: "../../path/to/blusys/components/<component>"
+## replace git/version/path for each blusys_* dep with override_path, e.g.:
+##     override_path: "../../path/to/blusys/components/COMPONENT_NAME"
 dependencies:
   idf:
     version: ">=5.5"
 
   blusys:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v7.0.0"
+    version: "__BLUSYS_SCAFFOLD_TAG__"
     path: "components/blusys"
   blusys_services:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v7.0.0"
+    version: "__BLUSYS_SCAFFOLD_TAG__"
     path: "components/blusys_services"
   blusys_framework:
     git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "v7.0.0"
+    version: "__BLUSYS_SCAFFOLD_TAG__"
     path: "components/blusys_framework"
+
+  espressif/mdns:
+    version: "*"
 YAML
+    sed -i "s/__BLUSYS_SCAFFOLD_TAG__/${BLUSYS_SCAFFOLD_PLATFORM_VERSION}/g" \
+        "$target_dir/main/idf_component.yml"
+}
+
+# Interactive + managed pins + mDNS (gateway interactive archetype).
+blusys_create_main_yml_interactive_mdns() {
+    local target_dir="$1"
+    cat > "$target_dir/main/idf_component.yml" <<'YAML'
+## Managed dependencies for the blusys platform.
+##
+## All three platform components must be pinned to the SAME release tag.
+## Mixing tiers across versions is not supported (decision 7).
+##
+## To test against a local platform checkout instead of the pinned tag,
+## replace git/version/path for each blusys_* dep with override_path, e.g.:
+##     override_path: "../../path/to/blusys/components/COMPONENT_NAME"
+dependencies:
+  idf:
+    version: ">=5.5"
+
+  espressif/mdns:
+    version: "*"
+
+  blusys:
+    git: "https://github.com/oguzkaganozt/blusys.git"
+    version: "__BLUSYS_SCAFFOLD_TAG__"
+    path: "components/blusys"
+  blusys_services:
+    git: "https://github.com/oguzkaganozt/blusys.git"
+    version: "__BLUSYS_SCAFFOLD_TAG__"
+    path: "components/blusys_services"
+  blusys_framework:
+    git: "https://github.com/oguzkaganozt/blusys.git"
+    version: "__BLUSYS_SCAFFOLD_TAG__"
+    path: "components/blusys_framework"
+
+  lvgl/lvgl:
+    version: "~9.2"
+YAML
+    sed -i "s/__BLUSYS_SCAFFOLD_TAG__/${BLUSYS_SCAFFOLD_PLATFORM_VERSION}/g" \
+        "$target_dir/main/idf_component.yml"
 }
 
 blusys_create_logic_headless() {
     local target_dir="$1"
-    cat > "$target_dir/main/logic/app_logic.hpp" <<'HPP'
+    cat > "$target_dir/main/core/app_logic.hpp" <<'HPP'
 #pragma once
 // State and Action for the headless product.
 // Edit these to define your product's data model and event vocabulary.
@@ -977,7 +1045,7 @@ struct State {
     int tick_count = 0;
 };
 
-// Product actions — dispatched by system/ hooks and capability events.
+// Product actions — dispatched by integration/ hooks and capability events.
 enum class Action {
     periodic_tick,
 };
@@ -987,13 +1055,13 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action);
 void on_tick(blusys::app::app_ctx &ctx, State &state, std::uint32_t now_ms);
 HPP
 
-    cat > "$target_dir/main/logic/app_logic.cpp" <<'CPP'
-// logic/app_logic.cpp — product reducer.
+    cat > "$target_dir/main/core/app_logic.cpp" <<'CPP'
+// core/app_logic.cpp — product reducer.
 //
 // update() is the single entry point for all state transitions.
 // on_tick() runs at the configured tick_period_ms interval.
 
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 #include "blusys/app/app.hpp"
 #include "blusys/log.h"
 
@@ -1018,14 +1086,14 @@ CPP
 
 blusys_create_system_headless() {
     local target_dir="$1"
-    cat > "$target_dir/main/system/app_main.cpp" <<'CPP'
-// system/app_main.cpp — headless product entry point.
+    cat > "$target_dir/main/integration/app_main.cpp" <<'CPP'
+// integration/app_main.cpp — headless product entry point.
 //
 // Wires the reducer, tick hook, and optional capabilities into
 // an app_spec and hands it to the framework runtime.
 // The framework owns the runtime loop — no manual plumbing needed.
 
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 #include "blusys/app/app.hpp"
 
 static const blusys::app::app_spec<State, Action> spec{
@@ -1041,8 +1109,8 @@ CPP
 
 blusys_create_system_gateway_headless() {
     local target_dir="$1"
-    cat > "$target_dir/main/system/app_main.cpp" <<'CPP'
-#include "logic/app_logic.hpp"
+    cat > "$target_dir/main/integration/app_main.cpp" <<'CPP'
+#include "core/app_logic.hpp"
 
 #include "blusys/app/app.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
@@ -1178,7 +1246,7 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     case CE::wifi_disconnected: *out = action{.tag = action_tag::wifi_disconnected}; return true;
     case CE::wifi_reconnecting: *out = action{.tag = action_tag::wifi_reconnecting}; return true;
     case CE::time_synced:       *out = action{.tag = action_tag::time_synced};       return true;
-    case CE::bundle_ready:      *out = action{.tag = action_tag::conn_bundle_ready}; return true;
+    case CE::capability_ready:      *out = action{.tag = action_tag::conn_capability_ready}; return true;
     default: break;
     }
 
@@ -1192,7 +1260,7 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     using DE = blusys::app::diagnostics_event;
     switch (static_cast<DE>(id)) {
     case DE::snapshot_ready: *out = action{.tag = action_tag::diag_snapshot};     return true;
-    case DE::bundle_ready:   *out = action{.tag = action_tag::diag_bundle_ready}; return true;
+    case DE::capability_ready:   *out = action{.tag = action_tag::diag_capability_ready}; return true;
     default: break;
     }
 
@@ -1202,7 +1270,7 @@ bool map_event(std::uint32_t id, std::uint32_t code,
                                                .value = static_cast<std::int32_t>(code)}; return true;
     case OE::apply_complete:    *out = action{.tag = action_tag::ota_apply_complete};    return true;
     case OE::apply_failed:      *out = action{.tag = action_tag::ota_apply_failed};      return true;
-    case OE::bundle_ready:      *out = action{.tag = action_tag::ota_bundle_ready};      return true;
+    case OE::capability_ready:      *out = action{.tag = action_tag::ota_capability_ready};      return true;
     default: break;
     }
 
@@ -1210,13 +1278,13 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     switch (static_cast<PE>(id)) {
     case PE::success:             *out = action{.tag = action_tag::prov_success};      return true;
     case PE::already_provisioned: *out = action{.tag = action_tag::prov_already_done}; return true;
-    case PE::bundle_ready:        *out = action{.tag = action_tag::prov_bundle_ready}; return true;
+    case PE::capability_ready:        *out = action{.tag = action_tag::prov_capability_ready}; return true;
     default: break;
     }
 
     using SE = blusys::app::storage_event;
     switch (static_cast<SE>(id)) {
-    case SE::bundle_ready: *out = action{.tag = action_tag::storage_bundle_ready}; return true;
+    case SE::capability_ready: *out = action{.tag = action_tag::storage_capability_ready}; return true;
     default: break;
     }
 
@@ -1242,7 +1310,7 @@ CPP
 
 blusys_create_logic_interactive() {
     local target_dir="$1"
-    cat > "$target_dir/main/logic/app_logic.hpp" <<'HPP'
+    cat > "$target_dir/main/core/app_logic.hpp" <<'HPP'
 #pragma once
 // State and Action for the interactive product.
 // Edit these to define your product's data model and event vocabulary.
@@ -1267,13 +1335,13 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action);
 bool map_intent(blusys::framework::intent intent, Action *out);
 HPP
 
-    cat > "$target_dir/main/logic/app_logic.cpp" <<'CPP'
-// logic/app_logic.cpp — product reducer.
+    cat > "$target_dir/main/core/app_logic.cpp" <<'CPP'
+// core/app_logic.cpp — product reducer.
 //
 // update() is the single entry point for all state transitions.
 // map_intent() translates encoder/keyboard events into product actions.
 
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 #include "blusys/app/app.hpp"
 #include "blusys/log.h"
 
@@ -1339,7 +1407,7 @@ blusys_create_ui_interactive() {
 // on_init() builds the initial screen. Add more screens by registering
 // them with ctx.screen_router() and navigating with ctx.navigate_to().
 
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 #include "blusys/app/app.hpp"
 #include "blusys/log.h"
 
@@ -1370,8 +1438,8 @@ CPP
 
 blusys_create_system_interactive() {
     local target_dir="$1"
-    cat > "$target_dir/main/system/app_main.cpp" <<'CPP'
-// system/app_main.cpp — interactive product entry point.
+    cat > "$target_dir/main/integration/app_main.cpp" <<'CPP'
+// integration/app_main.cpp — interactive product entry point.
 //
 // Wires State, Action, update(), on_init(), and map_intent() into
 // an app_spec and hands it to the framework runtime.
@@ -1384,7 +1452,7 @@ blusys_create_system_interactive() {
 //   #include "blusys/app/profiles/st7735.hpp"
 //   BLUSYS_APP_MAIN_DEVICE(spec, blusys::app::profiles::st7735_160x128())
 
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 #include "blusys/app/app.hpp"
 
 // on_init is implemented in ui/app_ui.cpp.
@@ -1403,7 +1471,7 @@ CPP
 
 blusys_create_logic_interactive_controller() {
     local target_dir="$1"
-    cat > "$target_dir/main/logic/app_logic.hpp" <<'HPP'
+    cat > "$target_dir/main/core/app_logic.hpp" <<'HPP'
 #pragma once
 
 #include "blusys/app/app.hpp"
@@ -1462,8 +1530,8 @@ bool map_intent(blusys::framework::intent intent, Action *out);
 const char *accent_name(std::int32_t index);
 HPP
 
-    cat > "$target_dir/main/logic/app_logic.cpp" <<'CPP'
-#include "logic/app_logic.hpp"
+    cat > "$target_dir/main/core/app_logic.cpp" <<'CPP'
+#include "core/app_logic.hpp"
 
 #include "blusys/app/flows/provisioning_flow.hpp"
 #include "blusys/app/view/bindings.hpp"
@@ -1484,7 +1552,7 @@ std::int32_t clamp_level(std::int32_t value)
 void sync_ui(State &state)
 {
     if (state.shell_badge != nullptr) {
-        const bool ready = state.provisioning.bundle_ready || state.provisioning.is_provisioned;
+        const bool ready = state.provisioning.capability_ready || state.provisioning.is_provisioned;
         blusys::app::view::set_badge_text(state.shell_badge, ready ? "Ready" : "Setup");
         blusys::app::view::set_badge_level(
             state.shell_badge,
@@ -1585,7 +1653,7 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
 
     case Tag::sync_storage:
         if (const auto *storage = ctx.storage(); storage != nullptr) {
-            state.storage_ready = storage->bundle_ready;
+            state.storage_ready = storage->capability_ready;
         }
         break;
 
@@ -1624,7 +1692,7 @@ CPP
 blusys_create_ui_interactive_controller() {
     local target_dir="$1"
     cat > "$target_dir/main/ui/app_ui.cpp" <<'CPP'
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 #include "blusys/app/app.hpp"
 #include "blusys/app/flows/settings.hpp"
 #include "blusys/app/screens/about_screen.hpp"
@@ -1850,8 +1918,8 @@ CPP
 
 blusys_create_system_interactive_controller() {
     local target_dir="$1"
-    cat > "$target_dir/main/system/app_main.cpp" <<'CPP'
-#include "logic/app_logic.hpp"
+    cat > "$target_dir/main/integration/app_main.cpp" <<'CPP'
+#include "core/app_logic.hpp"
 #include "blusys/app/app.hpp"
 
 constexpr blusys::app::view::shell_config kShellConfig{
@@ -1866,7 +1934,7 @@ void on_init(blusys::app::app_ctx &ctx, State &state);
 bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*/, Action *out)
 {
     switch (id) {
-    case static_cast<std::uint32_t>(blusys::app::storage_event::bundle_ready):
+    case static_cast<std::uint32_t>(blusys::app::storage_event::capability_ready):
         *out = Action{.tag = Tag::sync_storage};
         return true;
     case static_cast<std::uint32_t>(blusys::app::provisioning_event::started):
@@ -1875,7 +1943,7 @@ bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*
     case static_cast<std::uint32_t>(blusys::app::provisioning_event::failed):
     case static_cast<std::uint32_t>(blusys::app::provisioning_event::already_provisioned):
     case static_cast<std::uint32_t>(blusys::app::provisioning_event::reset_complete):
-    case static_cast<std::uint32_t>(blusys::app::provisioning_event::bundle_ready):
+    case static_cast<std::uint32_t>(blusys::app::provisioning_event::capability_ready):
         *out = Action{.tag = Tag::sync_provisioning};
         return true;
     default:
@@ -2055,12 +2123,12 @@ target_compile_options(blusys_framework_host PRIVATE
 target_link_libraries(blusys_framework_host PUBLIC lvgl)
 target_compile_definitions(blusys_framework_host PUBLIC BLUSYS_FRAMEWORK_HAS_UI=1)
 
-# App executable — compiles main/logic/ + main/ui/ + main/system/app_main.cpp
+# App executable — compiles main/core/ + main/ui/ + main/integration/app_main.cpp
 # which uses BLUSYS_APP_MAIN_HOST(spec) to define int main().
 add_executable(BLUSYS_PRODUCT_HOST
-    "${CMAKE_CURRENT_LIST_DIR}/../main/logic/app_logic.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../main/ui/app_ui.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../main/system/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/integration/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_host_platform.cpp"
 )
 target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE
@@ -2138,11 +2206,11 @@ target_compile_options(blusys_framework_core_host PRIVATE
 )
 target_link_libraries(blusys_framework_core_host PUBLIC PkgConfig::SDL2)
 
-# App executable — compiles main/logic/ + main/system/app_main.cpp
+# App executable — compiles main/core/ + main/integration/app_main.cpp
 # which uses BLUSYS_APP_MAIN_HEADLESS(spec) to define int main().
 add_executable(BLUSYS_PRODUCT_HOST
-    "${CMAKE_CURRENT_LIST_DIR}/../main/logic/app_logic.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../main/system/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/integration/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_headless_platform.cpp"
 )
 target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE
@@ -2218,8 +2286,8 @@ target_compile_options(blusys_framework_core_host PRIVATE
 target_link_libraries(blusys_framework_core_host PUBLIC PkgConfig::SDL2)
 
 add_executable(BLUSYS_PRODUCT_HOST
-    "${CMAKE_CURRENT_LIST_DIR}/../main/logic/app_logic.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../main/system/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/integration/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_headless_platform.cpp"
 )
 target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE

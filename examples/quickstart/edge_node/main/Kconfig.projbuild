@@ -17,7 +17,7 @@ menu "Edge Node Example"
         default n
         help
             When enabled, uses BLUSYS_APP_MAIN_DEVICE with a minimal mono status
-            screen (same logic/ and capabilities as headless). Host and headless
+            screen (same core/ and capabilities as headless). Host and headless
             simulator builds stay unchanged.
 
 endmenu

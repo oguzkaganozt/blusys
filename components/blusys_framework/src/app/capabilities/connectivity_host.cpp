@@ -28,7 +28,7 @@ blusys_err_t connectivity_capability::start(blusys::framework::runtime &rt)
         status_.local_ctrl_running = true;
     }
 
-    status_.bundle_ready = true;
+    status_.capability_ready = true;
 
     BLUSYS_LOGI(TAG, "host stub: connectivity ready (simulated)");
     return BLUSYS_OK;
@@ -56,7 +56,7 @@ void connectivity_capability::poll(std::uint32_t /*now_ms*/)
         post_event(connectivity_event::local_ctrl_ready);
     }
 
-    post_event(connectivity_event::bundle_ready);
+    post_event(connectivity_event::capability_ready);
 }
 
 void connectivity_capability::stop()

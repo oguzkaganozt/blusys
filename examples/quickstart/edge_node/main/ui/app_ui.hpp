@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 
 namespace edge_node::ui {
 

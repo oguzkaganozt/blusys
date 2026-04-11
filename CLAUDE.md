@@ -220,7 +220,7 @@ Use these checks proportionally to the change:
 5. `python scripts/example-health.py` when modifying example structure
 6. broader nightly validation only when the touched area warrants it
 
-PR CI only builds curated quickstart examples (ci_pr=true in inventory.yml). Full example validation runs nightly.
+PR CI only builds examples marked `ci_pr=true` in `inventory.yml` (currently the archetype quickstarts). Full example validation runs nightly.
 
 When the refactor changes public app flow, prioritize validating:
 

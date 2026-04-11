@@ -18,7 +18,7 @@ blusys_err_t provisioning_capability::start(blusys::framework::runtime &rt)
 
     // On host, simulate already-provisioned state.
     status_.is_provisioned = true;
-    status_.bundle_ready = true;
+    status_.capability_ready = true;
     std::strncpy(status_.qr_payload,
                  R"({"ver":"v1","name":"HOST_SIM","transport":"ble"})",
                  sizeof(status_.qr_payload) - 1);
@@ -35,7 +35,7 @@ void provisioning_capability::poll(std::uint32_t /*now_ms*/)
     first_poll_ = false;
 
     post_event(provisioning_event::already_provisioned);
-    post_event(provisioning_event::bundle_ready);
+    post_event(provisioning_event::capability_ready);
 }
 
 void provisioning_capability::stop()
@@ -50,7 +50,7 @@ blusys_err_t provisioning_capability::request_reset()
     status_.is_provisioned = false;
     status_.provision_success = false;
     status_.credentials_received = false;
-    status_.bundle_ready = false;
+    status_.capability_ready = false;
     post_event(provisioning_event::reset_complete);
     return BLUSYS_OK;
 }

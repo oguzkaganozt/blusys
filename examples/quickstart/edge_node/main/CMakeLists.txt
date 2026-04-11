@@ -1,6 +1,6 @@
 set(_edge_main_srcs
-    "logic/app_logic.cpp"
-    "system/app_main.cpp"
+    "core/app_logic.cpp"
+    "integration/app_main.cpp"
 )
 if(BLUSYS_BUILD_UI)
     list(APPEND _edge_main_srcs "ui/app_ui.cpp")

@@ -27,7 +27,7 @@ blusys_err_t diagnostics_capability::start(blusys::framework::runtime &rt)
     s.chip_cores = 4;
     s.flash_size = 4 * 1024 * 1024;
 
-    status_.bundle_ready = true;
+    status_.capability_ready = true;
 
     BLUSYS_LOGI(TAG, "host stub: diagnostics ready (simulated)");
     return BLUSYS_OK;
@@ -39,7 +39,7 @@ void diagnostics_capability::poll(std::uint32_t now_ms)
         first_poll_ = false;
         last_snapshot_ms_ = now_ms;
         post_event(diagnostics_event::snapshot_ready);
-        post_event(diagnostics_event::bundle_ready);
+        post_event(diagnostics_event::capability_ready);
         return;
     }
 

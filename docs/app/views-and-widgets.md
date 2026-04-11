@@ -21,6 +21,10 @@ void on_init(blusys::app::app_ctx &ctx, State &state)
 
 `page_create()` accepts an optional `page_config` to set padding, gap, and scrollability.
 
+## Navigation
+
+In `on_init`, register screens with `ctx.screen_router()->register_screen(route_id, create_fn, destroy_fn)` (optionally with lifecycle hooks). Move between screens with `ctx.navigate_to`, `ctx.navigate_push`, `ctx.navigate_replace`, and `ctx.navigate_pop`. Overlays use `ctx.show_overlay` / `ctx.hide_overlay`. The framework owns the route queue, stack, transitions, and focus reattachment after each change — product code does not touch `route_sink` or raw `route_command` values except through `app_ctx`.
+
 ## Stock Widgets
 
 All widget helpers take the parent container as the first argument.

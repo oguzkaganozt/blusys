@@ -48,7 +48,7 @@ blusys_err_t diagnostics_capability::start(blusys::framework::runtime &rt)
     // Collect initial snapshot.
     collect_snapshot();
 
-    // Defer bundle_ready event to first poll.
+    // Defer capability_ready event to first poll.
     first_poll_ = true;
     return BLUSYS_OK;
 }
@@ -58,9 +58,9 @@ void diagnostics_capability::poll(std::uint32_t now_ms)
     if (first_poll_) {
         first_poll_ = false;
         last_snapshot_ms_ = now_ms;
-        status_.bundle_ready = true;
+        status_.capability_ready = true;
         post_event(diagnostics_event::snapshot_ready);
-        post_event(diagnostics_event::bundle_ready);
+        post_event(diagnostics_event::capability_ready);
     }
 
     if (cfg_.snapshot_interval_ms == 0) {

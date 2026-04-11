@@ -147,7 +147,7 @@ void bluetooth_capability::post_event(bluetooth_event ev)
 
 void bluetooth_capability::check_capability_ready()
 {
-    if (status_.bundle_ready) {
+    if (status_.capability_ready) {
         return;
     }
 
@@ -157,8 +157,8 @@ void bluetooth_capability::check_capability_ready()
     }
 
     if (ready) {
-        status_.bundle_ready = true;
-        post_event(bluetooth_event::bundle_ready);
+        status_.capability_ready = true;
+        post_event(bluetooth_event::capability_ready);
         BLUSYS_LOGI(TAG, "bluetooth capability ready");
     }
 }

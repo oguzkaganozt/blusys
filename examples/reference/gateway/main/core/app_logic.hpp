@@ -41,7 +41,7 @@ enum class action_tag : std::uint8_t {
     wifi_disconnected,
     wifi_reconnecting,
     time_synced,
-    conn_bundle_ready,
+    conn_capability_ready,
 
     // telemetry
     telemetry_delivered,
@@ -49,21 +49,21 @@ enum class action_tag : std::uint8_t {
 
     // diagnostics
     diag_snapshot,
-    diag_bundle_ready,
+    diag_capability_ready,
 
     // ota
     ota_download_progress,
     ota_apply_complete,
     ota_apply_failed,
-    ota_bundle_ready,
+    ota_capability_ready,
 
     // provisioning
     prov_success,
     prov_already_done,
-    prov_bundle_ready,
+    prov_capability_ready,
 
     // storage
-    storage_bundle_ready,
+    storage_capability_ready,
 
     // navigation (interactive)
     show_dashboard,

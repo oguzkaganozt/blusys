@@ -2,7 +2,7 @@
 
 // Device platform profile for blusys::app products.
 //
-// A device_profile bundles all hardware configuration needed to bring
+// A device_profile groups all hardware configuration needed to bring
 // up a device target: LCD panel, UI service, and optional encoder
 // input. The device entry path (BLUSYS_APP_MAIN_DEVICE) uses the
 // profile to perform framework-owned display and input bring-up so

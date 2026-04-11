@@ -1,4 +1,4 @@
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 #include "ui/app_ui.hpp"
 
 #include "blusys/app/layout_surface.hpp"
@@ -94,10 +94,10 @@ bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*
 {
     switch (id) {
     case static_cast<std::uint32_t>(blusys::app::diagnostics_event::snapshot_ready):
-    case static_cast<std::uint32_t>(blusys::app::diagnostics_event::bundle_ready):
+    case static_cast<std::uint32_t>(blusys::app::diagnostics_event::capability_ready):
         *out = action{.tag = action_tag::sync_diagnostics};
         return true;
-    case static_cast<std::uint32_t>(blusys::app::storage_event::bundle_ready):
+    case static_cast<std::uint32_t>(blusys::app::storage_event::capability_ready):
         *out = action{.tag = action_tag::sync_storage};
         return true;
     default:

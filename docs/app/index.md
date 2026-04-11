@@ -41,4 +41,6 @@ These are handled by the framework runtime, profiles, and capabilities.
 - [`examples/reference/interactive_panel/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/interactive_panel) --- operational panel reference using the same app runtime and shell
 - [`examples/quickstart/edge_node/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/edge_node) --- headless-first connected archetype
 - [`examples/reference/gateway/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/gateway) --- coordinator/operator archetype with an optional local surface
-- [`examples/quickstart/framework_device_basic/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/framework_device_basic) --- minimal interactive app for framework validation
+- [`examples/reference/framework_device_basic/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/framework_device_basic) --- minimal interactive app for framework validation
+- [`examples/reference/connected_device/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connected_device) --- interactive product with connectivity capabilities
+- [`examples/reference/connected_headless/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connected_headless) --- headless product with connectivity capabilities

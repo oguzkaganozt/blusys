@@ -21,7 +21,7 @@ blusys_err_t storage_capability::start(blusys::framework::runtime &rt)
         status_.fatfs_mounted = true;
     }
 
-    status_.bundle_ready = true;
+    status_.capability_ready = true;
 
     BLUSYS_LOGI(TAG, "host stub: storage ready (simulated)");
     return BLUSYS_OK;
@@ -41,7 +41,7 @@ void storage_capability::poll(std::uint32_t /*now_ms*/)
         post_event(storage_event::fatfs_mounted);
     }
 
-    post_event(storage_event::bundle_ready);
+    post_event(storage_event::capability_ready);
 }
 
 void storage_capability::stop()

@@ -15,7 +15,7 @@ blusys_err_t ota_capability::start(blusys::framework::runtime &rt)
     first_poll_ = true;
 
     status_.marked_valid = true;
-    status_.bundle_ready = true;
+    status_.capability_ready = true;
 
     BLUSYS_LOGI(TAG, "host stub: OTA ready (simulated)");
     return BLUSYS_OK;
@@ -29,7 +29,7 @@ void ota_capability::poll(std::uint32_t /*now_ms*/)
     first_poll_ = false;
 
     post_event(ota_event::marked_valid);
-    post_event(ota_event::bundle_ready);
+    post_event(ota_event::capability_ready);
 }
 
 void ota_capability::stop()

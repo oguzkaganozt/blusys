@@ -26,7 +26,7 @@ enum class bluetooth_event : std::uint32_t {
     client_connected       = 0x0311,
     client_disconnected    = 0x0312,
     characteristic_written = 0x0313,
-    bundle_ready           = 0x03FF,
+    capability_ready           = 0x03FF,
 };
 
 struct bluetooth_status {
@@ -34,7 +34,7 @@ struct bluetooth_status {
     bool    advertising      = false;
     bool    gatt_ready       = false;
     bool    client_connected = false;
-    bool    bundle_ready     = false;
+    bool    capability_ready     = false;
     std::uint8_t connected_count = 0;
 };
 

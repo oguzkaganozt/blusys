@@ -12,9 +12,10 @@ build/flash/host workflow.
 git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
 ~/.blusys/install.sh
 
-# Scaffold a product (interactive controller by default; headless also available)
+# Scaffold a product (interactive controller archetype by default)
 mkdir ~/my_product && cd ~/my_product
-blusys create --starter interactive   # or --starter headless
+blusys create --archetype interactive-controller
+# or: blusys create --archetype edge-node   # headless-first connected archetype
 
 # Build, flash, monitor
 blusys run /dev/ttyACM0 esp32s3
@@ -139,8 +140,8 @@ blusys host-build
 
 Examples are organized into three categories:
 
-- `examples/quickstart/` --- canonical product starters using `blusys::app`
-- `examples/reference/` --- scoped capability demos for specific modules
+- `examples/quickstart/` --- archetype starters (`blusys create` shapes) using `blusys::app`
+- `examples/reference/` --- deeper demos, connectivity examples, and framework validation builds
 - `examples/validation/` --- internal stress tests and smoke tests
 
 See `inventory.yml` for the full classification and CI inclusion flags.

@@ -51,8 +51,8 @@ target_compile_options(blusys_framework_core_host PRIVATE
 target_compile_definitions(blusys_framework_core_host PUBLIC SDL_MAIN_HANDLED)
 
 add_executable(edge_node_host
-    "${CMAKE_CURRENT_LIST_DIR}/../main/logic/app_logic.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../main/system/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/integration/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_headless_platform.cpp"
 )
 target_include_directories(edge_node_host PRIVATE

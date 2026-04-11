@@ -449,19 +449,19 @@ examples:
     ci_nightly: true
 
   - name: connected_device
-    category: quickstart
+    category: reference
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
-    ci_pr: true
+    ci_pr: false
     ci_nightly: true
 
   - name: connected_headless
-    category: quickstart
+    category: reference
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
-    ci_pr: true
+    ci_pr: false
     ci_nightly: true
 
   - name: framework_app_basic
@@ -489,11 +489,11 @@ examples:
     ci_nightly: true
 
   - name: framework_device_basic
-    category: quickstart
+    category: reference
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
-    ci_pr: true
+    ci_pr: false
     ci_nightly: true
 
   # --- Reference (nightly only) ---
@@ -1368,6 +1368,14 @@ docs:
     visibility: public
 
   - path: docs/internals/guidelines.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-0-v7-foundation-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-0-exit.md
     section: internals
     visibility: public
 

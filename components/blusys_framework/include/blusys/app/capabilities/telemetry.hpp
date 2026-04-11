@@ -16,7 +16,7 @@ enum class telemetry_event : std::uint32_t {
     buffer_full     = 0x0601,
     delivery_ok     = 0x0602,
     delivery_failed = 0x0603,
-    bundle_ready    = 0x06FF,
+    capability_ready    = 0x06FF,
 };
 
 struct telemetry_metric {
@@ -29,7 +29,7 @@ struct telemetry_status {
     std::uint16_t buffered_count  = 0;
     std::uint16_t total_delivered = 0;
     std::uint16_t total_failed    = 0;
-    bool          bundle_ready    = false;
+    bool          capability_ready    = false;
 };
 
 // User-provided delivery callback. Called from poll() when the buffer

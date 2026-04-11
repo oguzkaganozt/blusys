@@ -77,7 +77,7 @@ void connectivity_capability::poll(std::uint32_t /*now_ms*/)
     if (flags & kPendingDisconnected) {
         status_.wifi_connected = false;
         status_.has_ip         = false;
-        status_.bundle_ready   = false;
+        status_.capability_ready   = false;
         post_event(connectivity_event::wifi_disconnected);
     }
 
@@ -242,7 +242,7 @@ void connectivity_capability::post_event(connectivity_event ev)
 
 void connectivity_capability::check_capability_ready()
 {
-    if (status_.bundle_ready) {
+    if (status_.capability_ready) {
         return;
     }
 
@@ -259,8 +259,8 @@ void connectivity_capability::check_capability_ready()
     }
 
     if (ready) {
-        status_.bundle_ready = true;
-        post_event(connectivity_event::bundle_ready);
+        status_.capability_ready = true;
+        post_event(connectivity_event::capability_ready);
         BLUSYS_LOGI(TAG, "connectivity capability ready (ip=%s)", status_.ip_info.ip);
     }
 }

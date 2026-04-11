@@ -26,7 +26,7 @@ enum class ota_event : std::uint32_t {
     apply_failed      = 0x0406,
     rollback_pending  = 0x0410,
     marked_valid      = 0x0411,
-    bundle_ready      = 0x04FF,
+    capability_ready      = 0x04FF,
 };
 
 struct ota_status {
@@ -36,7 +36,7 @@ struct ota_status {
     bool    rollback_pending = false;
     bool    marked_valid     = false;
     std::uint8_t progress_pct = 0;
-    bool    bundle_ready     = false;
+    bool    capability_ready     = false;
 };
 
 // ---- device implementation ----
@@ -72,7 +72,7 @@ private:
     static constexpr std::uint32_t kPendingApplyFailed    = 1 << 1;
     static constexpr std::uint32_t kPendingMarkedValid    = 1 << 2;
     static constexpr std::uint32_t kPendingRollback       = 1 << 3;
-    static constexpr std::uint32_t kPendingBundleReady    = 1 << 4;
+    static constexpr std::uint32_t kPendingCapabilityReady    = 1 << 4;
     static constexpr std::uint32_t kPendingDownloadStarted = 1 << 5;
 
     void post_event(ota_event ev);

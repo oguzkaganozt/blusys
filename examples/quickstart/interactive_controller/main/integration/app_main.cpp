@@ -1,4 +1,4 @@
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 #include "ui/app_ui.hpp"
 
 #include "blusys/app/layout_surface.hpp"
@@ -94,7 +94,7 @@ static const blusys::app::view::shell_config kShellConfig = controller_shell_for
 bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*/, action *out)
 {
     switch (id) {
-    case static_cast<std::uint32_t>(blusys::app::storage_event::bundle_ready):
+    case static_cast<std::uint32_t>(blusys::app::storage_event::capability_ready):
         *out = action{.tag = action_tag::sync_storage};
         return true;
     case static_cast<std::uint32_t>(blusys::app::provisioning_event::started):
@@ -103,7 +103,7 @@ bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*
     case static_cast<std::uint32_t>(blusys::app::provisioning_event::failed):
     case static_cast<std::uint32_t>(blusys::app::provisioning_event::already_provisioned):
     case static_cast<std::uint32_t>(blusys::app::provisioning_event::reset_complete):
-    case static_cast<std::uint32_t>(blusys::app::provisioning_event::bundle_ready):
+    case static_cast<std::uint32_t>(blusys::app::provisioning_event::capability_ready):
         *out = action{.tag = action_tag::sync_provisioning};
         return true;
     default:

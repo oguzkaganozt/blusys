@@ -2,9 +2,9 @@
 //
 // Owns capability configuration, event bridge, telemetry recording,
 // and the headless or optional local mono UI entry point.  Product
-// behavior stays in logic/.
+// behavior stays in core/.
 
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
@@ -167,7 +167,7 @@ float drift_sensor(float base, float range, std::uint32_t tick)
 }
 
 // ---- on_tick: sensor sampling and telemetry recording ----
-// Lives in system/ because it needs direct access to the telemetry
+// Lives in integration/ because it needs direct access to the telemetry
 // capability instance for record().
 
 void on_tick(blusys::app::app_ctx & /*ctx*/, app_state &state, std::uint32_t now_ms)
@@ -211,7 +211,7 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     case CE::wifi_disconnected: *out = action{.tag = action_tag::wifi_disconnected}; return true;
     case CE::wifi_reconnecting: *out = action{.tag = action_tag::wifi_reconnecting}; return true;
     case CE::time_synced:       *out = action{.tag = action_tag::time_synced};       return true;
-    case CE::bundle_ready:      *out = action{.tag = action_tag::conn_bundle_ready}; return true;
+    case CE::capability_ready:      *out = action{.tag = action_tag::conn_capability_ready}; return true;
     default: break;
     }
 
@@ -228,7 +228,7 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     using DE = blusys::app::diagnostics_event;
     switch (static_cast<DE>(id)) {
     case DE::snapshot_ready: *out = action{.tag = action_tag::diag_snapshot};     return true;
-    case DE::bundle_ready:   *out = action{.tag = action_tag::diag_bundle_ready}; return true;
+    case DE::capability_ready:   *out = action{.tag = action_tag::diag_capability_ready}; return true;
     default: break;
     }
 
@@ -244,7 +244,7 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     case OE::apply_failed:      *out = action{.tag = action_tag::ota_apply_failed};      return true;
     case OE::rollback_pending:  *out = action{.tag = action_tag::ota_rollback_pending};  return true;
     case OE::marked_valid:      *out = action{.tag = action_tag::ota_marked_valid};      return true;
-    case OE::bundle_ready:      *out = action{.tag = action_tag::ota_bundle_ready};      return true;
+    case OE::capability_ready:      *out = action{.tag = action_tag::ota_capability_ready};      return true;
     default: break;
     }
 
@@ -255,14 +255,14 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     case PE::success:             *out = action{.tag = action_tag::prov_success};     return true;
     case PE::failed:              *out = action{.tag = action_tag::prov_failed};      return true;
     case PE::already_provisioned: *out = action{.tag = action_tag::prov_already_done}; return true;
-    case PE::bundle_ready:        *out = action{.tag = action_tag::prov_bundle_ready}; return true;
+    case PE::capability_ready:        *out = action{.tag = action_tag::prov_capability_ready}; return true;
     default: break;
     }
 
     // Storage events
     using SE = blusys::app::storage_event;
     switch (static_cast<SE>(id)) {
-    case SE::bundle_ready: *out = action{.tag = action_tag::storage_bundle_ready}; return true;
+    case SE::capability_ready: *out = action{.tag = action_tag::storage_capability_ready}; return true;
     default: break;
     }
 

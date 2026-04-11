@@ -32,7 +32,7 @@ enum class connectivity_event : std::uint32_t {
     time_sync_failed    = 0x0111,
     mdns_ready          = 0x0120,
     local_ctrl_ready    = 0x0130,
-    bundle_ready        = 0x01FF,
+    capability_ready        = 0x01FF,
 };
 
 // IP info — mirrors the C struct on device, standalone on host.
@@ -53,7 +53,7 @@ struct connectivity_status {
     bool time_synced        = false;
     bool mdns_running       = false;
     bool local_ctrl_running = false;
-    bool bundle_ready       = false;
+    bool capability_ready       = false;
     connectivity_ip_info ip_info{};
     std::int8_t wifi_rssi   = 0;
 };

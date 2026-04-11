@@ -35,7 +35,7 @@ struct State {
 enum class Tag : std::uint8_t {
     wifi_got_ip,
     wifi_disconnected,
-    bundle_ready,
+    capability_ready,
     brightness_up,
     brightness_down,
     confirm,
@@ -64,7 +64,7 @@ void update(app_ctx &ctx, State &state, const Action &action)
         view::set_text(state.ip_lbl, "---");
         break;
 
-    case Tag::bundle_ready:
+    case Tag::capability_ready:
         state.ready = true;
         view::set_text(state.status_lbl, "Ready");
         BLUSYS_LOGI(kTag, "device ready");
@@ -124,7 +124,7 @@ bool map_event(std::uint32_t id, std::uint32_t /*code*/,
     switch (static_cast<CE>(id)) {
     case CE::wifi_got_ip:       *out = Action{.tag = Tag::wifi_got_ip};      return true;
     case CE::wifi_disconnected: *out = Action{.tag = Tag::wifi_disconnected}; return true;
-    case CE::bundle_ready:      *out = Action{.tag = Tag::bundle_ready};     return true;
+    case CE::capability_ready:      *out = Action{.tag = Tag::capability_ready};     return true;
     default: return false;
     }
 }

@@ -19,14 +19,14 @@ namespace blusys::app {
 enum class storage_event : std::uint32_t {
     spiffs_mounted = 0x0200,
     fatfs_mounted  = 0x0201,
-    bundle_ready   = 0x02FF,
+    capability_ready   = 0x02FF,
 };
 
 // Current storage state, queryable via ctx.storage().
 struct storage_status {
     bool spiffs_mounted = false;
     bool fatfs_mounted  = false;
-    bool bundle_ready   = false;
+    bool capability_ready   = false;
 };
 
 // Declarative storage configuration.

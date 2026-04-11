@@ -44,9 +44,9 @@ blusys_err_t ota_capability::start(blusys::framework::runtime &rt)
         }
     }
 
-    // Defer bundle_ready to first poll so reducer receives it through
+    // Defer capability_ready to first poll so reducer receives it through
     // the normal event flow (not during init).
-    pending_flags_.fetch_or(kPendingBundleReady, std::memory_order_release);
+    pending_flags_.fetch_or(kPendingCapabilityReady, std::memory_order_release);
     return BLUSYS_OK;
 }
 
@@ -79,9 +79,9 @@ void ota_capability::poll(std::uint32_t /*now_ms*/)
         post_event(ota_event::download_failed);
         post_event(ota_event::apply_failed);
     }
-    if (flags & kPendingBundleReady) {
-        status_.bundle_ready = true;
-        post_event(ota_event::bundle_ready);
+    if (flags & kPendingCapabilityReady) {
+        status_.capability_ready = true;
+        post_event(ota_event::capability_ready);
     }
 }
 

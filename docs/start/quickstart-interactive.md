@@ -30,6 +30,7 @@ The scaffold generates a host-first interactive app with:
 
 - framework-owned boot, LVGL lifecycle, shell, and focus wiring
 - the canonical `core/`, `ui/`, and `integration/` product structure
+- `main/idf_component.yml` with managed git pins for all three platform tiers (and LVGL); set `BLUSYS_SCAFFOLD_PLATFORM_VERSION` when you need a different release tag
 - a reducer-owned control flow that can be retargeted to host or ST7735 device profiles
 
 If you want a concrete product-shaped reference immediately, start from:
@@ -47,8 +48,8 @@ my_product/
     CMakeLists.txt     — idf_component_register listing core, ui, and integration
     idf_component.yml
     core/
-      app.hpp          — State, Action, update() declarations
-      app.cpp          — reducer implementation
+      app_logic.hpp    — State, Action, update() declarations
+      app_logic.cpp    — reducer implementation
     ui/
       app_ui.cpp       — screen composition with stock widgets
     integration/

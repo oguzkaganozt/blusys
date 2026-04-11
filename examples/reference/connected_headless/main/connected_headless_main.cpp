@@ -21,7 +21,7 @@ static const char *TAG = "app";
 struct State {
     bool connected      = false;
     bool time_synced    = false;
-    bool bundle_ready   = false;
+    bool capability_ready   = false;
     int  tick_count     = 0;
 };
 
@@ -31,7 +31,7 @@ enum class Action {
     wifi_got_ip,
     wifi_disconnected,
     time_synced,
-    bundle_ready,
+    capability_ready,
     periodic_tick,
 };
 
@@ -64,8 +64,8 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
         break;
     }
 
-    case Action::bundle_ready:
-        state.bundle_ready = true;
+    case Action::capability_ready:
+        state.capability_ready = true;
         BLUSYS_LOGI(TAG, "All services ready — product operational");
         break;
 
@@ -90,7 +90,7 @@ bool map_event(std::uint32_t id, std::uint32_t /*code*/,
     case CE::wifi_got_ip:       *out = Action::wifi_got_ip;      return true;
     case CE::wifi_disconnected: *out = Action::wifi_disconnected; return true;
     case CE::time_synced:       *out = Action::time_synced;      return true;
-    case CE::bundle_ready:      *out = Action::bundle_ready;     return true;
+    case CE::capability_ready:      *out = Action::capability_ready;     return true;
     default: return false;
     }
 }

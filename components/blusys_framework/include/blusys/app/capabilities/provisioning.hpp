@@ -23,7 +23,7 @@ enum class provisioning_event : std::uint32_t {
     failed               = 0x0703,
     already_provisioned  = 0x0710,
     reset_complete       = 0x0711,
-    bundle_ready         = 0x07FF,
+    capability_ready         = 0x07FF,
 };
 
 struct provisioning_status {
@@ -32,7 +32,7 @@ struct provisioning_status {
     bool credentials_received = false;
     bool provision_success    = false;
     bool provision_failed     = false;
-    bool bundle_ready         = false;
+    bool capability_ready         = false;
     char qr_payload[256]      = {};
 };
 

@@ -21,7 +21,7 @@ blusys_err_t telemetry_capability::start(blusys::framework::runtime &rt)
     write_pos_ = 0;
     last_flush_ms_ = 0;
     status_ = {};
-    status_.bundle_ready = true;
+    status_.capability_ready = true;
 
     BLUSYS_LOGI(TAG, "telemetry ready (threshold=%u, interval=%lums)",
                 static_cast<unsigned>(cfg_.flush_threshold),

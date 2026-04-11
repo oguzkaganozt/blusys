@@ -18,7 +18,7 @@ namespace blusys::app {
 enum class diagnostics_event : std::uint32_t {
     snapshot_ready = 0x0500,
     console_ready  = 0x0501,
-    bundle_ready   = 0x05FF,
+    capability_ready   = 0x05FF,
 };
 
 struct diagnostics_snapshot {
@@ -33,7 +33,7 @@ struct diagnostics_snapshot {
 
 struct diagnostics_status {
     bool console_running = false;
-    bool bundle_ready    = false;
+    bool capability_ready    = false;
     diagnostics_snapshot last_snapshot{};
 };
 

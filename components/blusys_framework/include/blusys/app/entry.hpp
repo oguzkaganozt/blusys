@@ -15,11 +15,14 @@
 //   - runtime construction and main loop
 //
 // Available entry macros:
-//   BLUSYS_APP_MAIN_HOST(spec)            — interactive, SDL2 host
-//   BLUSYS_APP_MAIN_HEADLESS(spec)        — no UI, terminal
-//   BLUSYS_APP_MAIN_DEVICE(spec, profile) — device target with LCD + optional encoder
+//   BLUSYS_APP_MAIN_HOST(spec)                  — interactive, SDL2 host
+//   BLUSYS_APP_MAIN_HOST_PROFILE(spec, profile) — interactive host + explicit window size/title
+//   BLUSYS_APP_MAIN_HEADLESS(spec)              — no UI, terminal
+//   BLUSYS_APP_MAIN_HEADLESS_PROFILE(spec, hl)  — headless + headless_profile
+//   BLUSYS_APP_MAIN_DEVICE(spec, profile)       — device target with LCD + optional encoder
 
 #include "blusys/app/app_runtime.hpp"
+#include "blusys/app/profiles/headless.hpp"
 #include "blusys/framework/core/runtime.hpp"
 #include "blusys/log.h"
 
@@ -258,7 +261,8 @@ void run_device(const app_spec<State, Action> &spec,
 // ---- headless entry (no UI, no LVGL) ----
 
 template <typename State, typename Action>
-void run_headless(const app_spec<State, Action> &spec)
+void run_headless(const app_spec<State, Action> &spec,
+                  const profiles::headless_profile &profile = profiles::headless_default())
 {
     // Ensure log output is visible even when piped (stdout may be fully buffered).
     std::setvbuf(stdout, nullptr, _IOLBF, 0);
@@ -270,7 +274,11 @@ void run_headless(const app_spec<State, Action> &spec)
         return;
     }
 
-    BLUSYS_LOGI("blusys_app", "headless app running");
+    if (profile.boot_log_label != nullptr && profile.boot_log_label[0] != '\0') {
+        BLUSYS_LOGI("blusys_app", "headless app running (%s)", profile.boot_log_label);
+    } else {
+        BLUSYS_LOGI("blusys_app", "headless app running");
+    }
 
     while (true) {
         const std::uint32_t now = blusys_app_platform::headless_get_ticks_ms();
@@ -325,11 +333,28 @@ void run_headless(const app_spec<State, Action> &spec)
         auto _blusys_spec = (spec_expr);                                    \
         ::blusys::app::detail::run_headless(_blusys_spec);                  \
     }
+
+// Like `BLUSYS_APP_MAIN_HEADLESS` but passes a `blusys::app::profiles::headless_profile`
+// for code-first headless configuration (e.g. boot log label).
+#define BLUSYS_APP_MAIN_HEADLESS_PROFILE(spec_expr, profile_expr)           \
+    extern "C" void app_main(void) {                                        \
+        auto _blusys_spec = (spec_expr);                                    \
+        auto _blusys_hl     = (profile_expr);                                \
+        ::blusys::app::detail::run_headless(_blusys_spec, _blusys_hl);      \
+    }
 #else
 #define BLUSYS_APP_MAIN_HEADLESS(spec_expr)                                 \
     int main(void) {                                                        \
         auto _blusys_spec = (spec_expr);                                    \
         ::blusys::app::detail::run_headless(_blusys_spec);                  \
+        return 0;                                                           \
+    }
+
+#define BLUSYS_APP_MAIN_HEADLESS_PROFILE(spec_expr, profile_expr)           \
+    int main(void) {                                                        \
+        auto _blusys_spec = (spec_expr);                                    \
+        auto _blusys_hl     = (profile_expr);                                \
+        ::blusys::app::detail::run_headless(_blusys_spec, _blusys_hl);      \
         return 0;                                                           \
     }
 #endif

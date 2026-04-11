@@ -6,10 +6,12 @@ Capabilities provide higher-level product flows so apps stop assembling low-leve
 
 Every capability:
 
-1. Is configured with a plain config struct
-2. Is declared in `integration/` and passed to `app_spec.capabilities`
-3. Notifies the app of state changes by posting framework integration events
-4. Is queried via `app_ctx` after initialization
+1. Is configured with a plain data-only config struct (no hidden side effects in construction).
+2. Is composed in `integration/` and registered on `app_spec.capabilities` — not constructed ad hoc from `core/` or `ui/`.
+3. Owns lifecycle and runtime-service integration on the framework side; product code requests work through reducer-driven actions.
+4. Exposes **status** through the app-facing query path (`app_ctx` accessors) using consistent field naming (`capability_ready` signals that the capability’s default stack is up).
+5. Raises **events** with stable enum codes; `integration/` maps those events to product `action`s via `map_event`, and `core/` reacts in `update`.
+6. May expose advanced escape hatches, but the recommended path stays event- and reducer-driven.
 
 Apps bridge capability events to product actions via `map_event`:
 

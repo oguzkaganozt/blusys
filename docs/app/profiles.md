@@ -27,6 +27,10 @@ BLUSYS_APP_MAIN_HOST_PROFILE(spec, blusys::app::host_profile{
 - No real hardware dependencies
 - Fastest iteration cycle
 
+### Interactive input model (host and device)
+
+Host SDL and device encoder bridges both feed the **same** `blusys::framework::intent` stream (`increment`, `decrement`, `confirm`, …). Your app handles hardware differences only in `app_spec.map_intent`, not in UI code. After navigation, the framework re-attaches focus via `screen_router` so encoder and keyboard-driven runs stay consistent.
+
 ## Headless Profile
 
 For connected devices without a display.
@@ -35,10 +39,37 @@ For connected devices without a display.
 BLUSYS_APP_MAIN_HEADLESS(spec)
 ```
 
+Optional explicit profile (same pattern as `host_profile`):
+
+```cpp
+#include "blusys/app/profiles/headless.hpp"
+
+BLUSYS_APP_MAIN_HEADLESS_PROFILE(spec, blusys::app::profiles::headless_profile{
+    .boot_log_label = "my-sensor",
+})
+```
+
+| Field | Role |
+|-------|------|
+| `boot_log_label` | Optional string for the first post-init log line (nullptr = default message only) |
+
 - Same app runtime core as interactive
 - No UI or LVGL dependencies
 - `on_tick` and `map_event` for headless flows
 - Builds on ESP32, ESP32-C3, and ESP32-S3
+
+### Headless tuning (code-first)
+
+There is no separate “headless hardware” struct: behavior is configured on `app_spec` and in `integration/`:
+
+| Surface | What to set |
+|---------|-------------|
+| Main loop cadence | `app_spec.tick_period_ms` — delay between `runtime.step()` calls |
+| Capability events | `app_spec.map_event` — translate capability codes into product `Action`s |
+| Periodic work | `app_spec.on_tick` — time-based housekeeping without UI |
+| Capabilities | Register on `app_spec.capabilities` from `integration/` only |
+
+Use the same reducer (`update`) and action model as interactive products; only the entry macro and build flags differ (`BLUSYS_BUILD_UI` off).
 
 ## Device Profile
 
@@ -67,6 +98,7 @@ The first canonical interactive hardware profile. Framework-owned display and UI
 | `BLUSYS_APP_MAIN_HOST_PROFILE(spec, p)` | Host with explicit size | Simulated |
 | `BLUSYS_APP_MAIN_DEVICE(spec, profile)` | Device | Real hardware |
 | `BLUSYS_APP_MAIN_HEADLESS(spec)` | Headless | None |
+| `BLUSYS_APP_MAIN_HEADLESS_PROFILE(spec, profile)` | Headless + `headless_profile` | None |
 
 The same `app_spec`, State, Actions, and `update()` compile for all entries. Swap the macro at the bottom of `integration/app_main.cpp` to switch targets.
 

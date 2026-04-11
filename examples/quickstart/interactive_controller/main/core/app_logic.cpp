@@ -1,4 +1,4 @@
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 
 #include "blusys/app/flows/provisioning_flow.hpp"
 #include "blusys/app/view/bindings.hpp"
@@ -29,7 +29,7 @@ std::int32_t clamp_level(std::int32_t value)
 void sync_shell(app_state &state)
 {
     if (state.shell_badge != nullptr) {
-        const bool setup_ready = state.provisioning.bundle_ready || state.provisioning.is_provisioned;
+        const bool setup_ready = state.provisioning.capability_ready || state.provisioning.is_provisioned;
         blusys::app::view::set_badge_text(state.shell_badge, setup_ready ? "Ready" : "Setup");
         blusys::app::view::set_badge_level(
             state.shell_badge,
@@ -66,7 +66,7 @@ void sync_home(app_state &state)
 void sync_status(app_state &state)
 {
     if (state.status_setup != nullptr) {
-        const bool ready = state.provisioning.bundle_ready || state.provisioning.is_provisioned;
+        const bool ready = state.provisioning.capability_ready || state.provisioning.is_provisioned;
         blusys::app::view::set_badge_text(state.status_setup, ready ? "Provisioned" : "Waiting");
         blusys::app::view::set_badge_level(
             state.status_setup,
@@ -173,7 +173,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 
     case action_tag::sync_storage:
         if (const auto *storage = ctx.storage(); storage != nullptr) {
-            state.storage_ready = storage->bundle_ready;
+            state.storage_ready = storage->capability_ready;
         }
         break;
 

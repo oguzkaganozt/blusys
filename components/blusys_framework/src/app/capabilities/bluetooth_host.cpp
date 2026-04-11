@@ -17,7 +17,7 @@ blusys_err_t bluetooth_capability::start(blusys::framework::runtime &rt)
     status_.gap_ready = true;
     status_.gatt_ready = true;
     status_.advertising = true;
-    status_.bundle_ready = true;
+    status_.capability_ready = true;
 
     BLUSYS_LOGI(TAG, "host stub: bluetooth ready (simulated)");
     return BLUSYS_OK;
@@ -33,7 +33,7 @@ void bluetooth_capability::poll(std::uint32_t /*now_ms*/)
     post_event(bluetooth_event::gap_ready);
     post_event(bluetooth_event::gatt_ready);
     post_event(bluetooth_event::advertising_started);
-    post_event(bluetooth_event::bundle_ready);
+    post_event(bluetooth_event::capability_ready);
 }
 
 void bluetooth_capability::stop()

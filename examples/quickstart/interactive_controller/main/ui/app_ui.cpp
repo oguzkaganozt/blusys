@@ -168,8 +168,8 @@ lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/, lv_g
     auto *summary = view::card(page.content, "Snapshot");
     lv_obj_set_width(summary, LV_PCT(100));
     g_state->status_setup = view::status_badge(summary,
-                                               g_state->provisioning.bundle_ready ? "Provisioned" : "Waiting",
-                                               g_state->provisioning.bundle_ready
+                                               g_state->provisioning.capability_ready ? "Provisioned" : "Waiting",
+                                               g_state->provisioning.capability_ready
                                                    ? blusys::ui::badge_level::success
                                                    : blusys::ui::badge_level::warning);
     g_state->status_output = view::key_value(summary, "Output", "64%");

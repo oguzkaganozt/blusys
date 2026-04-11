@@ -1,4 +1,4 @@
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/app/view/bindings.hpp"
@@ -150,10 +150,10 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         BLUSYS_LOGI(kTag, "time synchronized");
         break;
 
-    case action_tag::conn_bundle_ready:
+    case action_tag::conn_capability_ready:
         state.conn_ready = true;
         state.wifi_connected = true;
-        BLUSYS_LOGI(kTag, "connectivity bundle ready — all services up");
+        BLUSYS_LOGI(kTag, "connectivity capability ready — all services up");
         break;
 
     // ---- telemetry ----
@@ -180,7 +180,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         }
         break;
 
-    case action_tag::diag_bundle_ready:
+    case action_tag::diag_capability_ready:
         state.diag_ready = true;
         BLUSYS_LOGI(kTag, "diagnostics ready");
         break;
@@ -203,7 +203,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         BLUSYS_LOGE(kTag, "ota: apply failed — resuming normal operation");
         break;
 
-    case action_tag::ota_bundle_ready:
+    case action_tag::ota_capability_ready:
         state.ota_ready = true;
         BLUSYS_LOGI(kTag, "ota ready");
         break;
@@ -212,13 +212,13 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 
     case action_tag::prov_success:
     case action_tag::prov_already_done:
-    case action_tag::prov_bundle_ready:
+    case action_tag::prov_capability_ready:
         state.provisioned = true;
         break;
 
     // ---- storage ----
 
-    case action_tag::storage_bundle_ready:
+    case action_tag::storage_capability_ready:
         state.storage_ready = true;
         BLUSYS_LOGI(kTag, "storage mounted");
         break;

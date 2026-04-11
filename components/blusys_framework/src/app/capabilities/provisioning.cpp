@@ -28,7 +28,7 @@ blusys_err_t provisioning_capability::start(blusys::framework::runtime &rt)
     // Check if already provisioned.
     if (cfg_.skip_if_provisioned && blusys_wifi_prov_is_provisioned()) {
         status_.is_provisioned = true;
-        status_.bundle_ready = true;
+        status_.capability_ready = true;
         BLUSYS_LOGI(TAG, "already provisioned — skipping");
         // Events posted on first poll via pending flags would require
         // a different mechanism. Since we're in start(), post directly
@@ -70,11 +70,11 @@ blusys_err_t provisioning_capability::start(blusys::framework::runtime &rt)
 void provisioning_capability::poll(std::uint32_t /*now_ms*/)
 {
     // Handle the "already provisioned" case — post events on first poll.
-    if (status_.is_provisioned && status_.bundle_ready && prov_ == nullptr) {
+    if (status_.is_provisioned && status_.capability_ready && prov_ == nullptr) {
         if (!already_posted_) {
             already_posted_ = true;
             post_event(provisioning_event::already_provisioned);
-            post_event(provisioning_event::bundle_ready);
+            post_event(provisioning_event::capability_ready);
         }
         return;
     }
@@ -95,9 +95,9 @@ void provisioning_capability::poll(std::uint32_t /*now_ms*/)
     if (flags & kPendingSuccess) {
         status_.provision_success = true;
         status_.is_provisioned = true;
-        status_.bundle_ready = true;
+        status_.capability_ready = true;
         post_event(provisioning_event::success);
-        post_event(provisioning_event::bundle_ready);
+        post_event(provisioning_event::capability_ready);
     }
     if (flags & kPendingFailed) {
         status_.provision_failed = true;
@@ -127,7 +127,7 @@ blusys_err_t provisioning_capability::request_reset()
         status_.is_provisioned = false;
         status_.provision_success = false;
         status_.credentials_received = false;
-        status_.bundle_ready = false;
+        status_.capability_ready = false;
         already_posted_ = false;
         pending_flags_.fetch_or(kPendingResetComplete, std::memory_order_release);
         BLUSYS_LOGI(TAG, "provisioning credentials reset");

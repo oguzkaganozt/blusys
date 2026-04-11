@@ -119,9 +119,9 @@ target_link_libraries(blusys_framework_host PUBLIC lvgl)
 target_compile_definitions(blusys_framework_host PUBLIC BLUSYS_FRAMEWORK_HAS_UI=1)
 
 add_executable(gateway_host
-    "${CMAKE_CURRENT_LIST_DIR}/../main/logic/app_logic.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../main/ui/app_ui.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../main/system/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/integration/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_host_platform.cpp"
 )
 target_include_directories(gateway_host PRIVATE

@@ -1,4 +1,4 @@
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 
 #include "blusys/app/view/bindings.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
@@ -24,7 +24,7 @@ std::int32_t clamp_pct(std::int32_t value)
 void sync_shell(app_state &state)
 {
     if (state.shell_badge != nullptr) {
-        const bool ready = state.diagnostics.bundle_ready;
+        const bool ready = state.diagnostics.capability_ready;
         blusys::app::view::set_badge_text(state.shell_badge, ready ? "Online" : "Warmup");
         blusys::app::view::set_badge_level(
             state.shell_badge,
@@ -149,7 +149,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 
     case action_tag::sync_storage:
         if (const auto *storage = ctx.storage(); storage != nullptr) {
-            state.storage_ready = storage->bundle_ready;
+            state.storage_ready = storage->capability_ready;
         }
         break;
     }

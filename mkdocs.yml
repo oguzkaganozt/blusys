@@ -140,6 +140,8 @@ nav:
       - internals/index.md
       - Architecture: internals/architecture.md
       - Guidelines: internals/guidelines.md
+      - "Phase 0 Foundation Plan": internals/phase-0-v7-foundation-plan.md
+      - "Phase 0 Exit": internals/phase-0-exit.md
       - Phase 5 Interactive Archetypes Plan: internals/phase-5-interactive-archetypes-plan.md
       - Phase 6 Connected Archetypes Plan: internals/phase-6-connected-archetypes-plan.md
       - Phase 7 Hardware Packaging Plan: internals/phase-7-hardware-packaging-plan.md

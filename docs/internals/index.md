@@ -6,6 +6,8 @@ Platform architecture, development guidelines, and testing infrastructure.
 
 - [Architecture](architecture.md) --- three-tier model, component dependencies, design rationale
 - [Guidelines](guidelines.md) --- API design rules, development workflow, documentation standards
+- [Phase 0 Foundation Plan](phase-0-v7-foundation-plan.md) --- v7 foundation scope and workstreams
+- [Phase 0 Exit](phase-0-exit.md) --- closure checklist against that plan
 - [Phase 5 Interactive Archetypes Plan](phase-5-interactive-archetypes-plan.md) --- implementation plan for the interactive controller and panel reference phase
 - [Phase 6 Connected Archetypes Plan](phase-6-connected-archetypes-plan.md) --- implementation plan for the edge node and gateway/controller reference phase
 - [Phase 7 Hardware Packaging Plan](phase-7-hardware-packaging-plan.md) --- implementation plan for validated display and profile breadth

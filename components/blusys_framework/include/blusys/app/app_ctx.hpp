@@ -14,7 +14,7 @@ struct shell;
 #endif
 
 #ifdef ESP_PLATFORM
-// Forward declarations for C service handle types used by bundle accessors.
+// Forward declarations for C service handle types used by capability accessors.
 struct blusys_fs;
 typedef struct blusys_fs blusys_fs_t;
 struct blusys_fatfs;
@@ -79,7 +79,7 @@ public:
     [[nodiscard]] view::shell *shell() const { return shell_; }
 #endif
 
-    // ---- bundle status queries ----
+    // ---- capability status queries ----
 
     [[nodiscard]] const connectivity_status *connectivity() const;
     [[nodiscard]] const storage_status *storage() const;
@@ -90,7 +90,7 @@ public:
     [[nodiscard]] const provisioning_status *provisioning() const;
 
 #ifdef ESP_PLATFORM
-    // Direct storage handle access — nullptr if the bundle is absent
+    // Direct storage handle access — nullptr if the storage capability is absent
     // or the filesystem was not configured / failed to mount.
     [[nodiscard]] blusys_fs_t    *spiffs() const;
     [[nodiscard]] blusys_fatfs_t *fatfs()  const;

@@ -136,7 +136,7 @@ This is the recommended product-facing API. Normal product code only touches thi
 
 The core spine is internal framework machinery. Product code does not interact with it directly — the `blusys::app` layer wraps it.
 
-- `router.hpp` — six route commands (`set_root`, `push`, `replace`, `pop`, `show_overlay`, `hide_overlay`) plus a `route_sink` interface
+- `router.hpp` — six route commands (`set_root`, `push`, `replace`, `pop`, `show_overlay`, `hide_overlay`) plus a `route_sink` interface; interactive products use `blusys::app::view::screen_router` as the bound sink so stack navigation and screen lifecycle stay framework-owned
 - `intent.hpp` — nine semantic intents (`press`/`long_press`/`release`/`confirm`/`cancel`/`increment`/`decrement`/`focus_next`/`focus_prev`) and the `app_event` envelope
 - `feedback.hpp` — three channels (`visual`/`audio`/`haptic`), six patterns, fixed-capacity bus
 - `controller.hpp` — `init`/`handle`/`tick`/`deinit` lifecycle base class (used internally by `app_runtime`)
@@ -154,7 +154,7 @@ The core spine is internal framework machinery. Product code does not interact w
 
 Authoring contract: every widget follows the six-rule contract (theme tokens only, config struct interface, setters own state transitions, standard state set, one folder per widget, header is the spec). Stock-backed widgets use a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` for callback storage. See `components/blusys_framework/widget-author-guide.md`.
 
-End-to-end validation: `examples/quickstart/framework_app_basic/` exercises the full framework validation chain. `examples/quickstart/connected_headless/` validates the headless path with capabilities and the reducer model.
+End-to-end validation: `examples/reference/framework_app_basic/` exercises the full framework validation chain. `examples/reference/connected_headless/` validates the headless path with capabilities and the reducer model; `examples/reference/connected_device/` does the same for interactive + connectivity. Device-profile validation lives under `examples/reference/framework_device_basic/`.
 
 Host iteration: `scripts/host/` builds LVGL against SDL2 on Linux via `blusys host-build`, pinned to the same upstream LVGL tag as the ESP-IDF managed component. Lets the widget kit be iterated on without flashing hardware on every change.
 

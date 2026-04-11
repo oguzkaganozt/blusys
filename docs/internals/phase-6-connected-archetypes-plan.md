@@ -57,8 +57,8 @@ The repo already contains the Phase 0 through Phase 5 foundation needed for conn
 - provisioning capability provides BLE and SoftAP transport with QR payload support
 - shared flows exist for connectivity, diagnostics, OTA, provisioning, boot, loading, error, status, and settings
 - stock screens exist for about, status, and diagnostics
-- `connected_headless` quickstart proves the basic headless reducer + connectivity pattern
-- `connected_device` quickstart proves the basic interactive connected pattern
+- `connected_headless` reference example proves the basic headless reducer + connectivity pattern
+- `connected_device` reference example proves the basic interactive connected pattern
 - interactive controller and panel references from Phase 5 prove the shell, navigation, and flow composition model
 
 The main gap is not missing architecture. The main gap is missing productized connected reference apps that pressure-test the framework capabilities under realistic operational conditions: sustained connectivity, telemetry delivery, OTA lifecycle, diagnostics under load, and provisioning flows that feel like real product onboarding.
@@ -360,7 +360,7 @@ Phase 6 is complete when all of the following are true:
 - adding cloud-platform-specific integrations that should live outside the framework
 - treating the optional interactive gateway variant as a mandatory deliverable rather than a proof-of-concept
 - neglecting sustained-operation quality in favor of demo-path polish
-- keeping `connected_headless` and `connected_device` quickstarts more prominent than the archetype references after the phase is complete
+- treating connectivity demos (`connected_headless`, `connected_device`) as more prominent than archetype starters (`edge_node`, `interactive_controller`) after the phase is complete
 
 ## Decision Rules During Phase 6
 

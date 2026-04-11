@@ -62,8 +62,8 @@ blusys_err_t storage_capability::start(blusys::framework::runtime &rt)
     }
 
     if (ready) {
-        status_.bundle_ready = true;
-        post_event(storage_event::bundle_ready);
+        status_.capability_ready = true;
+        post_event(storage_event::capability_ready);
     }
 
     return BLUSYS_OK;

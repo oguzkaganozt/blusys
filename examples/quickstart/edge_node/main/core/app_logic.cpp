@@ -1,4 +1,4 @@
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 
 #include "blusys/log.h"
 
@@ -93,9 +93,9 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         BLUSYS_LOGI(kTag, "time synchronized");
         break;
 
-    case action_tag::conn_bundle_ready:
+    case action_tag::conn_capability_ready:
         state.conn_ready = true;
-        BLUSYS_LOGI(kTag, "connectivity bundle ready — all services up");
+        BLUSYS_LOGI(kTag, "connectivity capability ready — all services up");
         break;
 
     // ---- telemetry ----
@@ -127,7 +127,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         }
         break;
 
-    case action_tag::diag_bundle_ready:
+    case action_tag::diag_capability_ready:
         state.diag_ready = true;
         BLUSYS_LOGI(kTag, "diagnostics ready");
         break;
@@ -172,7 +172,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         BLUSYS_LOGI(kTag, "ota: firmware marked valid");
         break;
 
-    case action_tag::ota_bundle_ready:
+    case action_tag::ota_capability_ready:
         state.ota_ready = true;
         BLUSYS_LOGI(kTag, "ota ready");
         break;
@@ -197,14 +197,14 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         BLUSYS_LOGI(kTag, "already provisioned — skipping setup");
         break;
 
-    case action_tag::prov_bundle_ready:
+    case action_tag::prov_capability_ready:
         state.provisioned = true;
-        BLUSYS_LOGI(kTag, "provisioning bundle ready");
+        BLUSYS_LOGI(kTag, "provisioning capability ready");
         break;
 
     // ---- storage ----
 
-    case action_tag::storage_bundle_ready:
+    case action_tag::storage_capability_ready:
         state.storage_ready = true;
         BLUSYS_LOGI(kTag, "storage mounted");
         break;

@@ -6,7 +6,7 @@
 // that the same operating model supports optional local UI without
 // architecture changes.
 
-#include "logic/app_logic.hpp"
+#include "core/app_logic.hpp"
 #include "ui/app_ui.hpp"
 
 #include "blusys/app/capabilities/connectivity.hpp"
@@ -245,7 +245,7 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     case CE::wifi_disconnected: *out = action{.tag = action_tag::wifi_disconnected}; return true;
     case CE::wifi_reconnecting: *out = action{.tag = action_tag::wifi_reconnecting}; return true;
     case CE::time_synced:       *out = action{.tag = action_tag::time_synced};       return true;
-    case CE::bundle_ready:      *out = action{.tag = action_tag::conn_bundle_ready}; return true;
+    case CE::capability_ready:      *out = action{.tag = action_tag::conn_capability_ready}; return true;
     default: break;
     }
 
@@ -261,7 +261,7 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     using DE = blusys::app::diagnostics_event;
     switch (static_cast<DE>(id)) {
     case DE::snapshot_ready: *out = action{.tag = action_tag::diag_snapshot};     return true;
-    case DE::bundle_ready:   *out = action{.tag = action_tag::diag_bundle_ready}; return true;
+    case DE::capability_ready:   *out = action{.tag = action_tag::diag_capability_ready}; return true;
     default: break;
     }
 
@@ -272,7 +272,7 @@ bool map_event(std::uint32_t id, std::uint32_t code,
                                                .value = static_cast<std::int32_t>(code)}; return true;
     case OE::apply_complete:    *out = action{.tag = action_tag::ota_apply_complete};    return true;
     case OE::apply_failed:      *out = action{.tag = action_tag::ota_apply_failed};      return true;
-    case OE::bundle_ready:      *out = action{.tag = action_tag::ota_bundle_ready};      return true;
+    case OE::capability_ready:      *out = action{.tag = action_tag::ota_capability_ready};      return true;
     default: break;
     }
 
@@ -281,14 +281,14 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     switch (static_cast<PE>(id)) {
     case PE::success:             *out = action{.tag = action_tag::prov_success};      return true;
     case PE::already_provisioned: *out = action{.tag = action_tag::prov_already_done}; return true;
-    case PE::bundle_ready:        *out = action{.tag = action_tag::prov_bundle_ready}; return true;
+    case PE::capability_ready:        *out = action{.tag = action_tag::prov_capability_ready}; return true;
     default: break;
     }
 
     // Storage events
     using SE = blusys::app::storage_event;
     switch (static_cast<SE>(id)) {
-    case SE::bundle_ready: *out = action{.tag = action_tag::storage_bundle_ready}; return true;
+    case SE::capability_ready: *out = action{.tag = action_tag::storage_capability_ready}; return true;
     default: break;
     }
 
