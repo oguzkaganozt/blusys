@@ -6,7 +6,7 @@ Active roadmap. This document defines the implementation sequence for the curren
 
 The companion product requirements document lives at `PRD.md`.
 
-**Program position:** Phase 4 (shared operational flows, stock screens, and framework capabilities) is **complete**. Execution focus is **Phase 5** — interactive archetype references. Plan: `docs/internals/phase-5-interactive-archetypes-plan.md`.
+**Program position:** Phase 4 (shared operational flows, stock screens, and framework capabilities) is **complete**. Phase 5 (interactive archetype references) is **complete**. Exit record: `docs/internals/phase-5-exit.md`. Next execution focus: **Phase 6** — connected archetype references.
 
 ## North Star
 
@@ -454,7 +454,7 @@ Detailed execution plan: `docs/internals/phase-5-interactive-archetypes-plan.md`
 
 ### Status
 
-**Active** — primary reference for `interactive controller`, secondary for `interactive panel`.
+**Closed** — 2026-04-11. See `docs/internals/phase-5-exit.md`.
 
 ### Goal
 

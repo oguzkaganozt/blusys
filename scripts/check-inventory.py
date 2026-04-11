@@ -57,7 +57,9 @@ def find_example_dirs():
                 if sub.is_dir() and not sub.name.startswith("."):
                     dirs.add(sub.name)
         else:
-            # Flat layout (pre-reorganization)
+            # Flat layout (pre-reorganization) — shared headers, not an example app
+            if entry.name == "include":
+                continue
             dirs.add(entry.name)
     return dirs
 

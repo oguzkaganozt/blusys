@@ -127,6 +127,7 @@ add_executable(interactive_panel_host
 )
 target_include_directories(interactive_panel_host PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../main"
+    "${BLUSYS_PATH}/examples/include"
 )
 target_link_libraries(interactive_panel_host PRIVATE
     blusys_framework_host PkgConfig::SDL2 m

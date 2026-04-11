@@ -510,7 +510,7 @@ examples:
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
-    ci_pr: false
+    ci_pr: true
     ci_nightly: true
 
   - name: gpio_basic
@@ -1103,6 +1103,10 @@ docs:
     section: start
     visibility: public
 
+  - path: docs/start/interaction-design.md
+    section: start
+    visibility: public
+
   # --- App ---
   - path: docs/app/index.md
     section: app
@@ -1384,6 +1388,10 @@ docs:
     visibility: public
 
   - path: docs/internals/phase-5-interactive-archetypes-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-5-exit.md
     section: internals
     visibility: public
 

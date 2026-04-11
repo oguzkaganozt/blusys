@@ -27,6 +27,7 @@ enum class action_tag : std::uint8_t {
     open_about,
     sync_diagnostics,
     sync_storage,
+    sync_connectivity,
 };
 
 struct action {

@@ -1,5 +1,7 @@
 #include "core/app_logic.hpp"
 
+#include "blusys_examples/archetype_percent.hpp"
+
 #include "blusys/app/flows/provisioning_flow.hpp"
 #include "blusys/app/view/bindings.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
@@ -17,17 +19,6 @@ namespace interactive_controller {
 namespace {
 
 constexpr const char *kTag = "ctrl_archetype";
-
-std::int32_t clamp_level(std::int32_t value)
-{
-    if (value < 0) {
-        return 0;
-    }
-    if (value > 100) {
-        return 100;
-    }
-    return value;
-}
 
 void sync_shell(app_state &state)
 {
@@ -132,7 +123,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
     switch (event.tag) {
     case action_tag::level_delta:
         if (!state.hold_enabled) {
-            state.level = clamp_level(state.level + event.value);
+            state.level = blusys_examples::clamp_percent(state.level + event.value);
             ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
                               blusys::framework::feedback_pattern::click);
         }

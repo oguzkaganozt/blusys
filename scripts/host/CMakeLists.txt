@@ -338,6 +338,32 @@ target_compile_options(operational_phase_smoke PRIVATE
     -Wextra
 )
 
+# ── interactive_archetype_reducer_smoke (Phase 5 — shared clamp_percent) ───────
+add_executable(interactive_archetype_reducer_smoke src/interactive_archetype_reducer_smoke.cpp)
+target_include_directories(interactive_archetype_reducer_smoke PRIVATE
+    ${BLUSYS_REPO_ROOT}/examples/include
+)
+target_compile_options(interactive_archetype_reducer_smoke PRIVATE
+    -Wall
+    -Wextra
+)
+
+# ── panel_connectivity_map_smoke (Phase 5 — panel map_event connectivity band) ─
+add_executable(panel_connectivity_map_smoke src/panel_connectivity_map_smoke.cpp)
+target_include_directories(panel_connectivity_map_smoke PRIVATE
+    ${BLUSYS_REPO_ROOT}/examples/include
+    ${BLUSYS_COMPONENT_DIR}/include
+    ${BLUSYS_FRAMEWORK_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}/include_host
+)
+target_compile_options(panel_connectivity_map_smoke PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+
 # ── pomodoro_host (oled_encoder_basic ported to host) ────────────────────────
 #
 # Pixel-identical 128×32 OLED layout running on the PC + SDL2 stack.

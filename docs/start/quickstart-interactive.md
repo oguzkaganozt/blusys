@@ -35,8 +35,8 @@ The scaffold generates a host-first interactive app with:
 
 If you want a concrete product-shaped reference immediately, start from:
 
-- `examples/quickstart/interactive_controller/` for compact expressive control surfaces
-- `examples/reference/interactive_panel/` for denser operational panels
+- `examples/quickstart/interactive_controller/` for compact expressive control surfaces (see its `README.md` for the locked archetype brief)
+- `examples/reference/interactive_panel/` for denser operational panels (same brief pattern in `README.md`)
 
 ## Project structure
 

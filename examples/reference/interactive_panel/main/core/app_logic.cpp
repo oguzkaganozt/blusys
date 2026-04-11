@@ -1,5 +1,7 @@
 #include "core/app_logic.hpp"
 
+#include "blusys_examples/archetype_percent.hpp"
+
 #include "blusys/app/view/bindings.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #include "blusys/framework/ui/widgets/chart/chart.hpp"
@@ -9,17 +11,6 @@
 namespace interactive_panel {
 
 namespace {
-
-std::int32_t clamp_pct(std::int32_t value)
-{
-    if (value < 0) {
-        return 0;
-    }
-    if (value > 100) {
-        return 100;
-    }
-    return value;
-}
 
 void sync_shell(app_state &state)
 {
@@ -109,7 +100,8 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
     switch (event.tag) {
     case action_tag::sample_tick: {
         ++state.tick_count;
-        state.load_percent = clamp_pct(24 + static_cast<std::int32_t>((state.tick_count * 7) % 58));
+        state.load_percent =
+            blusys_examples::clamp_percent(24 + static_cast<std::int32_t>((state.tick_count * 7) % 58));
         state.queue_depth = 2 + static_cast<std::int32_t>(state.tick_count % 7);
         state.temp_c = 25 + static_cast<std::int32_t>((state.tick_count * 3) % 11);
         for (std::size_t i = 1; i < state.load_history.size(); ++i) {
@@ -151,6 +143,11 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         if (const auto *storage = ctx.storage(); storage != nullptr) {
             state.storage_ready = storage->capability_ready;
         }
+        break;
+
+    case action_tag::sync_connectivity:
+        // Connectivity state is read from ctx in status_screen_update; this
+        // action exists to re-run view sync after Wi-Fi / SNTP / mDNS events.
         break;
     }
 

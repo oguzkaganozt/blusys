@@ -1,5 +1,7 @@
 # Phase 5 Interactive Archetypes Plan
 
+**Status: complete** — closure checklist and validation summary: [`phase-5-exit.md`](phase-5-exit.md).
+
 This document turns the Phase 5 target from `ROADMAP.md` into an execution-ready implementation plan for the current repo state.
 
 Use it together with:

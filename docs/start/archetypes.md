@@ -33,6 +33,12 @@ Canonical example:
 
 - `examples/reference/interactive_panel/`
 
+### Controller vs panel
+
+Both use the same `core/` / `ui/` / `integration/` split and the same shell + capabilities model. Choose **controller** when the product is encoder-first, compact, and expressive (consumer-style tactility). Choose **panel** when the product needs glanceable operations, charts or tables, and connectivity or diagnostics on the primary status surface (industrial-style density). The controller ships as the PR CI **quickstart**; the panel is a **reference** app with a larger default display profile (ILI9341 / ILI9488) while still building on host SDL.
+
+For a concise interaction and presentation comparison, see [Interaction design](interaction-design.md).
+
 ## Edge Node
 
 Use the edge node archetype when your product is:

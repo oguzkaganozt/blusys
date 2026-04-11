@@ -187,7 +187,9 @@ lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/, lv_g
 {
     auto page = make_page(ctx, true);
 
-    if (!g_state->provisioning.capability_ready) {
+    const bool setup_ready =
+        g_state->provisioning.capability_ready || g_state->provisioning.is_provisioned;
+    if (!setup_ready) {
         lv_obj_t *empty = blusys::app::flows::empty_state_create(
             page.content,
             {
@@ -203,10 +205,9 @@ lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/, lv_g
     auto *summary = view::card(page.content, "Snapshot");
     lv_obj_set_width(summary, LV_PCT(100));
     g_state->status_setup = view::status_badge(summary,
-                                               g_state->provisioning.capability_ready ? "Provisioned" : "Waiting",
-                                               g_state->provisioning.capability_ready
-                                                   ? blusys::ui::badge_level::success
-                                                   : blusys::ui::badge_level::warning);
+                                               setup_ready ? "Provisioned" : "Waiting",
+                                               setup_ready ? blusys::ui::badge_level::success
+                                                           : blusys::ui::badge_level::warning);
     g_state->status_output = view::key_value(summary, "Output", "64%");
     g_state->status_hold = view::key_value(summary, "Hold", "Off");
     g_state->status_storage = view::key_value(summary, "Storage", "Pending");

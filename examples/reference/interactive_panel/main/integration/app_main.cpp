@@ -1,7 +1,10 @@
 #include "core/app_logic.hpp"
 #include "ui/app_ui.hpp"
 
+#include "blusys_examples/panel_connectivity_sync.hpp"
+
 #include "blusys/app/layout_surface.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/theme_presets.hpp"
 #include "blusys/version.h"
 
@@ -92,6 +95,11 @@ static const blusys::app::view::shell_config kShellConfig = panel_shell_for_prof
 
 bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*/, action *out)
 {
+    if (blusys_examples::panel_connectivity_event_triggers_sync(id)) {
+        *out = action{.tag = action_tag::sync_connectivity};
+        return true;
+    }
+
     switch (id) {
     case static_cast<std::uint32_t>(blusys::app::diagnostics_event::snapshot_ready):
     case static_cast<std::uint32_t>(blusys::app::diagnostics_event::capability_ready):
@@ -105,16 +113,35 @@ bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*
     }
 }
 
+blusys::app::connectivity_config panel_connectivity_cfg{
+#ifdef ESP_PLATFORM
+    .wifi_ssid     = CONFIG_WIFI_SSID,
+    .wifi_password = CONFIG_WIFI_PASSWORD,
+#else
+    .wifi_ssid     = "panel-host",
+    .wifi_password = "",
+#endif
+    .reconnect_delay_ms = 3000,
+    .max_retries        = 8,
+    .sntp_server        = "pool.ntp.org",
+    .mdns_hostname      = "blusys-panel",
+    .mdns_instance_name = "Blusys Ops Panel",
+};
+
+static blusys::app::connectivity_capability connectivity{panel_connectivity_cfg};
+
 static blusys::app::diagnostics_capability diagnostics{{
     .enable_console = false,
     .snapshot_interval_ms = 1000,
 }};
 
 static blusys::app::storage_capability storage{{
+    // connectivity_capability initializes NVS on device; avoid double init.
+    .init_nvs        = false,
     .spiffs_base_path = "/panel",
 }};
 
-static blusys::app::capability_list capabilities{&diagnostics, &storage};
+static blusys::app::capability_list capabilities{&connectivity, &diagnostics, &storage};
 
 static const blusys::app::app_spec<app_state, action> spec{
     .initial_state = {},

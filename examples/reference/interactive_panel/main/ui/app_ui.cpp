@@ -150,9 +150,9 @@ lv_obj_t *create_dashboard(blusys::app::app_ctx &ctx, const void * /*params*/, l
 lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
 {
     const blusys::app::screens::status_screen_config config{
-        .show_connectivity = false,
+        .show_connectivity = true,
         .show_diagnostics = true,
-        .show_storage = false,
+        .show_storage = true,
         .show_bluetooth = false,
     };
     return blusys::app::screens::status_screen_create(ctx, config, g_state->status_handles, group_out);
