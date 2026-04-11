@@ -66,13 +66,10 @@ blusys_err_t connectivity_capability::start(blusys::framework::runtime &rt)
     return BLUSYS_OK;
 }
 
-void connectivity_capability::poll(std::uint32_t /*now_ms*/)
+void connectivity_capability::poll(std::uint32_t now_ms)
 {
     const std::uint32_t flags =
         pending_flags_.exchange(kPendingNone, std::memory_order_acquire);
-    if (flags == kPendingNone) {
-        return;
-    }
 
     if (flags & kPendingManualConnecting) {
         status_.wifi_connecting = true;
@@ -117,10 +114,26 @@ void connectivity_capability::poll(std::uint32_t /*now_ms*/)
         post_event(connectivity_event::wifi_got_ip);
 
         if (!dependent_services_started_) {
-            start_dependent_services();
+            start_dependent_services(now_ms);
         }
 
         check_capability_ready();
+    }
+
+    if (sntp_ != nullptr && !status_.time_synced) {
+        if (blusys_sntp_is_synced(sntp_)) {
+            status_.time_synced = true;
+            sntp_timeout_reported_ = false;
+            post_event(connectivity_event::time_synced);
+            BLUSYS_LOGI(TAG, "time synced");
+            check_capability_ready();
+        } else if (!sntp_timeout_reported_ && cfg_.sntp_timeout_ms > 0 &&
+                   now_ms - sntp_sync_started_ms_ >=
+                       static_cast<std::uint32_t>(cfg_.sntp_timeout_ms)) {
+            sntp_timeout_reported_ = true;
+            post_event(connectivity_event::time_sync_failed);
+            BLUSYS_LOGW(TAG, "time sync timed out after %d ms", cfg_.sntp_timeout_ms);
+        }
     }
 }
 
@@ -146,6 +159,8 @@ void connectivity_capability::stop()
 
     status_ = {};
     dependent_services_started_ = false;
+    sntp_sync_started_ms_ = 0;
+    sntp_timeout_reported_ = false;
     rt_ = nullptr;
 }
 
@@ -180,7 +195,7 @@ void connectivity_capability::wifi_event_handler(blusys_wifi_t * /*wifi*/,
     }
 }
 
-void connectivity_capability::start_dependent_services()
+void connectivity_capability::start_dependent_services(std::uint32_t now_ms)
 {
     dependent_services_started_ = true;
 
@@ -193,18 +208,12 @@ void connectivity_capability::start_dependent_services()
 
         blusys_err_t err = blusys_sntp_open(&sntp_cfg, &sntp_);
         if (err == BLUSYS_OK) {
-            // Note: blusys_sntp_sync blocks until time is obtained or
-            // the timeout expires. On interactive apps this stalls the
-            // UI; a future improvement could poll for sync completion
-            // across multiple poll() calls instead.
-            err = blusys_sntp_sync(sntp_, cfg_.sntp_timeout_ms);
-            if (err == BLUSYS_OK) {
+            sntp_sync_started_ms_ = now_ms;
+            sntp_timeout_reported_ = false;
+            if (blusys_sntp_is_synced(sntp_)) {
                 status_.time_synced = true;
                 post_event(connectivity_event::time_synced);
                 BLUSYS_LOGI(TAG, "time synced");
-            } else {
-                post_event(connectivity_event::time_sync_failed);
-                BLUSYS_LOGW(TAG, "time sync failed: %d", static_cast<int>(err));
             }
         } else {
             BLUSYS_LOGW(TAG, "sntp open failed: %d", static_cast<int>(err));

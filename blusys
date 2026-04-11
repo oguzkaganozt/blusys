@@ -9,11 +9,7 @@ BLUSYS_DEFAULT_TARGET="esp32s3"
 BLUSYS_DEFAULT_PROJECT="."
 BLUSYS_MIN_IDF_MAJOR=5
 BLUSYS_MIN_IDF_MINOR=5
-BLUSYS_SCAFFOLD_PLATFORM_VERSION="${BLUSYS_SCAFFOLD_PLATFORM_VERSION:-v6.1.0}"
-
-# Pin for `blusys create` generated main/idf_component.yml (all three tiers same tag).
-# Override when testing against a fork or pre-release: BLUSYS_SCAFFOLD_PLATFORM_VERSION=v7.x ...
-BLUSYS_SCAFFOLD_PLATFORM_VERSION="${BLUSYS_SCAFFOLD_PLATFORM_VERSION:-v7.0.0}"
+BLUSYS_SCAFFOLD_PLATFORM_VERSION="${BLUSYS_SCAFFOLD_PLATFORM_VERSION:-$(git -C "$BLUSYS_REPO_ROOT" symbolic-ref --quiet --short HEAD 2>/dev/null || printf 'main')}"
 
 BLUSYS_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/blusys"
 BLUSYS_CONFIG_FILE="$BLUSYS_CONFIG_DIR/config"
@@ -471,7 +467,11 @@ blusys_help_create() {
     printf '\nGenerates: top-level CMake + main/ with core/, integration/, and ui/ when the archetype ships UI.\n'
     printf 'Platform components are pulled via main/idf_component.yml.\n'
     printf '\nEnvironment:\n'
+<<<<<<< HEAD
     printf '  BLUSYS_SCAFFOLD_PLATFORM_VERSION   git tag for blusys_* deps (default: v7.0.0)\n'
+=======
+    printf '  BLUSYS_SCAFFOLD_PLATFORM_VERSION   git ref for blusys_* deps (default: current branch)\n'
+>>>>>>> bff28d1 (fix(v7): harden runtime navigation and example builds)
 }
 
 blusys_help_build() {
@@ -941,7 +941,7 @@ blusys_create_main_yml_interactive() {
     cat > "$target_dir/main/idf_component.yml" <<'YAML'
 ## Managed dependencies for the blusys platform.
 ##
-## All three platform components must be pinned to the SAME release tag.
+## All three platform components must be pinned to the SAME git ref.
 ## Mixing tiers across versions is not supported (decision 7).
 ##
 ## To test against a local platform checkout instead of the pinned tag,
@@ -976,7 +976,7 @@ blusys_create_main_yml_headless() {
     cat > "$target_dir/main/idf_component.yml" <<'YAML'
 ## Managed dependencies for the blusys platform.
 ##
-## All three platform components must be pinned to the SAME release tag.
+## All three platform components must be pinned to the SAME git ref.
 ## Mixing tiers across versions is not supported (decision 7).
 ##
 ## To test against a local platform checkout instead of the pinned tag,

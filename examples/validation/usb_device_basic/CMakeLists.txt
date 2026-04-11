@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-get_filename_component(BLUSYS_REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+get_filename_component(BLUSYS_REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
 set(EXTRA_COMPONENT_DIRS "${BLUSYS_REPO_ROOT}/components")
 
 set(SUPPORTED_TARGETS esp32s3)

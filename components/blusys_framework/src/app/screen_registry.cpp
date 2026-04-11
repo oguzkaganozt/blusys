@@ -19,16 +19,16 @@ std::uint32_t screen_registry::nav_route_at(std::size_t index_from_bottom) const
 }
 
 bool screen_registry::register_screen(std::uint32_t    route_id,
-                                       screen_create_fn  create_fn,
-                                       screen_destroy_fn destroy_fn)
+                                      screen_create_fn  create_fn,
+                                      screen_destroy_fn destroy_fn)
 {
     return register_screen(route_id, create_fn, destroy_fn, {});
 }
 
 bool screen_registry::register_screen(std::uint32_t         route_id,
-                                       screen_create_fn       create_fn,
-                                       screen_destroy_fn      destroy_fn,
-                                       const screen_lifecycle &lifecycle)
+                                      screen_create_fn       create_fn,
+                                      screen_destroy_fn      destroy_fn,
+                                      const screen_lifecycle &lifecycle)
 {
     if (create_fn == nullptr) {
         return false;
@@ -49,6 +49,8 @@ bool screen_registry::register_screen(std::uint32_t         route_id,
 bool screen_registry::navigate(const blusys::framework::route_command &cmd, app_ctx &ctx)
 {
     using T = blusys::framework::route_command_type;
+    const auto previous_stack = nav_stack_;
+
     switch (cmd.type) {
     case T::set_root: {
         if (find(cmd.id) == nullptr) {
@@ -60,7 +62,7 @@ bool screen_registry::navigate(const blusys::framework::route_command &cmd, app_
         (void)nav_stack_.push_back({.route_id = cmd.id, .params = cmd.params});
         if (!load_screen(cmd.id, cmd.params, ctx, cmd.transition,
                          blusys::ui::transition_type::none)) {
-            nav_stack_.clear();
+            nav_stack_ = previous_stack;
             return false;
         }
         return true;
@@ -79,7 +81,7 @@ bool screen_registry::navigate(const blusys::framework::route_command &cmd, app_
         (void)nav_stack_.push_back({.route_id = cmd.id, .params = cmd.params});
         if (!load_screen(cmd.id, cmd.params, ctx, cmd.transition,
                          blusys::ui::transition_type::slide_left)) {
-            nav_stack_.pop_back();
+            nav_stack_ = previous_stack;
             return false;
         }
         return true;
@@ -91,21 +93,14 @@ bool screen_registry::navigate(const blusys::framework::route_command &cmd, app_
                         static_cast<unsigned long>(cmd.id));
             return false;
         }
-        nav_entry old_top{};
-        const bool had_stack = !nav_stack_.empty();
-        if (had_stack) {
-            old_top = nav_stack_[nav_stack_.size() - 1];
+        if (!nav_stack_.empty()) {
             nav_stack_[nav_stack_.size() - 1] = {.route_id = cmd.id, .params = cmd.params};
         } else {
             (void)nav_stack_.push_back({.route_id = cmd.id, .params = cmd.params});
         }
         if (!load_screen(cmd.id, cmd.params, ctx, cmd.transition,
                          blusys::ui::transition_type::none)) {
-            if (had_stack) {
-                nav_stack_[nav_stack_.size() - 1] = old_top;
-            } else {
-                nav_stack_.clear();
-            }
+            nav_stack_ = previous_stack;
             return false;
         }
         return true;
@@ -113,14 +108,11 @@ bool screen_registry::navigate(const blusys::framework::route_command &cmd, app_
 
     case T::pop:
         if (nav_stack_.size() > 1) {
-            const nav_entry popped = nav_stack_[nav_stack_.size() - 1];
             nav_stack_.pop_back();
             const auto &prev = nav_stack_[nav_stack_.size() - 1];
             if (!load_screen(prev.route_id, prev.params, ctx, cmd.transition,
                              blusys::ui::transition_type::slide_right)) {
-                (void)nav_stack_.push_back(popped);
-                BLUSYS_LOGW(TAG, "pop: failed to restore route %lu",
-                            static_cast<unsigned long>(prev.route_id));
+                nav_stack_ = previous_stack;
                 return false;
             }
             return true;
@@ -134,10 +126,19 @@ bool screen_registry::navigate(const blusys::framework::route_command &cmd, app_
 }
 
 void screen_registry::set_screen_changed_callback(void (*fn)(lv_obj_t *, void *),
-                                                    void *user_ctx)
+                                                  void *user_ctx)
 {
-    on_screen_changed_ = fn;
-    screen_changed_ctx_ = user_ctx;
+    if (fn == nullptr) {
+        return;
+    }
+    for (const auto &entry : screen_changed_callbacks_) {
+        if (entry.fn == fn && entry.user_ctx == user_ctx) {
+            return;
+        }
+    }
+    if (!screen_changed_callbacks_.push_back({.fn = fn, .user_ctx = user_ctx})) {
+        BLUSYS_LOGW(TAG, "screen changed callback list full");
+    }
 }
 
 const screen_registry::screen_entry *screen_registry::find(std::uint32_t id) const
@@ -151,10 +152,10 @@ const screen_registry::screen_entry *screen_registry::find(std::uint32_t id) con
 }
 
 bool screen_registry::load_screen(std::uint32_t route_id,
-                                   const void   *params,
-                                   app_ctx      &ctx,
-                                   std::uint32_t transition_field,
-                                   blusys::ui::transition_type default_transition)
+                                  const void   *params,
+                                  app_ctx      &ctx,
+                                  std::uint32_t transition_field,
+                                  blusys::ui::transition_type default_transition)
 {
     const screen_entry *entry = find(route_id);
     if (entry == nullptr) {
@@ -163,10 +164,23 @@ bool screen_registry::load_screen(std::uint32_t route_id,
         return false;
     }
 
-    // Fire lifecycle hooks on the outgoing screen.
-    fire_hide_hooks();
-
     const bool in_shell = (shell_content_ != nullptr);
+    const auto spec = blusys::ui::resolve_transition(transition_field, default_transition);
+    const bool animated = !in_shell && (spec.type != blusys::ui::transition_type::none);
+
+    // Build the next screen before mutating nav-owned state so a missing
+    // route or create failure cannot blank the current UI.
+    lv_group_t *group  = nullptr;
+    lv_obj_t   *screen = entry->create_fn(ctx, params, &group);
+    if (screen == nullptr) {
+        BLUSYS_LOGW(TAG, "create_fn returned null for route %lu",
+                    static_cast<unsigned long>(route_id));
+        return false;
+    }
+
+    // Fire lifecycle hooks on the outgoing screen only after the incoming
+    // screen exists, so failed navigations leave the current screen intact.
+    fire_hide_hooks();
 
     if (in_shell) {
         const auto shell_spec =
@@ -175,14 +189,10 @@ bool screen_registry::load_screen(std::uint32_t route_id,
 
         destroy_active();
 
-        lv_group_t *group  = nullptr;
-        lv_obj_t   *screen = entry->create_fn(ctx, params, &group);
-        if (screen == nullptr) {
-            BLUSYS_LOGW(TAG, "create_fn returned null for route %lu",
-                        static_cast<unsigned long>(route_id));
-            return false;
-        }
-
+        // Re-parent screen content into the shell's content area if the
+        // create_fn made a standalone screen. Products using
+        // page_create_in(shell_content) already parent correctly; this also
+        // handles the case where they used page_create() instead.
         if (lv_obj_get_parent(screen) != shell_content_) {
             lv_obj_set_parent(screen, shell_content_);
         }
@@ -198,7 +208,6 @@ bool screen_registry::load_screen(std::uint32_t route_id,
             lv_obj_set_style_opa(screen, LV_OPA_COVER, 0);
         }
 
-        // Wire focus.
         if (focus_scope_ != nullptr) {
             focus_scope_->reset();
             focus_scope_->push_scope(screen);
@@ -212,17 +221,15 @@ bool screen_registry::load_screen(std::uint32_t route_id,
             }
         }
 
-        if (on_screen_changed_ != nullptr) {
-            on_screen_changed_(screen, screen_changed_ctx_);
+        for (const auto &callback : screen_changed_callbacks_) {
+            if (callback.fn != nullptr) {
+                callback.fn(screen, callback.user_ctx);
+            }
         }
 
         fire_show_hooks(screen, entry->lifecycle);
         return true;
     }
-
-    // Standalone screen mode: destroy/animate the old screen and load a new one.
-    const auto spec = blusys::ui::resolve_transition(transition_field, default_transition);
-    const bool animated = (spec.type != blusys::ui::transition_type::none);
 
     if (animated) {
         if (active_screen_ != nullptr && active_destroy_fn_ != nullptr) {
@@ -233,14 +240,6 @@ bool screen_registry::load_screen(std::uint32_t route_id,
         active_lifecycle_ = {};
     } else {
         destroy_active();
-    }
-
-    lv_group_t *group  = nullptr;
-    lv_obj_t   *screen = entry->create_fn(ctx, params, &group);
-    if (screen == nullptr) {
-        BLUSYS_LOGW(TAG, "create_fn returned null for route %lu",
-                    static_cast<unsigned long>(route_id));
-        return false;
     }
 
     active_screen_     = screen;
@@ -266,8 +265,10 @@ bool screen_registry::load_screen(std::uint32_t route_id,
         }
     }
 
-    if (on_screen_changed_ != nullptr) {
-        on_screen_changed_(screen, screen_changed_ctx_);
+    for (const auto &callback : screen_changed_callbacks_) {
+        if (callback.fn != nullptr) {
+            callback.fn(screen, callback.user_ctx);
+        }
     }
 
     fire_show_hooks(screen, entry->lifecycle);

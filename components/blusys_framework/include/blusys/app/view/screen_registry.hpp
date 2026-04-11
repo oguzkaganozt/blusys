@@ -72,7 +72,10 @@ public:
     // handled here — the screen_router delegates those to overlay_manager.
     bool navigate(const blusys::framework::route_command &command, app_ctx &ctx);
 
-    // Set a callback invoked after every screen load (after focus wiring).
+    // Register a callback invoked after every screen load.
+    // Multiple callbacks may be registered; the device entry path uses
+    // this to call input_bridge_attach_screen and the shell uses it to
+    // keep its chrome in sync with the nav stack.
     void set_screen_changed_callback(void (*fn)(lv_obj_t *screen, void *user_ctx),
                                      void *user_ctx);
 
@@ -107,6 +110,11 @@ private:
         const void    *params   = nullptr;
     };
 
+    struct screen_changed_callback_entry {
+        void (*fn)(lv_obj_t *screen, void *user_ctx) = nullptr;
+        void *user_ctx = nullptr;
+    };
+
     const screen_entry *find(std::uint32_t id) const;
     bool load_screen(std::uint32_t route_id, const void *params, app_ctx &ctx,
                      std::uint32_t transition_field, blusys::ui::transition_type default_transition);
@@ -121,8 +129,7 @@ private:
     screen_destroy_fn  active_destroy_fn_ = nullptr;
     screen_lifecycle   active_lifecycle_   = {};
 
-    void (*on_screen_changed_)(lv_obj_t *screen, void *user_ctx) = nullptr;
-    void *screen_changed_ctx_ = nullptr;
+    blusys::static_vector<screen_changed_callback_entry, 4> screen_changed_callbacks_{};
 
     blusys::ui::focus_scope_manager *focus_scope_    = nullptr;
     lv_obj_t                        *shell_content_  = nullptr;

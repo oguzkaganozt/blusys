@@ -125,7 +125,7 @@ private:
                                    const blusys_wifi_event_info_t *info,
                                    void *user_ctx);
 
-    void start_dependent_services();
+    void start_dependent_services(std::uint32_t now_ms);
     void post_event(connectivity_event ev);
     void check_capability_ready();
 
@@ -140,6 +140,8 @@ private:
 
     std::atomic<std::uint32_t> pending_flags_{kPendingNone};
     bool dependent_services_started_ = false;
+    std::uint32_t sntp_sync_started_ms_ = 0;
+    bool sntp_timeout_reported_ = false;
 };
 
 #else  // host stub
