@@ -1,0 +1,18 @@
+menu "Interactive Panel (Phase 7 display)"
+
+choice BLUSYS_IP_DISPLAY_PROFILE
+    prompt "Device display profile"
+    default BLUSYS_IP_DISPLAY_PROFILE_ILI9341
+    help
+        SPI TFT for the panel archetype. ILI9341 is the default medium panel;
+        ILI9488 is the large-panel option.
+
+config BLUSYS_IP_DISPLAY_PROFILE_ILI9341
+    bool "ILI9341 320x240 landscape"
+
+config BLUSYS_IP_DISPLAY_PROFILE_ILI9488
+    bool "ILI9488 480x320 landscape"
+
+endchoice
+
+endmenu

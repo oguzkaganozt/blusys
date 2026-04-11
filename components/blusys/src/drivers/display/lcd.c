@@ -27,6 +27,8 @@
 #include "esp_lcd_panel_ssd1306.h"
 #include "esp_lcd_panel_nt35510.h"
 
+#include "blusys/internal/lcd_panel_ili.h"
+
 struct blusys_lcd {
     esp_lcd_panel_io_handle_t io_handle;
     esp_lcd_panel_handle_t    panel_handle;
@@ -528,9 +530,22 @@ static blusys_err_t blusys_lcd_open_spi(const blusys_lcd_config_t *config,
      * ST7735 160x128 = 40 KB) while still keeping at least the legacy 80-line
      * budget for taller displays. This is what lets the LVGL flush callback
      * push a whole dirty area in a single DMA transaction instead of slicing
-     * it into per-row writes. */
+     * it into per-row writes.
+     *
+     * Large panels (ILI9488-class) would otherwise request multi-megabyte DMA
+     * windows; cap the reservation while still allowing a full RGB565 frame up
+     * to ~1024 KiB (e.g. 800x480 or 480x320). */
+    uint32_t row_bytes = (config->width * config->bits_per_pixel + 7u) / 8u;
     uint32_t xfer_lines = config->height > 80u ? config->height : 80u;
-    uint32_t xfer_bytes = (config->width * xfer_lines * config->bits_per_pixel + 7u) / 8u;
+    uint32_t xfer_bytes = row_bytes * xfer_lines;
+    const uint32_t xfer_cap = 1024u * 1024u;
+    if (xfer_bytes > xfer_cap) {
+        xfer_lines = xfer_cap / row_bytes;
+        if (xfer_lines < 1u) {
+            xfer_lines = 1u;
+        }
+        xfer_bytes = row_bytes * xfer_lines;
+    }
 
     spi_bus_config_t bus_cfg = {
         .mosi_io_num   = config->spi.mosi_pin,
@@ -593,9 +608,17 @@ static blusys_err_t blusys_lcd_open_spi(const blusys_lcd_config_t *config,
     } else if (config->driver == BLUSYS_LCD_DRIVER_ST7735) {
         esp_err = blusys_lcd_new_panel_st7735(lcd->io_handle, &panel_cfg,
                                               &lcd->panel_handle);
-    } else {
+    } else if (config->driver == BLUSYS_LCD_DRIVER_ILI9341) {
+        esp_err = blusys_lcd_new_panel_ili9341(lcd->io_handle, &panel_cfg,
+                                               &lcd->panel_handle);
+    } else if (config->driver == BLUSYS_LCD_DRIVER_ILI9488) {
+        esp_err = blusys_lcd_new_panel_ili9488(lcd->io_handle, &panel_cfg,
+                                               &lcd->panel_handle);
+    } else if (config->driver == BLUSYS_LCD_DRIVER_NT35510) {
         esp_err = esp_lcd_new_panel_nt35510(lcd->io_handle, &panel_cfg,
                                             &lcd->panel_handle);
+    } else {
+        esp_err = ESP_ERR_NOT_SUPPORTED;
     }
 
     if (esp_err != ESP_OK) {
@@ -693,6 +716,8 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
     case BLUSYS_LCD_DRIVER_ST7789:
     case BLUSYS_LCD_DRIVER_NT35510:
     case BLUSYS_LCD_DRIVER_ST7735:
+    case BLUSYS_LCD_DRIVER_ILI9341:
+    case BLUSYS_LCD_DRIVER_ILI9488:
         if (!blusys_lcd_is_valid_spi_bus(config->spi.bus) ||
             !GPIO_IS_VALID_OUTPUT_GPIO(config->spi.sclk_pin) ||
             !GPIO_IS_VALID_OUTPUT_GPIO(config->spi.mosi_pin) ||
@@ -742,7 +767,9 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
 
     if ((config->driver == BLUSYS_LCD_DRIVER_ST7789) ||
         (config->driver == BLUSYS_LCD_DRIVER_NT35510) ||
-        (config->driver == BLUSYS_LCD_DRIVER_ST7735)) {
+        (config->driver == BLUSYS_LCD_DRIVER_ST7735) ||
+        (config->driver == BLUSYS_LCD_DRIVER_ILI9341) ||
+        (config->driver == BLUSYS_LCD_DRIVER_ILI9488)) {
         lcd->bl_pin = config->spi.bl_pin;
         err = blusys_lcd_open_spi(config, lcd);
     } else {

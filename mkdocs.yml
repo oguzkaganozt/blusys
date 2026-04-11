@@ -138,6 +138,7 @@ nav:
       - Architecture: internals/architecture.md
       - Guidelines: internals/guidelines.md
       - Phase 5 Interactive Archetypes Plan: internals/phase-5-interactive-archetypes-plan.md
+      - Phase 7 Hardware Packaging Plan: internals/phase-7-hardware-packaging-plan.md
       - Target Matrix: internals/target-matrix.md
       - Testing:
           - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md

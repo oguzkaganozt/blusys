@@ -1367,6 +1367,10 @@ docs:
     section: internals
     visibility: public
 
+  - path: docs/internals/phase-7-hardware-packaging-plan.md
+    section: internals
+    visibility: public
+
   - path: docs/internals/target-matrix.md
     section: internals
     visibility: public

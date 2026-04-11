@@ -319,9 +319,17 @@ void run_headless(const app_spec<State, Action> &spec)
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
 
+#if defined(ESP_PLATFORM)
+#define BLUSYS_APP_MAIN_HEADLESS(spec_expr)                                 \
+    extern "C" void app_main(void) {                                        \
+        auto _blusys_spec = (spec_expr);                                    \
+        ::blusys::app::detail::run_headless(_blusys_spec);                  \
+    }
+#else
 #define BLUSYS_APP_MAIN_HEADLESS(spec_expr)                                 \
     int main(void) {                                                        \
         auto _blusys_spec = (spec_expr);                                    \
         ::blusys::app::detail::run_headless(_blusys_spec);                  \
         return 0;                                                           \
     }
+#endif

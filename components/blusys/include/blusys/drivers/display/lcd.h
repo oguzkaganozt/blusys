@@ -17,6 +17,8 @@ typedef enum {
     BLUSYS_LCD_DRIVER_SSD1306 = 1,
     BLUSYS_LCD_DRIVER_NT35510 = 2,
     BLUSYS_LCD_DRIVER_ST7735  = 3,
+    BLUSYS_LCD_DRIVER_ILI9341 = 4,
+    BLUSYS_LCD_DRIVER_ILI9488 = 5,
 } blusys_lcd_driver_t;
 
 typedef struct {

@@ -36,6 +36,7 @@ set(blusys_sources
     src/common/usb_host.c
     src/common/wdt.c
     src/drivers/display/lcd.c
+    src/drivers/display/lcd_panel_ili.c
     src/drivers/display/led_strip.c
     src/drivers/display/seven_seg.c
     src/drivers/input/button.c

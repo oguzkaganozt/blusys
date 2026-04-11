@@ -35,6 +35,7 @@ target_link_libraries(lvgl PUBLIC PkgConfig::SDL2)
 
 set(BLUSYS_COMP "${BLUSYS_PATH}/components/blusys")
 set(BLUSYS_FW   "${BLUSYS_PATH}/components/blusys_framework")
+set(BLUSYS_SVC  "${BLUSYS_PATH}/components/blusys_services")
 
 add_library(blusys_framework_host STATIC
     ${BLUSYS_COMP}/src/common/error.c
@@ -95,6 +96,7 @@ add_library(blusys_framework_host STATIC
 target_include_directories(blusys_framework_host PUBLIC
     ${BLUSYS_COMP}/include
     ${BLUSYS_FW}/include
+    ${BLUSYS_SVC}/include
     ${BLUSYS_PATH}/scripts/host/include_host
 )
 target_compile_options(blusys_framework_host PRIVATE
@@ -121,3 +123,7 @@ target_link_libraries(gateway_host PRIVATE
 target_compile_options(gateway_host PRIVATE
     -fno-exceptions -fno-rtti -fno-threadsafe-statics -Wall -Wextra
 )
+
+set(BLUSYS_GW_HOST_DISPLAY_PROFILE "0" CACHE STRING "Host SDL: 0=320x240 1=480x320")
+target_compile_definitions(gateway_host PRIVATE
+    BLUSYS_GW_HOST_DISPLAY_PROFILE=${BLUSYS_GW_HOST_DISPLAY_PROFILE})

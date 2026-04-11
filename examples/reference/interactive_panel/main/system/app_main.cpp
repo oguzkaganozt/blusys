@@ -1,19 +1,57 @@
 #include "logic/app_logic.hpp"
 #include "ui/app_ui.hpp"
 
+#include "blusys/app/layout_surface.hpp"
 #include "blusys/app/theme_presets.hpp"
 
 #include <cstdint>
 
+#ifdef ESP_PLATFORM
+#include "sdkconfig.h"
+#include "blusys/app/profiles/ili9341.hpp"
+#include "blusys/app/profiles/ili9488.hpp"
+#endif
+
 namespace interactive_panel::system {
+
+blusys::app::device_profile panel_device_profile_for_build()
+{
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_IP_DISPLAY_PROFILE_ILI9488) && \
+    CONFIG_BLUSYS_IP_DISPLAY_PROFILE_ILI9488
+    return blusys::app::profiles::ili9488_480x320();
+#elif defined(ESP_PLATFORM)
+    return blusys::app::profiles::ili9341_320x240();
+#else
+    blusys::app::device_profile p{};
+#if defined(BLUSYS_IP_HOST_DISPLAY_PROFILE) && (BLUSYS_IP_HOST_DISPLAY_PROFILE == 1)
+    p.lcd.width          = 480;
+    p.lcd.height         = 320;
+#else
+    p.lcd.width          = 320;
+    p.lcd.height         = 240;
+#endif
+    p.lcd.bits_per_pixel = 16;
+    p.ui.panel_kind      = BLUSYS_UI_PANEL_KIND_RGB565;
+    return p;
+#endif
+}
 
 namespace {
 
-constexpr blusys::app::view::shell_config kShellConfig{
-    .header = {.enabled = true, .title = "Panel"},
-    .status = {.enabled = true},
-    .tabs = {.enabled = true},
-};
+const blusys::app::view::shell_config panel_shell_for_profile()
+{
+    const auto prof = panel_device_profile_for_build();
+    const auto h    = blusys::app::layout::classify(prof);
+    blusys::app::view::shell_config c{};
+    c.header.enabled = true;
+    c.header.title   = "Panel";
+    c.status.enabled = h.shell != blusys::app::layout::shell_density::minimal;
+    c.tabs.enabled =
+        h.size_class != blusys::app::layout::surface_size::tiny_mono;
+    return c;
+}
+
+static const blusys::app::view::shell_config kShellConfig = panel_shell_for_profile();
 
 bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*/, action *out)
 {
@@ -59,14 +97,19 @@ static const blusys::app::app_spec<app_state, action> spec{
 }  // namespace interactive_panel::system
 
 #ifdef ESP_PLATFORM
-#include "blusys/app/profiles/st7735.hpp"
 BLUSYS_APP_MAIN_DEVICE(interactive_panel::system::spec,
-                       blusys::app::profiles::st7735_160x128())
+                       interactive_panel::system::panel_device_profile_for_build())
 #else
-BLUSYS_APP_MAIN_HOST_PROFILE(interactive_panel::system::spec,
-                             (blusys::app::host_profile{
-                                 .hor_res = 320,
-                                 .ver_res = 240,
-                                 .title = "Ops Panel",
-                             }))
+BLUSYS_APP_MAIN_HOST_PROFILE(
+    interactive_panel::system::spec,
+    (blusys::app::host_profile{
+#if defined(BLUSYS_IP_HOST_DISPLAY_PROFILE) && (BLUSYS_IP_HOST_DISPLAY_PROFILE == 1)
+        .hor_res = 480,
+        .ver_res = 320,
+#else
+        .hor_res = 320,
+        .ver_res = 240,
+#endif
+        .title = "Ops Panel",
+    }))
 #endif

@@ -12,6 +12,8 @@
 //
 // For device targets, also include a profile header:
 //   #include "blusys/app/profiles/st7735.hpp"
+// Optional layout hints when supporting multiple display sizes:
+//   #include "blusys/app/layout_surface.hpp"
 
 #include "blusys/app/app_spec.hpp"
 #include "blusys/app/app_identity.hpp"

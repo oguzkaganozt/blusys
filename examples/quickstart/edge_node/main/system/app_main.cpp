@@ -1,7 +1,8 @@
 // Edge node reference — system layer.
 //
 // Owns capability configuration, event bridge, telemetry recording,
-// and the headless entry point.  Product behavior stays in logic/.
+// and the headless or optional local mono UI entry point.  Product
+// behavior stays in logic/.
 
 #include "logic/app_logic.hpp"
 
@@ -16,9 +17,29 @@
 #include <cstdio>
 #include <cstdint>
 
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+#include "ui/app_ui.hpp"
+#endif
+
+#ifdef ESP_PLATFORM
+#include "sdkconfig.h"
+#endif
+
+#if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM) && \
+    defined(CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI) && CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI
+#include "blusys/app/theme_presets.hpp"
+#endif
+
 namespace edge_node::system {
 
 namespace {
+
+#ifndef BLUSYS_FRAMEWORK_HAS_UI
+void on_init_host(blusys::app::app_ctx & /*ctx*/, app_state & /*state*/)
+{
+    BLUSYS_LOGI("edge_node", "edge node initialized — entering operational loop");
+}
+#endif
 
 // ---- telemetry delivery callback ----
 
@@ -116,13 +137,6 @@ float drift_sensor(float base, float range, std::uint32_t tick)
     float phase = static_cast<float>(tick % 120) / 120.0f;
     float offset = (phase < 0.5f) ? (phase * 2.0f) : (2.0f - phase * 2.0f);
     return base + (offset - 0.5f) * range;
-}
-
-// ---- on_init ----
-
-void on_init(blusys::app::app_ctx & /*ctx*/, app_state & /*state*/)
-{
-    BLUSYS_LOGI("edge_node", "edge node initialized — entering operational loop");
 }
 
 // ---- on_tick: sensor sampling and telemetry recording ----
@@ -233,15 +247,32 @@ bool map_event(std::uint32_t id, std::uint32_t code,
 const blusys::app::app_spec<app_state, action> spec{
     .initial_state  = {},
     .update         = update,
-    .on_init        = on_init,
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+    .on_init        = edge_node::ui::on_init,
+#else
+    .on_init        = on_init_host,
+#endif
     .on_tick        = on_tick,
     .map_event      = map_event,
     .tick_period_ms = 200,
     .capabilities   = &capabilities,
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI) && \
+    CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI
+    .theme          = &blusys::app::presets::oled(),
+#endif
+#endif
 };
 
 }  // namespace
 
 }  // namespace edge_node::system
 
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI) && \
+    CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI && defined(BLUSYS_FRAMEWORK_HAS_UI)
+#include "blusys/app/profiles/ssd1306.hpp"
+BLUSYS_APP_MAIN_DEVICE(edge_node::system::spec,
+                       blusys::app::profiles::ssd1306_128x64())
+#else
 BLUSYS_APP_MAIN_HEADLESS(edge_node::system::spec)
+#endif

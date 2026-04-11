@@ -15,15 +15,59 @@
 #include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
+#include "blusys/app/layout_surface.hpp"
 #include "blusys/app/theme_presets.hpp"
 #include "blusys/log.h"
 
 #include <cstdio>
 #include <cstdint>
 
+#ifdef ESP_PLATFORM
+#include "sdkconfig.h"
+#include "blusys/app/profiles/ili9341.hpp"
+#include "blusys/app/profiles/ili9488.hpp"
+#endif
+
 namespace gateway::system {
 
+blusys::app::device_profile gateway_device_profile_for_build()
+{
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488) && \
+    CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488
+    return blusys::app::profiles::ili9488_480x320();
+#elif defined(ESP_PLATFORM)
+    return blusys::app::profiles::ili9341_320x240();
+#else
+    blusys::app::device_profile p{};
+#if defined(BLUSYS_GW_HOST_DISPLAY_PROFILE) && (BLUSYS_GW_HOST_DISPLAY_PROFILE == 1)
+    p.lcd.width          = 480;
+    p.lcd.height         = 320;
+#else
+    p.lcd.width          = 320;
+    p.lcd.height         = 240;
+#endif
+    p.lcd.bits_per_pixel = 16;
+    p.ui.panel_kind      = BLUSYS_UI_PANEL_KIND_RGB565;
+    return p;
+#endif
+}
+
 namespace {
+
+const blusys::app::view::shell_config gateway_shell_for_profile()
+{
+    const auto prof = gateway_device_profile_for_build();
+    const auto h    = blusys::app::layout::classify(prof);
+    blusys::app::view::shell_config c{};
+    c.header.enabled = true;
+    c.header.title   = "Gateway";
+    c.status.enabled = h.shell != blusys::app::layout::shell_density::minimal;
+    c.tabs.enabled =
+        h.size_class != blusys::app::layout::surface_size::tiny_mono;
+    return c;
+}
+
+static const blusys::app::view::shell_config kShellConfig = gateway_shell_for_profile();
 
 // ---- telemetry delivery callback ----
 
@@ -211,14 +255,6 @@ bool map_event(std::uint32_t id, std::uint32_t code,
     return false;
 }
 
-// ---- shell config ----
-
-constexpr blusys::app::view::shell_config kShellConfig{
-    .header = {.enabled = true, .title = "Gateway"},
-    .status = {.enabled = true},
-    .tabs   = {.enabled = true},
-};
-
 // ---- app spec ----
 
 const blusys::app::app_spec<app_state, action> spec{
@@ -241,14 +277,19 @@ const blusys::app::app_spec<app_state, action> spec{
 // ---- platform entry ----
 
 #ifdef ESP_PLATFORM
-#include "blusys/app/profiles/st7735.hpp"
 BLUSYS_APP_MAIN_DEVICE(gateway::system::spec,
-                       blusys::app::profiles::st7735_160x128())
+                       gateway::system::gateway_device_profile_for_build())
 #else
-BLUSYS_APP_MAIN_HOST_PROFILE(gateway::system::spec,
-                             (blusys::app::host_profile{
-                                 .hor_res = 320,
-                                 .ver_res = 240,
-                                 .title = "Blusys Gateway",
-                             }))
+BLUSYS_APP_MAIN_HOST_PROFILE(
+    gateway::system::spec,
+    (blusys::app::host_profile{
+#if defined(BLUSYS_GW_HOST_DISPLAY_PROFILE) && (BLUSYS_GW_HOST_DISPLAY_PROFILE == 1)
+        .hor_res = 480,
+        .ver_res = 320,
+#else
+        .hor_res = 320,
+        .ver_res = 240,
+#endif
+        .title = "Blusys Gateway",
+    }))
 #endif

@@ -69,3 +69,41 @@ The first canonical interactive hardware profile. Framework-owned display and UI
 | `BLUSYS_APP_MAIN_HEADLESS(spec)` | Headless | None |
 
 The same `app_spec`, State, Actions, and `update()` compile for all entries. Swap the macro at the bottom of `system/app_main.cpp` to switch targets.
+
+## Phase 7 device profile headers
+
+Beyond ST7735, the framework ships small **data-first** profile factories under `blusys/app/profiles/`. Override fields after construction for your PCB.
+
+| Header | Factory (typical) | Role |
+|--------|-------------------|------|
+| `st7735.hpp` | `st7735_160x128()` | Canonical compact SPI TFT |
+| `st7789.hpp` | `st7789_320x240()` | Larger handheld / compact dashboard |
+| `ssd1306.hpp` | `ssd1306_128x64()`, `ssd1306_128x32()` | I2C mono local status |
+| `ili9341.hpp` | `ili9341_320x240()` | Medium operator / panel |
+| `ili9488.hpp` | `ili9488_480x320()` | Large local surface |
+
+SPI defaults use target-gated pins where common; I2C defaults follow the `lcd_ssd1306_basic` example per target.
+
+## Layout hints
+
+`#include "blusys/app/layout_surface.hpp"` — `blusys::app::layout::classify(device_profile)` returns a small **surface_hints** struct (size class, suggested shell density, spacing/typography levels, theme packaging hint). Use it to tune shell chrome or documentation; it is **not** a responsive layout engine.
+
+## Kconfig in reference examples
+
+Several archetype examples expose **menuconfig** choices so you can compile the same `logic/` against different display families without editing source:
+
+- **Interactive controller** (`quickstart/interactive_controller`): ST7735 vs ST7789.
+- **Interactive panel** (`reference/interactive_panel`): ILI9341 vs ILI9488.
+- **Gateway** (`reference/gateway`): ILI9341 vs ILI9488 (plus WiFi strings).
+- **Edge node** (`quickstart/edge_node`): optional **local SSD1306** status UI vs default headless (device only).
+
+Host SDL builds use CMake cache variables (e.g. `BLUSYS_IC_HOST_DISPLAY_PROFILE`) where documented in each example’s `host/CMakeLists.txt` to match window size to the simulated profile.
+
+## Archetype → profile (quick reference)
+
+| Archetype | Typical profiles | Notes |
+|-----------|------------------|--------|
+| Interactive controller | ST7735, ST7789 | Compact color; expressive theme bias |
+| Interactive panel | ILI9341, ILI9488 | Operational / dashboard density |
+| Edge node | Headless, or SSD1306 for local status | Same reducer; `system/` chooses entry |
+| Gateway / controller | ILI9341, ILI9488 | Local operator UI; connectivity unchanged |

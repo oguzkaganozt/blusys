@@ -11,6 +11,7 @@ set(blusys_framework_sources
 # Capabilities — device-only (depend on blusys_services C APIs).
 if(ESP_PLATFORM)
     list(APPEND blusys_framework_sources
+        src/app/app_headless_platform_esp.cpp
         src/app/capabilities/connectivity.cpp
         src/app/capabilities/storage.cpp
         src/app/capabilities/bluetooth.cpp
