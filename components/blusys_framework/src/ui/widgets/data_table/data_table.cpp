@@ -61,7 +61,7 @@ void apply_theme(lv_obj_t *table)
     const auto &t = theme();
 
     // Table background.
-    lv_obj_set_style_bg_color(table, t.color_surface, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(table, t.color_surface_elevated, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(table, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_border_width(table, 0, LV_PART_MAIN);
     lv_obj_set_style_radius(table, t.radius_card, LV_PART_MAIN);

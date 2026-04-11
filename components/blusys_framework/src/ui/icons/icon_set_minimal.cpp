@@ -25,6 +25,11 @@ const icon_set &icon_set_minimal()
         .power     = LV_SYMBOL_POWER,
         .refresh   = LV_SYMBOL_REFRESH,
         .close     = LV_SYMBOL_CLOSE,
+
+        .menu      = LV_SYMBOL_LIST,
+        .more      = LV_SYMBOL_PLUS,
+        .nav_next  = LV_SYMBOL_RIGHT,
+        .nav_prev  = LV_SYMBOL_LEFT,
     };
     return set;
 }

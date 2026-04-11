@@ -56,7 +56,7 @@ void apply_theme(lv_obj_t *ta)
     const auto &t = theme();
 
     // Background.
-    lv_obj_set_style_bg_color(ta, t.color_surface, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(ta, t.color_surface_elevated, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(ta, LV_OPA_COVER, LV_PART_MAIN);
 
     // Border.

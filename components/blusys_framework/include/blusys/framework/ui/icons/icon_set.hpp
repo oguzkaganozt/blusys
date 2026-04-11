@@ -34,6 +34,12 @@ struct icon_set {
     const char *power;
     const char *refresh;
     const char *close;
+
+    // Dense status / navigation (small displays)
+    const char *menu;
+    const char *more;
+    const char *nav_next;
+    const char *nav_prev;
 };
 
 }  // namespace blusys::ui

@@ -48,7 +48,11 @@ lv_obj_t *icon_label_create(lv_obj_t *parent, const icon_label_config &config)
 
     // Text label.
     lv_obj_t *text = lv_label_create(row);
-    lv_obj_set_style_text_font(text, config.text_font != nullptr ? config.text_font : t.font_body, 0);
+    const lv_font_t *tfont = config.text_font != nullptr ? config.text_font : t.font_body;
+    lv_obj_set_style_text_font(text, tfont, 0);
+    if (config.text_font == nullptr) {
+        lv_obj_set_style_text_letter_space(text, t.text_letter_space_body, 0);
+    }
     lv_obj_set_style_text_color(text, t.color_on_surface, 0);
     lv_label_set_text(text, config.text != nullptr ? config.text : "");
 

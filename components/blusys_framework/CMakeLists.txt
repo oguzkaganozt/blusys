@@ -2,6 +2,7 @@ set(blusys_framework_sources
     src/core/controller.cpp
     src/core/feedback.cpp
     src/core/feedback_presets.cpp
+    src/app/feedback_logging_sink.cpp
     src/core/framework.cpp
     src/core/router.cpp
     src/core/runtime.cpp
@@ -49,6 +50,7 @@ if(BLUSYS_BUILD_UI)
             src/ui/primitives/row.cpp
             src/ui/primitives/screen.cpp
             src/ui/theme.cpp
+            src/ui/visual_feedback.cpp
             src/ui/primitives/icon_label.cpp
             src/ui/primitives/status_badge.cpp
             src/ui/primitives/key_value.cpp

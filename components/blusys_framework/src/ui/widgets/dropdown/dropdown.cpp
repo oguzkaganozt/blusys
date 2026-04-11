@@ -89,7 +89,7 @@ void apply_theme(lv_obj_t *dd)
     const auto &t = theme();
 
     // Main button surface.
-    lv_obj_set_style_bg_color(dd, t.color_surface, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(dd, t.color_surface_elevated, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(dd, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_border_color(dd, t.color_outline, LV_PART_MAIN);
     lv_obj_set_style_border_width(dd, 1, LV_PART_MAIN);
@@ -127,7 +127,7 @@ void on_lvgl_opened(lv_event_t *e)
         return;
     }
     const auto &t = theme();
-    lv_obj_set_style_bg_color(list, t.color_surface, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(list, t.color_surface_elevated, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(list, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_border_color(list, t.color_outline, LV_PART_MAIN);
     lv_obj_set_style_border_width(list, 1, LV_PART_MAIN);

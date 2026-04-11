@@ -113,6 +113,7 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/core/controller.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback_presets.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/feedback_logging_sink.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/framework.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/router.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/runtime.cpp
@@ -144,6 +145,7 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/row.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/screen.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/theme.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/visual_feedback.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/icon_label.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/status_badge.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/key_value.cpp
@@ -273,6 +275,21 @@ target_compile_options(app_headless_demo PRIVATE
 )
 # Prevent SDL from hijacking main() — the headless path owns its own entry.
 target_compile_definitions(app_headless_demo PRIVATE SDL_MAIN_HANDLED)
+
+# ── theme_presets_smoke (Phase 1 — preset + visual feedback token sanity) ───
+add_executable(theme_presets_smoke src/theme_presets_smoke.cpp)
+target_link_libraries(theme_presets_smoke PRIVATE
+    blusys_framework_host
+    PkgConfig::SDL2
+    m
+)
+target_compile_options(theme_presets_smoke PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
 
 # ── connected_headless_host (Phase 4 — connected product on host) ───────────
 #

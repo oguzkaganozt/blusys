@@ -32,8 +32,8 @@ lv_obj_t *card_create(lv_obj_t *parent, const card_config &config)
     lv_obj_set_style_pad_all(card, pad, 0);
     lv_obj_set_style_pad_row(card, t.spacing_sm, 0);
 
-    // Surface background.
-    lv_obj_set_style_bg_color(card, t.color_surface, 0);
+    // Elevated surface (card above page background).
+    lv_obj_set_style_bg_color(card, t.color_surface_elevated, 0);
     lv_obj_set_style_bg_opa(card, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(card, t.radius_card, 0);
     lv_obj_set_style_border_width(card, 0, 0);

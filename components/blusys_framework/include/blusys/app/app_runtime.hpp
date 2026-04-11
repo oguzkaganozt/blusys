@@ -19,6 +19,7 @@
 #include "blusys/framework/core/intent.hpp"
 #include "blusys/framework/core/router.hpp"
 #include "blusys/framework/core/runtime.hpp"
+#include "blusys/app/detail/feedback_logging_sink.hpp"
 #include "blusys/log.h"
 
 #include <cstddef>
@@ -100,25 +101,6 @@ protected:
 
 namespace detail {
 
-// ---- logging feedback sink (registered by default) ----
-
-class default_feedback_sink final : public blusys::framework::feedback_sink {
-public:
-    bool supports(blusys::framework::feedback_channel) const override
-    {
-        return true;
-    }
-
-    void emit(const blusys::framework::feedback_event &event) override
-    {
-        BLUSYS_LOGI("blusys_app",
-                     "feedback: channel=%s pattern=%s value=%lu",
-                     blusys::framework::feedback_channel_name(event.channel),
-                     blusys::framework::feedback_pattern_name(event.pattern),
-                     static_cast<unsigned long>(event.value));
-    }
-};
-
 // ---- logging route sink (Phase 1 — logs route commands) ----
 
 class default_route_sink final : public blusys::framework::route_sink {
@@ -150,7 +132,8 @@ public:
 
     blusys_err_t init()
     {
-        framework_runtime_.register_feedback_sink(&default_feedback_sink_);
+        feedback_logging_sink_.set_identity(spec_.identity);
+        framework_runtime_.register_feedback_sink(&feedback_logging_sink_);
 
         blusys_err_t err = framework_runtime_.init(
             &reducer_ctrl_, &route_sink_ref(), spec_.tick_period_ms);
@@ -221,7 +204,7 @@ public:
     {
         stop_capabilities();
         framework_runtime_.deinit();
-        framework_runtime_.unregister_feedback_sink(&default_feedback_sink_);
+        framework_runtime_.unregister_feedback_sink(&feedback_logging_sink_);
     }
 
     bool post_action(const Action &action)
@@ -376,7 +359,7 @@ private:
     reducer_controller                                   reducer_ctrl_;
     blusys::framework::runtime                           framework_runtime_{};
     blusys::ring_buffer<Action, ActionQueueCap>          action_queue_{};
-    detail::default_feedback_sink                        default_feedback_sink_{};
+    detail::feedback_logging_sink                        feedback_logging_sink_{};
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     view::screen_router                                  screen_router_{};
     view::shell                                          shell_{};

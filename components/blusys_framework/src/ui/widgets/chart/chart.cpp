@@ -76,7 +76,7 @@ lv_obj_t *chart_create(lv_obj_t *parent, const chart_config &config)
     lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, config.y_min, config.y_max);
 
     // Theme styling.
-    lv_obj_set_style_bg_color(chart, t.color_surface, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(chart, t.color_surface_elevated, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(chart, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_border_width(chart, 0, LV_PART_MAIN);
     lv_obj_set_style_radius(chart, t.radius_card, LV_PART_MAIN);

@@ -58,15 +58,37 @@ void release_slot(button_slot *slot)
     }
 }
 
+lv_obj_t *button_label_child(lv_obj_t *button)
+{
+    if (lv_obj_get_child_count(button) == 0) {
+        return nullptr;
+    }
+    return lv_obj_get_child(button, 0);
+}
+
 lv_color_t background_for(button_variant variant, const theme_tokens &t)
 {
     switch (variant) {
         case button_variant::primary:   return t.color_primary;
-        case button_variant::secondary: return t.color_surface;
-        case button_variant::ghost:     return t.color_surface;
+        case button_variant::secondary: return t.color_surface_elevated;
+        case button_variant::ghost:     return t.color_surface_elevated;
         case button_variant::danger:    return t.color_error;
     }
     return t.color_primary;
+}
+
+lv_color_t label_color_for(button_variant variant, const theme_tokens &t)
+{
+    switch (variant) {
+        case button_variant::primary:
+            return t.color_on_primary;
+        case button_variant::secondary:
+        case button_variant::ghost:
+            return t.color_on_surface;
+        case button_variant::danger:
+            return t.color_on_error;
+    }
+    return t.color_on_primary;
 }
 
 void apply_variant(lv_obj_t *button, button_variant variant)
@@ -93,6 +115,11 @@ void apply_variant(lv_obj_t *button, button_variant variant)
     lv_obj_set_style_outline_width(button, t.focus_ring_width, LV_STATE_FOCUSED);
     lv_obj_set_style_outline_color(button, t.color_focus_ring, LV_STATE_FOCUSED);
     lv_obj_set_style_outline_pad(button, 2, LV_STATE_FOCUSED);
+
+    lv_obj_t *label = button_label_child(button);
+    if (label != nullptr) {
+        lv_obj_set_style_text_color(label, label_color_for(variant, t), 0);
+    }
 }
 
 void on_lvgl_clicked(lv_event_t *e)
@@ -109,15 +136,6 @@ void on_lvgl_deleted(lv_event_t *e)
     auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
     auto *slot = static_cast<button_slot *>(lv_obj_get_user_data(obj));
     release_slot(slot);
-}
-
-lv_obj_t *button_label_child(lv_obj_t *button)
-{
-    // The label is the first (and only) child added by `button_create`.
-    if (lv_obj_get_child_count(button) == 0) {
-        return nullptr;
-    }
-    return lv_obj_get_child(button, 0);
 }
 
 }  // namespace
@@ -140,12 +158,14 @@ lv_obj_t *button_create(lv_obj_t *parent, const button_config &config)
     lv_obj_set_style_radius(button, t.radius_button, 0);
     lv_obj_set_style_pad_hor(button, t.spacing_md, 0);
     lv_obj_set_style_pad_ver(button, t.spacing_sm, 0);
+    lv_obj_set_style_min_height(button, t.touch_target_min, 0);
 
     if (config.label != nullptr) {
         lv_obj_t *label = lv_label_create(button);
         lv_label_set_text(label, config.label);
-        lv_obj_set_style_text_color(label, t.color_on_primary, 0);
+        lv_obj_set_style_text_color(label, label_color_for(config.variant, t), 0);
         lv_obj_set_style_text_font(label, t.font_body, 0);
+        lv_obj_set_style_text_letter_space(label, t.text_letter_space_body, 0);
         lv_obj_center(label);
     }
 

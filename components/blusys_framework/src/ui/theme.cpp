@@ -23,13 +23,16 @@ theme_tokens make_default_theme()
         .color_on_error   = lv_color_hex(0xFFFFFF),
 
         // surface and outline
-        .color_background      = lv_color_hex(0x0D1017),
-        .color_on_surface      = lv_color_hex(0xE0E4EC),
-        .color_outline         = lv_color_hex(0x3A3F4B),
-        .color_outline_variant = lv_color_hex(0x2A2E38),
+        .color_background       = lv_color_hex(0x0D1017),
+        .color_on_surface       = lv_color_hex(0xE0E4EC),
+        .color_surface_elevated = lv_color_hex(0x181C27),
+        .color_outline          = lv_color_hex(0x3A3F4B),
+        .color_outline_variant  = lv_color_hex(0x2A2E38),
 
         // density
         .density_mode = density::normal,
+
+        .feedback_voice = theme_feedback_voice::expressive,
 
         // spacing
         .spacing_xs  = 4,
@@ -53,6 +56,8 @@ theme_tokens make_default_theme()
         .font_label   = LV_FONT_DEFAULT,
         .font_mono    = LV_FONT_DEFAULT,
 
+        .text_letter_space_body = 0,
+
         // motion
         .anim_duration_fast   = 100,
         .anim_duration_normal = 200,
@@ -75,7 +80,9 @@ theme_tokens make_default_theme()
         .opa_pressed       = LV_OPA_80,
         .opa_focused       = LV_OPA_40,
         .opa_disabled      = LV_OPA_30,
-        .opa_backdrop      = LV_OPA_70,
+        .opa_backdrop         = LV_OPA_70,
+        .opa_surface_subtle   = LV_OPA_20,
+        .opa_shadow_soft      = LV_OPA_40,
         .focus_ring_width  = 2,
         .color_focus_ring  = lv_color_hex(0x275DFF),
 

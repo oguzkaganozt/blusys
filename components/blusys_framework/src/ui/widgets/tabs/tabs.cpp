@@ -71,7 +71,7 @@ void apply_strip_button_active(lv_obj_t *btn, bool active)
     const auto &t = theme();
     if (active) {
         lv_obj_set_style_bg_color(btn, t.color_primary, 0);
-        lv_obj_set_style_bg_opa(btn, LV_OPA_20, 0);
+        lv_obj_set_style_bg_opa(btn, t.opa_surface_subtle, 0);
         // Indicator line at bottom.
         lv_obj_set_style_border_color(btn, t.color_primary, LV_PART_MAIN);
         lv_obj_set_style_border_width(btn, 2, LV_PART_MAIN);

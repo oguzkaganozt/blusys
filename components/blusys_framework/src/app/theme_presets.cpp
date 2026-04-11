@@ -2,6 +2,9 @@
 
 #include "blusys/app/theme_presets.hpp"
 
+#include "blusys/framework/ui/fonts.hpp"
+#include "blusys/framework/ui/icons/icon_set_minimal.hpp"
+
 #include "lvgl.h"
 
 namespace blusys::app::presets {
@@ -26,13 +29,16 @@ const blusys::ui::theme_tokens &expressive_dark()
         .color_on_error   = lv_color_hex(0xFFFFFF),
 
         // surface and outline
-        .color_background      = lv_color_hex(0x080A0F),
-        .color_on_surface      = lv_color_hex(0xE4E8F0),
-        .color_outline         = lv_color_hex(0x2D3240),
-        .color_outline_variant = lv_color_hex(0x1E222E),
+        .color_background       = lv_color_hex(0x080A0F),
+        .color_on_surface       = lv_color_hex(0xE4E8F0),
+        .color_surface_elevated = lv_color_hex(0x161C2A),
+        .color_outline          = lv_color_hex(0x2D3240),
+        .color_outline_variant  = lv_color_hex(0x1E222E),
 
-        // density — normal for consumer
-        .density_mode = blusys::ui::density::normal,
+        // density — comfortable for consumer / controller
+        .density_mode = blusys::ui::density::comfortable,
+
+        .feedback_voice = blusys::ui::theme_feedback_voice::expressive,
 
         // spacing
         .spacing_xs  = 4,
@@ -48,13 +54,15 @@ const blusys::ui::theme_tokens &expressive_dark()
         .radius_card   = 14,
         .radius_button = 999,
 
-        // typography
-        .font_body    = LV_FONT_DEFAULT,
-        .font_body_sm = LV_FONT_DEFAULT,
-        .font_title   = LV_FONT_DEFAULT,
-        .font_display = LV_FONT_DEFAULT,
-        .font_label   = LV_FONT_DEFAULT,
-        .font_mono    = LV_FONT_DEFAULT,
+        // typography — larger display/title ramp when Montserrat is enabled
+        .font_body    = blusys::ui::fonts::montserrat_14(),
+        .font_body_sm = blusys::ui::fonts::montserrat_14(),
+        .font_title   = blusys::ui::fonts::montserrat_20(),
+        .font_display = blusys::ui::fonts::montserrat_20(),
+        .font_label   = blusys::ui::fonts::montserrat_14(),
+        .font_mono    = blusys::ui::fonts::montserrat_14(),
+
+        .text_letter_space_body = 0,
 
         // motion — full, expressive
         .anim_duration_fast   = 100,
@@ -78,12 +86,14 @@ const blusys::ui::theme_tokens &expressive_dark()
         .opa_pressed      = LV_OPA_80,
         .opa_focused      = LV_OPA_50,
         .opa_disabled     = LV_OPA_30,
-        .opa_backdrop     = LV_OPA_70,
+        .opa_backdrop         = LV_OPA_70,
+        .opa_surface_subtle   = LV_OPA_20,
+        .opa_shadow_soft      = LV_OPA_40,
         .focus_ring_width = 2,
         .color_focus_ring = lv_color_hex(0x3B6FFF),
 
         // icons
-        .icons = nullptr,
+        .icons = &blusys::ui::icon_set_minimal(),
     };
     return tokens;
 }
@@ -108,13 +118,16 @@ const blusys::ui::theme_tokens &operational_light()
         .color_on_error   = lv_color_hex(0xFFFFFF),
 
         // surface and outline
-        .color_background      = lv_color_hex(0xF4F6F9),
-        .color_on_surface      = lv_color_hex(0x1F2937),
-        .color_outline         = lv_color_hex(0xD1D5DB),
-        .color_outline_variant = lv_color_hex(0xE5E7EB),
+        .color_background       = lv_color_hex(0xF4F6F9),
+        .color_on_surface       = lv_color_hex(0x1F2937),
+        .color_surface_elevated = lv_color_hex(0xFFFFFF),
+        .color_outline          = lv_color_hex(0xD1D5DB),
+        .color_outline_variant  = lv_color_hex(0xE5E7EB),
 
         // density — compact for industrial
         .density_mode = blusys::ui::density::compact,
+
+        .feedback_voice = blusys::ui::theme_feedback_voice::operational,
 
         // spacing — tighter
         .spacing_xs  = 2,
@@ -130,13 +143,15 @@ const blusys::ui::theme_tokens &operational_light()
         .radius_card   = 8,
         .radius_button = 6,
 
-        // typography
-        .font_body    = LV_FONT_DEFAULT,
-        .font_body_sm = LV_FONT_DEFAULT,
-        .font_title   = LV_FONT_DEFAULT,
-        .font_display = LV_FONT_DEFAULT,
-        .font_label   = LV_FONT_DEFAULT,
-        .font_mono    = LV_FONT_DEFAULT,
+        // typography — uniform, dense sans hierarchy (operational clarity)
+        .font_body    = blusys::ui::fonts::montserrat_14(),
+        .font_body_sm = blusys::ui::fonts::montserrat_14(),
+        .font_title   = blusys::ui::fonts::montserrat_14(),
+        .font_display = blusys::ui::fonts::montserrat_14(),
+        .font_label   = blusys::ui::fonts::montserrat_14(),
+        .font_mono    = blusys::ui::fonts::montserrat_14(),
+
+        .text_letter_space_body = 1,
 
         // motion — reduced, snappy
         .anim_duration_fast   = 60,
@@ -160,12 +175,14 @@ const blusys::ui::theme_tokens &operational_light()
         .opa_pressed      = LV_OPA_90,
         .opa_focused      = LV_OPA_30,
         .opa_disabled     = LV_OPA_40,
-        .opa_backdrop     = LV_OPA_60,
+        .opa_backdrop         = LV_OPA_60,
+        .opa_surface_subtle   = LV_OPA_20,
+        .opa_shadow_soft      = LV_OPA_30,
         .focus_ring_width = 2,
         .color_focus_ring = lv_color_hex(0x1A56DB),
 
         // icons
-        .icons = nullptr,
+        .icons = &blusys::ui::icon_set_minimal(),
     };
     return tokens;
 }
@@ -190,13 +207,16 @@ const blusys::ui::theme_tokens &oled()
         .color_on_error   = lv_color_hex(0x000000),
 
         // surface and outline
-        .color_background      = lv_color_hex(0x000000),
-        .color_on_surface      = lv_color_hex(0xFFFFFF),
-        .color_outline         = lv_color_hex(0x444444),
-        .color_outline_variant = lv_color_hex(0x333333),
+        .color_background       = lv_color_hex(0x000000),
+        .color_on_surface       = lv_color_hex(0xFFFFFF),
+        .color_surface_elevated = lv_color_hex(0x0A0A0A),
+        .color_outline          = lv_color_hex(0x444444),
+        .color_outline_variant  = lv_color_hex(0x333333),
 
         // density — ultra compact
         .density_mode = blusys::ui::density::compact,
+
+        .feedback_voice = blusys::ui::theme_feedback_voice::operational,
 
         // spacing — minimal
         .spacing_xs  = 1,
@@ -220,6 +240,8 @@ const blusys::ui::theme_tokens &oled()
         .font_label   = LV_FONT_DEFAULT,
         .font_mono    = LV_FONT_DEFAULT,
 
+        .text_letter_space_body = 0,
+
         // motion — off on tiny displays
         .anim_duration_fast   = 0,
         .anim_duration_normal = 0,
@@ -242,12 +264,14 @@ const blusys::ui::theme_tokens &oled()
         .opa_pressed      = LV_OPA_70,
         .opa_focused      = LV_OPA_50,
         .opa_disabled     = LV_OPA_30,
-        .opa_backdrop     = LV_OPA_80,
+        .opa_backdrop         = LV_OPA_80,
+        .opa_surface_subtle   = LV_OPA_10,
+        .opa_shadow_soft      = LV_OPA_30,
         .focus_ring_width = 1,
         .color_focus_ring = lv_color_hex(0xFFFFFF),
 
         // icons
-        .icons = nullptr,
+        .icons = &blusys::ui::icon_set_minimal(),
     };
     return tokens;
 }

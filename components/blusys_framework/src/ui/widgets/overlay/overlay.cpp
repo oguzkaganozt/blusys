@@ -99,7 +99,7 @@ void style_overlay(lv_obj_t *overlay)
     lv_obj_set_style_shadow_width(overlay, t.shadow_overlay_width, 0);
     lv_obj_set_style_shadow_offset_y(overlay, t.shadow_overlay_ofs_y, 0);
     lv_obj_set_style_shadow_color(overlay, t.shadow_color, 0);
-    lv_obj_set_style_shadow_opa(overlay, LV_OPA_40, 0);
+    lv_obj_set_style_shadow_opa(overlay, t.opa_shadow_soft, 0);
 }
 
 void on_timer(lv_timer_t *t)

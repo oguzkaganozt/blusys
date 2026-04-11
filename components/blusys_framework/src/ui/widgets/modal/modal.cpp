@@ -80,7 +80,7 @@ void style_panel(lv_obj_t *panel)
     const auto &t = theme();
     lv_obj_set_width(panel, LV_PCT(80));
     lv_obj_set_height(panel, LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_color(panel, t.color_surface, 0);
+    lv_obj_set_style_bg_color(panel, t.color_surface_elevated, 0);
     lv_obj_set_style_bg_opa(panel, LV_OPA_COVER, 0);
     lv_obj_set_style_border_color(panel, t.color_outline, 0);
     lv_obj_set_style_border_width(panel, 1, 0);
@@ -95,7 +95,7 @@ void style_panel(lv_obj_t *panel)
     lv_obj_set_style_shadow_width(panel, t.shadow_overlay_width, 0);
     lv_obj_set_style_shadow_offset_y(panel, t.shadow_overlay_ofs_y, 0);
     lv_obj_set_style_shadow_color(panel, t.shadow_color, 0);
-    lv_obj_set_style_shadow_opa(panel, LV_OPA_40, 0);
+    lv_obj_set_style_shadow_opa(panel, t.opa_shadow_soft, 0);
 }
 
 void on_lvgl_clicked(lv_event_t *e)

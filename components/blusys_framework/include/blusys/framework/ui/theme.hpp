@@ -16,6 +16,13 @@ enum class density : std::uint8_t {
     comfortable,  // consumer controllers, touch-first surfaces
 };
 
+// Which built-in feedback_preset family matches this theme when app_identity
+// does not set identity.feedback (visual flash + default haptic alignment).
+enum class theme_feedback_voice : std::uint8_t {
+    expressive,
+    operational,
+};
+
 struct theme_tokens {
     // ---- core palette ----
     lv_color_t color_primary;
@@ -36,11 +43,17 @@ struct theme_tokens {
     // ---- surface and outline ----
     lv_color_t color_background;
     lv_color_t color_on_surface;
+    // Elevated surfaces (cards, panels) distinct from flat background.
+    lv_color_t color_surface_elevated;
     lv_color_t color_outline;
     lv_color_t color_outline_variant;
 
     // ---- density ----
     density density_mode;
+
+    // Default feedback voice when identity.feedback is nullptr (custom themes
+    // should set this to match their tactile intent).
+    theme_feedback_voice feedback_voice;
 
     // ---- spacing ----
     int spacing_xs;
@@ -63,6 +76,9 @@ struct theme_tokens {
     const lv_font_t *font_display;
     const lv_font_t *font_label;
     const lv_font_t *font_mono;
+
+    // Extra letter spacing for body styles (0 = LVGL default).
+    lv_coord_t text_letter_space_body;
 
     // ---- motion ----
     std::uint16_t anim_duration_fast;      // ms
@@ -87,6 +103,10 @@ struct theme_tokens {
     lv_opa_t   opa_focused;
     lv_opa_t   opa_disabled;
     lv_opa_t   opa_backdrop;
+    // Muted fills (inactive tabs, chips).
+    lv_opa_t   opa_surface_subtle;
+    // Soft drop shadow on modals / floating overlays.
+    lv_opa_t   opa_shadow_soft;
     int        focus_ring_width;
     lv_color_t color_focus_ring;
 
