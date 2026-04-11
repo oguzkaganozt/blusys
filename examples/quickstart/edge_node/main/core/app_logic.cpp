@@ -231,7 +231,8 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         break;
 
     case action_tag::prov_capability_ready:
-        state.provisioned = true;
+        // provisioned is set by prov_success / prov_already_done; this event
+        // pairs with those on the wire and only confirms the service is up.
         BLUSYS_LOGI(kTag, "provisioning capability ready");
         break;
 

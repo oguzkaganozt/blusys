@@ -25,6 +25,7 @@ add_library(blusys_framework_core_host STATIC
     ${BLUSYS_FW}/src/core/controller.cpp
     ${BLUSYS_FW}/src/core/feedback.cpp
     ${BLUSYS_FW}/src/core/feedback_presets.cpp
+    ${BLUSYS_FW}/src/app/feedback_logging_sink.cpp
     ${BLUSYS_FW}/src/core/framework.cpp
     ${BLUSYS_FW}/src/core/router.cpp
     ${BLUSYS_FW}/src/core/runtime.cpp

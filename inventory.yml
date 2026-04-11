@@ -433,7 +433,7 @@ modules:
     support: supported
     targets: [esp32, esp32c3, esp32s3]
     doc: docs/app/index.md
-    examples: [interactive_controller, interactive_panel, framework_device_basic, framework_encoder_basic, connected_device, connected_headless]
+    examples: [interactive_controller, interactive_panel, edge_node, gateway, framework_device_basic, framework_encoder_basic, connected_device, connected_headless]
 
 # ---------------------------------------------------------------------------
 # Examples
@@ -1107,6 +1107,10 @@ docs:
     section: start
     visibility: public
 
+  - path: docs/start/connected-products.md
+    section: start
+    visibility: public
+
   # --- App ---
   - path: docs/app/index.md
     section: app
@@ -1392,6 +1396,18 @@ docs:
     visibility: public
 
   - path: docs/internals/phase-5-exit.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-6-connected-archetypes-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-6-archetype-briefs.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-6-exit.md
     section: internals
     visibility: public
 

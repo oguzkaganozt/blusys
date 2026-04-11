@@ -280,8 +280,11 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 
     case action_tag::prov_success:
     case action_tag::prov_already_done:
-    case action_tag::prov_capability_ready:
         state.provisioned = true;
+        break;
+
+    case action_tag::prov_capability_ready:
+        BLUSYS_LOGI(kTag, "provisioning capability ready");
         break;
 
     case action_tag::prov_failed:

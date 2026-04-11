@@ -27,6 +27,7 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 ## Archetypes
 
 - [Archetype Starters](archetypes.md) --- choose between `interactive controller`, `interactive panel`, `edge node`, and `gateway/controller`
+- [Connected products](connected-products.md) --- when to start from edge node vs gateway, headless vs local UI, and operational runbook notes
 - [Interaction design (interactive archetypes)](interaction-design.md) --- presentation, inputs, and fork guidance for controller vs panel
 
 ## Platform Layers

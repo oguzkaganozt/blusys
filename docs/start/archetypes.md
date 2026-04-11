@@ -85,6 +85,7 @@ All four also keep the same runtime model:
 ## Next Pages
 
 - [Interactive Quickstart](quickstart-interactive.md)
+- [Connected products](connected-products.md)
 - [App](../app/index.md)
 - [Capabilities](../app/capabilities.md)
 - [Profiles](../app/profiles.md)
