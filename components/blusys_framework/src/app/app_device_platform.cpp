@@ -23,6 +23,20 @@
 #include <cstdint>
 
 namespace {
+void *find_first_pointer_indev()
+{
+    lv_indev_t *indev = lv_indev_get_next(nullptr);
+    while (indev != nullptr) {
+        if (lv_indev_get_type(indev) == LV_INDEV_TYPE_POINTER) {
+            return indev;
+        }
+        indev = lv_indev_get_next(indev);
+    }
+    return nullptr;
+}
+}  // namespace
+
+namespace {
 constexpr const char *kTag = "device_platform";
 }
 
@@ -107,6 +121,11 @@ void device_ui_lock(blusys_ui_t *ui)
 void device_ui_unlock(blusys_ui_t *ui)
 {
     blusys_ui_unlock(ui);
+}
+
+void *device_find_pointer_indev()
+{
+    return find_first_pointer_indev();
 }
 
 }  // namespace blusys_app_platform

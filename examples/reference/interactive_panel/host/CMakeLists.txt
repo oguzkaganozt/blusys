@@ -52,6 +52,7 @@ add_library(blusys_framework_host STATIC
     ${BLUSYS_FW}/src/core/controller.cpp
     ${BLUSYS_FW}/src/core/feedback.cpp
     ${BLUSYS_FW}/src/core/feedback_presets.cpp
+    ${BLUSYS_FW}/src/app/feedback_logging_sink.cpp
     ${BLUSYS_FW}/src/core/framework.cpp
     ${BLUSYS_FW}/src/core/router.cpp
     ${BLUSYS_FW}/src/core/runtime.cpp
@@ -66,6 +67,7 @@ add_library(blusys_framework_host STATIC
     ${BLUSYS_FW}/src/app/page.cpp
     ${BLUSYS_FW}/src/app/screen_registry.cpp
     ${BLUSYS_FW}/src/app/screen_router.cpp
+    ${BLUSYS_FW}/src/app/touch_bridge.cpp
     ${BLUSYS_FW}/src/app/shell.cpp
     ${BLUSYS_FW}/src/app/flows/connectivity_flow.cpp
     ${BLUSYS_FW}/src/app/flows/diagnostics_flow.cpp
@@ -84,6 +86,7 @@ add_library(blusys_framework_host STATIC
     ${BLUSYS_FW}/src/ui/primitives/screen.cpp
     ${BLUSYS_FW}/src/ui/primitives/status_badge.cpp
     ${BLUSYS_FW}/src/ui/theme.cpp
+    ${BLUSYS_FW}/src/ui/visual_feedback.cpp
     ${BLUSYS_FW}/src/ui/transition.cpp
     ${BLUSYS_FW}/src/ui/widgets/button/button.cpp
     ${BLUSYS_FW}/src/ui/widgets/card/card.cpp

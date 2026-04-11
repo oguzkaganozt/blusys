@@ -11,6 +11,8 @@ namespace blusys::app { class app_ctx; }
 
 namespace blusys::app::view {
 
+class screen_registry;
+
 // Shell header configuration.
 struct shell_header_config {
     bool        enabled   = false;
@@ -49,6 +51,10 @@ struct shell_tab_item {
 // The shell owns a persistent screen with optional header, status bar,
 // content area, and tab bar. Screen content is swapped inside the
 // content area on navigation — the shell surfaces persist.
+//
+// Tab bar (shell chrome) vs in-page tabs: shell tabs are top-level section
+// switches (same stack, `navigate_to` per tab). The stock `tabs` widget
+// (Phase 3) is for content inside a single screen — do not mix the two roles.
 struct shell {
     lv_obj_t *root         = nullptr; // the real lv_screen
     lv_obj_t *header       = nullptr; // persistent header (nullptr if disabled)
@@ -89,6 +95,10 @@ void shell_set_tabs(shell &s, const shell_tab_item *items, std::size_t count,
 
 // Set the active tab by index (updates visual highlight only).
 void shell_set_active_tab(shell &s, std::size_t index);
+
+// Match tab highlight (and optional header title) to the current nav stack.
+// Walks from the top of the stack downward until a route matches a tab item.
+void shell_sync_tabs_for_nav_stack(shell &s, const screen_registry &nav);
 
 }  // namespace blusys::app::view
 

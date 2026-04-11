@@ -72,8 +72,7 @@ public:
     // handled here — the screen_router delegates those to overlay_manager.
     bool navigate(const blusys::framework::route_command &command, app_ctx &ctx);
 
-    // Set a callback invoked after every screen load.
-    // The device entry path uses this to call input_bridge_attach_screen.
+    // Set a callback invoked after every screen load (after focus wiring).
     void set_screen_changed_callback(void (*fn)(lv_obj_t *screen, void *user_ctx),
                                      void *user_ctx);
 
@@ -90,6 +89,10 @@ public:
     // Current navigation stack depth (for shell header back-button logic).
     [[nodiscard]] std::size_t stack_depth() const { return nav_stack_.size(); }
 
+    // Stack index 0 is the bottom (first pushed / root). Used by shell tab sync.
+    [[nodiscard]] std::size_t nav_stack_size() const { return nav_stack_.size(); }
+    [[nodiscard]] std::uint32_t nav_route_at(std::size_t index_from_bottom) const;
+
 private:
     struct screen_entry {
         std::uint32_t     route_id   = 0;
@@ -105,7 +108,7 @@ private:
     };
 
     const screen_entry *find(std::uint32_t id) const;
-    void load_screen(std::uint32_t route_id, const void *params, app_ctx &ctx,
+    bool load_screen(std::uint32_t route_id, const void *params, app_ctx &ctx,
                      std::uint32_t transition_field, blusys::ui::transition_type default_transition);
     void destroy_active();
     void fire_hide_hooks();

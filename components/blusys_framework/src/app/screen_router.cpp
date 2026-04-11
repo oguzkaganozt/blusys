@@ -1,6 +1,7 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/app/view/screen_router.hpp"
+#include "blusys/app/view/shell.hpp"
 #include "blusys/app/app_ctx.hpp"
 #include "blusys/log.h"
 
@@ -22,7 +23,16 @@ void screen_router::submit(const blusys::framework::route_command &command)
         return;
     }
 
-    screens_.navigate(command, *ctx_);
+    if (!screens_.navigate(command, *ctx_)) {
+        BLUSYS_LOGW(TAG, "navigation failed for route op=%s id=%lu",
+                    blusys::framework::route_command_type_name(command.type),
+                    static_cast<unsigned long>(command.id));
+    }
+}
+
+void screen_router::sync_shell_chrome(shell &s)
+{
+    shell_sync_tabs_for_nav_stack(s, screens_);
 }
 
 bool screen_router::register_screen(std::uint32_t    route_id,

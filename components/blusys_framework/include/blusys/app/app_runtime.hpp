@@ -165,7 +165,7 @@ public:
             // content area instead of loading standalone screens.
             screen_router_.bind_shell(shell_.content_area);
 
-            // Auto-update header on every screen change.
+            // Auto-update shell chrome (back button, tab highlight, title) on every transition.
             screen_router_.set_screen_changed_callback(
                 [](lv_obj_t * /*screen*/, void *user_ctx) {
                     auto *s = static_cast<view::shell *>(user_ctx);
@@ -176,6 +176,7 @@ public:
                     if (router == nullptr) {
                         return;
                     }
+                    router->sync_shell_chrome(*s);
                     view::shell_set_back_visible(*s, router->stack_depth() > 1);
                 },
                 &shell_);

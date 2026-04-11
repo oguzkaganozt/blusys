@@ -15,6 +15,8 @@ namespace blusys::app { class app_ctx; }
 
 namespace blusys::app::view {
 
+struct shell;
+
 // Combined route_sink that owns screen navigation and overlay management.
 //
 // Dispatches:
@@ -47,9 +49,9 @@ public:
     // Access the overlay manager for overlay registration.
     [[nodiscard]] view::overlay_manager &overlays() { return overlays_; }
 
-    // Set a callback invoked after each screen transition (for focus
-    // re-attachment). The device entry path sets this to call
-    // input_bridge_attach_screen after the input_bridge is created.
+    // Set a callback invoked after each screen transition (focus refresh,
+    // optional product hooks). The device entry path may replace this to
+    // also call focus_scope_manager::refresh_current when using a hardware encoder.
     void set_screen_changed_callback(void (*fn)(lv_obj_t *screen, void *user_ctx),
                                      void *user_ctx);
 
@@ -70,6 +72,9 @@ public:
 
     // Current navigation stack depth.
     [[nodiscard]] std::size_t stack_depth() const { return screens_.stack_depth(); }
+
+    // Update shell tab bar + title from the navigation stack (call after each transition).
+    void sync_shell_chrome(shell &s);
 
 private:
     screen_registry                  screens_{};

@@ -72,6 +72,39 @@ transition_spec resolve_transition(std::uint32_t transition_field,
     };
 }
 
+namespace {
+
+void shell_opa_anim_exec(void *var, int32_t v)
+{
+    lv_obj_set_style_opa(static_cast<lv_obj_t *>(var), static_cast<lv_opa_t>(v), 0);
+}
+
+}  // namespace
+
+void shell_content_enter_anim(lv_obj_t *content, const transition_spec &spec)
+{
+    if (content == nullptr) {
+        return;
+    }
+    if (spec.type == transition_type::none || spec.duration == 0) {
+        lv_obj_set_style_opa(content, LV_OPA_COVER, 0);
+        return;
+    }
+
+    lv_obj_set_style_opa(content, LV_OPA_TRANSP, 0);
+
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, content);
+    lv_anim_set_exec_cb(&a, shell_opa_anim_exec);
+    lv_anim_set_values(&a, LV_OPA_TRANSP, LV_OPA_COVER);
+    lv_anim_set_duration(&a, spec.duration);
+    if (spec.path != nullptr) {
+        lv_anim_set_path_cb(&a, spec.path);
+    }
+    lv_anim_start(&a);
+}
+
 }  // namespace blusys::ui
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI

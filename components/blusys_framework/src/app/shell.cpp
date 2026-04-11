@@ -1,6 +1,7 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/app/view/shell.hpp"
+#include "blusys/app/view/screen_registry.hpp"
 #include "blusys/app/app_ctx.hpp"
 #include "blusys/framework/ui/primitives/col.hpp"
 #include "blusys/framework/ui/primitives/label.hpp"
@@ -239,6 +240,27 @@ void shell_set_active_tab(shell &s, std::size_t index)
         } else {
             lv_obj_set_style_text_color(child, t.color_on_surface, 0);
             lv_obj_set_style_border_width(child, 0, LV_PART_MAIN);
+        }
+    }
+}
+
+void shell_sync_tabs_for_nav_stack(shell &s, const screen_registry &nav)
+{
+    if (s.tab_bar == nullptr || s.tab_count == 0) {
+        return;
+    }
+
+    const std::size_t depth = nav.nav_stack_size();
+    for (std::size_t ri = depth; ri > 0; --ri) {
+        const std::uint32_t route = nav.nav_route_at(ri - 1);
+        for (std::size_t ti = 0; ti < s.tab_count; ++ti) {
+            if (s.tabs[ti].route_id == route) {
+                shell_set_active_tab(s, ti);
+                if (s.header_title != nullptr && s.tabs[ti].label != nullptr) {
+                    shell_set_title(s, s.tabs[ti].label);
+                }
+                return;
+            }
         }
     }
 }

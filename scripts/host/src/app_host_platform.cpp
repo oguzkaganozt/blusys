@@ -27,6 +27,18 @@ void host_set_runtime(blusys::framework::runtime *rt)
     g_runtime = rt;
 }
 
+void *host_find_pointer_indev()
+{
+    lv_indev_t *indev = lv_indev_get_next(nullptr);
+    while (indev != nullptr) {
+        if (lv_indev_get_type(indev) == LV_INDEV_TYPE_POINTER) {
+            return indev;
+        }
+        indev = lv_indev_get_next(indev);
+    }
+    return nullptr;
+}
+
 // ---- keyboard encoder indev ----
 
 // Accumulated encoder state, written by the SDL event watcher and

@@ -24,6 +24,7 @@ namespace blusys::app {
 static constexpr std::size_t kMaxButtons = 8;
 
 // Mapping from a hardware button to framework intents.
+// Typical mapping: confirm / cancel — map `cancel` to `navigate_back` in `map_intent`.
 struct button_mapping {
     blusys_button_config_t      button_config;
     blusys::framework::intent   on_press      = blusys::framework::intent::confirm;

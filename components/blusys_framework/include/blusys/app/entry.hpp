@@ -32,6 +32,12 @@
 #include "blusys/app/platform_profile.hpp"
 #include "blusys/app/input_bridge.hpp"
 #include "blusys/app/button_array_bridge.hpp"
+#include "blusys/app/touch_bridge.hpp"
+#include "blusys/app/view/shell.hpp"
+#endif
+
+#if defined(BLUSYS_FRAMEWORK_HAS_UI) && !defined(ESP_PLATFORM)
+#include "blusys/app/touch_bridge.hpp"
 #endif
 
 #include <cstdint>
@@ -48,6 +54,8 @@ namespace blusys_app_platform {
 // Host platform (SDL2)
 void host_init(int w, int h, const char *title);
 void host_set_runtime(blusys::framework::runtime *rt);
+// First LVGL POINTER indev (SDL mouse on host), or nullptr.
+void *host_find_pointer_indev();
 std::uint32_t host_get_ticks_ms();
 void host_tick_inc(std::uint32_t ms);
 std::uint32_t host_frame_step();
@@ -67,6 +75,7 @@ std::uint32_t device_get_ticks_ms();
 void device_delay(std::uint32_t ms);
 void device_ui_lock(blusys_ui_t *ui);
 void device_ui_unlock(blusys_ui_t *ui);
+void *device_find_pointer_indev();
 #endif  // ESP_PLATFORM
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
 
@@ -131,6 +140,17 @@ void run_host(const app_spec<State, Action> &spec,
     // the device input_bridge behavior.
     blusys_app_platform::host_set_runtime(&runtime.framework_runtime());
 
+    // Pointer indev (SDL mouse): semantic tap / swipe intents for parity with device touch.
+    blusys::app::touch_bridge host_touch{};
+    {
+        auto *ptr = static_cast<lv_indev_t *>(blusys_app_platform::host_find_pointer_indev());
+        if (ptr != nullptr) {
+            blusys::app::touch_bridge_config tcfg{};
+            tcfg.framework_runtime = &runtime.framework_runtime();
+            (void)blusys::app::touch_bridge_open(tcfg, ptr, &host_touch);
+        }
+    }
+
     BLUSYS_LOGI("blusys_app", "app running");
 
     std::uint32_t last_ticks = blusys_app_platform::host_get_ticks_ms();
@@ -189,6 +209,13 @@ void run_device(const app_spec<State, Action> &spec,
 
     // Input bridge (optional — only if profile declares an encoder).
     input_bridge bridge{};
+    struct device_screen_changed_ctx {
+        app_runtime<State, Action> *runtime = nullptr;
+        bool                          has_shell = false;
+    } screen_cb_ctx{};
+    screen_cb_ctx.runtime   = &runtime;
+    screen_cb_ctx.has_shell = (spec.shell != nullptr);
+
     if (profile.has_encoder) {
         input_bridge_config bridge_cfg{};
         bridge_cfg.encoder_config = profile.encoder;
@@ -200,15 +227,41 @@ void run_device(const app_spec<State, Action> &spec,
                         static_cast<int>(bridge_err));
             profile.has_encoder = false;
         } else {
-            // Wire focus re-attachment: after each screen transition the
-            // screen_router calls input_bridge_attach_screen to rebuild
-            // the focus group from the new screen's widget tree.
+            // Encoder indev is rebound by focus_scope_manager; refresh the
+            // walking group after each transition. When a shell is present,
+            // re-apply the same chrome updates as app_runtime::init (which
+            // this callback overrides).
             runtime.screen_router().set_screen_changed_callback(
-                [](lv_obj_t *screen, void *ctx) {
-                    input_bridge_attach_screen(
-                        static_cast<input_bridge *>(ctx), screen);
+                [](lv_obj_t * /*screen*/, void *ctx) {
+                    auto *p = static_cast<device_screen_changed_ctx *>(ctx);
+                    if (p == nullptr || p->runtime == nullptr) {
+                        return;
+                    }
+                    p->runtime->screen_router().focus_scopes().refresh_current();
+                    if (p->has_shell) {
+                        auto *sh = p->runtime->ctx().shell();
+                        if (sh != nullptr) {
+                            p->runtime->screen_router().sync_shell_chrome(*sh);
+                            view::shell_set_back_visible(
+                                *sh, p->runtime->screen_router().stack_depth() > 1);
+                        }
+                    }
                 },
-                &bridge);
+                &screen_cb_ctx);
+        }
+    }
+
+    // Touch / pointer bridge (optional — uses first LVGL POINTER indev).
+    blusys::app::touch_bridge touch{};
+    if (profile.has_touch) {
+        auto *ptr = static_cast<lv_indev_t *>(blusys_app_platform::device_find_pointer_indev());
+        if (ptr != nullptr) {
+            blusys::app::touch_bridge_config tcfg{};
+            tcfg.framework_runtime = &runtime.framework_runtime();
+            (void)blusys::app::touch_bridge_open(tcfg, ptr, &touch);
+        } else {
+            BLUSYS_LOGW("blusys_app",
+                        "has_touch set but no LVGL POINTER indev — skipping touch bridge");
         }
     }
 
@@ -250,6 +303,7 @@ void run_device(const app_spec<State, Action> &spec,
     if (profile.has_encoder) {
         input_bridge_close(&bridge);
     }
+    blusys::app::touch_bridge_close(&touch);
     runtime.deinit();
     blusys_app_platform::device_deinit(lcd, ui);
 }

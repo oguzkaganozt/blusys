@@ -39,6 +39,10 @@ transition_spec resolve_transition(std::uint32_t transition_field);
 transition_spec resolve_transition(std::uint32_t transition_field,
                                    transition_type default_type);
 
+// Shell content area: fade-in new route content using motion tokens (duration/path
+// from `spec`). No-op when `spec.type` is none or animations are disabled.
+void shell_content_enter_anim(lv_obj_t *content, const transition_spec &spec);
+
 }  // namespace blusys::ui
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
