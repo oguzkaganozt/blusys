@@ -75,6 +75,19 @@ void app_ctx::emit_feedback(blusys::framework::feedback_channel channel,
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
+std::size_t app_ctx::navigation_stack_depth() const
+{
+    if (screen_router_ != nullptr) {
+        return screen_router_->stack_depth();
+    }
+    return 0;
+}
+
+bool app_ctx::can_navigate_back() const
+{
+    return navigation_stack_depth() > 1;
+}
+
 blusys::app::view::overlay_manager *blusys::app::app_ctx::overlay_manager() const
 {
     if (screen_router_ != nullptr) {

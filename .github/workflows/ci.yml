@@ -67,6 +67,9 @@ jobs:
       - name: Validate inventory
         run: python scripts/check-inventory.py
 
+      - name: Product app main/ layout
+        run: python scripts/check-product-layout.py
+
   # ── Tier 0: Host harness smokes (Linux + SDL2 deps) ───────────────────────
   host-smoke:
     name: "Host harness smoke"

@@ -29,6 +29,7 @@ These are handled by the framework runtime, profiles, and capabilities.
 ## Sections
 
 - [Reducer Model](reducer-model.md) --- state, actions, `update()`, dispatch lifecycle, intent map
+- [App Runtime Model](app-runtime-model.md) --- intent/event queues, threading, what runs in `update()`
 - [Views & Widgets](views-and-widgets.md) --- stock widgets, page helpers, custom widget contract, bounded LVGL
 - [Widget Gallery](widget-gallery.md) --- stock widgets by product use case
 - [Capability Composition](capability-composition.md) --- how capabilities fit together in `integration/`

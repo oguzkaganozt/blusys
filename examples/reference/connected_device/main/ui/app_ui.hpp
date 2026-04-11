@@ -1,0 +1,9 @@
+#pragma once
+
+#include "core/app_logic.hpp"
+
+namespace connected_device::ui {
+
+void on_init(blusys::app::app_ctx &ctx, State &state);
+
+}

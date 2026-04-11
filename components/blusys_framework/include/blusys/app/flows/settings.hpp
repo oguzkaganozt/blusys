@@ -28,6 +28,9 @@ struct setting_item {
     const char   *description = nullptr;
     setting_type  type        = setting_type::info;
 
+    // Stable id for on_changed (non-zero). If 0, the table index is passed instead.
+    std::uint32_t id          = 0;
+
     // toggle
     bool toggle_initial = false;
 
@@ -53,9 +56,9 @@ struct settings_screen_config {
     const setting_item *items      = nullptr;
     std::size_t         item_count = 0;
     // Called when a setting value changes.
-    // item_index identifies which setting_item changed.
+    // setting_id is item.id when non-zero, otherwise the row index in `items`.
     // value is: toggle (0/1), slider (new value), dropdown (index), button (0).
-    void (*on_changed)(void *ctx, std::size_t item_index, std::int32_t value) = nullptr;
+    void (*on_changed)(void *ctx, std::uint32_t setting_id, std::int32_t value) = nullptr;
     void *user_ctx = nullptr;
 };
 

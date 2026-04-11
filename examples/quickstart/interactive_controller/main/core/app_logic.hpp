@@ -5,20 +5,21 @@
 #include "blusys/app/app.hpp"
 #include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/flows/provisioning_flow.hpp"
-#include "lvgl.h"
+
+#include "ui/panels.hpp"
 
 namespace interactive_controller {
 
-enum route_id : std::uint32_t {
-    route_home = 1,
-    route_status,
-    route_settings,
-    route_setup,
-    route_about,
+enum class route : std::uint32_t {
+    home = 1,
+    status,
+    settings,
+    setup,
+    about,
 };
 
-enum overlay_id : std::uint32_t {
-    overlay_confirm = 1,
+enum class overlay : std::uint32_t {
+    confirm = 1,
 };
 
 enum class action_tag : std::uint8_t {
@@ -47,17 +48,9 @@ struct app_state {
     bool         storage_ready = false;
     blusys::app::provisioning_status provisioning{};
 
-    lv_obj_t *shell_badge      = nullptr;
-    lv_obj_t *shell_detail     = nullptr;
-    lv_obj_t *home_gauge       = nullptr;
-    lv_obj_t *home_level_bar   = nullptr;
-    lv_obj_t *home_vu_strip    = nullptr;
-    lv_obj_t *home_preset      = nullptr;
-    lv_obj_t *home_hold_badge  = nullptr;
-    lv_obj_t *status_setup     = nullptr;
-    lv_obj_t *status_storage   = nullptr;
-    lv_obj_t *status_output    = nullptr;
-    lv_obj_t *status_hold      = nullptr;
+    ui::ShellChrome shell{};
+    ui::HomePanel   home{};
+    ui::StatusPanel status{};
 
     blusys::app::flows::provisioning_screen_handles setup_handles{};
 };

@@ -18,7 +18,7 @@ Both use the same `blusys::app` reducer, capabilities, and `integration/` event 
 
 ## Relation to older examples
 
-- `examples/reference/connected_headless` — minimal single-file demo of connectivity + storage (historical).
+- `examples/reference/connected_headless` — minimal headless demo of connectivity + storage (`core` / `ui` / `integration` layout).
 - `examples/reference/connected_device` — minimal interactive + Wi-Fi status (historical).
 
 For new products, start from **edge node** or **gateway** so provisioning, telemetry, OTA, diagnostics, and operational phases are already composed.

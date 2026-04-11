@@ -16,6 +16,25 @@ namespace blusys::app {
 
 struct capability_list;  // forward declaration — include capability_list.hpp to use
 
+// Application definition consumed by app_runtime. Use designated initializers in this order:
+//
+//   1. initial_state     (required)
+//   2. update            (required)
+//   3. on_init            — screen registration, first navigation
+//   4. on_tick            — periodic work; keep light
+//   5. map_intent         — interactive: framework intents → Action
+//   6. map_event          — capabilities → Action (see blusys/app/integration.hpp)
+//   7. tick_period_ms
+//   8. capabilities       — device only; nullptr on host
+//   9. identity           — theme + feedback preset
+//  10. theme / shell      — interactive only (when BLUSYS_FRAMEWORK_HAS_UI)
+//
+// Optional `map_intent` / `map_event` may be nullptr; those inputs are then ignored.
+//
+// Alternative action models: you may use `std::variant<...>` as `Action` if every
+// alternative is dispatchable from `ctx.dispatch`. Use `blusys/app/integration.hpp`
+// if you need `dispatch_variant` from outside the reducer.
+
 template <typename State, typename Action>
 struct app_spec {
     // ---- required ----

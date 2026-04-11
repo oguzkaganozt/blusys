@@ -8,6 +8,8 @@
 #   modules[].support:   supported | advanced | internal | deprecated
 #   examples[].category: quickstart | reference | validation
 #   examples[].visibility: public | internal
+#   examples[].layout_exempt: optional bool — skip scripts/check-product-layout.py for this example
+#   examples[].product_layout: optional bool — force layout check (e.g. validation app using blusys::app)
 #   docs[].section:      start | app | services | hal_drivers | internals
 
 # ---------------------------------------------------------------------------
@@ -1122,6 +1124,10 @@ docs:
     visibility: public
 
   - path: docs/app/reducer-model.md
+    section: app
+    visibility: public
+
+  - path: docs/app/app-runtime-model.md
     section: app
     visibility: public
 

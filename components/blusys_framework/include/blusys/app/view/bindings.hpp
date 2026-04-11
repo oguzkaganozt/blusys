@@ -64,6 +64,21 @@ void set_kv_value(lv_obj_t *kv, const char *value);
 // Data table cell
 void set_cell_text(lv_obj_t *table, std::int32_t row, std::int32_t col, const char *text);
 
+// Gauge / level bar / VU (display widgets — use from update() sync, not as owning handles)
+void set_gauge_value(lv_obj_t *gauge, std::int32_t value);
+void set_level_bar_value(lv_obj_t *bar, std::int32_t value);
+void set_vu_strip_lit_segments(lv_obj_t *strip, std::uint8_t lit_segments);
+
+// Composite: gauge + level bar + VU strip driven by one percent value (0–100).
+struct percent_output_cluster {
+    lv_obj_t    *gauge      = nullptr;
+    lv_obj_t    *level_bar  = nullptr;
+    lv_obj_t    *vu_strip   = nullptr;
+    std::uint8_t vu_segment_count = 12;
+};
+
+void sync_percent_output(const percent_output_cluster &cluster, std::int32_t percent_0_100);
+
 }  // namespace blusys::app::view
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI

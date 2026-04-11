@@ -69,6 +69,26 @@ See [Architecture](architecture.md) for the tier model.
 - do not add or recommend public API without proportionate examples, docs, and validation
 - during the v7 refactor, prefer the new canonical product path over preserving additive continuity with the old one
 
+### Framework product API versioning
+
+Breaking changes to `app_spec`, `app_ctx`, and umbrella `blusys/app/*.hpp` headers are announced alongside the framework tier (changelog / release notes when applicable) and should be accompanied by updates to canonical docs and quickstarts when they touch the recommended product path. For the runtime story (queues, threading, what not to do in `update()`), see [App runtime model](../app/app-runtime-model.md).
+
+### Product application layout (enforced in CI)
+
+- **Canonical `main/` shape:** `core/` (state, actions, `update()`), `ui/` (screens, LVGL, sync — may be empty for headless with a README), `integration/` (`app_spec`, capabilities, `map_event`, entry macro in `integration/app_main.cpp`).
+- **Validation examples** (`examples/validation/`) and other non-`blusys::app` demos are exempt; see `scripts/check-product-layout.py`.
+- Optional inventory flags: `layout_exempt`, `product_layout` (see `inventory.yml` header).
+
+### Product application C++ shape (v7)
+
+- **Reducer center:** domain rules live in `update(ctx, state, action)`; keep navigation and capability sync as explicit actions.
+- **Strong ids:** use `enum class` for routes and overlays in product code; `app_ctx::navigate_to` / `show_overlay` accept those enums.
+- **State from factories:** use `ctx.product_state<YourState>()` in screen factories instead of file-scope pointers to `app_state`.
+- **View sync:** prefer `blusys::app::view::` bindings and small composites (for example `sync_percent_output`) over calling `blusys::ui::*` setters directly from product code.
+- **Route handles:** group `lv_obj_t*` handles in per-route structs with `clear()` on hide; the screen registry still owns teardown of the widget tree.
+- **Settings:** give interactive `setting_item` rows a non-zero `id` when using `settings_screen_config::on_changed`; the callback receives that stable id (or the row index when `id` is 0).
+- **Integration:** include `blusys/app/integration.hpp` when you need typed capability event IDs (`integration_dispatch.hpp`), narrow shortcuts (`integration_events.hpp`), or `dispatch_variant`; use `blusys/app/reference_build_profile.hpp` to avoid duplicated `#ifdef` matrices in `integration/app_main.cpp`.
+
 ## Development Workflow
 
 1. confirm the scope against `PRD.md`

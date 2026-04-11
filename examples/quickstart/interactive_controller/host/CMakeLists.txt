@@ -120,6 +120,7 @@ target_compile_definitions(blusys_framework_host PUBLIC BLUSYS_FRAMEWORK_HAS_UI=
 
 add_executable(interactive_controller_host
     "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/ui/panels.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../main/ui/app_ui.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../main/integration/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_host_platform.cpp"

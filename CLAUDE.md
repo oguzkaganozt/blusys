@@ -146,8 +146,9 @@ Proportionate checks:
 2. `blusys build` or `blusys host-build` — affected paths  
 3. `mkdocs build --strict` — docs/nav  
 4. `python scripts/check-inventory.py` — examples, docs, or modules added/removed  
-5. `python scripts/example-health.py` — example layout changes  
-6. Broader nightly validation — only when warranted  
+5. `python scripts/check-product-layout.py` — `main/core` · `main/ui` · `main/integration` for product-shaped examples  
+6. `python scripts/example-health.py` — example inventory paths  
+7. Broader nightly validation — only when warranted  
 
 PR CI builds examples with `ci_pr=true` in `inventory.yml` (archetype quickstarts). Full examples run nightly.
 

@@ -48,6 +48,11 @@ protected:
         ctx.runtime_ptr_  = runtime_ptr;
     }
 
+    static void bind_product_state(app_ctx &ctx, void *state)
+    {
+        ctx.product_state_ = state;
+    }
+
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     static void bind_screen_router(app_ctx &ctx, view::screen_router *router)
     {
@@ -185,6 +190,7 @@ public:
 
         start_capabilities();
         bind_capability_ptrs(ctx_, spec_.capabilities);
+        bind_product_state(ctx_, static_cast<void *>(&state_));
 
         if (spec_.on_init != nullptr) {
             spec_.on_init(ctx_, state_);
@@ -203,6 +209,7 @@ public:
 
     void deinit()
     {
+        bind_product_state(ctx_, nullptr);
         stop_capabilities();
         framework_runtime_.deinit();
         framework_runtime_.unregister_feedback_sink(&feedback_logging_sink_);
@@ -290,13 +297,15 @@ private:
         }
     }
 
-    static void dispatch_trampoline(void *self, const void *action_ptr)
+    static bool dispatch_trampoline(void *self, const void *action_ptr)
     {
         auto *rt = static_cast<app_runtime *>(self);
         const auto &action = *static_cast<const Action *>(action_ptr);
         if (!rt->action_queue_.push_back(action)) {
             BLUSYS_LOGW("blusys_app", "action queue full, dispatch dropped");
+            return false;
         }
+        return true;
     }
 
     // ---- inner controller: bridges framework events to the reducer model ----

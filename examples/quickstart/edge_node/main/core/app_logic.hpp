@@ -4,6 +4,10 @@
 
 #include "blusys/app/app.hpp"
 
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+#include "lvgl.h"
+#endif
+
 namespace edge_node {
 
 // ---- operational state machine ----
@@ -108,6 +112,16 @@ struct app_state {
     // diagnostics cache
     std::uint32_t free_heap       = 0;
     std::uint32_t uptime_ms       = 0;
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+    // Optional SSD1306 mono UI — filled in ui/on_init + screen factory; timer reads these.
+    struct local_mono_ui {
+        lv_obj_t *phase_lbl = nullptr;
+        lv_obj_t *temp_lbl  = nullptr;
+        lv_obj_t *hum_lbl   = nullptr;
+        lv_obj_t *tel_lbl   = nullptr;
+    } mono_ui{};
+#endif
 };
 
 // ---- public functions ----

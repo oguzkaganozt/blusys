@@ -53,7 +53,7 @@ enum class Action {
 The context object provided to your reducer. Use it for dispatch, navigation, and feedback:
 
 ```cpp
-ctx.dispatch(Action::increment);          // queue an action
+ctx.dispatch(Action::increment);          // queue an action (returns false if the queue is full)
 ctx.navigate_to(RouteId::settings);       // set root route
 ctx.navigate_push(RouteId::detail);       // push route
 ctx.navigate_back();                      // pop route

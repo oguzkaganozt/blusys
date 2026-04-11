@@ -820,7 +820,8 @@ cmd_create() {
     if [[ "$archetype" == "gateway-controller" && "$starter_kind" == "headless" ]]; then
         local gw_tmpl="$BLUSYS_REPO_ROOT/templates/scaffold/gateway_headless"
         cp -f "$gw_tmpl/main/CMakeLists.txt" "$target_dir/main/CMakeLists.txt"
-        rm -rf "$target_dir/main/ui"
+        mkdir -p "$target_dir/main/ui"
+        cp -f "$gw_tmpl/main/ui/README.md" "$target_dir/main/ui/README.md"
         cp -f "$gw_tmpl/main/integration/app_main.cpp" "$target_dir/main/integration/app_main.cpp"
         cp -f "$gw_tmpl/host/CMakeLists.txt" "$target_dir/host/CMakeLists.txt"
         sed -i "s/BLUSYS_PRODUCT_HOST/${project_name}_host/g" "$target_dir/host/CMakeLists.txt"

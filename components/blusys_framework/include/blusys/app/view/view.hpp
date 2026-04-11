@@ -9,6 +9,7 @@
 
 #include "blusys/app/view/action_widgets.hpp"
 #include "blusys/app/view/bindings.hpp"
+#include "blusys/app/view/composites.hpp"
 #include "blusys/app/view/custom_widget.hpp"
 #include "blusys/app/view/lvgl_scope.hpp"
 #include "blusys/app/view/overlay_manager.hpp"

@@ -256,8 +256,12 @@ void shell_sync_tabs_for_nav_stack(shell &s, const screen_registry &nav)
         for (std::size_t ti = 0; ti < s.tab_count; ++ti) {
             if (s.tabs[ti].route_id == route) {
                 shell_set_active_tab(s, ti);
-                if (s.header_title != nullptr && s.tabs[ti].label != nullptr) {
-                    shell_set_title(s, s.tabs[ti].label);
+                if (s.header_title != nullptr) {
+                    const char *title = s.tabs[ti].header_title != nullptr ? s.tabs[ti].header_title
+                                                                           : s.tabs[ti].label;
+                    if (title != nullptr) {
+                        shell_set_title(s, title);
+                    }
                 }
                 return;
             }

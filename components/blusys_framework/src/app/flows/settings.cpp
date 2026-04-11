@@ -40,7 +40,10 @@ void on_toggle_changed(bool new_state, void *user_data)
 {
     auto *ic = static_cast<item_cb_ctx *>(user_data);
     if (ic != nullptr && ic->cfg != nullptr && ic->cfg->on_changed != nullptr) {
-        ic->cfg->on_changed(ic->cfg->user_ctx, ic->index, new_state ? 1 : 0);
+        const auto &item = ic->cfg->items[ic->index];
+        const std::uint32_t sid =
+            item.id != 0 ? item.id : static_cast<std::uint32_t>(ic->index);
+        ic->cfg->on_changed(ic->cfg->user_ctx, sid, new_state ? 1 : 0);
     }
 }
 
@@ -48,7 +51,10 @@ void on_slider_changed(std::int32_t new_value, void *user_data)
 {
     auto *ic = static_cast<item_cb_ctx *>(user_data);
     if (ic != nullptr && ic->cfg != nullptr && ic->cfg->on_changed != nullptr) {
-        ic->cfg->on_changed(ic->cfg->user_ctx, ic->index, new_value);
+        const auto &item = ic->cfg->items[ic->index];
+        const std::uint32_t sid =
+            item.id != 0 ? item.id : static_cast<std::uint32_t>(ic->index);
+        ic->cfg->on_changed(ic->cfg->user_ctx, sid, new_value);
     }
 }
 
@@ -56,7 +62,10 @@ void on_dropdown_changed(std::int32_t index, void *user_data)
 {
     auto *ic = static_cast<item_cb_ctx *>(user_data);
     if (ic != nullptr && ic->cfg != nullptr && ic->cfg->on_changed != nullptr) {
-        ic->cfg->on_changed(ic->cfg->user_ctx, ic->index, index);
+        const auto &item = ic->cfg->items[ic->index];
+        const std::uint32_t sid =
+            item.id != 0 ? item.id : static_cast<std::uint32_t>(ic->index);
+        ic->cfg->on_changed(ic->cfg->user_ctx, sid, index);
     }
 }
 
@@ -64,7 +73,10 @@ void on_button_pressed(void *user_data)
 {
     auto *ic = static_cast<item_cb_ctx *>(user_data);
     if (ic != nullptr && ic->cfg != nullptr && ic->cfg->on_changed != nullptr) {
-        ic->cfg->on_changed(ic->cfg->user_ctx, ic->index, 0);
+        const auto &item = ic->cfg->items[ic->index];
+        const std::uint32_t sid =
+            item.id != 0 ? item.id : static_cast<std::uint32_t>(ic->index);
+        ic->cfg->on_changed(ic->cfg->user_ctx, sid, 0);
     }
 }
 

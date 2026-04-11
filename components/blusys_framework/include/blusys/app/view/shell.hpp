@@ -46,6 +46,9 @@ static constexpr std::size_t kMaxTabs = 6;
 struct shell_tab_item {
     const char   *label    = nullptr;
     std::uint32_t route_id = 0;
+    /// When set, used as the shell header title when this tab matches the nav stack.
+    /// If null, `label` is used for both the tab button and the header title.
+    const char   *header_title = nullptr;
 };
 
 // The shell owns a persistent screen with optional header, status bar,

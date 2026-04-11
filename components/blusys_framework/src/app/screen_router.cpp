@@ -50,6 +50,25 @@ bool screen_router::register_screen(std::uint32_t         route_id,
     return screens_.register_screen(route_id, create_fn, destroy_fn, lifecycle);
 }
 
+bool screen_router::register_screens(app_ctx *ctx, const screen_registration *rows, std::size_t count)
+{
+    if (rows == nullptr || count == 0) {
+        return true;
+    }
+    bool ok = true;
+    for (std::size_t i = 0; i < count; ++i) {
+        const screen_lifecycle life{
+            .on_show = rows[i].on_show,
+            .on_hide = rows[i].on_hide,
+            .user_data = ctx,
+        };
+        if (!screens_.register_screen(rows[i].route_id, rows[i].create, rows[i].destroy, life)) {
+            ok = false;
+        }
+    }
+    return ok;
+}
+
 void screen_router::set_screen_changed_callback(void (*fn)(lv_obj_t *screen, void *user_ctx),
                                                  void *user_ctx)
 {

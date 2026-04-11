@@ -87,14 +87,14 @@ void on_about_show(lv_obj_t * /*screen*/, void *user_data)
     }
 }
 
-void on_settings_changed(void *user_ctx, std::size_t item_index, std::int32_t value)
+void on_settings_changed(void *user_ctx, std::uint32_t setting_id, std::int32_t value)
 {
     auto *ctx = static_cast<blusys::app::app_ctx *>(user_ctx);
     if (ctx == nullptr) {
         return;
     }
 
-    switch (item_index) {
+    switch (setting_id) {
     case 1:
         ctx->dispatch(action{.tag = action_tag::set_mode, .value = value});
         break;

@@ -4,7 +4,7 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 
 ## Pick a product archetype first
 
-New products should start from one of four **canonical archetypes** — the same `core/` / `ui/` / `integration/` layout and reducer model; only defaults and starter content differ.
+New products should start from one of four **canonical archetypes** — the same `core/` / `ui/` / `integration/` layout and reducer model; only defaults and starter content differ. Product-shaped examples in this repo must keep that layout; CI runs `scripts/check-product-layout.py` (HAL `validation/` demos are exempt).
 
 - [Archetype Starters](archetypes.md) — when to use each shape, example paths, and `blusys create --archetype …`
 - [Connected products](connected-products.md) — edge node vs gateway, headless vs optional local UI (same model, different emphasis)

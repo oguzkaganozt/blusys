@@ -5,7 +5,10 @@
 
 #include "blusys/error.h"
 
+#include <cassert>
+#include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 namespace blusys::app::view {
@@ -54,6 +57,44 @@ public:
     void show_overlay(std::uint32_t overlay_id, const void *params = nullptr);
     void hide_overlay(std::uint32_t overlay_id);
 
+    template <typename RouteEnum, typename = std::enable_if_t<std::is_enum_v<RouteEnum>>>
+    void navigate_to(RouteEnum route, const void *params = nullptr)
+    {
+        navigate_to(static_cast<std::uint32_t>(route), params);
+    }
+
+    template <typename RouteEnum, typename = std::enable_if_t<std::is_enum_v<RouteEnum>>>
+    void navigate_push(RouteEnum route, const void *params = nullptr)
+    {
+        navigate_push(static_cast<std::uint32_t>(route), params);
+    }
+
+    template <typename RouteEnum, typename = std::enable_if_t<std::is_enum_v<RouteEnum>>>
+    void navigate_replace(RouteEnum route, const void *params = nullptr)
+    {
+        navigate_replace(static_cast<std::uint32_t>(route), params);
+    }
+
+    template <typename OverlayEnum, typename = std::enable_if_t<std::is_enum_v<OverlayEnum>>>
+    void show_overlay(OverlayEnum overlay, const void *params = nullptr)
+    {
+        show_overlay(static_cast<std::uint32_t>(overlay), params);
+    }
+
+    template <typename OverlayEnum, typename = std::enable_if_t<std::is_enum_v<OverlayEnum>>>
+    void hide_overlay(OverlayEnum overlay)
+    {
+        hide_overlay(static_cast<std::uint32_t>(overlay));
+    }
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+    // Current screen stack depth (1 = root). Zero when no router is bound.
+    [[nodiscard]] std::size_t navigation_stack_depth() const;
+
+    // True when navigate_back() would pop a pushed screen (same heuristic as shell back affordance).
+    [[nodiscard]] bool can_navigate_back() const;
+#endif
+
     // ---- feedback ----
 
     void emit_feedback(blusys::framework::feedback_channel channel,
@@ -61,14 +102,30 @@ public:
                        std::uint32_t value = 0);
 
     // ---- action dispatch (type-erased) ----
+    //
+    // Queues an action for the next reducer pass. Returns false if the action queue is full
+    // (action dropped; runtime logs a warning) or if dispatch is not wired.
 
     template <typename Action>
-    void dispatch(const Action &action)
+    bool dispatch(const Action &action)
     {
         if (dispatch_fn_ != nullptr) {
-            dispatch_fn_(runtime_ptr_, static_cast<const void *>(&action));
+            return dispatch_fn_(runtime_ptr_, static_cast<const void *>(&action));
         }
+        return false;
     }
+
+    // Pointer to the app-owned state (set by app_runtime for on_init / screen factories).
+    // State must be the same type as app_spec<State, Action>::State. Casting to the wrong
+    // type is undefined behavior. Not available after runtime deinit (nullptr).
+    template <typename State>
+    [[nodiscard]] State *product_state() const
+    {
+        assert(product_state_ != nullptr);
+        return static_cast<State *>(product_state_);
+    }
+
+    [[nodiscard]] void *product_state_raw() const { return product_state_; }
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     // ---- screen router access (for registering screens in on_init) ----
@@ -106,12 +163,13 @@ public:
 private:
     friend class app_runtime_base;
 
-    using dispatch_fn = void (*)(void *runtime, const void *action);
+    using dispatch_fn = bool (*)(void *runtime, const void *action);
 
     blusys::framework::route_sink  *route_sink_   = nullptr;
     blusys::framework::feedback_bus *feedback_bus_ = nullptr;
     dispatch_fn                     dispatch_fn_   = nullptr;
     void                           *runtime_ptr_   = nullptr;
+    void                           *product_state_ = nullptr;
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     view::screen_router            *screen_router_ = nullptr;
     view::shell                    *shell_          = nullptr;

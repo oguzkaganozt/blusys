@@ -29,7 +29,7 @@ The app launches in a host SDL2 window with the default theme. Arrow keys move f
 The scaffold generates a host-first interactive app with:
 
 - framework-owned boot, LVGL lifecycle, shell, and focus wiring
-- the canonical `core/`, `ui/`, and `integration/` product structure
+- the canonical `core/`, `ui/`, and `integration/` product structure (CI-enforced for product-shaped examples via `scripts/check-product-layout.py`)
 - `main/idf_component.yml` with managed git pins for all three platform tiers (and LVGL); set `BLUSYS_SCAFFOLD_PLATFORM_VERSION` when you need a different release tag
 - a reducer-owned control flow that can be retargeted to host or ST7735 device profiles
 
@@ -48,10 +48,12 @@ my_product/
     CMakeLists.txt     — idf_component_register listing core, ui, and integration
     idf_component.yml
     core/
-      app_logic.hpp    — State, Action, update() declarations
+      app_logic.hpp    — State, Action, update(); domain-only (no LVGL component defs)
       app_logic.cpp    — reducer implementation
     ui/
-      app_ui.cpp       — screen composition with stock widgets
+      panels.hpp       — product panel types + sync from state (custom “components”)
+      panels.cpp
+      app_ui.cpp       — screen factories, shell chrome wiring
     integration/
       app_main.cpp     — app_spec wiring + BLUSYS_APP_MAIN_HOST(spec) macro
   host/

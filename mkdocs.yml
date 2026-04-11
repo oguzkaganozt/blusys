@@ -65,6 +65,7 @@ nav:
   - App:
       - app/index.md
       - Reducer Model: app/reducer-model.md
+      - App Runtime Model: app/app-runtime-model.md
       - Views & Widgets: app/views-and-widgets.md
       - Widget Gallery: app/widget-gallery.md
       - Capability Composition: app/capability-composition.md

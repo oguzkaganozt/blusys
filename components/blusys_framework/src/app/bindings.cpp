@@ -1,14 +1,18 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/app/view/bindings.hpp"
+#include "blusys/app/view/composites.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #include "blusys/framework/ui/primitives/status_badge.hpp"
 #include "blusys/framework/ui/widgets/data_table/data_table.hpp"
 #include "blusys/framework/ui/widgets/dropdown/dropdown.hpp"
 #include "blusys/framework/ui/widgets/input_field/input_field.hpp"
 #include "blusys/framework/ui/widgets/list/list.hpp"
+#include "blusys/framework/ui/widgets/gauge/gauge.hpp"
+#include "blusys/framework/ui/widgets/level_bar/level_bar.hpp"
 #include "blusys/framework/ui/widgets/progress/progress.hpp"
 #include "blusys/framework/ui/widgets/slider/slider.hpp"
+#include "blusys/framework/ui/widgets/vu_strip/vu_strip.hpp"
 #include "blusys/framework/ui/widgets/tabs/tabs.hpp"
 #include "blusys/framework/ui/widgets/toggle/toggle.hpp"
 
@@ -171,6 +175,70 @@ void set_cell_text(lv_obj_t *table, std::int32_t row, std::int32_t col, const ch
 {
     if (table != nullptr) {
         blusys::ui::data_table_set_cell(table, row, col, text);
+    }
+}
+
+void set_gauge_value(lv_obj_t *gauge, std::int32_t value)
+{
+    if (gauge != nullptr) {
+        blusys::ui::gauge_set_value(gauge, value);
+    }
+}
+
+void set_level_bar_value(lv_obj_t *bar, std::int32_t value)
+{
+    if (bar != nullptr) {
+        blusys::ui::level_bar_set_value(bar, value);
+    }
+}
+
+void set_vu_strip_lit_segments(lv_obj_t *strip, std::uint8_t lit_segments)
+{
+    if (strip != nullptr) {
+        blusys::ui::vu_strip_set_value(strip, lit_segments);
+    }
+}
+
+void sync_percent_output(const percent_output_cluster &cluster, std::int32_t percent_0_100)
+{
+    if (percent_0_100 < 0) {
+        percent_0_100 = 0;
+    } else if (percent_0_100 > 100) {
+        percent_0_100 = 100;
+    }
+    set_gauge_value(cluster.gauge, percent_0_100);
+    set_level_bar_value(cluster.level_bar, percent_0_100);
+    if (cluster.vu_strip != nullptr && cluster.vu_segment_count > 0) {
+        const auto lit = static_cast<std::uint8_t>(
+            (percent_0_100 * static_cast<std::int32_t>(cluster.vu_segment_count)) / 100);
+        set_vu_strip_lit_segments(cluster.vu_strip, lit);
+    }
+}
+
+void sync_labeled_value(const labeled_value_row &row, const char *value_text)
+{
+    if (row.value != nullptr) {
+        set_text(row.value, value_text != nullptr ? value_text : "");
+    }
+}
+
+void sync_labeled_value(const labeled_value_row &row, const char *caption_text, const char *value_text)
+{
+    if (row.caption != nullptr) {
+        set_text(row.caption, caption_text != nullptr ? caption_text : "");
+    }
+    sync_labeled_value(row, value_text);
+}
+
+void sync_status_strip(const status_strip &strip,
+                       blusys::ui::badge_level level,
+                       const char *badge_text,
+                       const char *detail_text)
+{
+    set_badge_level(strip.badge, level);
+    set_badge_text(strip.badge, badge_text);
+    if (strip.detail_label != nullptr) {
+        set_text(strip.detail_label, detail_text != nullptr ? detail_text : "");
     }
 }
 

@@ -200,7 +200,7 @@ Directory ownership rules:
 
 Scaffolded product apps should use `main/` as the single local ESP-IDF component.
 
-- `main/CMakeLists.txt` compiles the files under `core/`, `ui/`, and `integration/`
+- `main/CMakeLists.txt` compiles the files under `core/`, `ui/`, and `integration/` (CI enforces this layout for product-shaped examples via `scripts/check-product-layout.py`; HAL smoke examples under `examples/validation/` are exempt)
 - `main/idf_component.yml` remains the place where platform components are pulled in through the managed component flow
 - the separate local `app/` component model is not part of the canonical scaffold path
 
