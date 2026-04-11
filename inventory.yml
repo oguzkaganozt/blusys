@@ -1431,6 +1431,10 @@ docs:
     section: internals
     visibility: public
 
+  - path: docs/internals/v2-plan.md
+    section: internals
+    visibility: public
+
   - path: docs/internals/phase-7-hardware-packaging-plan.md
     section: internals
     visibility: public

@@ -732,3 +732,10 @@ The platform is successful when:
 - industrial products can feel clear, dependable, and connected without repeated orchestration work
 - new teams start from shared product grammar, not from plumbing
 - Blusys behaves like an internal product operating system rather than a loose collection of modules
+
+## V2 Follow-Ups
+
+Supplemental V2 planning doc: [`docs/internals/v2-plan.md`](docs/internals/v2-plan.md).
+
+Current focus areas: doc cleanup, scaffold production hardening, host-side tests, widget
+source auto-discovery, `bu_knob`, sanitizer builds, and snapshot rendering.

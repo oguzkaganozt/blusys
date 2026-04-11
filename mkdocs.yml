@@ -156,6 +156,7 @@ nav:
       - "Phase 7 Exit": internals/phase-7-exit.md
       - Phase 8 Ecosystem, Archetype Scaffolds, And Docs Plan: internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
       - "Phase 8 Exit": internals/phase-8-exit.md
+      - V2 Plan: internals/v2-plan.md
       - Target Matrix: internals/target-matrix.md
       - Testing:
           - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md

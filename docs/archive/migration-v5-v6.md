@@ -39,8 +39,8 @@ scaffold layout, switching `main/` to C++, and so on.
 | Services      | `components/blusys_services/` (incl. drivers) | `components/blusys_services/` (no drivers) |
 | Framework     | (did not exist)                         | `components/blusys_framework/` (new, C++)  |
 
-Rationale and full details: [`platform-transition/ROADMAP.md`](https://github.com/oguzkaganozt/blusys/blob/main/platform-transition/ROADMAP.md)
-and [`platform-transition/DECISIONS.md`](https://github.com/oguzkaganozt/blusys/blob/main/platform-transition/DECISIONS.md).
+Rationale and full details in [`ROADMAP.md`](https://github.com/oguzkaganozt/blusys/blob/main/ROADMAP.md)
+and [`CLAUDE.md`](https://github.com/oguzkaganozt/blusys/blob/main/CLAUDE.md).
 
 ### 2. Drivers moved from `blusys_services` into `blusys`
 
@@ -290,8 +290,7 @@ dependencies:
 ```
 
 **All three tiers must be pinned to the same tag.** Mixing tiers across
-versions is not supported — see decision 7 in
-[`platform-transition/DECISIONS.md`](https://github.com/oguzkaganozt/blusys/blob/main/platform-transition/DECISIONS.md).
+versions is not supported.
 The framework's ABI is not stable between minor versions, and the
 framework's internal use of services assumes matching versions.
 
@@ -349,9 +348,8 @@ tool may complain about redundant fields.
 
 **Two `CMakeLists.txt` files found under the `EXTRA_COMPONENT_DIRS`
 target** — your top-level `CMakeLists.txt` is pointing at the project
-root instead of `${CMAKE_CURRENT_LIST_DIR}/app`. See the scaffold spec
-correction in [`platform-transition/DECISIONS.md`](https://github.com/oguzkaganozt/blusys/blob/main/platform-transition/DECISIONS.md)
-(decision 15 amendment) and Phase 7 notes.
+root instead of `${CMAKE_CURRENT_LIST_DIR}/app`. See the scaffold section in
+[`CLAUDE.md`](https://github.com/oguzkaganozt/blusys/blob/main/CLAUDE.md) for the correct pattern.
 
 **`BLUSYS_BUILD_UI=ON requires the lvgl/lvgl managed component`** —
 you've enabled the UI tier but did not add `lvgl/lvgl ~9.2` to
@@ -362,7 +360,5 @@ for a headless product.
 
 - [Architecture](../internals/architecture.md) — the current three-tier layout.
 - [App](../app/index.md) — v7 product-facing API (supersedes the v6 framework guide).
-- [Platform transition docs](https://github.com/oguzkaganozt/blusys/tree/main/platform-transition) — full planning
-  history, decisions log, and phase-by-phase rationale.
-- [`PROGRESS.md`](https://github.com/oguzkaganozt/blusys/blob/main/PROGRESS.md) — current transition phase and verification snapshot.
+- [`ROADMAP.md`](https://github.com/oguzkaganozt/blusys/blob/main/ROADMAP.md) — current roadmap, exit records, and follow-up planning.
 - [`CLAUDE.md`](https://github.com/oguzkaganozt/blusys/blob/main/CLAUDE.md) — contributor guidance and "Adding a New Module" workflow.
