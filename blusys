@@ -467,11 +467,7 @@ blusys_help_create() {
     printf '\nGenerates: top-level CMake + main/ with core/, integration/, and ui/ when the archetype ships UI.\n'
     printf 'Platform components are pulled via main/idf_component.yml.\n'
     printf '\nEnvironment:\n'
-<<<<<<< HEAD
-    printf '  BLUSYS_SCAFFOLD_PLATFORM_VERSION   git tag for blusys_* deps (default: v7.0.0)\n'
-=======
     printf '  BLUSYS_SCAFFOLD_PLATFORM_VERSION   git ref for blusys_* deps (default: current branch)\n'
->>>>>>> bff28d1 (fix(v7): harden runtime navigation and example builds)
 }
 
 blusys_help_build() {
