@@ -147,9 +147,11 @@ The core spine is internal framework machinery. Product code does not interact w
 
 - `theme.hpp` — single `theme_tokens` struct populated at boot, `set_theme()` / `theme()` accessors
 - `callbacks.hpp` — semantic callback types (`press_cb_t`, `toggle_cb_t`, `change_cb_t`, ...) — products never see `lv_event_cb_t`
-- `widgets.hpp` — umbrella over all widget kit headers
-- Layout primitives: `screen`, `row`, `col`, `label`, `divider`
-- Stock widgets: `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`
+- `primitives.hpp` — umbrella over layout primitives (`screen`, `row`, `col`, `label`, `divider`, `icon_label`, `status_badge`, `key_value`, …)
+- `widgets.hpp` — umbrella over primitives plus stock widgets (`bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`, `bu_progress`, `bu_list`, `bu_card`, `bu_tabs`, `bu_dropdown`, `bu_gauge`, `bu_knob`, `bu_chart`, `bu_data_table`, `bu_input_field`, `bu_level_bar`, `bu_vu_strip`, …)
+- Layout primitives: `screen`, `row`, `col`, `label`, `divider`, `icon_label`, `status_badge`, `key_value`
+- Stock interactive widgets: `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`, `bu_list`, `bu_tabs`, `bu_dropdown`, `bu_input_field`, `bu_knob`
+- Stock display widgets: `bu_progress`, `bu_chart`, `bu_gauge`, `bu_data_table`, `bu_card`, `bu_level_bar`, `bu_vu_strip`
 - `input/encoder.hpp` — `create_encoder_group` + `auto_focus_screen` for encoder-driven focus traversal
 
 Authoring contract: every widget follows the six-rule contract (theme tokens only, config struct interface, setters own state transitions, standard state set, one folder per widget, header is the spec). Stock-backed widgets use a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` for callback storage. See `components/blusys_framework/widget-author-guide.md`.

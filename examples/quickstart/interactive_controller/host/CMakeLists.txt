@@ -92,6 +92,7 @@ add_library(blusys_framework_host STATIC
     ${BLUSYS_FW}/src/ui/widgets/dropdown/dropdown.cpp
     ${BLUSYS_FW}/src/ui/widgets/gauge/gauge.cpp
     ${BLUSYS_FW}/src/ui/widgets/input_field/input_field.cpp
+    ${BLUSYS_FW}/src/ui/widgets/level_bar/level_bar.cpp
     ${BLUSYS_FW}/src/ui/widgets/list/list.cpp
     ${BLUSYS_FW}/src/ui/widgets/modal/modal.cpp
     ${BLUSYS_FW}/src/ui/widgets/overlay/overlay.cpp
@@ -99,6 +100,7 @@ add_library(blusys_framework_host STATIC
     ${BLUSYS_FW}/src/ui/widgets/slider/slider.cpp
     ${BLUSYS_FW}/src/ui/widgets/tabs/tabs.cpp
     ${BLUSYS_FW}/src/ui/widgets/toggle/toggle.cpp
+    ${BLUSYS_FW}/src/ui/widgets/vu_strip/vu_strip.cpp
 )
 target_include_directories(blusys_framework_host PUBLIC
     ${BLUSYS_COMP}/include

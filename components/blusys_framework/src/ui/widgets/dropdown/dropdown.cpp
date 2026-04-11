@@ -105,7 +105,7 @@ void apply_theme(lv_obj_t *dd)
     // Focus ring.
     lv_obj_set_style_outline_width(dd, t.focus_ring_width, LV_STATE_FOCUSED);
     lv_obj_set_style_outline_color(dd, t.color_focus_ring, LV_STATE_FOCUSED);
-    lv_obj_set_style_outline_pad(dd, 2, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_pad(dd, t.spacing_xs > 0 ? t.spacing_xs / 2 : 1, LV_STATE_FOCUSED);
 
     // Disabled state.
     lv_obj_set_style_opa(dd, t.opa_disabled, LV_STATE_DISABLED);

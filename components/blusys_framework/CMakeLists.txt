@@ -62,6 +62,7 @@ if(BLUSYS_BUILD_UI)
             src/ui/widgets/gauge/gauge.cpp
             src/ui/widgets/input_field/input_field.cpp
             src/ui/widgets/knob/knob.cpp
+            src/ui/widgets/level_bar/level_bar.cpp
             src/ui/widgets/list/list.cpp
             src/ui/widgets/modal/modal.cpp
             src/ui/widgets/overlay/overlay.cpp
@@ -69,6 +70,7 @@ if(BLUSYS_BUILD_UI)
             src/ui/widgets/slider/slider.cpp
             src/ui/widgets/tabs/tabs.cpp
             src/ui/widgets/toggle/toggle.cpp
+            src/ui/widgets/vu_strip/vu_strip.cpp
             src/app/shell.cpp
             src/app/touch_bridge.cpp
             src/ui/transition.cpp

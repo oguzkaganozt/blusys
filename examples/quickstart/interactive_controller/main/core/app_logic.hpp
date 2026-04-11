@@ -50,6 +50,8 @@ struct app_state {
     lv_obj_t *shell_badge      = nullptr;
     lv_obj_t *shell_detail     = nullptr;
     lv_obj_t *home_gauge       = nullptr;
+    lv_obj_t *home_level_bar   = nullptr;
+    lv_obj_t *home_vu_strip    = nullptr;
     lv_obj_t *home_preset      = nullptr;
     lv_obj_t *home_hold_badge  = nullptr;
     lv_obj_t *status_setup     = nullptr;

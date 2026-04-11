@@ -18,11 +18,13 @@
 #include "blusys/framework/ui/widgets/gauge/gauge.hpp"
 #include "blusys/framework/ui/widgets/input_field/input_field.hpp"
 #include "blusys/framework/ui/widgets/knob/knob.hpp"
+#include "blusys/framework/ui/widgets/level_bar/level_bar.hpp"
 #include "blusys/framework/ui/widgets/list/list.hpp"
 #include "blusys/framework/ui/widgets/progress/progress.hpp"
 #include "blusys/framework/ui/widgets/slider/slider.hpp"
 #include "blusys/framework/ui/widgets/tabs/tabs.hpp"
 #include "blusys/framework/ui/widgets/toggle/toggle.hpp"
+#include "blusys/framework/ui/widgets/vu_strip/vu_strip.hpp"
 #include "blusys/log.h"
 
 #include <cstddef>
@@ -269,6 +271,28 @@ inline lv_obj_t *progress(lv_obj_t *parent, int32_t min = 0, int32_t max = 100,
         .initial  = initial,
         .label    = lbl,
         .show_pct = show_pct,
+    });
+}
+
+inline lv_obj_t *level_bar(lv_obj_t *parent, int32_t min = 0, int32_t max = 100,
+                           int32_t initial = 0, const char *lbl = nullptr)
+{
+    return blusys::ui::level_bar_create(parent, {
+        .min     = min,
+        .max     = max,
+        .initial = initial,
+        .label   = lbl,
+    });
+}
+
+inline lv_obj_t *vu_strip(lv_obj_t *parent, std::uint8_t segments = 12,
+                          std::uint8_t initial = 0,
+                          blusys::ui::vu_orientation orient = blusys::ui::vu_orientation::vertical)
+{
+    return blusys::ui::vu_strip_create(parent, {
+        .segment_count = segments,
+        .initial       = initial,
+        .orientation   = orient,
     });
 }
 

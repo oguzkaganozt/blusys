@@ -157,6 +157,7 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/gauge/gauge.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/input_field/input_field.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/knob/knob.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/level_bar/level_bar.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/list/list.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/modal/modal.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/overlay/overlay.cpp
@@ -164,6 +165,7 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/slider/slider.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/tabs/tabs.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/toggle/toggle.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/vu_strip/vu_strip.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/shell.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/touch_bridge.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/transition.cpp

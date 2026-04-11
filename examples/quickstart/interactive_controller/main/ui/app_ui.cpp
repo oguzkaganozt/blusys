@@ -7,6 +7,8 @@
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #include "blusys/version.h"
 
+#include <cstdint>
+
 namespace interactive_controller::system {
 const char *controller_build_version_for_build();
 const char *controller_profile_label_for_build();
@@ -35,6 +37,8 @@ void clear_home_handles()
         return;
     }
     g_state->home_gauge = nullptr;
+    g_state->home_level_bar = nullptr;
+    g_state->home_vu_strip  = nullptr;
     g_state->home_preset = nullptr;
     g_state->home_hold_badge = nullptr;
 }
@@ -134,6 +138,15 @@ lv_obj_t *create_home(blusys::app::app_ctx &ctx, const void * /*params*/, lv_gro
 
     view::label(hero, "Drive");
     g_state->home_gauge = view::gauge(hero, 0, 100, g_state->level, "%");
+
+    auto *meters = view::row(page.content);
+    lv_obj_set_width(meters, LV_PCT(100));
+    const auto vu_initial = static_cast<std::uint8_t>((g_state->level * 12) / 100);
+    g_state->home_vu_strip =
+        view::vu_strip(meters, 12, vu_initial, blusys::ui::vu_orientation::vertical);
+    g_state->home_level_bar =
+        view::level_bar(meters, 0, 100, g_state->level, "Output");
+    lv_obj_set_flex_grow(g_state->home_level_bar, 1);
     g_state->home_preset = view::key_value(hero, "Accent", accent_name(g_state->accent_index));
     g_state->home_hold_badge = view::status_badge(hero,
                                                   g_state->hold_enabled ? "Hold" : "Live",

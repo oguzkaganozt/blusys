@@ -29,6 +29,23 @@ In `on_init`, register screens with `ctx.screen_router()->register_screen(route_
 
 All widget helpers take the parent container as the first argument.
 
+### Umbrella includes
+
+- `blusys/framework/ui/primitives.hpp` — layout primitives only (`screen`, `row`, `col`, `label`, `divider`, `icon_label`, `status_badge`, `key_value`).
+- `blusys/framework/ui/widgets.hpp` — primitives plus the full stock widget set (buttons through `vu_strip`). Prefer this or `blusys::app::view::action_widgets.hpp` in product code rather than deep one-off includes.
+
+`blusys::app::view::action_widgets.hpp` exposes ergonomic `view::*` factories (e.g. `view::button`, `view::progress`) that wrap the underlying `blusys::ui::*_create` APIs.
+
+### Inventory (by category)
+
+| Category | Stock kit |
+|----------|-----------|
+| Layout primitives | `screen`, `row`, `col`, `label`, `divider`, `icon_label`, `status_badge`, `key_value` |
+| Interactive | `button`, `toggle`, `slider`, `modal`, `overlay`, `list`, `tabs`, `dropdown`, `input_field`, `knob` |
+| Display | `progress`, `card`, `gauge`, `chart`, `data_table`, `level_bar`, `vu_strip` |
+
+Authoring rules for contributors live in `components/blusys_framework/widget-author-guide.md`. A roadmap-to-repo checklist is in `docs/internals/phase-3-widget-library-gap-matrix.md`.
+
 ### Labels and headings
 
 ```cpp
@@ -84,6 +101,18 @@ view::divider(p.content);              // horizontal separator
 auto *row = view::row(p.content);      // horizontal flex container
 view::button(row, "-", ...);
 view::button(row, "+", ...);
+```
+
+### Level bar and VU strip (audio-style displays)
+
+Display-only helpers for compact level feedback. Update values from the reducer with `blusys::ui::level_bar_set_value` / `blusys::ui::vu_strip_set_value`, or keep handles and use `view::set_*` bindings where applicable.
+
+```cpp
+lv_obj_t *lvl = view::level_bar(p.content, 0, 100, state.level, "Output");
+lv_obj_t *vu  = view::vu_strip(p.content, 12, 0, blusys::ui::vu_orientation::vertical);
+// ... in update(), after state changes:
+blusys::ui::level_bar_set_value(lvl, state.level);
+blusys::ui::vu_strip_set_value(vu, static_cast<std::uint8_t>((state.level * 12) / 100));
 ```
 
 ## Multi-Screen Navigation

@@ -5,8 +5,11 @@
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #include "blusys/framework/ui/primitives/status_badge.hpp"
 #include "blusys/framework/ui/widgets/gauge/gauge.hpp"
+#include "blusys/framework/ui/widgets/level_bar/level_bar.hpp"
+#include "blusys/framework/ui/widgets/vu_strip/vu_strip.hpp"
 #include "blusys/log.h"
 
+#include <cstdint>
 #include <cstdio>
 
 namespace interactive_controller {
@@ -49,6 +52,14 @@ void sync_home(app_state &state)
 {
     if (state.home_gauge != nullptr) {
         blusys::ui::gauge_set_value(state.home_gauge, state.level);
+    }
+    if (state.home_level_bar != nullptr) {
+        blusys::ui::level_bar_set_value(state.home_level_bar, state.level);
+    }
+    if (state.home_vu_strip != nullptr) {
+        constexpr std::int32_t kSeg = 12;
+        const auto lit = static_cast<std::uint8_t>((state.level * kSeg) / 100);
+        blusys::ui::vu_strip_set_value(state.home_vu_strip, lit);
     }
     if (state.home_preset != nullptr) {
         blusys::app::view::set_kv_value(state.home_preset, accent_name(state.accent_index));

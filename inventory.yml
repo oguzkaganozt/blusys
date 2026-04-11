@@ -1379,6 +1379,10 @@ docs:
     section: internals
     visibility: public
 
+  - path: docs/internals/phase-3-widget-library-gap-matrix.md
+    section: internals
+    visibility: public
+
   - path: docs/internals/phase-5-interactive-archetypes-plan.md
     section: internals
     visibility: public
