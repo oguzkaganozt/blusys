@@ -1,0 +1,18 @@
+menu "Interactive Controller (Phase 7 display)"
+
+choice BLUSYS_IC_DISPLAY_PROFILE
+    prompt "Device display profile"
+    default BLUSYS_IC_DISPLAY_PROFILE_ST7735
+    help
+        SPI TFT used with this quickstart. Host SDL builds use the matching
+        window size when BLUSYS_IC_DISPLAY_PROFILE is passed from host CMake.
+
+config BLUSYS_IC_DISPLAY_PROFILE_ST7735
+    bool "ST7735 160x128 (canonical)"
+
+config BLUSYS_IC_DISPLAY_PROFILE_ST7789
+    bool "ST7789 320x240 landscape"
+
+endchoice
+
+endmenu

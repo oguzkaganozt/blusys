@@ -1,32 +1,40 @@
 # Blusys Platform
 
-An internal ESP32 product platform built on top of ESP-IDF v5.5.4. Blusys combines HAL modules, hardware drivers, runtime services, and an in-progress framework tier so new products can start from a shared architecture instead of rebuilding the same plumbing repeatedly.
+An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a shared operating model for recurring product families --- from interactive consumer devices to headless industrial nodes --- so new products start from shared architecture instead of rebuilding plumbing.
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch:{ .lg .middle } **Get Started**
+-   :material-rocket-launch:{ .lg .middle } **Start Here**
 
     ---
 
-    Set up your environment and run your first Blusys example in minutes.
+    Create a new product and run it on host immediately.
 
-    [:octicons-arrow-right-24: Getting Started](guides/getting-started.md)
+    [:octicons-arrow-right-24: Interactive Quickstart](start/quickstart-interactive.md)
 
--   :material-book-open-variant:{ .lg .middle } **Task Guides**
-
-    ---
-
-    Step-by-step guides across HAL, drivers, services, and the framework tier.
-
-    [:octicons-arrow-right-24: Browse Guides](guides/index.md)
-
--   :material-code-braces:{ .lg .middle } **API Reference**
+-   :material-cube-outline:{ .lg .middle } **App**
 
     ---
 
-    Type definitions, function signatures, and module references across the platform tiers.
+    The product-facing API: reducer model, views, widgets, capabilities, and profiles.
 
-    [:octicons-arrow-right-24: Browse API Reference](modules/index.md)
+    [:octicons-arrow-right-24: App Overview](app/index.md)
+
+-   :material-connection:{ .lg .middle } **Services**
+
+    ---
+
+    Runtime services: WiFi, HTTP, MQTT, OTA, storage, display, and more.
+
+    [:octicons-arrow-right-24: Browse Services](services/index.md)
+
+-   :material-chip:{ .lg .middle } **HAL + Drivers**
+
+    ---
+
+    Direct hardware access: GPIO, UART, SPI, I2C, sensors, actuators.
+
+    [:octicons-arrow-right-24: Browse HAL](hal/index.md)
 
 </div>
 
@@ -38,7 +46,4 @@ An internal ESP32 product platform built on top of ESP-IDF v5.5.4. Blusys combin
 | ESP32-C3 | Supported |
 | ESP32-S3 | Supported |
 
-See [Compatibility](target-matrix.md) for the full per-module support matrix.
-
-!!! info "Current State"
-    The repo ships HAL, drivers, services, and the framework tier in full. The V1 widget kit (`bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`, `bu_overlay`) plus the framework spine (`router`, `intent`, `feedback`, `controller`, `runtime`) and the encoder focus helpers are all live, with `examples/framework_app_basic/` validating the chain end-to-end. A PC + SDL2 host harness under `scripts/host/` lets the widget kit be iterated on without flashing hardware. See [`ROADMAP.md`](https://github.com/oguzkaganozt/blusys/blob/main/ROADMAP.md) for current state and planned work.
+See [Target Matrix](internals/target-matrix.md) for the full per-module support matrix.

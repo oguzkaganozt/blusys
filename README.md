@@ -12,19 +12,21 @@ build/flash/host workflow.
 git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
 ~/.blusys/install.sh
 
-# Scaffold a product (interactive: framework UI tier on; headless: UI tier off)
+# Scaffold a product (interactive controller archetype by default)
 mkdir ~/my_product && cd ~/my_product
-blusys create --starter interactive   # or --starter headless
+blusys create --archetype interactive-controller
+# or: blusys create --archetype edge-node   # headless-first connected archetype
 
 # Build, flash, monitor
 blusys run /dev/ttyACM0 esp32s3
 ```
 
-Requires ESP-IDF v5.5+ (auto-detected). `blusys create` generates the
-four-CMakeLists product layout (top-level + `main/` + `app/` +
-`app/product_config.cmake`); platform components are pulled by ESP-IDF's
-managed component manager from `main/idf_component.yml`. See
-[Getting Started](docs/guides/getting-started.md) for the full walkthrough.
+Requires ESP-IDF v5.5+ (auto-detected). `blusys create` generates a
+minimal app using the `blusys::app` reducer model. The canonical interactive
+reference is now `examples/quickstart/interactive_controller/`, with
+`examples/reference/interactive_panel/` as the secondary interactive archetype.
+See
+[Getting Started](docs/start/index.md) for the full walkthrough.
 
 ## Architecture
 
@@ -74,32 +76,40 @@ is enforced by `blusys lint`.
 | **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
 | **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl` |
 
-### Framework
+### Framework + App Layer
 
-C++ tier shipping the V1 widget kit and the product spine:
+C++ tier shipping the `blusys::app` product API and the internal
+framework spine:
 
-- **Core spine:** `router`, `intent`, `feedback`, `controller`, `runtime`
-  (queued events, route delivery, feedback bus, tick cadence).
+- **App model:** `app_spec`, `app_ctx`, reducer-driven dispatch
+  (`update(ctx, state, action)`), entry macros (`BLUSYS_APP_MAIN_HOST`,
+  `_HEADLESS`, `_DEVICE`).
+- **View layer:** action-bound widgets, reactive bindings, page helpers,
+  custom widget contract, bounded LVGL scope.
+- **Platform profiles:** host (SDL2), headless, generic SPI ST7735.
+- **Capabilities:** connectivity (Wi-Fi, SNTP, mDNS, local control),
+  storage (SPIFFS, FAT), diagnostics, provisioning, OTA, bluetooth.
 - **Widget kit:** `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`,
   `bu_overlay`, plus layout primitives `screen` / `row` / `col` /
   `label` / `divider`.
 - **Theme system:** single `theme_tokens` struct populated at boot.
-- **Encoder helpers:** `create_encoder_group` + `auto_focus_screen` for
-  encoder-driven focus traversal across the widget kit.
 
 See [`components/blusys_framework/widget-author-guide.md`](components/blusys_framework/widget-author-guide.md)
 for the six-rule widget contract.
 
 ## Usage
 
+Product code (recommended):
+
+```cpp
+#include "blusys/app/app.hpp"          /* app model, entry macros, view layer */
+```
+
+HAL and services (direct access):
+
 ```c
 #include "blusys/blusys.h"             /* HAL + drivers */
 #include "blusys/blusys_services.h"    /* services */
-```
-
-```cpp
-#include "blusys/framework/framework.hpp"  /* framework core */
-#include "blusys/framework/ui/widgets.hpp" /* widget kit */
 ```
 
 ```cmake
@@ -126,10 +136,20 @@ blusys host-build
 ./scripts/host/build-host/hello_lvgl
 ```
 
+## Examples
+
+Examples are organized into three categories:
+
+- `examples/quickstart/` --- archetype starters (`blusys create` shapes) using `blusys::app`
+- `examples/reference/` --- deeper demos, connectivity examples, and framework validation builds
+- `examples/validation/` --- internal stress tests and smoke tests
+
+See `inventory.yml` for the full classification and CI inclusion flags.
+
 ## Documentation
 
 [**oguzkaganozt.github.io/blusys**](https://oguzkaganozt.github.io/blusys/) —
-guides, API reference, and architecture docs.
+organized as Start, App, Services, HAL + Drivers, Internals, Archive.
 
 Build locally:
 
@@ -140,8 +160,8 @@ mkdocs serve
 
 ## Project Status
 
-Current release: **v6.1.0**. See [`ROADMAP.md`](ROADMAP.md) for current state,
-release history, and planned work. See [`CLAUDE.md`](CLAUDE.md) for repo conventions.
+Current release: **v7.0.0**. See [`ROADMAP.md`](ROADMAP.md) for current state
+and release history. See [`CLAUDE.md`](CLAUDE.md) for repo conventions.
 
 ## License
 

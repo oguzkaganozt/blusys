@@ -12,8 +12,9 @@ The widget kit has two categories. They live in different folders and follow sli
 
 | Category            | Folder                                | Has callbacks? | Has setters?     | Examples                                       |
 |---------------------|---------------------------------------|----------------|------------------|------------------------------------------------|
-| Layout primitives   | `ui/primitives/<name>.{hpp,cpp}`      | no             | rare             | `screen`, `row`, `col`, `label`, `divider`     |
-| Interactive widgets | `ui/widgets/<name>/<name>.{hpp,cpp}`  | yes            | yes (state-only) | `button`, `toggle`, `slider`, `modal`          |
+| Layout primitives   | `ui/primitives/<name>.{hpp,cpp}`      | no             | rare             | `screen`, `row`, `col`, `label`, `divider`, `icon_label`, `status_badge`, `key_value` |
+| Interactive widgets | `ui/widgets/<name>/<name>.{hpp,cpp}`  | yes            | yes (state-only) | `button`, `toggle`, `slider`, `modal`, `list`, `tabs`, `dropdown`, `input_field`, `knob` |
+| Display widgets     | `ui/widgets/<name>/<name>.{hpp,cpp}`  | no             | yes (value only) | `progress`, `chart`, `gauge`, `card`, `data_table`, `level_bar`, `vu_strip` |
 
 Layout primitives are stateless composition factories. Interactive widgets carry callbacks and standard widget state (`normal`, `focused`, `pressed`, `disabled`, optionally `checked`/`loading`/`error`).
 

@@ -94,6 +94,12 @@ void style_overlay(lv_obj_t *overlay)
     lv_obj_set_style_radius(overlay, t.radius_button, 0);
     lv_obj_set_style_pad_all(overlay, t.spacing_md, 0);
     lv_obj_remove_flag(overlay, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Shadow from tokens.
+    lv_obj_set_style_shadow_width(overlay, t.shadow_overlay_width, 0);
+    lv_obj_set_style_shadow_offset_y(overlay, t.shadow_overlay_ofs_y, 0);
+    lv_obj_set_style_shadow_color(overlay, t.shadow_color, 0);
+    lv_obj_set_style_shadow_opa(overlay, t.opa_shadow_soft, 0);
 }
 
 void on_timer(lv_timer_t *t)

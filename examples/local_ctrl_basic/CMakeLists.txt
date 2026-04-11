@@ -1,7 +1,0 @@
-cmake_minimum_required(VERSION 3.16)
-
-get_filename_component(BLUSYS_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
-list(APPEND EXTRA_COMPONENT_DIRS "${BLUSYS_REPO_ROOT}/components")
-
-include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(blusys_local_ctrl_basic)

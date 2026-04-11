@@ -3,16 +3,23 @@
 
 #include "blusys/error.h"
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct blusys_ota blusys_ota_t;
 
+/** Optional download progress (0–100). May be invoked often during `blusys_ota_perform`. */
+typedef void (*blusys_ota_progress_cb_t)(uint8_t percent, void *user_ctx);
+
 typedef struct {
     const char *url;        /* firmware URL; required; HTTP or HTTPS */
     const char *cert_pem;   /* server CA certificate (PEM); NULL disables TLS verification */
     int         timeout_ms; /* per-operation network timeout; 0 = default (30 000 ms) */
+    blusys_ota_progress_cb_t on_progress; /* optional; NULL to ignore */
+    void        *progress_ctx;            /* passed to on_progress */
 } blusys_ota_config_t;
 
 /* Allocate an OTA session handle.

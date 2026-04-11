@@ -20,6 +20,7 @@ enum class feedback_pattern : std::uint8_t {
     success,
     warning,
     error,
+    notification,
 };
 
 struct feedback_event {

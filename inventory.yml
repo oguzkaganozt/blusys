@@ -1,0 +1,1477 @@
+# inventory.yml — single source of truth for support tiers, example taxonomy, and doc classification
+#
+# This manifest drives CI gating, doc coverage checks, and example health validation.
+# Every module, example, and doc page must have an entry here.
+#
+# Fields:
+#   modules[].tier:      hal | driver | service | framework
+#   modules[].support:   supported | advanced | internal | deprecated
+#   examples[].category: quickstart | reference | validation
+#   examples[].visibility: public | internal
+#   docs[].section:      start | app | services | hal_drivers | internals | archive
+
+# ---------------------------------------------------------------------------
+# Modules
+# ---------------------------------------------------------------------------
+modules:
+  # --- HAL: I/O & Communication ---
+  - name: gpio
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/gpio.md
+    examples: [gpio_basic, gpio_interrupt]
+
+  - name: uart
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/uart.md
+    examples: [uart_loopback, uart_async]
+
+  - name: i2c
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/i2c.md
+    examples: [i2c_scan]
+
+  - name: i2c_slave
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/i2c.md
+    examples: [i2c_slave_basic]
+
+  - name: spi
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/spi.md
+    examples: [spi_loopback]
+
+  - name: spi_slave
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/spi.md
+    examples: [spi_slave_basic]
+
+  - name: twai
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/twai.md
+    examples: [twai_basic]
+
+  - name: i2s
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/i2s.md
+    examples: [i2s_basic, i2s_rx_basic]
+
+  - name: rmt
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/rmt.md
+    examples: [rmt_basic, rmt_rx_basic]
+
+  - name: one_wire
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/one_wire.md
+    examples: [one_wire_basic]
+
+  - name: gpio_expander
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/gpio_expander.md
+    examples: [gpio_expander_basic]
+
+  - name: touch
+    tier: hal
+    support: supported
+    targets: [esp32, esp32s3]
+    doc: docs/hal/touch.md
+    examples: [touch_basic]
+
+  # --- HAL: Analog ---
+  - name: adc
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/adc.md
+    examples: [adc_basic]
+
+  - name: dac
+    tier: hal
+    support: supported
+    targets: [esp32]
+    doc: docs/hal/dac.md
+    examples: [dac_basic]
+
+  - name: sdm
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/sdm.md
+    examples: [sdm_basic]
+
+  - name: pwm
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/pwm.md
+    examples: [pwm_basic]
+
+  # --- HAL: Timers & Counters ---
+  - name: timer
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/timer.md
+    examples: [timer_basic]
+
+  - name: pcnt
+    tier: hal
+    support: supported
+    targets: [esp32, esp32s3]
+    doc: docs/hal/pcnt.md
+    examples: [pcnt_basic]
+
+  - name: mcpwm
+    tier: hal
+    support: supported
+    targets: [esp32, esp32s3]
+    doc: docs/hal/mcpwm.md
+    examples: [mcpwm_basic]
+
+  # --- HAL: Storage ---
+  - name: nvs
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/nvs.md
+    examples: [nvs_basic]
+
+  - name: sdmmc
+    tier: hal
+    support: supported
+    targets: [esp32, esp32s3]
+    doc: docs/hal/sdmmc.md
+    examples: [sdmmc_basic]
+
+  - name: sd_spi
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/sd_spi.md
+    examples: [sd_spi_basic]
+
+  # --- HAL: Device ---
+  - name: system
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/system.md
+    examples: [system_info]
+
+  - name: sleep
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/sleep.md
+    examples: [sleep_basic]
+
+  - name: wdt
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/wdt.md
+    examples: [wdt_basic]
+
+  - name: temp_sensor
+    tier: hal
+    support: supported
+    targets: [esp32c3, esp32s3]
+    doc: docs/hal/temp_sensor.md
+    examples: [temp_sensor_basic]
+
+  - name: efuse
+    tier: hal
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/efuse.md
+    examples: [efuse_info]
+
+  - name: ulp
+    tier: hal
+    support: supported
+    targets: [esp32, esp32s3]
+    doc: docs/hal/ulp.md
+    examples: [ulp_gpio_watch]
+
+  - name: usb_host
+    tier: hal
+    support: supported
+    targets: [esp32s3]
+    doc: docs/hal/usb_host.md
+    examples: [usb_host_basic]
+
+  - name: usb_device
+    tier: hal
+    support: supported
+    targets: [esp32s3]
+    doc: docs/hal/usb_device.md
+    examples: [usb_device_basic]
+
+  # --- Drivers: Display ---
+  - name: lcd
+    tier: driver
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/lcd.md
+    examples: [lcd_basic, lcd_ssd1306_basic, lcd_st7735_basic]
+
+  - name: led_strip
+    tier: driver
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/led_strip.md
+    examples: [led_strip_basic]
+
+  - name: seven_seg
+    tier: driver
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/seven_seg.md
+    examples: [seven_seg_basic]
+
+  # --- Drivers: Input ---
+  - name: button
+    tier: driver
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/button.md
+    examples: [button_basic]
+
+  - name: encoder
+    tier: driver
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/encoder.md
+    examples: [encoder_basic]
+
+  # --- Drivers: Sensor ---
+  - name: dht
+    tier: driver
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/dht.md
+    examples: [dht_basic]
+
+  # --- Drivers: Actuator ---
+  - name: buzzer
+    tier: driver
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/hal/buzzer.md
+    examples: [buzzer_basic]
+
+  # --- Services: Display / Runtime ---
+  - name: ui
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/ui.md
+    examples: [ui_basic]
+
+  # --- Services: Input / Runtime ---
+  - name: usb_hid
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/usb_hid.md
+    examples: [usb_hid_basic]
+
+  # --- Services: Connectivity ---
+  - name: wifi
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/wifi.md
+    examples: [wifi_connect]
+
+  - name: wifi_prov
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/wifi_prov.md
+    examples: [wifi_prov_basic]
+
+  - name: wifi_mesh
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/wifi_mesh.md
+    examples: [wifi_mesh_basic]
+
+  - name: espnow
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/espnow.md
+    examples: [espnow_basic]
+
+  - name: bluetooth
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/bluetooth.md
+    examples: [bluetooth_basic]
+
+  - name: ble_gatt
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/ble_gatt.md
+    examples: [ble_gatt_basic]
+
+  - name: mdns
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/mdns.md
+    examples: [mdns_basic]
+
+  # --- Services: Protocol ---
+  - name: http_client
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/http.md
+    examples: [http_client_basic]
+
+  - name: http_server
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/http.md
+    examples: [http_server_basic]
+
+  - name: mqtt
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/mqtt.md
+    examples: [mqtt_basic]
+
+  - name: ws_client
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/ws_client.md
+    examples: [ws_client_basic]
+
+  # --- Services: System ---
+  - name: console
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/console.md
+    examples: [console_basic]
+
+  - name: fs
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/fs.md
+    examples: [fs_basic]
+
+  - name: fatfs
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/fatfs.md
+    examples: [fatfs_basic]
+
+  - name: local_ctrl
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/local_ctrl.md
+    examples: [local_ctrl_basic]
+
+  - name: power_mgmt
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/power_mgmt.md
+    examples: [power_mgmt_basic]
+
+  - name: sntp
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/sntp.md
+    examples: [sntp_basic]
+
+  - name: ota
+    tier: service
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/services/ota.md
+    examples: [ota_basic]
+
+  # --- Framework ---
+  - name: framework
+    tier: framework
+    support: supported
+    targets: [esp32, esp32c3, esp32s3]
+    doc: docs/app/index.md
+    examples: [interactive_controller, interactive_panel, edge_node, gateway, framework_device_basic, framework_encoder_basic, connected_device, connected_headless]
+
+# ---------------------------------------------------------------------------
+# Examples
+# ---------------------------------------------------------------------------
+examples:
+  # --- Quickstart (PR CI + nightly) ---
+  - name: interactive_controller
+    category: quickstart
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: true
+    ci_nightly: true
+
+  - name: connected_device
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: connected_headless
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: framework_app_basic
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: framework_ui_basic
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: edge_node
+    category: quickstart
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: true
+    ci_nightly: true
+
+  - name: framework_device_basic
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  # --- Reference (nightly only) ---
+  - name: gateway
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: interactive_panel
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: true
+    ci_nightly: true
+
+  - name: gpio_basic
+    category: reference
+    visibility: public
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: uart_loopback
+    category: reference
+    visibility: public
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: uart_async
+    category: reference
+    visibility: public
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: i2c_scan
+    category: reference
+    visibility: public
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: spi_loopback
+    category: reference
+    visibility: public
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: timer_basic
+    category: reference
+    visibility: public
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: adc_basic
+    category: reference
+    visibility: public
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: pwm_basic
+    category: reference
+    visibility: public
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: nvs_basic
+    category: reference
+    visibility: public
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: button_basic
+    category: reference
+    visibility: public
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: encoder_basic
+    category: reference
+    visibility: public
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: lcd_basic
+    category: reference
+    visibility: public
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: lcd_st7735_basic
+    category: reference
+    visibility: public
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: wifi_connect
+    category: reference
+    visibility: public
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: http_client_basic
+    category: reference
+    visibility: public
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: mqtt_basic
+    category: reference
+    visibility: public
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: ui_basic
+    category: reference
+    visibility: public
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: oled_encoder_basic
+    category: reference
+    visibility: public
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: framework_encoder_basic
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  # --- Validation (nightly only, internal) ---
+  - name: smoke
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: system_info
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: wdt_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: concurrency_timer
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: concurrency_i2c
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: concurrency_spi
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: concurrency_uart
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: framework_core_basic
+    category: validation
+    visibility: internal
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: gpio_interrupt
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: i2c_slave_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: spi_slave_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: rmt_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: rmt_rx_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: i2s_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: i2s_rx_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: dac_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: sdm_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: touch_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: twai_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: pcnt_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: mcpwm_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: sdmmc_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: sd_spi_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: one_wire_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: gpio_expander_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: seven_seg_basic
+    category: validation
+    visibility: internal
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: led_strip_basic
+    category: validation
+    visibility: internal
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: lcd_ssd1306_basic
+    category: validation
+    visibility: internal
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: dht_basic
+    category: validation
+    visibility: internal
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: buzzer_basic
+    category: validation
+    visibility: internal
+    tier: driver
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: temp_sensor_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: efuse_info
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: sleep_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: ulp_gpio_watch
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: usb_host_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: usb_device_basic
+    category: validation
+    visibility: internal
+    tier: hal
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: usb_hid_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: console_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: fs_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: fatfs_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: local_ctrl_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: power_mgmt_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: sntp_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: ota_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: http_server_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: espnow_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: bluetooth_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: ble_gatt_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: wifi_prov_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: wifi_mesh_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: ws_client_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: mdns_basic
+    category: validation
+    visibility: internal
+    tier: service
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+# ---------------------------------------------------------------------------
+# Docs
+# ---------------------------------------------------------------------------
+docs:
+  # --- Start ---
+  - path: docs/start/index.md
+    section: start
+    visibility: public
+
+  - path: docs/start/quickstart-interactive.md
+    section: start
+    visibility: public
+
+  - path: docs/start/quickstart-headless.md
+    section: start
+    visibility: public
+
+  - path: docs/start/archetypes.md
+    section: start
+    visibility: public
+
+  - path: docs/start/interaction-design.md
+    section: start
+    visibility: public
+
+  - path: docs/start/connected-products.md
+    section: start
+    visibility: public
+
+  # --- App ---
+  - path: docs/app/index.md
+    section: app
+    visibility: public
+
+  - path: docs/app/reducer-model.md
+    section: app
+    visibility: public
+
+  - path: docs/app/views-and-widgets.md
+    section: app
+    visibility: public
+
+  - path: docs/app/widget-gallery.md
+    section: app
+    visibility: public
+
+  - path: docs/app/capability-composition.md
+    section: app
+    visibility: public
+
+  - path: docs/app/capabilities.md
+    section: app
+    visibility: public
+
+  - path: docs/app/profiles.md
+    section: app
+    visibility: public
+
+  - path: docs/app/validation-host-loop.md
+    section: app
+    visibility: public
+
+  # --- Services ---
+  - path: docs/services/index.md
+    section: services
+    visibility: public
+
+  - path: docs/services/wifi.md
+    section: services
+    visibility: public
+
+  - path: docs/services/wifi_prov.md
+    section: services
+    visibility: public
+
+  - path: docs/services/wifi_mesh.md
+    section: services
+    visibility: public
+
+  - path: docs/services/espnow.md
+    section: services
+    visibility: public
+
+  - path: docs/services/bluetooth.md
+    section: services
+    visibility: public
+
+  - path: docs/services/ble_gatt.md
+    section: services
+    visibility: public
+
+  - path: docs/services/mdns.md
+    section: services
+    visibility: public
+
+  - path: docs/services/http.md
+    section: services
+    visibility: public
+
+  - path: docs/services/mqtt.md
+    section: services
+    visibility: public
+
+  - path: docs/services/ws_client.md
+    section: services
+    visibility: public
+
+  - path: docs/services/ui.md
+    section: services
+    visibility: public
+
+  - path: docs/services/usb_hid.md
+    section: services
+    visibility: public
+
+  - path: docs/services/console.md
+    section: services
+    visibility: public
+
+  - path: docs/services/fs.md
+    section: services
+    visibility: public
+
+  - path: docs/services/fatfs.md
+    section: services
+    visibility: public
+
+  - path: docs/services/local_ctrl.md
+    section: services
+    visibility: public
+
+  - path: docs/services/power_mgmt.md
+    section: services
+    visibility: public
+
+  - path: docs/services/sntp.md
+    section: services
+    visibility: public
+
+  - path: docs/services/ota.md
+    section: services
+    visibility: public
+
+  # --- HAL + Drivers ---
+  - path: docs/hal/index.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/gpio.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/uart.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/i2c.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/spi.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/twai.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/i2s.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/rmt.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/one_wire.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/gpio_expander.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/touch.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/adc.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/dac.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/sdm.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/pwm.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/timer.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/pcnt.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/mcpwm.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/nvs.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/sdmmc.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/sd_spi.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/system.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/sleep.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/wdt.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/temp_sensor.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/efuse.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/ulp.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/usb_host.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/usb_device.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/lcd.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/led_strip.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/seven_seg.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/button.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/encoder.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/dht.md
+    section: hal_drivers
+    visibility: public
+
+  - path: docs/hal/buzzer.md
+    section: hal_drivers
+    visibility: public
+
+  # --- Internals ---
+  - path: docs/internals/index.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/architecture.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/guidelines.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/prd-release-criteria.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-0-v7-foundation-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-0-exit.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-3-widget-library-gap-matrix.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-5-interactive-archetypes-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-5-exit.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-6-connected-archetypes-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-6-archetype-briefs.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-6-exit.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-7-exit.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-8-exit.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/v2-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-7-hardware-packaging-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/target-matrix.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/testing/hardware-smoke-tests.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/testing/concurrency-tests.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/testing/hardware-validation-report-template.md
+    section: internals
+    visibility: public
+
+  # --- Archive ---
+  - path: docs/archive/index.md
+    section: archive
+    visibility: public
+
+  - path: docs/archive/migration-v6-v7.md
+    section: archive
+    visibility: public
+
+  - path: docs/archive/migration-v5-v6.md
+    section: archive
+    visibility: public
+
+  - path: docs/archive/validation-report-v6.md
+    section: archive
+    visibility: public
+
+  - path: docs/archive/plans/usb-support-plan.md
+    section: archive
+    visibility: public

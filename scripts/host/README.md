@@ -47,6 +47,18 @@ sudo pacman -S base-devel cmake pkgconf sdl2
 brew install cmake pkg-config sdl2
 ```
 
+## Phase 4 validation targets
+
+These ship with the host harness and do not require hardware:
+
+| Binary | Purpose |
+|--------|---------|
+| `capability_contract_smoke` | Static checks that capability integration event IDs stay in their reserved bands |
+| `interactive_archetype_reducer_smoke` | Phase 5 — exercises `blusys_examples::clamp_percent` shared with interactive archetype reducers |
+| `panel_connectivity_map_smoke` | Phase 5 — `panel_connectivity_event_triggers_sync` parity with the interactive_panel `map_event` bridge |
+| `operational_phase_smoke` | Runtime checks for the edge-node-style operational phase state machine |
+| `connected_headless_host` | Headless `blusys::app` loop with connectivity + storage host stubs and a broad `map_event` bridge |
+
 ## Build and run
 
 The wrapper goes through the `blusys` CLI:
@@ -55,6 +67,10 @@ The wrapper goes through the `blusys` CLI:
 blusys host-build                                  # configure + build
 ./scripts/host/build-host/hello_lvgl               # LVGL-only smoke test
 ./scripts/host/build-host/widget_kit_demo          # framework widget kit demo
+./scripts/host/build-host/interactive_archetype_reducer_smoke
+./scripts/host/build-host/panel_connectivity_map_smoke
+./scripts/host/build-host/operational_phase_smoke  # Phase 4 phase-machine smoke
+./scripts/host/build-host/connected_headless_host  # headless capability + reducer smoke
 ```
 
 `hello_lvgl` opens a 480×320 SDL2 window with a centred rounded card and a
@@ -106,6 +122,10 @@ Subsequent builds reuse the cache.
 
 1. Per-widget visual snapshot tests once a headless display driver is wired
    in alongside the SDL2 one. See [`docs/plans/v2-plan.md`](../../docs/plans/v2-plan.md) item 7.
+
+## PRD traceability
+
+The product requirements (**`PRD.md` §9 — Validation and developer loop**) expect host-runnable checks and curated CI. See **`docs/app/validation-host-loop.md`** for a mapping from each PRD bullet to this harness, `scripts/scaffold-smoke.sh`, and `.github/workflows/ci.yml`.
 
 ## Troubleshooting
 

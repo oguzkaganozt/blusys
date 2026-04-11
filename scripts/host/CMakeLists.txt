@@ -112,12 +112,32 @@ set(blusys_framework_host_sources
     # Core spine — C++, pure logic, no LVGL deps.
     ${BLUSYS_FRAMEWORK_DIR}/src/core/controller.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback_presets.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/feedback_logging_sink.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/framework.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/router.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/runtime.cpp
 
+    # App layer — blusys::app product-facing API.
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/app_ctx.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/connectivity_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/storage_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/bluetooth_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/ota_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/diagnostics_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/provisioning_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/telemetry.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/theme_presets.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/action_widgets.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/bindings.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/overlay_manager.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/page.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screen_registry.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screen_router.cpp
+
     # UI surface — LVGL-backed. Always on in the host harness
     # (device builds gate this behind BLUSYS_BUILD_UI).
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/icons/icon_set_minimal.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/input/encoder.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/col.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/divider.cpp
@@ -125,11 +145,47 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/row.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/screen.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/theme.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/visual_feedback.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/icon_label.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/status_badge.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/key_value.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/button/button.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/card/card.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/chart/chart.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/data_table/data_table.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/dropdown/dropdown.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/gauge/gauge.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/input_field/input_field.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/knob/knob.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/level_bar/level_bar.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/list/list.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/modal/modal.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/overlay/overlay.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/progress/progress.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/slider/slider.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/tabs/tabs.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/toggle/toggle.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/vu_strip/vu_strip.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/shell.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/touch_bridge.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/transition.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/ui/input/focus_scope.cpp
+
+    # Phase 4 — shared operational flows
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/boot.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/loading.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/error.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/status.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/settings.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/ota_flow.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/provisioning_flow.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/connectivity_flow.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/diagnostics_flow.cpp
+
+    # Phase 4 — stock product screens
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/about_screen.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/status_screen.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/diagnostics_screen.cpp
 )
 
 add_library(blusys_framework_host STATIC ${blusys_framework_host_sources})
@@ -155,6 +211,7 @@ target_compile_options(blusys_framework_host PRIVATE
 )
 
 target_link_libraries(blusys_framework_host PUBLIC lvgl)
+target_compile_definitions(blusys_framework_host PUBLIC BLUSYS_FRAMEWORK_HAS_UI=1)
 
 # ── hello_lvgl smoke test (Phase 4.5) ────────────────────────────────────────
 add_executable(hello_lvgl src/hello_lvgl.c)
@@ -176,6 +233,130 @@ target_link_libraries(widget_kit_demo PRIVATE
     m
 )
 target_compile_options(widget_kit_demo PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+
+# ── app_interactive_demo (Phase 1 — blusys::app interactive consumer) ────────
+add_executable(app_interactive_demo
+    src/app_interactive_demo.cpp
+    src/app_host_platform.cpp
+)
+target_link_libraries(app_interactive_demo PRIVATE
+    blusys_framework_host
+    PkgConfig::SDL2
+    m
+)
+target_compile_options(app_interactive_demo PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+
+# ── app_headless_demo (Phase 1 — blusys::app headless sensor node) ───────────
+add_executable(app_headless_demo
+    src/app_headless_demo.cpp
+    src/app_headless_platform.cpp
+)
+target_link_libraries(app_headless_demo PRIVATE
+    blusys_framework_host
+    PkgConfig::SDL2
+    m
+)
+target_compile_options(app_headless_demo PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+# Prevent SDL from hijacking main() — the headless path owns its own entry.
+target_compile_definitions(app_headless_demo PRIVATE SDL_MAIN_HANDLED)
+
+# ── theme_presets_smoke (Phase 1 — preset + visual feedback token sanity) ───
+add_executable(theme_presets_smoke src/theme_presets_smoke.cpp)
+target_link_libraries(theme_presets_smoke PRIVATE
+    blusys_framework_host
+    PkgConfig::SDL2
+    m
+)
+target_compile_options(theme_presets_smoke PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+
+# ── connected_headless_host (Phase 4 — connected product on host) ───────────
+#
+# Exercises the connectivity and storage capability host stubs through the
+# same reducer event flow used on device. Proves the full capability
+# lifecycle runs on host without hardware.
+add_executable(connected_headless_host
+    src/connected_headless_host.cpp
+    src/app_headless_platform.cpp
+)
+target_link_libraries(connected_headless_host PRIVATE
+    blusys_framework_host
+    PkgConfig::SDL2
+    m
+)
+target_compile_options(connected_headless_host PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+target_compile_definitions(connected_headless_host PRIVATE SDL_MAIN_HANDLED)
+
+# ── capability_contract_smoke (Phase 4 — enum range sanity) ───────────────────
+add_executable(capability_contract_smoke src/capability_contract_smoke.cpp)
+target_include_directories(capability_contract_smoke PRIVATE
+    ${BLUSYS_COMPONENT_DIR}/include
+    ${BLUSYS_FRAMEWORK_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}/include_host
+)
+target_compile_options(capability_contract_smoke PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+
+# ── operational_phase_smoke (Phase 4 — edge-node phase machine parity) ────────
+add_executable(operational_phase_smoke src/operational_phase_smoke.cpp)
+target_compile_options(operational_phase_smoke PRIVATE
+    -Wall
+    -Wextra
+)
+
+# ── interactive_archetype_reducer_smoke (Phase 5 — shared clamp_percent) ───────
+add_executable(interactive_archetype_reducer_smoke src/interactive_archetype_reducer_smoke.cpp)
+target_include_directories(interactive_archetype_reducer_smoke PRIVATE
+    ${BLUSYS_REPO_ROOT}/examples/include
+)
+target_compile_options(interactive_archetype_reducer_smoke PRIVATE
+    -Wall
+    -Wextra
+)
+
+# ── panel_connectivity_map_smoke (Phase 5 — panel map_event connectivity band) ─
+add_executable(panel_connectivity_map_smoke src/panel_connectivity_map_smoke.cpp)
+target_include_directories(panel_connectivity_map_smoke PRIVATE
+    ${BLUSYS_REPO_ROOT}/examples/include
+    ${BLUSYS_COMPONENT_DIR}/include
+    ${BLUSYS_FRAMEWORK_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}/include_host
+)
+target_compile_options(panel_connectivity_map_smoke PRIVATE
     -fno-exceptions
     -fno-rtti
     -fno-threadsafe-statics

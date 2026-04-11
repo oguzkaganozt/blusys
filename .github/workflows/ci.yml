@@ -7,14 +7,22 @@ on:
       - "components/**"
       - "examples/**"
       - "blusys"
+      - "templates/**"
       - "scripts/**"
+      - "inventory.yml"
+      - "docs/**"
+      - "mkdocs.yml"
       - ".github/workflows/ci.yml"
   pull_request:
     paths:
       - "components/**"
       - "examples/**"
       - "blusys"
+      - "templates/**"
       - "scripts/**"
+      - "inventory.yml"
+      - "docs/**"
+      - "mkdocs.yml"
       - ".github/workflows/ci.yml"
   workflow_dispatch:
 
@@ -39,10 +47,101 @@ jobs:
         shell: bash
         run: bash scripts/lint-layering.sh
 
-  # ── Tier 1: Compilation Gate ────────────────────────────────────────────────
+  # ── Tier 0: Inventory Validation ───────────────────────────────────────────
+  inventory:
+    name: "Inventory check"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate inventory
+        run: python scripts/check-inventory.py
+
+  # ── Tier 0: Host harness smokes (Phase 5 — Linux + SDL2 deps) ─────────────
+  host-smoke:
+    name: "Host harness smoke"
+    needs: [lint]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install host build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake pkg-config libsdl2-dev
+
+      - name: Configure and build Phase 5 + Phase 6 smoke targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S scripts/host -B scripts/host/build-host-ci
+          cmake --build scripts/host/build-host-ci -j \
+            --target interactive_archetype_reducer_smoke \
+                     panel_connectivity_map_smoke \
+                     capability_contract_smoke \
+                     operational_phase_smoke
+          export BLUSYS_PATH="${GITHUB_WORKSPACE}"
+          cmake -S examples/quickstart/edge_node/host -B examples/quickstart/edge_node/build-host-ci
+          cmake --build examples/quickstart/edge_node/build-host-ci -j
+          cmake -S examples/reference/gateway/host -B examples/reference/gateway/build-host-ci
+          cmake --build examples/reference/gateway/build-host-ci -j
+
+      - name: Run host smoke binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./scripts/host/build-host-ci/interactive_archetype_reducer_smoke
+          ./scripts/host/build-host-ci/panel_connectivity_map_smoke
+          ./scripts/host/build-host-ci/capability_contract_smoke
+          ./scripts/host/build-host-ci/operational_phase_smoke
+
+      - name: Scaffold smoke (blusys create × archetypes + host-build)
+        shell: bash
+        env:
+          BLUSYS_PATH: ${{ github.workspace }}
+        run: |
+          chmod +x scripts/scaffold-smoke.sh blusys
+          scripts/scaffold-smoke.sh
+
+  # ── Tier 0: Docs Build ────────────────────────────────────────────────────
+  docs:
+    name: "Docs build"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-docs.txt
+
+      - name: Install docs dependencies
+        run: pip install -r requirements-docs.txt
+
+      - name: Build docs (strict)
+        run: mkdocs build --strict
+
+  # ── Tier 1: Build Curated Examples ─────────────────────────────────────────
   build:
-    name: "Build (${{ matrix.target }})"
-    needs: lint
+    name: "Build PR (${{ matrix.target }})"
+    needs: [lint, inventory, host-smoke]
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4
@@ -70,71 +169,63 @@ jobs:
           restore-keys: |
             ccache-${{ matrix.target }}-
 
-      - name: Build all examples
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Build curated examples (ci_pr=true)
         shell: bash
         run: |
-          set -uo pipefail
-
-          TARGET="${{ matrix.target }}"
-          pass=0
-          fail=0
-          failed_list=""
-
-          for cmakelists in examples/*/CMakeLists.txt; do
-              example_dir="$(realpath "$(dirname "$cmakelists")")"
-              example_name="$(basename "$example_dir")"
-              build_dir="$example_dir/build-$TARGET"
-
-              # Compute sdkconfig args (mirrors blusys_sdkconfig_args)
-              sdkconfig_args=("-DSDKCONFIG=$build_dir/sdkconfig")
-              defaults=""
-              [ -f "$example_dir/sdkconfig.defaults" ] && defaults="$example_dir/sdkconfig.defaults"
-              if [ -f "$example_dir/sdkconfig.$TARGET" ]; then
-                  if [ -n "$defaults" ]; then
-                      defaults="$defaults;$example_dir/sdkconfig.$TARGET"
-                  else
-                      defaults="$example_dir/sdkconfig.$TARGET"
-                  fi
-              fi
-              [ -n "$defaults" ] && sdkconfig_args+=("-DSDKCONFIG_DEFAULTS=$defaults")
-
-              printf '::group::Build %s for %s\n' "$example_name" "$TARGET"
-
-              # set-target + build; count failures but keep going
-              build_ok=true
-              if [ ! -f "$build_dir/CMakeCache.txt" ]; then
-                  if ! idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" set-target "$TARGET"; then
-                      build_ok=false
-                  fi
-              fi
-
-              if $build_ok && idf.py -C "$example_dir" -B "$build_dir" "${sdkconfig_args[@]}" build; then
-                  printf 'OK\n'
-                  ((pass++)) || true
-              else
-                  printf '::error::Build failed: %s / %s\n' "$example_name" "$TARGET"
-                  failed_list="$failed_list $example_name"
-                  ((fail++)) || true
-              fi
-
-              printf '::endgroup::\n'
-          done
-
-          printf '\n=== Build Results for %s ===\n' "$TARGET"
-          printf 'Pass: %d  Fail: %d  Total: %d\n' "$pass" "$fail" "$((pass + fail))"
-          if [ "$fail" -gt 0 ]; then
-              printf 'Failed:%s\n' "$failed_list"
-              exit 1
-          fi
+          chmod +x scripts/build-from-inventory.sh
+          scripts/build-from-inventory.sh "${{ matrix.target }}" ci_pr
 
       - name: ccache stats
         if: always()
         run: ccache -s 2>/dev/null || true
 
-  # ── Tier 2: QEMU Smoke Tests ───────────────────────────────────────────────
+  phase7-variants:
+    name: "Phase 7 variants (${{ matrix.target }})"
+    needs: [lint, inventory, host-smoke]
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5.4
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [esp32, esp32c3, esp32s3]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up ESP-IDF environment
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          echo "PATH=$PATH" >> "$GITHUB_ENV"
+          idf.py --version
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-phase7-variants-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
+          restore-keys: |
+            ccache-phase7-variants-
+
+      - name: Build Phase 7 variant matrix
+        shell: bash
+        run: |
+          chmod +x scripts/build-phase7-variants.sh
+          scripts/build-phase7-variants.sh "${{ matrix.target }}"
+
+      - name: ccache stats
+        if: always()
+        run: ccache -s 2>/dev/null || true
+
+  # ── Tier 2: QEMU Smoke Tests (reduced) ────────────────────────────────────
   qemu:
     name: "QEMU smoke (${{ matrix.target }})"
-    needs: build
+    needs: [build, phase7-variants]
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4
@@ -203,12 +294,9 @@ jobs:
               printf '::endgroup::\n'
           }
 
-          run_test smoke              15 "status_ok_string: OK"
-          run_test system_info        15 "free_heap_bytes:"
-          run_test timer_basic        30 "callback_swap_result: ok"
-          run_test nvs_basic          20 "Done\\."
-          run_test wdt_basic          30 "wdt_deinit: ok"
-          run_test concurrency_timer  30 "concurrent_result: ok"
+          run_test validation/smoke              15 "status_ok_string: OK"
+          run_test validation/system_info        15 "free_heap_bytes:"
+          run_test validation/concurrency_timer  30 "concurrent_result: ok"
 
           printf '\n=== QEMU Results for %s ===\n' "$TARGET"
           printf 'Pass: %d  Fail: %d  Total: %d\n' "$pass" "$fail" "$((pass + fail))"
