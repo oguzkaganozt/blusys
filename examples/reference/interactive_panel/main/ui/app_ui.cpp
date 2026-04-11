@@ -5,6 +5,13 @@
 #include "blusys/app/screens/status_screen.hpp"
 #include "blusys/app/view/action_widgets.hpp"
 #include "blusys/framework/ui/widgets/data_table/data_table.hpp"
+#include "blusys/version.h"
+
+namespace interactive_panel::system {
+const char *panel_build_version_for_build();
+const char *panel_profile_label_for_build();
+const char *panel_hardware_label_for_build();
+}
 
 namespace interactive_panel::ui {
 
@@ -189,16 +196,17 @@ lv_obj_t *create_settings(blusys::app::app_ctx &ctx, const void * /*params*/, lv
 
 lv_obj_t *create_about(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
 {
-    static const blusys::app::screens::about_extra_field extras[] = {
+    const blusys::app::screens::about_extra_field extras[] = {
         {.key = "Archetype", .value = "interactive panel"},
+        {.key = "Profile", .value = interactive_panel::system::panel_profile_label_for_build()},
         {.key = "Identity", .value = "operational_light"},
         {.key = "Focus", .value = "status and diagnostics"},
     };
 
     const blusys::app::screens::about_screen_config config{
         .product_name = "Ops Panel",
-        .firmware_version = "phase5-preview",
-        .hardware_version = "ST7735 reference",
+        .firmware_version = interactive_panel::system::panel_build_version_for_build(),
+        .hardware_version = interactive_panel::system::panel_hardware_label_for_build(),
         .serial_number = "PANEL-0001",
         .build_date = __DATE__,
         .extras = extras,

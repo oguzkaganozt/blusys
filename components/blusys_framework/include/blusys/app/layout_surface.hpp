@@ -40,6 +40,13 @@ struct surface_hints {
     theme_packaging_hint  theme_hint       = theme_packaging_hint::operational;
 };
 
+// Small shell toggles derived from the classified surface. This keeps
+// product code from repeating raw size checks when selecting shell chrome.
+struct shell_chrome {
+    bool status_enabled = true;
+    bool tabs_enabled   = true;
+};
+
 // Classify from pixel dimensions and UI panel kind (matches device_profile.ui).
 inline surface_hints classify(std::uint32_t width, std::uint32_t height,
                               blusys_ui_panel_kind_t panel_kind,
@@ -88,6 +95,19 @@ inline surface_hints classify(const device_profile &profile)
 {
     return classify(profile.lcd.width, profile.lcd.height, profile.ui.panel_kind,
                     profile.lcd.bits_per_pixel);
+}
+
+inline shell_chrome shell_chrome_for(const surface_hints &h)
+{
+    shell_chrome c{};
+    c.status_enabled = h.shell != shell_density::minimal;
+    c.tabs_enabled   = h.size_class != surface_size::tiny_mono;
+    return c;
+}
+
+inline shell_chrome shell_chrome_for(const device_profile &profile)
+{
+    return shell_chrome_for(classify(profile));
 }
 
 }  // namespace blusys::app::layout

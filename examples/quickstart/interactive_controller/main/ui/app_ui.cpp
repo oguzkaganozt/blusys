@@ -5,6 +5,13 @@
 #include "blusys/app/view/action_widgets.hpp"
 #include "blusys/app/view/overlay_manager.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
+#include "blusys/version.h"
+
+namespace interactive_controller::system {
+const char *controller_build_version_for_build();
+const char *controller_profile_label_for_build();
+const char *controller_hardware_label_for_build();
+}
 
 namespace interactive_controller::ui {
 
@@ -239,16 +246,16 @@ lv_obj_t *create_setup(blusys::app::app_ctx &ctx, const void * /*params*/, lv_gr
 
 lv_obj_t *create_about(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
 {
-    static const blusys::app::screens::about_extra_field extras[] = {
+    const blusys::app::screens::about_extra_field extras[] = {
         {.key = "Archetype", .value = "interactive controller"},
-        {.key = "Profile", .value = "generic SPI ST7735"},
+        {.key = "Profile", .value = interactive_controller::system::controller_profile_label_for_build()},
         {.key = "Identity", .value = "expressive_dark"},
     };
 
     const blusys::app::screens::about_screen_config config{
         .product_name = "Pulse Controller",
-        .firmware_version = "phase5-preview",
-        .hardware_version = "ST7735 reference",
+        .firmware_version = interactive_controller::system::controller_build_version_for_build(),
+        .hardware_version = interactive_controller::system::controller_hardware_label_for_build(),
         .serial_number = "CTRL-0001",
         .build_date = __DATE__,
         .extras = extras,

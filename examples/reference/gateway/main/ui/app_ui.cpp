@@ -10,6 +10,13 @@
 #include "blusys/app/screens/status_screen.hpp"
 #include "blusys/app/view/action_widgets.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
+#include "blusys/version.h"
+
+namespace gateway::system {
+const char *gateway_build_version_for_build();
+const char *gateway_profile_label_for_build();
+const char *gateway_hardware_label_for_build();
+}
 
 namespace gateway::ui {
 
@@ -176,16 +183,16 @@ lv_obj_t *create_settings(blusys::app::app_ctx &ctx, const void * /*params*/,
 lv_obj_t *create_about(blusys::app::app_ctx &ctx, const void * /*params*/,
                        lv_group_t **group_out)
 {
-    static const blusys::app::screens::about_extra_field extras[] = {
+    const blusys::app::screens::about_extra_field extras[] = {
         {.key = "Archetype", .value = "gateway/controller"},
-        {.key = "Profile", .value = "generic SPI ST7735"},
+        {.key = "Profile", .value = gateway::system::gateway_profile_label_for_build()},
         {.key = "Identity", .value = "operational_light"},
     };
 
     const blusys::app::screens::about_screen_config config{
         .product_name     = "Blusys Gateway",
-        .firmware_version = "phase6-preview",
-        .hardware_version = "ST7735 reference",
+        .firmware_version = gateway::system::gateway_build_version_for_build(),
+        .hardware_version = gateway::system::gateway_hardware_label_for_build(),
         .serial_number    = "GW-0001",
         .build_date       = __DATE__,
         .extras           = extras,

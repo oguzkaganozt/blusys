@@ -13,6 +13,7 @@
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
 #include "blusys/log.h"
+#include "blusys/version.h"
 
 #include <cstdio>
 #include <cstdint>
@@ -33,6 +34,29 @@
 namespace edge_node::system {
 
 namespace {
+
+#ifdef ESP_PLATFORM
+const char *edge_surface_label_for_build()
+{
+#if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM) && \
+    defined(CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI) && CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI
+    return "SSD1306 128x64";
+#else
+    return "headless";
+#endif
+}
+
+const char *edge_build_version_for_build()
+{
+#ifdef PROJECT_VER
+    return PROJECT_VER;
+#elif defined(BLUSYS_APP_BUILD_VERSION)
+    return BLUSYS_APP_BUILD_VERSION;
+#else
+    return BLUSYS_VERSION_STRING;
+#endif
+}
+#endif
 
 #ifndef BLUSYS_FRAMEWORK_HAS_UI
 void on_init_host(blusys::app::app_ctx & /*ctx*/, app_state & /*state*/)
@@ -69,7 +93,10 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len,
     int written = std::snprintf(json_buf, buf_len,
         "{\"product\":\"edge-node-reference\","
         "\"archetype\":\"edge_node\","
-        "\"firmware\":\"phase6-preview\"}");
+        "\"firmware\":\"%s\","
+        "\"surface\":\"%s\"}",
+        edge_build_version_for_build(),
+        edge_surface_label_for_build());
     if (written < 0 || static_cast<size_t>(written) >= buf_len) {
         return BLUSYS_ERR_NO_MEM;
     }

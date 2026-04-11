@@ -118,10 +118,50 @@ jobs:
         if: always()
         run: ccache -s 2>/dev/null || true
 
+  phase7-variants:
+    name: "Phase 7 variants (${{ matrix.target }})"
+    needs: lint
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5.4
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [esp32, esp32c3, esp32s3]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up ESP-IDF environment
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          echo "PATH=$PATH" >> "$GITHUB_ENV"
+          idf.py --version
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-nightly-phase7-variants-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
+          restore-keys: |
+            ccache-nightly-phase7-variants-
+
+      - name: Build Phase 7 variant matrix
+        shell: bash
+        run: |
+          chmod +x scripts/build-phase7-variants.sh
+          scripts/build-phase7-variants.sh "${{ matrix.target }}"
+
+      - name: ccache stats
+        if: always()
+        run: ccache -s 2>/dev/null || true
+
   # ── Tier 2: QEMU Smoke Tests ───────────────────────────────────────────────
   qemu:
     name: "QEMU smoke (${{ matrix.target }})"
-    needs: build-all
+    needs: [build-all, phase7-variants]
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4

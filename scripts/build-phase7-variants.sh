@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+    printf 'Usage: build-phase7-variants.sh <target>\n' >&2
+    exit 2
+fi
+
+TARGET="$1"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+tmp_files=()
+cleanup() {
+    if [[ ${#tmp_files[@]} -gt 0 ]]; then
+        rm -f "${tmp_files[@]}"
+    fi
+}
+trap cleanup EXIT
+
+make_fragment() {
+    local file
+    file="$(mktemp)"
+    tmp_files+=("$file")
+    printf '%s\n' "$@" > "$file"
+    printf '%s' "$file"
+}
+
+build_variant() {
+    local example_dir="$1"
+    local build_dir_name="$2"
+    local fragment="$3"
+    local label="$4"
+
+    local build_dir="$example_dir/$build_dir_name"
+    local defaults="sdkconfig.defaults;$fragment"
+
+    printf '::group::%s\n' "$label"
+    rm -rf "$build_dir"
+
+    if idf.py -C "$example_dir" -B "$build_dir" \
+        -DSDKCONFIG="$build_dir/sdkconfig" \
+        -DSDKCONFIG_DEFAULTS="$defaults" \
+        set-target "$TARGET" && \
+        idf.py -C "$example_dir" -B "$build_dir" \
+            -DSDKCONFIG="$build_dir/sdkconfig" \
+            -DSDKCONFIG_DEFAULTS="$defaults" \
+            build; then
+        printf 'OK\n'
+    else
+        printf '::error::Phase 7 variant build failed: %s\n' "$label"
+        printf '::endgroup::\n'
+        return 1
+    fi
+
+    printf '::endgroup::\n'
+}
+
+controller_fragment="$(make_fragment \
+    'CONFIG_BLUSYS_IC_DISPLAY_PROFILE_ST7789=y' \
+    '# CONFIG_BLUSYS_IC_DISPLAY_PROFILE_ST7735 is not set')"
+
+panel_fragment="$(make_fragment \
+    'CONFIG_BLUSYS_IP_DISPLAY_PROFILE_ILI9488=y' \
+    '# CONFIG_BLUSYS_IP_DISPLAY_PROFILE_ILI9341 is not set')"
+
+gateway_fragment="$(make_fragment \
+    'CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488=y' \
+    '# CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9341 is not set')"
+
+edge_fragment="$(make_fragment \
+    'CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI=y')"
+
+build_variant \
+    "$REPO_ROOT/examples/quickstart/interactive_controller" \
+    "build-$TARGET-phase7-st7789" \
+    "$controller_fragment" \
+    "interactive_controller $TARGET ST7789"
+
+build_variant \
+    "$REPO_ROOT/examples/reference/interactive_panel" \
+    "build-$TARGET-phase7-ili9488" \
+    "$panel_fragment" \
+    "interactive_panel $TARGET ILI9488"
+
+build_variant \
+    "$REPO_ROOT/examples/reference/gateway" \
+    "build-$TARGET-phase7-ili9488" \
+    "$gateway_fragment" \
+    "gateway $TARGET ILI9488"
+
+build_variant \
+    "$REPO_ROOT/examples/quickstart/edge_node" \
+    "build-$TARGET-phase7-local-ui" \
+    "$edge_fragment" \
+    "edge_node $TARGET SSD1306 local UI"

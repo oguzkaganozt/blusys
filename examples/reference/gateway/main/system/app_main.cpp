@@ -18,6 +18,7 @@
 #include "blusys/app/layout_surface.hpp"
 #include "blusys/app/theme_presets.hpp"
 #include "blusys/log.h"
+#include "blusys/version.h"
 
 #include <cstdio>
 #include <cstdint>
@@ -52,18 +53,54 @@ blusys::app::device_profile gateway_device_profile_for_build()
 #endif
 }
 
+const char *gateway_profile_label_for_build()
+{
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488) && \
+    CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488
+    return "ILI9488 480x320";
+#elif defined(ESP_PLATFORM)
+    return "ILI9341 320x240";
+#elif defined(BLUSYS_GW_HOST_DISPLAY_PROFILE) && (BLUSYS_GW_HOST_DISPLAY_PROFILE == 1)
+    return "Host SDL 480x320";
+#else
+    return "Host SDL 320x240";
+#endif
+}
+
+const char *gateway_hardware_label_for_build()
+{
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488) && \
+    CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488
+    return "ILI9488 reference";
+#elif defined(ESP_PLATFORM)
+    return "ILI9341 reference";
+#else
+    return "Host simulation";
+#endif
+}
+
+const char *gateway_build_version_for_build()
+{
+#ifdef PROJECT_VER
+    return PROJECT_VER;
+#elif defined(BLUSYS_APP_BUILD_VERSION)
+    return BLUSYS_APP_BUILD_VERSION;
+#else
+    return BLUSYS_VERSION_STRING;
+#endif
+}
+
 namespace {
 
 const blusys::app::view::shell_config gateway_shell_for_profile()
 {
     const auto prof = gateway_device_profile_for_build();
-    const auto h    = blusys::app::layout::classify(prof);
+    const auto chrome = blusys::app::layout::shell_chrome_for(prof);
     blusys::app::view::shell_config c{};
     c.header.enabled = true;
     c.header.title   = "Gateway";
-    c.status.enabled = h.shell != blusys::app::layout::shell_density::minimal;
-    c.tabs.enabled =
-        h.size_class != blusys::app::layout::surface_size::tiny_mono;
+    c.status.enabled = chrome.status_enabled;
+    c.tabs.enabled   = chrome.tabs_enabled;
     return c;
 }
 
@@ -94,7 +131,10 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len,
     int written = std::snprintf(json_buf, buf_len,
         "{\"product\":\"gateway-reference\","
         "\"archetype\":\"gateway/controller\","
-        "\"firmware\":\"phase6-preview\"}");
+        "\"firmware\":\"%s\","
+        "\"profile\":\"%s\"}",
+        gateway_build_version_for_build(),
+        gateway_profile_label_for_build());
     if (written < 0 || static_cast<size_t>(written) >= buf_len) {
         return BLUSYS_ERR_NO_MEM;
     }

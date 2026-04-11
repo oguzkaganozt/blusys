@@ -37,6 +37,16 @@ set(BLUSYS_COMP "${BLUSYS_PATH}/components/blusys")
 set(BLUSYS_FW   "${BLUSYS_PATH}/components/blusys_framework")
 set(BLUSYS_SVC  "${BLUSYS_PATH}/components/blusys_services")
 
+execute_process(
+    COMMAND git -C "${BLUSYS_PATH}" describe --tags --dirty --always
+    OUTPUT_VARIABLE BLUSYS_GIT_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+if(NOT BLUSYS_GIT_VERSION)
+    set(BLUSYS_GIT_VERSION "host-build")
+endif()
+
 add_library(blusys_framework_host STATIC
     ${BLUSYS_COMP}/src/common/error.c
     ${BLUSYS_FW}/src/core/controller.cpp
@@ -117,6 +127,8 @@ target_link_libraries(interactive_controller_host PRIVATE
 target_compile_options(interactive_controller_host PRIVATE
     -fno-exceptions -fno-rtti -fno-threadsafe-statics -Wall -Wextra
 )
+target_compile_definitions(interactive_controller_host PRIVATE
+    BLUSYS_APP_BUILD_VERSION="${BLUSYS_GIT_VERSION}")
 
 # Mirror device profile for SDL window size: 0 = ST7735-class (240×240), 1 = ST7789 (320×240).
 set(BLUSYS_IC_HOST_DISPLAY_PROFILE "0" CACHE STRING "Host SDL: 0=240x240 1=320x240")

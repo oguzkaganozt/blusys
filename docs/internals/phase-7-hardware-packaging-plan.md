@@ -39,6 +39,7 @@ This section tracks progress against this plan in the repo. Update it when works
 
 - **Framework — layout hints (`components/blusys_framework/include/blusys/app/layout_surface.hpp`)**  
   - `blusys::app::layout::classify()` — surface size class, shell density, spacing/typography levels, theme packaging hint from `device_profile` or raw width/height (not a layout engine).
+  - `blusys::app::layout::shell_chrome_for()` — framework-owned shell adaptation helper so archetype examples do not repeat raw size checks for status and tab chrome.
 
 - **Workstreams D–E (partial) — Kconfig + wiring**  
   - `examples/quickstart/interactive_controller` — `main/Kconfig.projbuild` choice **ST7735** (default) vs **ST7789**; `controller_device_profile_for_build()` + `layout::classify` drives shell chrome; host SDL window size via CMake cache `BLUSYS_IC_HOST_DISPLAY_PROFILE` (0 = 240×240, 1 = 320×240).  
@@ -56,7 +57,7 @@ This section tracks progress against this plan in the repo. Update it when works
   - Field-test pin/orientation defaults on real boards; adjust comments or defaults per validated modules if needed.
 
 - **Workstream C — layout adaptation helpers (follow-up)**  
-  - Optional: map `surface_hints` into theme token scaling or stock widget presets when repetition appears.
+  - Optional: map `surface_hints` into theme token scaling or stock widget presets when repetition appears beyond the current shell-chrome helper.
 
 - **Workstreams D–E — references (remainder)**  
   - `edge_node` — **done**: Kconfig `BLUSYS_EDGE_NODE_LOCAL_UI` enables `BLUSYS_APP_MAIN_DEVICE` + `profiles/ssd1306_128x64()` and minimal mono status UI in `main/ui/` (same `logic/` + capabilities). Default remains headless. Project sets `BLUSYS_BUILD_UI` when the optional UI path is used.  
@@ -68,10 +69,11 @@ This section tracks progress against this plan in the repo. Update it when works
   - **Done**: `docs/app/profiles.md` extended with Phase 7 profile table, layout hints, Kconfig pointers, and archetype→profile table. No new nav entries (`profiles.md` already listed in `mkdocs.yml` / `inventory.yml`).
 
 - **Workstream G — validation**  
-  - `blusys lint`, targeted `blusys host-build` / `blusys build` on supported targets, manual hardware checklist per new display family before calling a profile “recommended”.
+  - **Done**: targeted host and device builds cover the non-default Phase 7 variants (`ST7789`, `ILI9488`, and `SSD1306` local UI). Repo automation includes `scripts/build-phase7-variants.sh` plus dedicated PR/nightly jobs across `esp32`, `esp32c3`, and `esp32s3` so these paths are enforced instead of relying on ad hoc manual builds.
+  - Manual hardware checklist per new display family is still advisable before calling a profile “recommended” for a specific board module.
 
 - **Exit criteria (see below)**  
-  - Not all roadmap exit criteria are met until references run on multiple profiles without app-architecture rewrites and optional connected local surface is demonstrated.
+  - Codebase-level exit criteria are met: the reference products build across multiple profiles without app rewrites, optional connected local surface is demonstrated, and Phase 7 profile variants are covered by repo automation.
 
 ## Phase Goal
 
