@@ -1,11 +1,13 @@
 # Headless Quickstart
 
-Build a connected device without a display using the same `blusys::app` reducer model.
+Build a headless-first connected product using the same `blusys::app` reducer model.
+
+The canonical headless starting point is the `edge node` archetype.
 
 ## Create the project
 
 ```bash
-blusys create --starter headless my_sensor
+blusys create --archetype edge-node my_sensor
 cd my_sensor
 ```
 
@@ -53,6 +55,7 @@ my_sensor/
 
 ## Next steps
 
+- [Archetype Starters](archetypes.md) --- choose the canonical starting shape
 - [Reducer Model](../app/reducer-model.md) --- understand state, actions, and `update()`
 - [Capabilities](../app/capabilities.md) --- add WiFi, SNTP, and storage
 - [Profiles](../app/profiles.md) --- understand headless and device profiles

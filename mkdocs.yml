@@ -54,6 +54,7 @@ markdown_extensions:
       permalink: true
 
 nav:
+  - Home: index.md
   - Start:
       - start/index.md
       - Interactive Quickstart: start/quickstart-interactive.md
@@ -63,6 +64,8 @@ nav:
       - app/index.md
       - Reducer Model: app/reducer-model.md
       - Views & Widgets: app/views-and-widgets.md
+      - Widget Gallery: app/widget-gallery.md
+      - Capability Composition: app/capability-composition.md
       - Capabilities: app/capabilities.md
       - Profiles: app/profiles.md
   - Services:
@@ -138,7 +141,9 @@ nav:
       - Architecture: internals/architecture.md
       - Guidelines: internals/guidelines.md
       - Phase 5 Interactive Archetypes Plan: internals/phase-5-interactive-archetypes-plan.md
+      - Phase 6 Connected Archetypes Plan: internals/phase-6-connected-archetypes-plan.md
       - Phase 7 Hardware Packaging Plan: internals/phase-7-hardware-packaging-plan.md
+      - Phase 8 Ecosystem, Archetype Scaffolds, And Docs Plan: internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
       - Target Matrix: internals/target-matrix.md
       - Testing:
           - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md

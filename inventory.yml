@@ -1116,6 +1116,14 @@ docs:
     section: app
     visibility: public
 
+  - path: docs/app/widget-gallery.md
+    section: app
+    visibility: public
+
+  - path: docs/app/capability-composition.md
+    section: app
+    visibility: public
+
   - path: docs/app/capabilities.md
     section: app
     visibility: public
@@ -1364,6 +1372,10 @@ docs:
     visibility: public
 
   - path: docs/internals/phase-5-interactive-archetypes-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
     section: internals
     visibility: public
 

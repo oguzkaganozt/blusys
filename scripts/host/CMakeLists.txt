@@ -276,8 +276,8 @@ target_compile_definitions(app_headless_demo PRIVATE SDL_MAIN_HANDLED)
 
 # ── connected_headless_host (Phase 4 — connected product on host) ───────────
 #
-# Exercises the connectivity and storage bundle host stubs through the
-# same reducer event flow used on device. Proves the full bundle
+# Exercises the connectivity and storage capability host stubs through the
+# same reducer event flow used on device. Proves the full capability
 # lifecycle runs on host without hardware.
 add_executable(connected_headless_host
     src/connected_headless_host.cpp

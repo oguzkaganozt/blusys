@@ -436,16 +436,19 @@ HELP
 }
 
 blusys_help_create() {
-    printf 'Usage: blusys create [--starter <headless|interactive>] [path]\n'
+    printf 'Usage: blusys create [--archetype <interactive-controller|interactive-panel|edge-node|gateway-controller>] [--starter <headless|interactive>] [path]\n'
     printf '\nScaffold a new blusys product project.\n'
     printf '\nOptions:\n'
-    printf '  --starter <type>   product starter type (default: interactive)\n'
-    printf '                       interactive — includes blusys_framework/ui + lvgl/lvgl\n'
-    printf '                       headless    — framework core only, no UI\n'
+    printf '  --archetype <type>  canonical starter shape (default: interactive-controller)\n'
+    printf '                       interactive-controller — compact expressive interactive app\n'
+    printf '                       interactive-panel      — operational interactive panel\n'
+    printf '                       edge-node               — headless-first connected app\n'
+    printf '                       gateway-controller      — headless coordinator/operator app\n'
+    printf '  --starter <type>    legacy mode alias (interactive|headless)\n'
     printf '\nIf path is given, creates the project there; otherwise uses the current directory.\n'
     printf 'Asks before overwriting existing files.\n'
-    printf '\nGenerates the four-CMakeLists product layout: top-level + main/ + app/ + app/product_config.cmake.\n'
-    printf 'Platform components are pulled via main/idf_component.yml — never via EXTRA_COMPONENT_DIRS.\n'
+    printf '\nGenerates the fixed product layout: top-level + main/logic + main/ui + main/system.\n'
+    printf 'Platform components are pulled via main/idf_component.yml.\n'
 }
 
 blusys_help_build() {
@@ -565,11 +568,24 @@ blusys_help_install_qemu() {
 # ── Subcommands ──────────────────────────────────────────────────────────────
 
 cmd_create() {
-    local starter="interactive"
+    local archetype=""
+    local starter=""
     local positional=()
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            --archetype)
+                if [[ $# -lt 2 ]]; then
+                    printf 'error: --archetype requires an argument\n' >&2
+                    exit 1
+                fi
+                archetype="$2"
+                shift 2
+                ;;
+            --archetype=*)
+                archetype="${1#--archetype=}"
+                shift
+                ;;
             --starter)
                 if [[ $# -lt 2 ]]; then
                     printf 'error: --starter requires an argument (headless|interactive)\n' >&2
@@ -604,18 +620,108 @@ cmd_create() {
     fi
 
     case "$starter" in
-        headless|interactive) ;;
+        ""|headless|interactive) ;;
         *)
             printf 'error: --starter must be "headless" or "interactive" (got %q)\n' "$starter" >&2
             exit 1
             ;;
     esac
 
+    case "$archetype" in
+        "")
+            case "$starter" in
+                ""|interactive) archetype="interactive-controller" ;;
+                headless) archetype="edge-node" ;;
+            esac
+            ;;
+        interactive-controller|interactive_controller|controller)
+            archetype="interactive-controller"
+            ;;
+        interactive-panel|interactive_panel|panel)
+            archetype="interactive-panel"
+            ;;
+        edge-node|edge_node|edge|headless)
+            archetype="edge-node"
+            ;;
+        gateway-controller|gateway_controller|gateway)
+            archetype="gateway-controller"
+            ;;
+        *)
+            printf 'error: unknown archetype %q\n' "$archetype" >&2
+            blusys_help_create
+            exit 1
+            ;;
+    esac
+
+    local template_dir=""
+    local template_host_target=""
+    local starter_kind=""
+    local archetype_label=""
+    local archetype_example=""
+    local archetype_default_profile=""
+
+    case "$archetype" in
+        interactive-controller)
+            template_dir="$BLUSYS_REPO_ROOT/examples/quickstart/interactive_controller"
+            template_host_target="interactive_controller_host"
+            starter_kind="interactive"
+            archetype_label="interactive controller"
+            archetype_example="examples/quickstart/interactive_controller/"
+            archetype_default_profile="ST7735"
+            ;;
+        interactive-panel)
+            template_dir="$BLUSYS_REPO_ROOT/examples/reference/interactive_panel"
+            template_host_target="interactive_panel_host"
+            starter_kind="interactive"
+            archetype_label="interactive panel"
+            archetype_example="examples/reference/interactive_panel/"
+            archetype_default_profile="ILI9341"
+            ;;
+        edge-node)
+            template_dir="$BLUSYS_REPO_ROOT/examples/quickstart/edge_node"
+            template_host_target="edge_node_host"
+            starter_kind="headless"
+            archetype_label="edge node"
+            archetype_example="examples/quickstart/edge_node/"
+            archetype_default_profile="headless"
+            ;;
+        gateway-controller)
+            template_dir="$BLUSYS_REPO_ROOT/examples/reference/gateway"
+            template_host_target="gateway_host"
+            starter_kind="headless"
+            archetype_label="gateway/controller"
+            archetype_example="examples/reference/gateway/"
+            archetype_default_profile="headless"
+            ;;
+    esac
+
+    if [[ "$archetype" == "gateway-controller" && "$starter" == "interactive" ]]; then
+        starter_kind="interactive"
+        archetype_default_profile="ILI9341"
+    fi
+
+    if [[ -n "$starter" ]]; then
+        case "$starter" in
+            interactive)
+                if [[ "$starter_kind" != "interactive" ]]; then
+                    printf 'error: --starter interactive does not match archetype %q\n' "$archetype" >&2
+                    exit 1
+                fi
+                ;;
+            headless)
+                if [[ "$starter_kind" != "headless" ]]; then
+                    printf 'error: --starter headless does not match archetype %q\n' "$archetype" >&2
+                    exit 1
+                fi
+                ;;
+        esac
+    fi
+
     local target_dir
     if [[ ${#positional[@]} -eq 0 ]]; then
         target_dir="$(pwd)"
     else
-        if [[ "${positional[0]}" = /* ]]; then
+    if [[ "${positional[0]}" = /* ]]; then
             target_dir="${positional[0]}"
         else
             target_dir="$(pwd)/${positional[0]}"
@@ -632,13 +738,16 @@ cmd_create() {
     local existing_files=()
     for f in \
         CMakeLists.txt \
+        README.md \
         sdkconfig.defaults \
         partitions.csv \
         main/CMakeLists.txt \
         main/idf_component.yml \
+        main/Kconfig.projbuild \
         main/logic/app_logic.hpp \
         main/ui/app_ui.cpp \
-        main/system/app_main.cpp; do
+        main/system/app_main.cpp \
+        host/CMakeLists.txt; do
         [[ -f "$target_dir/$f" ]] && existing_files+=("$f")
     done
 
@@ -657,38 +766,65 @@ cmd_create() {
 
     mkdir -p "$target_dir/main" "$target_dir/host"
 
-    blusys_create_top_cmakelists "$target_dir" "$project_name" "$starter"
-    blusys_create_main "$target_dir" "$starter"
-    blusys_create_host "$target_dir" "$project_name" "$starter"
-
-    if [[ "$starter" == "interactive" ]]; then
-        # The interactive starter compiles blusys_framework/ui, which drives
-        # LVGL from the blusys_ui render task. Without LV_OS_FREERTOS the
-        # LVGL global lock is a no-op and render/main race into an
-        # LV_ASSERT_MSG "Invalidate area is not allowed during rendering"
-        # whose default handler is `while(1);` — i.e. a hang. LV_COLOR_DEPTH_16
-        # matches the RGB565 color format blusys_ui uses with the LCD driver.
-        cat > "$target_dir/sdkconfig.defaults" <<'DEFAULTS'
-CONFIG_LV_OS_FREERTOS=y
-CONFIG_LV_COLOR_DEPTH_16=y
-CONFIG_PARTITION_TABLE_CUSTOM=y
-CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
-# CONFIG_ESPTOOLPY_FLASHSIZE_2MB is not set
-CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
-DEFAULTS
-        cat > "$target_dir/partitions.csv" <<'CSV'
-# Name,   Type, SubType, Offset,   Size
-nvs,      data, nvs,     0x9000,   24K
-phy_init, data, phy,     0xf000,   4K
-factory,  app,  factory, 0x10000,  2M
-spiffs,   data, spiffs,  0x210000, 0x1F0000
-CSV
-    else
-        touch "$target_dir/sdkconfig.defaults"
+    cp -f "$template_dir/sdkconfig.defaults" "$target_dir/sdkconfig.defaults"
+    if [[ -f "$template_dir/partitions.csv" ]]; then
+        cp -f "$template_dir/partitions.csv" "$target_dir/partitions.csv"
     fi
 
+    cp -R "$template_dir/main/." "$target_dir/main/"
+    cp -R "$template_dir/host/." "$target_dir/host/"
+
+    if [[ -f "$target_dir/host/CMakeLists.txt" ]]; then
+        sed -i "s/${template_host_target}/${project_name}_host/g" "$target_dir/host/CMakeLists.txt"
+    fi
+
+    if [[ "$archetype" == "gateway-controller" && "$starter_kind" == "headless" ]]; then
+        cat > "$target_dir/main/CMakeLists.txt" <<'CMAKE'
+idf_component_register(
+    SRCS
+        "logic/app_logic.cpp"
+        "system/app_main.cpp"
+    INCLUDE_DIRS "."
+    REQUIRES blusys_framework
+)
+CMAKE
+        rm -rf "$target_dir/main/ui"
+        blusys_create_main_yml_headless "$target_dir"
+        blusys_create_host_cmakelists_gateway_headless "$target_dir" "$project_name"
+        blusys_create_system_gateway_headless "$target_dir"
+    fi
+
+    blusys_create_top_cmakelists "$target_dir" "$project_name" "$starter_kind"
+
+    cat > "$target_dir/README.md" <<'EOF'
+# __PROJECT_NAME__
+
+Generated with `blusys create --archetype __ARCHETYPE__`.
+
+Canonical starter: __ARCHETYPE_LABEL__
+
+## Layout
+
+- `main/logic/` owns product state and reducer behavior
+- `main/ui/` owns screens and rendering when the archetype uses UI
+- `main/system/` owns entry wiring, capabilities, and runtime integration
+
+## Next steps
+
+- `blusys host-build`
+- `blusys build`
+- see `__ARCHETYPE_EXAMPLE__` for the curated reference starter
+EOF
+    sed -i \
+        -e "s|__PROJECT_NAME__|$project_name|g" \
+        -e "s|__ARCHETYPE__|$archetype|g" \
+        -e "s|__ARCHETYPE_LABEL__|$archetype_label|g" \
+        -e "s|__ARCHETYPE_EXAMPLE__|$archetype_example|g" \
+        "$target_dir/README.md"
+
     printf '\nCreated blusys project: %s\n' "$target_dir"
-    printf 'Starter type: %s\n\n' "$starter"
+    printf 'Starter archetype: %s\n' "$archetype_label"
+    printf 'Default profile family: %s\n\n' "$archetype_default_profile"
     printf 'Next steps:\n'
     printf '  cd %s\n' "$target_dir"
     printf '  blusys host-build           # build + run on PC (no hardware needed)\n'
@@ -697,7 +833,7 @@ CSV
     printf '\n'
     printf 'Product layout:\n'
     printf '  main/logic/   — State, Action, update() (product behavior)\n'
-    if [[ "$starter" == "interactive" ]]; then
+    if [[ "$starter_kind" == "interactive" ]]; then
         printf '  main/ui/      — on_init() and screen composition (rendering)\n'
     fi
     printf '  main/system/  — app_spec wiring and entry macro\n'
@@ -900,6 +1036,207 @@ static const blusys::app::app_spec<State, Action> spec{
 };
 
 BLUSYS_APP_MAIN_HEADLESS(spec)
+CPP
+}
+
+blusys_create_system_gateway_headless() {
+    local target_dir="$1"
+    cat > "$target_dir/main/system/app_main.cpp" <<'CPP'
+#include "logic/app_logic.hpp"
+
+#include "blusys/app/app.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
+#include "blusys/app/capabilities/diagnostics.hpp"
+#include "blusys/app/capabilities/ota.hpp"
+#include "blusys/app/capabilities/provisioning.hpp"
+#include "blusys/app/capabilities/storage.hpp"
+#include "blusys/app/capabilities/telemetry.hpp"
+#include "blusys/log.h"
+#include "blusys/version.h"
+
+#include <cstdio>
+#include <cstdint>
+
+namespace gateway::system {
+
+namespace {
+
+[[maybe_unused]] const char *gateway_build_version_for_build()
+{
+#ifdef PROJECT_VER
+    return PROJECT_VER;
+#elif defined(BLUSYS_APP_BUILD_VERSION)
+    return BLUSYS_APP_BUILD_VERSION;
+#else
+    return BLUSYS_VERSION_STRING;
+#endif
+}
+
+bool deliver_telemetry(const blusys::app::telemetry_metric *metrics,
+                       std::size_t count, void * /*user_ctx*/)
+{
+    BLUSYS_LOGI("telemetry", "forwarding %u aggregated metrics:", static_cast<unsigned>(count));
+    for (std::size_t i = 0; i < count; ++i) {
+        BLUSYS_LOGI("telemetry", "  [%u] %s = %.2f  ts=%lu",
+                    static_cast<unsigned>(i),
+                    metrics[i].name ? metrics[i].name : "?",
+                    static_cast<double>(metrics[i].value),
+                    static_cast<unsigned long>(metrics[i].timestamp_ms));
+    }
+    return true;
+}
+
+#ifdef ESP_PLATFORM
+blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len,
+                               size_t *out_len, void * /*user_ctx*/)
+{
+    int written = std::snprintf(json_buf, buf_len,
+        "{\"product\":\"gateway-reference\","
+        "\"archetype\":\"gateway/controller\","
+        "\"firmware\":\"%s\"}",
+        gateway_build_version_for_build());
+    if (written < 0 || static_cast<size_t>(written) >= buf_len) {
+        return BLUSYS_ERR_NO_MEM;
+    }
+    *out_len = static_cast<size_t>(written);
+    return BLUSYS_OK;
+}
+#endif
+
+blusys::app::connectivity_config conn_cfg{
+#ifdef ESP_PLATFORM
+    .wifi_ssid     = CONFIG_WIFI_SSID,
+    .wifi_password = CONFIG_WIFI_PASSWORD,
+#else
+    .wifi_ssid     = "host-sim",
+    .wifi_password = "",
+#endif
+    .reconnect_delay_ms = 3000,
+    .max_retries        = -1,
+    .sntp_server        = "pool.ntp.org",
+    .mdns_hostname      = "blusys-gw",
+    .mdns_instance_name = "Blusys Gateway",
+    .local_ctrl_device_name = "Gateway",
+#ifdef ESP_PLATFORM
+    .local_ctrl_status_cb   = local_ctrl_status,
+#endif
+};
+
+blusys::app::connectivity_capability connectivity{conn_cfg};
+blusys::app::telemetry_capability telemetry{{
+    .deliver           = deliver_telemetry,
+    .flush_threshold   = 12,
+    .flush_interval_ms = 20000,
+}};
+blusys::app::diagnostics_capability diagnostics{{
+    .enable_console       = true,
+    .snapshot_interval_ms = 3000,
+}};
+blusys::app::ota_capability ota{{
+    .firmware_url    = "https://ota.example.com/gateway.bin",
+    .auto_mark_valid = true,
+}};
+blusys::app::provisioning_capability provisioning{{
+    .service_name        = "blusys-gw",
+    .pop                 = "gw1234",
+    .skip_if_provisioned = true,
+}};
+blusys::app::storage_capability storage{{
+    .spiffs_base_path = "/gw",
+}};
+
+blusys::app::capability_list capabilities{
+    &connectivity, &telemetry, &diagnostics, &ota, &provisioning, &storage};
+
+void on_tick(blusys::app::app_ctx & /*ctx*/, app_state &state, std::uint32_t now_ms)
+{
+    ++state.sample_count;
+    state.active_devices = 1 + static_cast<std::int32_t>(state.sample_count % 3);
+    state.agg_throughput = 12.0f + static_cast<float>(state.sample_count % 8);
+
+    if (state.phase == op_state::operational) {
+        telemetry.record("active_devices", static_cast<float>(state.active_devices), now_ms);
+        telemetry.record("throughput", state.agg_throughput, now_ms);
+    }
+
+    if (state.sample_count % 30 == 0) {
+        BLUSYS_LOGI("gateway", "heartbeat #%lu  phase=%s  dev=%ld  tput=%.1f  delivered=%u fails=%u",
+                    static_cast<unsigned long>(state.sample_count),
+                    op_state_name(state.phase),
+                    static_cast<long>(state.active_devices),
+                    static_cast<double>(state.agg_throughput),
+                    state.delivered, state.delivery_fails);
+    }
+}
+
+bool map_event(std::uint32_t id, std::uint32_t code,
+               const void * /*payload*/, action *out)
+{
+    using CE = blusys::app::connectivity_event;
+    switch (static_cast<CE>(id)) {
+    case CE::wifi_got_ip:       *out = action{.tag = action_tag::wifi_got_ip};       return true;
+    case CE::wifi_disconnected: *out = action{.tag = action_tag::wifi_disconnected}; return true;
+    case CE::wifi_reconnecting: *out = action{.tag = action_tag::wifi_reconnecting}; return true;
+    case CE::time_synced:       *out = action{.tag = action_tag::time_synced};       return true;
+    case CE::bundle_ready:      *out = action{.tag = action_tag::conn_bundle_ready}; return true;
+    default: break;
+    }
+
+    using TE = blusys::app::telemetry_event;
+    switch (static_cast<TE>(id)) {
+    case TE::delivery_ok:     *out = action{.tag = action_tag::telemetry_delivered}; return true;
+    case TE::delivery_failed: *out = action{.tag = action_tag::telemetry_failed};    return true;
+    default: break;
+    }
+
+    using DE = blusys::app::diagnostics_event;
+    switch (static_cast<DE>(id)) {
+    case DE::snapshot_ready: *out = action{.tag = action_tag::diag_snapshot};     return true;
+    case DE::bundle_ready:   *out = action{.tag = action_tag::diag_bundle_ready}; return true;
+    default: break;
+    }
+
+    using OE = blusys::app::ota_event;
+    switch (static_cast<OE>(id)) {
+    case OE::download_progress: *out = action{.tag = action_tag::ota_download_progress,
+                                               .value = static_cast<std::int32_t>(code)}; return true;
+    case OE::apply_complete:    *out = action{.tag = action_tag::ota_apply_complete};    return true;
+    case OE::apply_failed:      *out = action{.tag = action_tag::ota_apply_failed};      return true;
+    case OE::bundle_ready:      *out = action{.tag = action_tag::ota_bundle_ready};      return true;
+    default: break;
+    }
+
+    using PE = blusys::app::provisioning_event;
+    switch (static_cast<PE>(id)) {
+    case PE::success:             *out = action{.tag = action_tag::prov_success};      return true;
+    case PE::already_provisioned: *out = action{.tag = action_tag::prov_already_done}; return true;
+    case PE::bundle_ready:        *out = action{.tag = action_tag::prov_bundle_ready}; return true;
+    default: break;
+    }
+
+    using SE = blusys::app::storage_event;
+    switch (static_cast<SE>(id)) {
+    case SE::bundle_ready: *out = action{.tag = action_tag::storage_bundle_ready}; return true;
+    default: break;
+    }
+
+    return false;
+}
+
+const blusys::app::app_spec<app_state, action> spec{
+    .initial_state  = {},
+    .update         = update,
+    .on_tick        = on_tick,
+    .map_event      = map_event,
+    .tick_period_ms = 300,
+    .capabilities   = &capabilities,
+};
+
+}  // namespace
+
+}  // namespace gateway::system
+
+BLUSYS_APP_MAIN_HEADLESS(gateway::system::spec)
 CPP
 }
 
@@ -1819,6 +2156,81 @@ target_compile_options(BLUSYS_PRODUCT_HOST PRIVATE
 )
 # Prevent SDL from hijacking main() — the headless path owns its own entry.
 target_compile_definitions(BLUSYS_PRODUCT_HOST PRIVATE SDL_MAIN_HANDLED)
+CMAKE
+    sed -i "s/BLUSYS_PRODUCT_HOST/${project_name}_host/g" "$target_dir/host/CMakeLists.txt"
+}
+
+blusys_create_host_cmakelists_gateway_headless() {
+    local target_dir="$1"
+    local project_name="$2"
+    cat > "$target_dir/host/CMakeLists.txt" <<'CMAKE'
+cmake_minimum_required(VERSION 3.16)
+project(BLUSYS_PRODUCT_HOST LANGUAGES C CXX)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(NOT DEFINED ENV{BLUSYS_PATH})
+    message(FATAL_ERROR
+        "BLUSYS_PATH is not set.\n"
+        "Run via 'blusys host-build' (it exports BLUSYS_PATH automatically), or:\n"
+        "  export BLUSYS_PATH=/path/to/blusys && cmake -S host -B build-host")
+endif()
+set(BLUSYS_PATH "$ENV{BLUSYS_PATH}")
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
+
+set(BLUSYS_COMP "${BLUSYS_PATH}/components/blusys")
+set(BLUSYS_FW   "${BLUSYS_PATH}/components/blusys_framework")
+
+add_library(blusys_framework_core_host STATIC
+    ${BLUSYS_COMP}/src/common/error.c
+    ${BLUSYS_FW}/src/core/controller.cpp
+    ${BLUSYS_FW}/src/core/feedback.cpp
+    ${BLUSYS_FW}/src/core/feedback_presets.cpp
+    ${BLUSYS_FW}/src/core/framework.cpp
+    ${BLUSYS_FW}/src/core/router.cpp
+    ${BLUSYS_FW}/src/core/runtime.cpp
+    ${BLUSYS_FW}/src/app/app_ctx.cpp
+    ${BLUSYS_FW}/src/app/capabilities/connectivity_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/storage_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/provisioning_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/diagnostics_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/ota_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/bluetooth_host.cpp
+    ${BLUSYS_FW}/src/app/capabilities/telemetry.cpp
+    ${BLUSYS_FW}/src/app/theme_presets.cpp
+)
+target_include_directories(blusys_framework_core_host PUBLIC
+    ${BLUSYS_COMP}/include
+    ${BLUSYS_FW}/include
+    ${BLUSYS_PATH}/scripts/host/include_host
+)
+target_compile_options(blusys_framework_core_host PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
+    -Wall -Wextra
+)
+target_link_libraries(blusys_framework_core_host PUBLIC PkgConfig::SDL2)
+
+add_executable(BLUSYS_PRODUCT_HOST
+    "${CMAKE_CURRENT_LIST_DIR}/../main/logic/app_logic.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/system/app_main.cpp"
+    "${BLUSYS_PATH}/scripts/host/src/app_headless_platform.cpp"
+)
+target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../main"
+)
+target_link_libraries(BLUSYS_PRODUCT_HOST PRIVATE
+    blusys_framework_core_host PkgConfig::SDL2 m
+)
+target_compile_options(BLUSYS_PRODUCT_HOST PRIVATE
+    -fno-exceptions -fno-rtti -fno-threadsafe-statics -Wall -Wextra
+)
 CMAKE
     sed -i "s/BLUSYS_PRODUCT_HOST/${project_name}_host/g" "$target_dir/host/CMakeLists.txt"
 }

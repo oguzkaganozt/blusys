@@ -6,7 +6,7 @@ Examples are organized into three categories:
 
 Canonical product starters that demonstrate the recommended `blusys::app` path. These are the first examples new users should look at.
 
-- **connected_device** — interactive connected product using the app runtime, display, and connectivity bundles
+- **connected_device** — interactive connected product using the app runtime, display, and connectivity capabilities
 - **connected_headless** — headless connected product using the same reducer model without a display
 - **framework_app_basic** — minimal interactive app quickstart
 - **framework_ui_basic** — interactive app with stock widgets and bindings

@@ -2,7 +2,7 @@
 
 Direct hardware access through the Blusys HAL and driver layers. These APIs are pure C with `blusys_err_t` return types.
 
-For most product apps, the [App](../app/index.md) layer and [service bundles](../app/service-bundles.md) provide higher-level access. Use these APIs when you need direct hardware control.
+For most product apps, the [App](../app/index.md) layer and [Capabilities](../app/capabilities.md) provide higher-level access. Use these APIs when you need direct hardware control.
 
 ## I/O & Communication
 

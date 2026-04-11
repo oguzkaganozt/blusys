@@ -1,6 +1,6 @@
 # Services
 
-Runtime services provide stateful capabilities on top of the HAL layer. For most product apps, use [service bundles](../app/service-bundles.md) instead of calling these APIs directly.
+Runtime services provide stateful capabilities on top of the HAL layer. For most product apps, use [Capabilities](../app/capabilities.md) instead of calling these APIs directly.
 
 ## Connectivity
 

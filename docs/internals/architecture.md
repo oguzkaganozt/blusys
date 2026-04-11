@@ -109,8 +109,8 @@ The framework tier is the only C++ component, with `-fno-exceptions -fno-rtti` a
 This is the recommended product-facing API. Normal product code only touches this layer.
 
 - `app.hpp` — umbrella include for the product API
-- `app_spec.hpp` — `app_spec<State, Action>` template: initial state, `update()` reducer, lifecycle hooks (`on_init`, `on_tick`), intent and event bridges, bundle config, theme
-- `app_ctx.hpp` — `app_ctx`: dispatch actions, navigate (`navigate_to`, `navigate_push`, `navigate_back`), show/hide overlays, emit feedback, query bundle status
+- `app_spec.hpp` — `app_spec<State, Action>` template: initial state, `update()` reducer, lifecycle hooks (`on_init`, `on_tick`), intent and event bridges, capability config, theme
+- `app_ctx.hpp` — `app_ctx`: dispatch actions, navigate (`navigate_to`, `navigate_push`, `navigate_back`), show/hide overlays, emit feedback, query capability status
 - `entry.hpp` — entry macros: `BLUSYS_APP_MAIN_HOST(spec)`, `BLUSYS_APP_MAIN_HEADLESS(spec)`, `BLUSYS_APP_MAIN_DEVICE(spec, profile)`
 - `app_runtime.hpp` — runtime engine (internal, driven by the entry macros)
 
@@ -128,7 +128,7 @@ This is the recommended product-facing API. Normal product code only touches thi
 - `headless.hpp` — no-display marker profile
 - `st7735.hpp` — generic SPI ST7735 TFT profile (ESP32, ESP32-C3, ESP32-S3)
 
-**Service bundles** (`include/blusys/app/bundles/`):
+**Capabilities** (`include/blusys/app/capabilities/`):
 - `connectivity.hpp` — Wi-Fi, SNTP, mDNS, local control lifecycle
 - `storage.hpp` — SPIFFS and FAT filesystem mounting
 
@@ -154,7 +154,7 @@ The core spine is internal framework machinery. Product code does not interact w
 
 Authoring contract: every widget follows the six-rule contract (theme tokens only, config struct interface, setters own state transitions, standard state set, one folder per widget, header is the spec). Stock-backed widgets use a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` for callback storage. See `components/blusys_framework/widget-author-guide.md`.
 
-End-to-end validation: `examples/quickstart/framework_app_basic/` exercises the full framework validation chain. `examples/quickstart/connected_headless/` validates the headless path with service bundles and the reducer model.
+End-to-end validation: `examples/quickstart/framework_app_basic/` exercises the full framework validation chain. `examples/quickstart/connected_headless/` validates the headless path with capabilities and the reducer model.
 
 Host iteration: `scripts/host/` builds LVGL against SDL2 on Linux via `blusys host-build`, pinned to the same upstream LVGL tag as the ESP-IDF managed component. Lets the widget kit be iterated on without flashing hardware on every change.
 

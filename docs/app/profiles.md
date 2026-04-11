@@ -94,8 +94,8 @@ Several archetype examples expose **menuconfig** choices so you can compile the 
 
 - **Interactive controller** (`quickstart/interactive_controller`): ST7735 vs ST7789.
 - **Interactive panel** (`reference/interactive_panel`): ILI9341 vs ILI9488.
-- **Gateway** (`reference/gateway`): ILI9341 vs ILI9488 (plus WiFi strings).
 - **Edge node** (`quickstart/edge_node`): optional **local SSD1306** status UI vs default headless (device only).
+- **Gateway/controller** (`reference/gateway`): ILI9341 vs ILI9488 (plus WiFi strings).
 
 Host SDL builds use CMake cache variables (e.g. `BLUSYS_IC_HOST_DISPLAY_PROFILE`) where documented in each example’s `host/CMakeLists.txt` to match window size to the simulated profile.
 
@@ -106,4 +106,4 @@ Host SDL builds use CMake cache variables (e.g. `BLUSYS_IC_HOST_DISPLAY_PROFILE`
 | Interactive controller | ST7735, ST7789 | Compact color; expressive theme bias |
 | Interactive panel | ILI9341, ILI9488 | Operational / dashboard density |
 | Edge node | Headless, or SSD1306 for local status | Same reducer; `system/` chooses entry |
-| Gateway / controller | ILI9341, ILI9488 | Local operator UI; connectivity unchanged |
+| Gateway/controller | Headless, ILI9341, ILI9488 | Headless default; optional local operator UI |

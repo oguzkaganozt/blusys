@@ -16,7 +16,7 @@ An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a sh
 
     ---
 
-    The product-facing API: reducer model, views, widgets, service bundles, and profiles.
+    The product-facing API: reducer model, views, widgets, capabilities, and profiles.
 
     [:octicons-arrow-right-24: App Overview](app/index.md)
 

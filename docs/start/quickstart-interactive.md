@@ -12,7 +12,7 @@ The canonical interactive starting point is the `interactive controller` archety
 ## Create the project
 
 ```bash
-blusys create --starter interactive my_product
+blusys create --archetype interactive-controller my_product
 cd my_product
 ```
 
@@ -59,7 +59,7 @@ my_product/
 
 ## Next steps
 
-- [Archetype Starters](archetypes.md) --- choose between controller and panel starting shapes
+- [Archetype Starters](archetypes.md) --- choose between the four canonical starting shapes
 - [Reducer Model](../app/reducer-model.md) --- understand state, actions, and `update()`
 - [Views & Widgets](../app/views-and-widgets.md) --- build screens with stock widgets
 - [Profiles](../app/profiles.md) --- target a real device with `BLUSYS_APP_MAIN_DEVICE`
