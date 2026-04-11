@@ -9,6 +9,7 @@ BLUSYS_DEFAULT_TARGET="esp32s3"
 BLUSYS_DEFAULT_PROJECT="."
 BLUSYS_MIN_IDF_MAJOR=5
 BLUSYS_MIN_IDF_MINOR=5
+BLUSYS_SCAFFOLD_PLATFORM_VERSION="${BLUSYS_SCAFFOLD_PLATFORM_VERSION:-v6.1.0}"
 
 # Pin for `blusys create` generated main/idf_component.yml (all three tiers same tag).
 # Override when testing against a fork or pre-release: BLUSYS_SCAFFOLD_PLATFORM_VERSION=v7.x ...
@@ -527,9 +528,9 @@ blusys_help_example() {
     printf 'Usage: blusys example [name] [command] [args...]\n'
     printf '\nRun a command on a bundled example.\n'
     printf '  blusys example                           list available examples\n'
-    printf '  blusys example smoke build esp32s3        build the smoke example\n'
-    printf '  blusys example smoke run /dev/ttyACM0 esp32s3\n'
-    printf '  blusys example smoke qemu esp32           run smoke in QEMU\n'
+    printf '  blusys example validation/smoke build esp32s3\n'
+    printf '  blusys example validation/smoke run /dev/ttyACM0 esp32s3\n'
+    printf '  blusys example validation/smoke qemu esp32\n'
     printf '\nIf no command is given, defaults to build.\n'
 }
 
@@ -2296,16 +2297,31 @@ cmd_example() {
         done | sort
     }
 
+    _display_example_name() {
+        local dir="$1"
+        printf '%s\n' "${dir#"$examples_dir"/}"
+    }
+
     # Resolve an example name to its path
     _resolve_example() {
         local target_name="$1"
         local found=""
+        local match_count=0
         while IFS= read -r dir; do
-            if [[ "$(basename "$dir")" == "$target_name" ]]; then
+            if [[ "$(_display_example_name "$dir")" == "$target_name" ]]; then
                 found="$dir"
                 break
             fi
+            if [[ "$target_name" != */* && "$(basename "$dir")" == "$target_name" ]]; then
+                found="$dir"
+                ((match_count++)) || true
+            fi
         done < <(_find_examples)
+        if [[ $match_count -gt 1 ]]; then
+            printf 'error: example name is ambiguous: %s\n' "$target_name" >&2
+            printf 'Use a category-qualified name such as quickstart/%s\n' "$target_name" >&2
+            return 1
+        fi
         printf '%s' "$found"
     }
 
@@ -2313,7 +2329,7 @@ cmd_example() {
     if [[ $# -eq 0 ]]; then
         printf 'Available examples:\n'
         while IFS= read -r dir; do
-            printf '  %s\n' "$(basename "$dir")"
+            printf '  %s\n' "$(_display_example_name "$dir")"
         done < <(_find_examples)
         printf '\nUsage: blusys example <name> [command] [args...]\n'
         return
@@ -2328,7 +2344,7 @@ cmd_example() {
         printf 'error: example not found: %s\n' "$name" >&2
         printf '\nAvailable examples:\n' >&2
         while IFS= read -r dir; do
-            printf '  %s\n' "$(basename "$dir")" >&2
+            printf '  %s\n' "$(_display_example_name "$dir")" >&2
         done < <(_find_examples)
         exit 1
     fi
