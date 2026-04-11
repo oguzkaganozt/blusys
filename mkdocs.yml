@@ -70,6 +70,7 @@ nav:
       - Capability Composition: app/capability-composition.md
       - Capabilities: app/capabilities.md
       - Profiles: app/profiles.md
+      - "Validation & host loop": app/validation-host-loop.md
   - Services:
       - services/index.md
       - Connectivity:
@@ -142,6 +143,7 @@ nav:
       - internals/index.md
       - Architecture: internals/architecture.md
       - Guidelines: internals/guidelines.md
+      - "PRD release criteria (status)": internals/prd-release-criteria.md
       - "Phase 0 Foundation Plan": internals/phase-0-v7-foundation-plan.md
       - "Phase 0 Exit": internals/phase-0-exit.md
       - "Phase 3 Widget Library Gap Matrix": internals/phase-3-widget-library-gap-matrix.md
@@ -153,6 +155,7 @@ nav:
       - Phase 7 Hardware Packaging Plan: internals/phase-7-hardware-packaging-plan.md
       - "Phase 7 Exit": internals/phase-7-exit.md
       - Phase 8 Ecosystem, Archetype Scaffolds, And Docs Plan: internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
+      - "Phase 8 Exit": internals/phase-8-exit.md
       - Target Matrix: internals/target-matrix.md
       - Testing:
           - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md

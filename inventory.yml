@@ -1140,6 +1140,10 @@ docs:
     section: app
     visibility: public
 
+  - path: docs/app/validation-host-loop.md
+    section: app
+    visibility: public
+
   # --- Services ---
   - path: docs/services/index.md
     section: services
@@ -1379,6 +1383,10 @@ docs:
     section: internals
     visibility: public
 
+  - path: docs/internals/prd-release-criteria.md
+    section: internals
+    visibility: public
+
   - path: docs/internals/phase-0-v7-foundation-plan.md
     section: internals
     visibility: public
@@ -1416,6 +1424,10 @@ docs:
     visibility: public
 
   - path: docs/internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/phase-8-exit.md
     section: internals
     visibility: public
 

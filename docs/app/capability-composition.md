@@ -12,35 +12,40 @@ Capabilities are composed in `integration/` and translated into app actions.
 
 ## Typical Stacks
 
+Each archetype has a **minimal** stack (enough to ship a credible starter) and a **full** stack (typical connected / operational product). Compose capabilities only in `integration/`; see [Archetype Starters](../start/archetypes.md) for starter mapping.
+
 ### Interactive Controller
 
-- storage
-- provisioning
-- connectivity when needed
+| Minimal | Full (typical) |
+|---------|----------------|
+| storage | storage, provisioning, connectivity (optional) |
+| provisioning | Bluetooth (optional, product-dependent) |
+
+Starter: `examples/quickstart/interactive_controller/`.
 
 ### Interactive Panel
 
-- connectivity
-- storage
-- diagnostics when needed
+| Minimal | Full (typical) |
+|---------|----------------|
+| connectivity | connectivity, storage, diagnostics |
+
+Starter: `examples/reference/interactive_panel/`.
 
 ### Edge Node
 
-- connectivity
-- telemetry
-- provisioning
-- OTA
-- diagnostics
-- storage
+| Minimal | Full (typical) |
+|---------|----------------|
+| connectivity, telemetry | connectivity, telemetry, provisioning, OTA, diagnostics, storage |
+
+Starter: `examples/quickstart/edge_node/`.
 
 ### Gateway/Controller
 
-- connectivity
-- telemetry
-- provisioning
-- OTA
-- diagnostics
-- storage
+| Minimal | Full (typical) |
+|---------|----------------|
+| connectivity, telemetry | connectivity, telemetry, provisioning, OTA, diagnostics, storage |
+
+Starter: `examples/reference/gateway/` (headless default; optional local UI variant via scaffold).
 
 ## Rule Of Thumb
 

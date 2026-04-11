@@ -2,7 +2,17 @@
 
 Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32-C3, and ESP32-S3 targets.
 
-## Quick Start
+## Pick a product archetype first
+
+New products should start from one of four **canonical archetypes** — the same `core/` / `ui/` / `integration/` layout and reducer model; only defaults and starter content differ.
+
+- [Archetype Starters](archetypes.md) — when to use each shape, example paths, and `blusys create --archetype …`
+- [Connected products](connected-products.md) — edge node vs gateway, headless vs optional local UI (same model, different emphasis)
+- [Interaction design](interaction-design.md) — controller vs panel: tactility vs operational density
+
+At the terminal: `blusys create --list-archetypes` prints the same four options with short descriptions.
+
+## Guided quickstarts (after you know the shape)
 
 <div class="grid cards" markdown>
 
@@ -10,7 +20,7 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 
     ---
 
-    Build a display-first product with the reducer model, stock widgets, and the `interactive controller` archetype.
+    Host-first display product: reducer model, stock widgets, and the **interactive controller** archetype walkthrough.
 
     [:octicons-arrow-right-24: Interactive Quickstart](quickstart-interactive.md)
 
@@ -18,17 +28,11 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 
     ---
 
-    Build a connected device without a display using the same app runtime and reducer model.
+    Connected device without a display using the same runtime and reducer; aligns with **edge node**-style starters.
 
     [:octicons-arrow-right-24: Headless Quickstart](quickstart-headless.md)
 
 </div>
-
-## Archetypes
-
-- [Archetype Starters](archetypes.md) --- choose between `interactive controller`, `interactive panel`, `edge node`, and `gateway/controller`
-- [Connected products](connected-products.md) --- when to start from edge node vs gateway, headless vs local UI, and operational runbook notes
-- [Interaction design (interactive archetypes)](interaction-design.md) --- presentation, inputs, and fork guidance for controller vs panel
 
 ## Platform Layers
 
@@ -43,10 +47,10 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 
 The platform is optimized for these recurring product types:
 
-- **Interactive consumer devices** --- smart lights, dashboards, timers, speakers
-- **Interactive control surfaces** --- home panels, operator screens, compact controllers
-- **Headless connected appliances** --- sensor nodes, infrastructure devices, appliance controllers
-- **Industrial telemetry and control** --- fleet devices, energy monitors, production line systems
+- **Interactive consumer devices** — smart lights, dashboards, timers, speakers
+- **Interactive control surfaces** — home panels, operator screens, compact controllers
+- **Headless connected appliances** — sensor nodes, infrastructure devices, appliance controllers
+- **Industrial telemetry and control** — fleet devices, energy monitors, production line systems
 
 ## Requirements
 

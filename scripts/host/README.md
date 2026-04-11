@@ -126,6 +126,10 @@ Subsequent builds reuse the cache.
 2. Per-widget visual snapshot tests once a headless display driver is wired
    in alongside the SDL2 one.
 
+## PRD traceability
+
+The product requirements (**`PRD.md` §9 — Validation and developer loop**) expect host-runnable checks and curated CI. See **`docs/app/validation-host-loop.md`** for a mapping from each PRD bullet to this harness, `scripts/scaffold-smoke.sh`, and `.github/workflows/ci.yml`.
+
 ## Troubleshooting
 
 - **`Could not find a package configuration file provided by "PkgConfig"`** —

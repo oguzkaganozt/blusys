@@ -6,7 +6,7 @@ Active roadmap. This document defines the implementation sequence for the curren
 
 The companion product requirements document lives at `PRD.md`.
 
-**Program position:** Phase 4 (shared operational flows, stock screens, and framework capabilities) is **complete**. Phase 5 (interactive archetype references) is **complete**. Exit record: `docs/internals/phase-5-exit.md`. Phase 6 (connected archetype references) is **complete**. Exit record: `docs/internals/phase-6-exit.md`. Phase 7 (hardware breadth and platform packaging) is **complete**. Exit record: `docs/internals/phase-7-exit.md`. Next execution focus: **Phase 8** — ecosystem, archetype scaffolds, and docs.
+**Program position:** Phase 4 (shared operational flows, stock screens, and framework capabilities) is **complete**. Phase 5 (interactive archetype references) is **complete**. Exit record: `docs/internals/phase-5-exit.md`. Phase 6 (connected archetype references) is **complete**. Exit record: `docs/internals/phase-6-exit.md`. Phase 7 (hardware breadth and platform packaging) is **complete**. Exit record: `docs/internals/phase-7-exit.md`. Phase 8 (ecosystem, archetype scaffolds, and docs) is **complete**. Exit record: `docs/internals/phase-8-exit.md`.
 
 ## North Star
 
@@ -550,6 +550,10 @@ Support the hardware and packaging breadth that the proven product model actuall
 
 ## Phase 8: Ecosystem, Archetype Scaffolds, And Docs
 
+### Status
+
+**Closed** — 2026-04-11. See `docs/internals/phase-8-exit.md`.
+
 ### Goal
 
 Make the proven platform discoverable directly from `blusys create` and easy to adopt without repo archaeology.
@@ -573,6 +577,8 @@ Make the proven platform discoverable directly from `blusys create` and easy to 
 ## Cross-Cutting Workstream: Validation And Developer Loop
 
 This should not wait until the end. It should progress alongside the core phases.
+
+**Living map (PRD §9):** `docs/app/validation-host-loop.md` — how host smokes, scaffold smoke, and CI cover reducer and capability checks. **Release criteria checklist:** `docs/internals/prd-release-criteria.md`.
 
 Required validation direction:
 
