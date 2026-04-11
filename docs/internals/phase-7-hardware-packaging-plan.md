@@ -40,6 +40,7 @@ This section tracks progress against this plan in the repo. Update it when works
 - **Framework — layout hints (`components/blusys_framework/include/blusys/app/layout_surface.hpp`)**  
   - `blusys::app::layout::classify()` — surface size class, shell density, spacing/typography levels, theme packaging hint from `device_profile` or raw width/height (not a layout engine).
   - `blusys::app::layout::shell_chrome_for()` — framework-owned shell adaptation helper so archetype examples do not repeat raw size checks for status and tab chrome.
+  - `blusys::app::layout::suggested_theme_density()` — optional bridge from `surface_hints` to `blusys::ui::density` (when `BLUSYS_FRAMEWORK_HAS_UI`), aligned with stock presets.
 
 - **Workstreams D–E (partial) — Kconfig + wiring**  
   - `examples/quickstart/interactive_controller` — `main/Kconfig.projbuild` choice **ST7735** (default) vs **ST7789**; `controller_device_profile_for_build()` + `layout::classify` drives shell chrome; host SDL window size via CMake cache `BLUSYS_IC_HOST_DISPLAY_PROFILE` (0 = 240×240, 1 = 320×240).  
@@ -47,33 +48,12 @@ This section tracks progress against this plan in the repo. Update it when works
   - `examples/reference/gateway` — same ILI9341 / ILI9488 choice + layout-driven shell; WiFi options preserved in `Kconfig.projbuild`.  
   - Host CMake for these three examples adds `blusys_services/include` so `layout_surface.hpp` resolves on SDL builds.
 
-### Remaining
+### Ongoing (post-closure maintenance)
 
-- **Workstream A (remainder)**  
-  - Confirm ST7789 / SSD1306 HAL paths for recommended boards; add **SH1106** only if product validation requires it beyond SSD1306 (still deferred by default).  
-  - Optional: small `device_profile` extensions **only** if layout helpers need extra metadata (prefer deriving hints from existing `lcd` fields first).
-
-- **Workstream B — product-facing profiles (follow-up)**  
-  - Field-test pin/orientation defaults on real boards; adjust comments or defaults per validated modules if needed.
-
-- **Workstream C — layout adaptation helpers (follow-up)**  
-  - Optional: map `surface_hints` into theme token scaling or stock widget presets when repetition appears beyond the current shell-chrome helper.
-
-- **Workstreams D–E — references (remainder)**  
-  - `edge_node` — **done**: Kconfig `BLUSYS_EDGE_NODE_LOCAL_UI` enables `BLUSYS_APP_MAIN_DEVICE` + `profiles/ssd1306_128x64()` and minimal mono status UI in `main/ui/` (same `core/` + capabilities). Default remains headless. Project sets `BLUSYS_BUILD_UI` when the optional UI path is used.  
-  - `gateway` — optional **headless** vs interactive (large product fork; still deferred).  
-  - **Gateway packaging** — `partitions.csv` added (aligned with other 4 MB + SPIFFS quickstarts).  
-  - Hardware proof: run the same `core/` on at least two physical profile variants per archetype (manual).
-
-- **Workstream F — docs and discoverability**  
-  - **Done**: `docs/app/profiles.md` extended with Phase 7 profile table, layout hints, Kconfig pointers, and archetype→profile table. No new nav entries (`profiles.md` already listed in `mkdocs.yml` / `inventory.yml`).
-
-- **Workstream G — validation**  
-  - **Done**: targeted host and device builds cover the non-default Phase 7 variants (`ST7789`, `ILI9488`, and `SSD1306` local UI). Repo automation includes `scripts/build-phase7-variants.sh` plus dedicated PR/nightly jobs across `esp32`, `esp32c3`, and `esp32s3` so these paths are enforced instead of relying on ad hoc manual builds.
-  - Manual hardware checklist per new display family is still advisable before calling a profile “recommended” for a specific board module.
-
-- **Exit criteria (see below)**  
-  - Codebase-level exit criteria are met: the reference products build across multiple profiles without app rewrites, optional connected local surface is demonstrated, and Phase 7 profile variants are covered by repo automation.
+- **Hardware sign-off:** Profile header comments document validation knobs; teams should still spot-check ST7789 / SSD1306 / ILI paths on physical boards before treating defaults as product-binding for a specific module.
+- **SH1106:** Not added as a separate HAL driver or `profiles/sh1106.hpp` — deferred until product hardware requires it beyond SSD1306 (see `docs/internals/phase-7-exit.md`).
+- **Gateway:** Optional large **headless** vs **interactive** product fork remains out of scope here; see Phase 8 for ecosystem packaging.
+- **Manual matrix:** Release checklist in `docs/internals/phase-7-exit.md` — automated CI does not replace on-device validation.
 
 ## Phase Goal
 
@@ -106,25 +86,11 @@ The following decisions are already locked by `PRD.md` and `ROADMAP.md` and must
 
 ## Current Repo Baseline
 
-The current repo has enough product-model maturity to plan Phase 7, but not enough hardware breadth to consider the packaging problem solved.
+Phase 7 framework and reference wiring are landed: product-facing headers exist for **`ST7789`**, **`SSD1306`**, **`ILI9341`**, and **`ILI9488`** alongside **`ST7735`**; **`layout_surface.hpp`** provides classification, shell chrome helpers, optional **`suggested_theme_density()`**, and documented rotation vs resolution responsibilities; archetype examples expose Kconfig (or CMake host) switches so the same `core/` builds against alternate profiles; CI runs `scripts/build-phase7-variants.sh` across targets.
 
-What already exists:
+**SH1106** remains optional: the roadmap allows “SSD1306 or SH1106”; the repo standardizes on **SSD1306** until hardware validation demands a dedicated driver and profile.
 
-- `blusys::app` runtime, reducer model, profiles, and entry macros are real
-- the current product-facing profile surface already includes `host`, `headless`, and the canonical `st7735` device profile
-- the current `device_profile` already centralizes framework-owned LCD, UI, encoder, button, and brightness bring-up
-- the shell, widget, theme, capability, and flow layers already exist from the Phase 0 through Phase 6 foundation
-- the HAL LCD layer already exposes `ST7789`, `SSD1306`, `NT35510`, and `ST7735` driver identifiers; **`ILI9341` and `ILI9488` are now public enum values with in-tree SPI panel support** (see **Implementation status**)
-- the UI service already supports both RGB565-class panels and mono page-format panels
-
-What is still missing or incomplete:
-
-- product-facing profiles do not yet exist for `ST7789`, `SSD1306` or `SH1106`, `ILI9341`, or `ILI9488` (**HAL drivers for ILI9341/ILI9488 are in place; framework `profiles/*.hpp` not yet added**)
-- the lower-tier LCD enum does not yet expose **`SH1106`** as a public driver choice (optional; prefer SSD1306 unless hardware forces otherwise)
-- there is no small app-facing layout adaptation layer for density, orientation, and resolution changes
-- archetype packaging is still implicit in examples and reference apps rather than formalized as recommended profile and composition guidance
-
-This means Phase 7 is partly framework packaging work and partly prerequisite lower-tier enablement work.
+Formal closure and evidence are recorded in **`docs/internals/phase-7-exit.md`**. Deeper archetype **scaffolds** and docs packaging are **Phase 8** work.
 
 ## Phase Deliverables
 

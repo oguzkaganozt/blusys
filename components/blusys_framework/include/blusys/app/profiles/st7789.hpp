@@ -7,6 +7,13 @@
 // same target-gated pattern as st7735.hpp for consistency across dev kits.
 //
 // Override any field after construction (offsets, mirrors, pins, backlight).
+//
+// Hardware validation (before treating defaults as board-specific “recommended”):
+// - Image offset: set lcd.spi.x_offset / y_offset if the panel shows a colored
+//   bar or shifted viewport (common on bare modules).
+// - Inversion / color: toggle lcd.invert_color or adjust BGR if red/blue swap.
+// - Backlight: set lcd.spi.bl_pin and drive brightness if your PCB wires BL.
+// - SPI clock: lower pclk_hz if you see tearing or bus errors on long wires.
 
 #include "blusys/app/platform_profile.hpp"
 

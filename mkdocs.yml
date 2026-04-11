@@ -151,6 +151,7 @@ nav:
       - "Phase 6 Archetype Briefs": internals/phase-6-archetype-briefs.md
       - "Phase 6 Exit": internals/phase-6-exit.md
       - Phase 7 Hardware Packaging Plan: internals/phase-7-hardware-packaging-plan.md
+      - "Phase 7 Exit": internals/phase-7-exit.md
       - Phase 8 Ecosystem, Archetype Scaffolds, And Docs Plan: internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
       - Target Matrix: internals/target-matrix.md
       - Testing:

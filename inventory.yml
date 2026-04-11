@@ -1411,6 +1411,10 @@ docs:
     section: internals
     visibility: public
 
+  - path: docs/internals/phase-7-exit.md
+    section: internals
+    visibility: public
+
   - path: docs/internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
     section: internals
     visibility: public

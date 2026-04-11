@@ -3,6 +3,14 @@
 // Small layout and packaging hints derived from display geometry and panel
 // kind — not a responsive layout engine. Use with theme tokens and shell
 // config so one product can adjust density when the profile changes.
+//
+// Rotation and resolution:
+// - Panel rotation (swap_xy, mirror_*) belongs in device_profile / HAL: the
+//   logical width and height exposed here are already the post-transform size
+//   the UI uses (e.g. 320×240 landscape after swap_xy on a 240×320 ST7789).
+// - classify() uses those logical dimensions and bits_per_pixel; it does not
+//   re-apply hardware rotation. Keep orientation fixes in the profile, not in
+//   screens.
 
 #include "blusys/app/platform_profile.hpp"
 
@@ -109,5 +117,32 @@ inline shell_chrome shell_chrome_for(const device_profile &profile)
 {
     return shell_chrome_for(classify(profile));
 }
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+
+#include "blusys/framework/ui/theme.hpp"
+
+// Maps packaging hints from classify() to a suggested theme_tokens::density_mode.
+// Aligns with presets::expressive_dark() (comfortable), operational_light()
+// (compact), and presets::oled() (compact). Products can copy this into a
+// custom theme when the display profile changes at integration time.
+inline blusys::ui::density suggested_theme_density(const surface_hints &h)
+{
+    switch (h.theme_hint) {
+    case theme_packaging_hint::expressive:
+        return blusys::ui::density::comfortable;
+    case theme_packaging_hint::operational:
+    case theme_packaging_hint::monochrome:
+    default:
+        return blusys::ui::density::compact;
+    }
+}
+
+inline blusys::ui::density suggested_theme_density(const device_profile &profile)
+{
+    return suggested_theme_density(classify(profile));
+}
+
+#endif  // BLUSYS_FRAMEWORK_HAS_UI
 
 }  // namespace blusys::app::layout

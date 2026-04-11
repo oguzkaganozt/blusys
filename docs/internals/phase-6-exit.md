@@ -35,7 +35,7 @@ Closure record for [Phase 6: Connected Archetype References](../internals/phase-
 
 - **PR CI (ESP-IDF):** `inventory.yml` `ci_pr: true` includes `edge_node`; `scripts/build-from-inventory.sh` builds PR examples per target.
 - **Host harness:** `operational_phase_smoke` mirrors edge node `compute_phase`; CI builds and runs host smokes (see `.github/workflows/ci.yml`). Host builds for `edge_node` and `gateway` via `host/CMakeLists.txt` are validated in CI.
-- **Phase 7 display variants:** `scripts/build-phase7-variants.sh` includes edge node (SSD1306 local UI) and gateway (ILI9488).
+- **Phase 7 display variants:** `scripts/build-phase7-variants.sh` includes edge node (SSD1306 local UI) and gateway (ILI9488). Phase 7 closure: `docs/internals/phase-7-exit.md`.
 
 ### Manual (recommended per release)
 

@@ -6,7 +6,7 @@ Active roadmap. This document defines the implementation sequence for the curren
 
 The companion product requirements document lives at `PRD.md`.
 
-**Program position:** Phase 4 (shared operational flows, stock screens, and framework capabilities) is **complete**. Phase 5 (interactive archetype references) is **complete**. Exit record: `docs/internals/phase-5-exit.md`. Phase 6 (connected archetype references) is **complete**. Exit record: `docs/internals/phase-6-exit.md`. Next execution focus: **Phase 7** — hardware breadth and platform packaging.
+**Program position:** Phase 4 (shared operational flows, stock screens, and framework capabilities) is **complete**. Phase 5 (interactive archetype references) is **complete**. Exit record: `docs/internals/phase-5-exit.md`. Phase 6 (connected archetype references) is **complete**. Exit record: `docs/internals/phase-6-exit.md`. Phase 7 (hardware breadth and platform packaging) is **complete**. Exit record: `docs/internals/phase-7-exit.md`. Next execution focus: **Phase 8** — ecosystem, archetype scaffolds, and docs.
 
 ## North Star
 
@@ -526,6 +526,8 @@ Prove the platform can build dependable connected products without adding a sepa
 - a product team can fork either archetype and quickly produce a differentiated product
 
 ## Phase 7: Hardware Breadth And Platform Packaging
+
+**Closed** — 2026-04-11. See `docs/internals/phase-7-exit.md`.
 
 ### Goal
 

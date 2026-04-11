@@ -7,6 +7,14 @@
 // status UIs; 128×32 for ultra-compact encoder or ticker-style surfaces.
 //
 // Override any field after construction.
+//
+// Hardware validation:
+// - I2C address: many modules use 0x3C; some use 0x3D — set lcd.i2c.dev_addr.
+// - Pins: defaults match examples/validation/lcd_ssd1306_basic per target;
+//   override sda/scl for your PCB.
+// - Some clones need lcd.invert_color = true for correct contrast.
+// - SH1106-based modules are not the same controller; see docs/app/profiles.md
+//   — use SSD1306 unless hardware requires a dedicated SH1106 profile.
 
 #include "blusys/app/platform_profile.hpp"
 
