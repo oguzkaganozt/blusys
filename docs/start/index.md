@@ -41,7 +41,7 @@ At the terminal: `blusys create --list-archetypes` prints the same four options 
 | [App](../app/index.md) | Product-facing API: reducer model, views, capabilities, profiles | **Start here** for new products |
 | [Services](../services/index.md) | Runtime services: WiFi, HTTP, MQTT, OTA, storage, display | When you need direct service access beyond capabilities |
 | [HAL + Drivers](../hal/index.md) | Hardware abstraction: GPIO, UART, SPI, I2C, sensors, actuators | When you need direct hardware control |
-| [Internals](../internals/index.md) | Architecture, guidelines, testing infrastructure | When contributing to the platform itself |
+| [Internals](../internals/index.md) | Architecture, guidelines, target matrix, testing | When contributing to the platform itself |
 
 ## Product Families
 

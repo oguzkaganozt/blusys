@@ -10,7 +10,7 @@ This page maps **`PRD.md`** (repository root) **§9 Validation And Developer Loo
 | **Capability integration tests with simulated runtime-service events** | `capability_contract_smoke` (event ID bands), `panel_connectivity_map_smoke` (connectivity `map_event` path), and the **`connected_headless_host`** harness (full headless `app_spec` + capability host stubs — run locally; see `scripts/host/README.md`). |
 | **Screenshot or visual smoke where practical** | `widget_kit_demo`, `app_interactive_demo`, and host builds of archetype examples (SDL). Not automated as image snapshots in CI today. |
 | **Scaffold smoke for generated starters** | `scripts/scaffold-smoke.sh` (also run in CI after host smokes). |
-| **Curated CI aligned with the canonical product path** | `.github/workflows/ci.yml` — layering lint, inventory, host smokes, docs strict build, `build-from-inventory.sh` for `ci_pr=true` examples, Phase 7 variants, QEMU subset. |
+| **Curated CI aligned with the canonical product path** | `.github/workflows/ci.yml` — layering lint, inventory, host smokes, docs strict build, `build-from-inventory.sh` for `ci_pr=true` examples, multi-profile display builds (e.g. ST7735 variants), QEMU subset. |
 | **Fast host iteration** | `blusys host-build` for projects with `host/CMakeLists.txt`; monorepo `blusys host-build` (no path) builds `scripts/host` harnesses. |
 
 ## Host harness smokes (quick reference)
@@ -46,4 +46,4 @@ Creates temporary projects for all archetypes (plus gateway `--starter interacti
 - [Reducer Model](reducer-model.md)
 - [Capability Composition](capability-composition.md)
 - `scripts/host/README.md` — install and binary list
-- [PRD release criteria status](../internals/prd-release-criteria.md)
+- `PRD.md` (repository root) — release criteria and validation expectations

@@ -140,31 +140,15 @@ nav:
           - DHT: hal/dht.md
           - Buzzer: hal/buzzer.md
   - Internals:
-      - internals/index.md
-      - Architecture: internals/architecture.md
-      - Guidelines: internals/guidelines.md
-      - "PRD release criteria (status)": internals/prd-release-criteria.md
-      - "Phase 0 Foundation Plan": internals/phase-0-v7-foundation-plan.md
-      - "Phase 0 Exit": internals/phase-0-exit.md
-      - "Phase 3 Widget Library Gap Matrix": internals/phase-3-widget-library-gap-matrix.md
-      - Phase 5 Interactive Archetypes Plan: internals/phase-5-interactive-archetypes-plan.md
-      - "Phase 5 Exit": internals/phase-5-exit.md
-      - Phase 6 Connected Archetypes Plan: internals/phase-6-connected-archetypes-plan.md
-      - "Phase 6 Archetype Briefs": internals/phase-6-archetype-briefs.md
-      - "Phase 6 Exit": internals/phase-6-exit.md
-      - Phase 7 Hardware Packaging Plan: internals/phase-7-hardware-packaging-plan.md
-      - "Phase 7 Exit": internals/phase-7-exit.md
-      - Phase 8 Ecosystem, Archetype Scaffolds, And Docs Plan: internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
-      - "Phase 8 Exit": internals/phase-8-exit.md
-      - V2 Plan: internals/v2-plan.md
-      - Target Matrix: internals/target-matrix.md
+      - Core:
+          - internals/index.md
+          - Architecture: internals/architecture.md
+          - Guidelines: internals/guidelines.md
+          - Target Matrix: internals/target-matrix.md
+          - "V2 plan": internals/v2-plan.md
+      - "Display & integration":
+          - "LVGL integration (ST7735, resolved)": internals/lvgl-st7735-integration.md
       - Testing:
           - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md
           - Concurrency Tests: internals/testing/concurrency-tests.md
           - Validation Template: internals/testing/hardware-validation-report-template.md
-  - Archive:
-      - archive/index.md
-      - V6 to V7 Migration: archive/migration-v6-v7.md
-      - V5 to V6 Migration: archive/migration-v5-v6.md
-      - V6 Validation Report: archive/validation-report-v6.md
-      - USB Support Plan: archive/plans/usb-support-plan.md

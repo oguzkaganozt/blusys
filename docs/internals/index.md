@@ -1,19 +1,17 @@
 # Internals
 
-Platform architecture, development guidelines, and testing infrastructure.
+Platform architecture, development guidelines, display notes, testing procedures, and other engineering references.
 
-## Architecture
+## Core
 
 - [Architecture](architecture.md) --- three-tier model, component dependencies, design rationale
 - [Guidelines](guidelines.md) --- API design rules, development workflow, documentation standards
-- [Phase 0 Foundation Plan](phase-0-v7-foundation-plan.md) --- v7 foundation scope and workstreams
-- [Phase 0 Exit](phase-0-exit.md) --- closure checklist against that plan
-- [Phase 3 Widget Library Gap Matrix](phase-3-widget-library-gap-matrix.md) --- roadmap widget inventory vs repository (Phase 3 expansion)
-- [Phase 5 Interactive Archetypes Plan](phase-5-interactive-archetypes-plan.md) --- implementation plan for the interactive controller and panel reference phase
-- [Phase 6 Connected Archetypes Plan](phase-6-connected-archetypes-plan.md) --- implementation plan for the edge node and gateway/controller reference phase
-- [Phase 7 Hardware Packaging Plan](phase-7-hardware-packaging-plan.md) --- implementation plan for validated display and profile breadth
-- [Phase 8 Ecosystem, Archetype Scaffolds, And Docs Plan](phase-8-ecosystem-archetype-scaffolds-docs-plan.md) --- implementation plan for archetype-first onboarding and docs packaging
 - [Target Matrix](target-matrix.md) --- per-module target support and requirements
+- [V2 plan](v2-plan.md) --- post-reset platform improvements (scaffold, host tests, widgets, hardening)
+
+## Display & integration
+
+- [LVGL integration (ST7735, resolved)](lvgl-st7735-integration.md) --- root-cause notes for SPI DMA + LVGL stride on ESP32-C3
 
 ## Testing
 

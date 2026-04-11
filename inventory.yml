@@ -8,7 +8,7 @@
 #   modules[].support:   supported | advanced | internal | deprecated
 #   examples[].category: quickstart | reference | validation
 #   examples[].visibility: public | internal
-#   docs[].section:      start | app | services | hal_drivers | internals | archive
+#   docs[].section:      start | app | services | hal_drivers | internals
 
 # ---------------------------------------------------------------------------
 # Modules
@@ -1086,6 +1086,11 @@ examples:
 # Docs
 # ---------------------------------------------------------------------------
 docs:
+  # --- Site home ---
+  - path: docs/index.md
+    section: start
+    visibility: public
+
   # --- Start ---
   - path: docs/start/index.md
     section: start
@@ -1383,59 +1388,11 @@ docs:
     section: internals
     visibility: public
 
-  - path: docs/internals/prd-release-criteria.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-0-v7-foundation-plan.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-0-exit.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-3-widget-library-gap-matrix.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-5-interactive-archetypes-plan.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-5-exit.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-6-connected-archetypes-plan.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-6-archetype-briefs.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-6-exit.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-7-exit.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-8-ecosystem-archetype-scaffolds-docs-plan.md
-    section: internals
-    visibility: public
-
-  - path: docs/internals/phase-8-exit.md
-    section: internals
-    visibility: public
-
   - path: docs/internals/v2-plan.md
     section: internals
     visibility: public
 
-  - path: docs/internals/phase-7-hardware-packaging-plan.md
+  - path: docs/internals/lvgl-st7735-integration.md
     section: internals
     visibility: public
 
@@ -1453,25 +1410,4 @@ docs:
 
   - path: docs/internals/testing/hardware-validation-report-template.md
     section: internals
-    visibility: public
-
-  # --- Archive ---
-  - path: docs/archive/index.md
-    section: archive
-    visibility: public
-
-  - path: docs/archive/migration-v6-v7.md
-    section: archive
-    visibility: public
-
-  - path: docs/archive/migration-v5-v6.md
-    section: archive
-    visibility: public
-
-  - path: docs/archive/validation-report-v6.md
-    section: archive
-    visibility: public
-
-  - path: docs/archive/plans/usb-support-plan.md
-    section: archive
     visibility: public

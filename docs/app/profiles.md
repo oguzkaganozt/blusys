@@ -102,7 +102,7 @@ The first canonical interactive hardware profile. Framework-owned display and UI
 
 The same `app_spec`, State, Actions, and `update()` compile for all entries. Swap the macro at the bottom of `integration/app_main.cpp` to switch targets.
 
-## Phase 7 device profile headers
+## Stock device profile headers
 
 Beyond ST7735, the framework ships small **data-first** profile factories under `blusys/app/profiles/`. Override fields after construction for your PCB.
 
@@ -118,7 +118,7 @@ SPI defaults use target-gated pins where common; I2C defaults follow the `lcd_ss
 
 ### SH1106
 
-Many small OLED modules use an SSD1306-compatible controller; some use **SH1106** (similar I2C wiring, different memory layout). The framework ships **SSD1306** as the Phase 7 mono profile. Add a dedicated SH1106 HAL + profile only when product hardware cannot use the SSD1306 driver path — see `docs/internals/phase-7-exit.md`.
+Many small OLED modules use an SSD1306-compatible controller; some use **SH1106** (similar I2C wiring, different memory layout). The framework ships **SSD1306** as the mono OLED profile. Add a dedicated SH1106 HAL + profile only when product hardware cannot use the SSD1306 driver path.
 
 ## Layout hints
 

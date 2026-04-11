@@ -16,7 +16,7 @@ blusys_pwm_close(pwm);
 ## Common Mistakes
 
 - choosing a pin that is not safe for PWM output on the board
-- expecting more than four concurrent PWM handles from the current Phase 4 implementation
+- expecting more than four concurrent PWM handles from the current HAL implementation
 - passing raw percentages such as `50` when you meant `500` per-mille
 
 ## Target Support

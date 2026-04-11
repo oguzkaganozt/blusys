@@ -24,14 +24,13 @@ except ImportError:
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 DOC_DIRS = [
+    REPO_ROOT / "docs",
     REPO_ROOT / "docs" / "start",
     REPO_ROOT / "docs" / "app",
     REPO_ROOT / "docs" / "services",
     REPO_ROOT / "docs" / "hal",
     REPO_ROOT / "docs" / "internals",
     REPO_ROOT / "docs" / "internals" / "testing",
-    REPO_ROOT / "docs" / "archive",
-    REPO_ROOT / "docs" / "archive" / "plans",
 ]
 
 

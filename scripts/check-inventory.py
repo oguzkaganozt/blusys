@@ -30,7 +30,7 @@ VALID_SUPPORT = {"supported", "advanced", "internal", "deprecated"}
 VALID_TARGETS = {"esp32", "esp32c3", "esp32s3"}
 VALID_CATEGORIES = {"quickstart", "reference", "validation"}
 VALID_VISIBILITY = {"public", "internal"}
-VALID_SECTIONS = {"start", "app", "services", "hal_drivers", "internals", "archive"}
+VALID_SECTIONS = {"start", "app", "services", "hal_drivers", "internals"}
 
 
 def load_inventory():

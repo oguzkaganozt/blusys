@@ -121,7 +121,7 @@ Subsequent builds reuse the cache.
 ## What's coming next
 
 1. Per-widget visual snapshot tests once a headless display driver is wired
-   in alongside the SDL2 one. See [`docs/plans/v2-plan.md`](../../docs/plans/v2-plan.md) item 7.
+   in alongside the SDL2 one. See [`docs/internals/v2-plan.md`](../../docs/internals/v2-plan.md) item 7.
 
 ## PRD traceability
 

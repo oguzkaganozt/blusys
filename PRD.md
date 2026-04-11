@@ -4,8 +4,6 @@
 
 Active product requirements document. This file defines the target product shape for the current platform reset and is the source of truth for scope, goals, and constraints.
 
-The companion implementation plan lives at `ROADMAP.md`.
-
 ## Problem Statement
 
 Blusys already has a coherent internal three-tier architecture, but too much runtime wiring, UI setup, lifecycle management, and low-level orchestration still leaks into product code. The result is:
@@ -404,7 +402,6 @@ Required top-level flow:
 - `Services`
 - `HAL + Drivers`
 - `Internals`
-- `Archive`
 
 Docs should emphasize the recommended product path first and keep advanced surfaces clearly marked.
 

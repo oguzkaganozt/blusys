@@ -1,64 +1,52 @@
 # CLAUDE.md
 
-This file provides guidance for working in this repository during the current product-platform reset.
+Guidance for working in this repository during the **product-platform reset** (v7 path). When in doubt, trust executable sources over prose.
 
-## Read First
+## Read first
 
-Before changing public API, docs, repo structure, examples, scaffolding, or project status, read these files first:
+Before changing public API, docs, repo structure, examples, scaffolding, or project status, read:
 
-- `PRD.md` — canonical product requirements for the current platform reset
-- `ROADMAP.md` — canonical execution roadmap for the current platform reset
-- `docs/internals/architecture.md` — current code architecture and tiering
-- `docs/internals/guidelines.md` — public API design rules and contribution workflow
-- `inventory.yml` — module, example, and doc classification manifest
+| File | Purpose |
+|------|---------|
+| `PRD.md` | Product requirements for the reset |
+| `docs/internals/architecture.md` | Architecture and tiering |
+| `docs/internals/guidelines.md` | Public API rules and contribution workflow |
+| `inventory.yml` | Module, example, and doc manifest |
 
-Trust executable sources over prose when they disagree: the `blusys` shell script, `components/*/CMakeLists.txt`, example `idf_component.yml` files, and `.github/workflows/*.yml` are authoritative about current behavior.
+Authoritative when behavior matters: the `blusys` shell script, `components/*/CMakeLists.txt`, example `idf_component.yml` files, and `.github/workflows/*.yml`.
 
-## Repository Mission
+## Repository mission
 
-This repository has one active mission: execute the current product-platform reset.
+**Single active mission:** ship the product-platform reset.
 
-The reset is a breaking redefinition of the product-facing surface. The goal is to make product code dramatically simpler, move complexity into the framework, preserve low-level escape hatches as advanced paths, and reduce repo-wide maintenance burden.
+That reset is a breaking redefinition of the product-facing surface: smaller app code, more logic in the framework, low-level escape hatches for advanced use, less repo-wide churn.
 
-This repository is not trying to become a cleaner generic ESP32 framework. It is trying to become the internal operating system for our recurring product families.
+This is **not** aiming to be a cleaner generic ESP32 framework. It is the internal OS for recurring product families. Prefer reusable product flows over module sprawl.
 
-When making decisions, favor reusable product operating flows over generic module sprawl.
+## Locked decisions
 
-## Locked Decisions
+Treat as constraints unless the user explicitly changes them:
 
-These are already decided and should be treated as constraints unless explicitly changed by the user:
+- Product-facing namespace: `blusys::app` (C++ only on the product path)
+- App model: reducer-style `update(ctx, state, action)`; reducers mutate state in place
+- Core runtime modes: **`interactive`** and **`headless`** only
+- Default onboarding: **host-first** interactive; secondary path: **headless-first** hardware
+- “Consumer” / “industrial” are **product lenses**, not framework branches
+- Four archetypes: interactive controller, interactive panel, edge node, gateway/controller
+- First canonical interactive hardware profile: **generic SPI ST7735** (ESP32, ESP32-C3, ESP32-S3)
+- Product-facing term: **`capabilities`**, not “bundles”
+- Hardware and capability configuration: **code-first**; Kconfig is advanced tuning
+- Raw LVGL: only inside custom widgets or an explicit custom view scope; outward UI behavior goes through **actions** and approved framework behavior
+- Scaffold: single local component **`main/`** with fixed layout **`core/`**, **`ui/`**, **`integration/`** (behavior · rendering · wiring and capability calls)
+- Three-tier architecture stays; HAL, services, `blusys_ui`, and low-level framework primitives remain **escape hatches**
 
-- Product-facing namespace is `blusys::app`
-- Product-facing path is C++-only
-- App logic model is reducer-style: `update(ctx, state, action)`
-- Reducers mutate state in place
-- Default onboarding is host-first interactive
-- Secondary canonical path is headless-first hardware
-- The only core runtime modes are `interactive` and `headless`
-- Consumer and industrial are product lenses, not framework branches
-- The four canonical archetypes are `interactive controller`, `interactive panel`, `edge node`, and `gateway/controller`
-- First canonical interactive hardware profile is generic SPI ST7735
-- ST7735 profile should support ESP32, ESP32-C3, and ESP32-S3
-- Product-facing term is `capabilities`, not `bundles`
-- Hardware and capability configuration for the product path is code-first; Kconfig is advanced tuning only
-- Raw LVGL is allowed only inside custom widget implementations or explicit custom view scope
-- UI outward behavior must go only through actions and approved framework behavior
-- Scaffolded product apps use `main/` as the single local ESP-IDF component
-- Scaffolded product apps use the fixed internal structure `core/`, `ui/`, and `integration/`
-- `core/` owns product behavior, `ui/` owns rendering and widgets, `integration/` owns wiring and runtime-service integration
-- Capability work is requested by reducer-driven actions and translated into capability calls in `integration/`
-- The three-tier architecture stays in place
-- HAL, runtime services, `blusys_ui`, and low-level framework primitives remain available as advanced escape hatches
+## Architecture constraints
 
-## Architecture Constraints
-
-The three-tier structure remains the base architecture:
-
-- `components/blusys/` — HAL + drivers (C)
-- `components/blusys_services/` — runtime substrate (C)
-- `components/blusys_framework/` — product framework (C++)
-
-Dependency direction remains:
+| Component | Role |
+|-----------|------|
+| `components/blusys/` | HAL + drivers (C) |
+| `components/blusys_services/` | Runtime substrate (C) |
+| `components/blusys_framework/` | Product framework (C++) |
 
 ```text
 blusys_framework -> blusys_services -> blusys
@@ -66,66 +54,29 @@ blusys_framework -> blusys_services -> blusys
 
 Do not collapse tiers as part of this refactor.
 
-## Refactor Priorities
+## Refactor priorities
 
-When deciding what to work on, prioritize these outcomes:
-
-1. Make the product-facing app path smaller and simpler.
-2. Remove framework and UI lifecycle plumbing from normal app code.
-3. Make host-first interactive onboarding actually runnable by default.
-4. Build the headless path on the same app runtime model.
-5. Build reusable product operating flows instead of one-off app wiring.
-6. Replace low-level product orchestration with framework-owned defaults and capabilities.
-7. Shrink docs, examples, and CI burden after the new path is real.
+1. Shrink and simplify the product-facing app path  
+2. Remove framework/UI lifecycle plumbing from normal app code  
+3. Make host-first interactive onboarding runnable by default  
+4. Build headless on the same app runtime model  
+5. Reusable operating flows instead of one-off wiring  
+6. Framework-owned defaults and capabilities instead of ad hoc orchestration  
+7. Trim docs, examples, and CI once the new path is real  
 
 ## Archetypes
 
-The reset should stay grounded in the four canonical archetypes:
+Ground work in the four canonical archetypes (interactive controller, interactive panel, edge node, gateway/controller). Judge changes by whether they make those shapes easier on **one** shared operating model.
 
-- interactive controller
-- interactive panel
-- edge node
-- gateway/controller
+## Product model target
 
-Work should be evaluated against whether it makes those archetypes easier to build on one shared operating model.
+**App owns:** `state`, `action`, `update(ctx, state, action)`, screens/views, optional hardware profiles, optional capabilities.
 
-## Product Model Target
+**Framework owns:** boot/shutdown, runtime loop and tick, routing, feedback, LVGL lifecycle and locks, screen activation/overlays, host/device/headless adapters, input bridges, default runtime-service orchestration, reusable product flows.
 
-The intended v7 product path centers on these app-owned concepts:
+**Normal product code should not touch directly:** `runtime.init`, `route_sink`, `feedback_sink`, `blusys_ui_lock`, `lv_screen_load`, raw LCD bring-up on the canonical interactive path, raw Wi-Fi orchestration on the canonical connected path.
 
-- `state`
-- `action`
-- `update(ctx, state, action)`
-- screens and views
-- optional hardware profiles
-- optional capabilities
-
-The framework should own:
-
-- app boot and shutdown
-- runtime loop and tick cadence
-- navigation and routing ownership
-- feedback plumbing and defaults
-- LVGL lifecycle and lock discipline
-- screen activation and overlays
-- host, device, and headless adapters
-- common input bridges
-- common runtime-service orchestration for the default path
-- reusable operating flows for common product behaviors
-
-Normal product code should not need to touch these concepts directly:
-
-- `runtime.init`
-- `route_sink`
-- `feedback_sink`
-- `blusys_ui_lock`
-- `lv_screen_load`
-- raw LCD bring-up in the canonical interactive path
-- raw Wi-Fi lifecycle orchestration in the canonical connected path
-
-## Scaffold Shape
-
-The canonical scaffold shape for product apps is:
+## Scaffold shape
 
 ```text
 my_project/
@@ -140,52 +91,30 @@ my_project/
     └── integration/
 ```
 
-Do not introduce competing default project layouts for different archetypes.
+Do not introduce competing default layouts per archetype.
 
-## UI Rules For v7 Work
+## UI rules (v7)
 
-The framework should be strongly opinionated, but custom UI composition must remain possible inside defined boundaries.
+**Preferred layers:** (1) stock `blusys::app` widgets, (2) product widgets following the widget contract, (3) bounded raw LVGL for advanced rendering.
 
-Preferred UI layers:
+**Product widgets:** lightweight contract — `config`/`props`, semantic callbacks or `dispatch(action)`, theme tokens only for visuals, setters own transitions where needed, standard focus/disabled behavior, raw LVGL inside the implementation only.
 
-1. Stock `blusys::app` widgets and helpers
-2. Product-owned widgets that follow the Blusys widget contract
-3. Explicit bounded raw LVGL blocks for advanced rendering
+**Raw LVGL must not:** own app screens, take UI locks, call runtime services from UI, or manipulate routing/runtime internals.
 
-Do not introduce a heavy inheritance tree for user widgets.
+## Code direction
 
-Instead, product-owned widgets should follow a lightweight contract:
+- Smallest change toward the v7 target  
+- Delete boilerplate; do not wrap it  
+- Keep escape hatches available but clearly separated  
+- No compatibility shims unless migration truly needs them  
+- No generic abstractions that do not reduce real app burden  
 
-- public `config` or `props` struct
-- semantic callbacks or direct `dispatch(action)` only
-- theme tokens as the only visual source
-- setters own state transitions when needed
-- standard focus and disabled behavior for interactive widgets
-- raw LVGL stays inside the widget implementation
+## CLI reference
 
-Raw LVGL is allowed only in approved custom scopes. It must not:
-
-- manage app screens directly
-- manage UI locks directly
-- call runtime services directly from UI code
-- manipulate routing or runtime internals directly
-
-## Code Direction
-
-Follow these implementation preferences during the refactor:
-
-- prefer the smallest change that moves the codebase toward the v7 target
-- remove boilerplate rather than wrapping it in more boilerplate
-- keep low-level escape hatches available, but clearly separate them from the recommended path
-- avoid compatibility shims unless they are strictly needed for staged migration
-- avoid introducing generic abstractions that do not remove real app-code burden
-
-## Current Commands
-
-All normal build and validation commands still go through the `blusys` CLI.
+Normal build and validation go through **`blusys`**.
 
 ```bash
-blusys create [--starter <headless|interactive>] [path]
+blusys create [--archetype <name>] [--starter <headless|interactive>] [--list-archetypes] [path]
 blusys build          [project] [esp32|esp32c3|esp32s3]
 blusys flash          [project] [port] [esp32|esp32c3|esp32s3]
 blusys monitor        [project] [port] [esp32|esp32c3|esp32s3]
@@ -198,7 +127,7 @@ blusys clean          [project] [esp32|esp32c3|esp32s3]
 blusys fullclean      [project]
 blusys build-examples
 blusys host-build     [project]
-blusys example <name> [build|flash|monitor|run] [port] [target]
+blusys example <name> [command] [args...]   # e.g. example quickstart/interactive_controller run /dev/ttyACM0 esp32s3
 blusys qemu           [project] [esp32|esp32c3|esp32s3]
 blusys install-qemu
 blusys lint
@@ -207,75 +136,44 @@ blusys version
 blusys update
 ```
 
-These commands reflect current repository behavior, not the final v7 shape. Part of the refactor is to simplify scaffolding and the product creation flow.
+Commands reflect **current** repo behavior; scaffolding may still simplify over time.
 
-## Validation Guidance
+## Validation
 
-Use these checks proportionally to the change:
+Proportionate checks:
 
-1. `blusys lint` for layering-sensitive work
-2. targeted `blusys build` or `blusys host-build` for the affected path
-3. `mkdocs build --strict` for docs or nav changes
-4. `python scripts/check-inventory.py` when adding or removing examples, docs, or modules
-5. `python scripts/example-health.py` when modifying example structure
-6. broader nightly validation only when the touched area warrants it
+1. `blusys lint` — layering-sensitive changes  
+2. `blusys build` or `blusys host-build` — affected paths  
+3. `mkdocs build --strict` — docs/nav  
+4. `python scripts/check-inventory.py` — examples, docs, or modules added/removed  
+5. `python scripts/example-health.py` — example layout changes  
+6. Broader nightly validation — only when warranted  
 
-PR CI only builds examples marked `ci_pr=true` in `inventory.yml` (currently the archetype quickstarts). Full example validation runs nightly.
+PR CI builds examples with `ci_pr=true` in `inventory.yml` (archetype quickstarts). Full examples run nightly.
 
-When the refactor changes public app flow, prioritize validating:
+After public app-flow changes, prioritize: host-first interactive, headless, scaffolded product flow, ST7735 builds on all three targets.
 
-- host-first interactive path
-- headless path
-- scaffolded product flow
-- ST7735 compile support across all three targets
+## Examples and docs
 
-## Examples And Docs Guidance
+**Examples:** `quickstart/` (PR CI), `reference/` (nightly), `validation/` (internal, nightly). New examples need `inventory.yml` entries (category, visibility, CI flags).
 
-Examples are organized into three categories under `examples/`:
+**Docs IA:** Start → App → Services → HAL + Drivers → Internals. New pages: `inventory.yml` + `mkdocs.yml`. Prefer canonical quickstarts and task-oriented pages; keep advanced material off the main path; one combined guide + API page per module where practical.
 
-- `quickstart/` — canonical product starters using `blusys::app` (public, PR CI)
-- `reference/` — scoped capability demos for one module each (public, nightly CI)
-- `validation/` — internal stress and smoke tests (internal, nightly CI)
+## Module work
 
-When adding new examples, add an entry to `inventory.yml` with the correct category, visibility, and CI flags.
+**HAL / services (C):** public APIs return `blusys_err_t`; public headers stay free of ESP-IDF types; preserve SOC gating and optional managed-component patterns in CMake.
 
-Docs follow the IA: `Start` → `App` → `Services` → `HAL + Drivers` → `Internals` → `Archive`.
+**Framework (C++):** no exceptions, no RTTI, no RAII over LVGL or ESP-IDF handles; avoid steady-state heap unless by deliberate design.
 
-When adding or refactoring docs:
+## Do not
 
-- favor canonical quickstarts over proliferating near-duplicate examples
-- favor family- or task-oriented docs over page-per-everything sprawl
-- keep advanced and validation-only material clearly separated from the main user path
-- add new doc pages to both `inventory.yml` (docs section) and `mkdocs.yml` (nav)
-- consolidate guide and API reference into a single page per module
+- Collapse the three tiers  
+- Move runtime services to C++ unless directed  
+- Build a heavy compatibility layer for the old product path  
+- Let raw LVGL become the normal path again  
+- Let UI call runtime services directly in the new model  
+- Keep old and new public app models in parallel longer than necessary  
 
-## Module Work Guidance
+## Generated files
 
-If the task touches HAL, runtime services, or framework internals:
-
-- keep return types as `blusys_err_t` in public C APIs
-- keep public C headers free of ESP-IDF types and macros
-- preserve the current SOC-gated module pattern where applicable
-- preserve current optional managed-component detection patterns in CMake
-
-If the task touches the framework:
-
-- no exceptions
-- no RTTI
-- no RAII over LVGL or ESP-IDF handles
-- avoid steady-state dynamic allocation unless a deliberate design change requires it
-
-## What Not To Do
-
-- do not collapse the three-tier architecture
-- do not migrate runtime services to C++ as part of the reset unless explicitly directed
-- do not build a heavy compatibility layer for the old product path
-- do not let raw LVGL become the normal product path again
-- do not let UI code call runtime services directly in the new model
-- do not keep old and new public app models alive in parallel longer than necessary
-
-## Generated Files
-
-Ignore generated artifacts under `examples/**/build*`, `examples/**/sdkconfig*` (except `sdkconfig.defaults*`), and `site/` unless the task is specifically about generated output.
-
-Do not edit vendored upstream docs under `esp-idf-en-*` unless the task is explicitly about that copy.
+Ignore `examples/**/build*`, `examples/**/sdkconfig*` (except `sdkconfig.defaults*`), and `site/` unless the task is about generated output. Do not edit vendored `esp-idf-en-*` unless the task is about that copy.

@@ -35,5 +35,4 @@ Enable **Edge Node Example → Local SSD1306 status OLED** in menuconfig. Rebuil
 
 ## Docs
 
-- [Connected products](../../../docs/start/connected-products.md)  
-- [Phase 6 archetype briefs](../../../docs/internals/phase-6-archetype-briefs.md)  
+- [Connected products](../../../docs/start/connected-products.md)

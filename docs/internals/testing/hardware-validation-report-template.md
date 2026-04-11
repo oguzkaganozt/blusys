@@ -253,7 +253,7 @@ For every failure or blocked test, record:
 - ESP32 smoke set complete:
 - ESP32-C3 smoke set complete:
 - ESP32-S3 smoke set complete:
-- Phase 5 async examples validated on hardware:
+- PR CI / archetype quickstarts validated on hardware:
 - Remaining blockers:
 - Recommendation:
   - keep the release in stabilization

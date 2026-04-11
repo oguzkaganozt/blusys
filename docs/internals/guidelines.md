@@ -71,7 +71,7 @@ See [Architecture](architecture.md) for the tier model.
 
 ## Development Workflow
 
-1. confirm the scope against `PRD.md` and `ROADMAP.md`
+1. confirm the scope against `PRD.md`
 2. define whether the work belongs to the canonical product path, an advanced path, or validation-only infrastructure
 3. define the public API shape and ownership boundary
 4. define lifecycle and thread-safety rules
@@ -161,5 +161,4 @@ Advanced or validation-only surfaces may require a different mix of examples, do
 ## Project Tracking
 
 - v7 product requirements: `../PRD.md`
-- v7 roadmap: `../ROADMAP.md`
 - repository guidance for agents: `../CLAUDE.md`

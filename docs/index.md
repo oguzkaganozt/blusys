@@ -36,6 +36,14 @@ An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a sh
 
     [:octicons-arrow-right-24: Browse HAL](hal/index.md)
 
+-   :material-wrench:{ .lg .middle } **Internals**
+
+    ---
+
+    Architecture, guidelines, target matrix, testing notes, and engineering references.
+
+    [:octicons-arrow-right-24: Internals](internals/index.md)
+
 </div>
 
 ## Supported Targets

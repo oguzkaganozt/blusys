@@ -18,7 +18,7 @@ blusys_spi_close(spi);
 
 - choosing board pins that are reserved for flash, PSRAM, USB, or onboard peripherals
 - forgetting the MOSI-to-MISO loopback wire
-- assuming Phase 3 supports advanced multi-device SPI sharing; the first implementation intentionally keeps one handle tied to one bus and one device
+- assuming this HAL supports advanced multi-device SPI sharing; the current implementation intentionally keeps one handle tied to one bus and one device
 
 ## Target Support
 

@@ -2,7 +2,7 @@
 
 This page describes the current repository architecture and tiering constraints.
 
-For the target v7 product model and execution plan, see `../PRD.md` and `../ROADMAP.md`.
+For the target v7 product model, see `../PRD.md`.
 
 Blusys is an internal ESP32 product platform. The repo ships three ESP-IDF components
 sharing the `blusys/` header namespace:

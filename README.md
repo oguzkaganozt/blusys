@@ -1,168 +1,146 @@
-# Blusys Platform
+# Blusys
 
-An internal ESP32 product platform built on ESP-IDF v5.5. Three tiers
-sharing the `blusys/` header namespace, one supported set of targets
-(**ESP32**, **ESP32-C3**, **ESP32-S3**), and a single CLI for the whole
-build/flash/host workflow.
+**Internal ESP32 product platform** on [ESP-IDF](https://docs.espressif.com/projects/esp-idf/) **v5.5+**. One dependency stack, one CLI, three supported silicon targets — **ESP32**, **ESP32-C3**, and **ESP32-S3** — and a product-facing API in `blusys::app` built around reducers, screens, and optional capabilities.
 
-## Quick Start
+---
+
+## Why this repo exists
+
+Blusys is not a generic “better ESP-IDF.” It is a shared **operating model** for recurring product families: same app shape (`core/` · `ui/` · `integration/`), same `update(ctx, state, action)` loop, host-first iteration where it helps, and escape hatches to HAL and services when you need them.
+
+---
+
+## Quick start
 
 ```sh
-# Install (once)
+# One-time install
 git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
 ~/.blusys/install.sh
 
-# Scaffold a product (interactive controller archetype by default)
+# New project (default archetype: interactive controller)
 mkdir ~/my_product && cd ~/my_product
 blusys create --archetype interactive-controller
-# or: blusys create --archetype edge-node   # headless-first connected archetype
 
-# Build, flash, monitor
+# Other archetypes — see: blusys create --list-archetypes
+
+# Build, flash, and monitor (from the project directory)
 blusys run /dev/ttyACM0 esp32s3
 ```
 
-Requires ESP-IDF v5.5+ (auto-detected). `blusys create` generates a
-minimal app using the `blusys::app` reducer model. The canonical interactive
-reference is now `examples/quickstart/interactive_controller/`, with
-`examples/reference/interactive_panel/` as the secondary interactive archetype.
-See
-[Getting Started](docs/start/index.md) for the full walkthrough.
+ESP-IDF **v5.5+** is required; the CLI discovers it. For the full walkthrough — archetypes, connected products, host loop — start at **[Getting started](docs/start/index.md)**.
+
+---
 
 ## Architecture
 
-Three ESP-IDF components, one-way dependency direction:
+Three ESP-IDF components, strict one-way dependencies:
 
 ```
-Application
-  → Framework      blusys/framework/...        (C++; controllers, routing,
-                                                 feedback, widget kit)
-  → Services       blusys/<category>/<module>  (C; runtime modules)
-  → HAL + Drivers  blusys/<module> /            (C; hardware abstraction +
-                   blusys/drivers/<...>          driver building blocks)
-  → ESP-IDF
-  → Hardware
+                    ┌─────────────────────────────────────┐
+                    │  Application (your product code)    │
+                    └──────────────────┬──────────────────┘
+                                       │
+         ┌─────────────────────────────▼────────────────────────────┐
+         │  Framework    components/blusys_framework/   (C++)       │
+         │               blusys::app, routing, widgets, capabilities  │
+         └─────────────────────────────┬────────────────────────────┘
+                                       │
+         ┌─────────────────────────────▼────────────────────────────┐
+         │  Services     components/blusys_services/    (C)         │
+         │               Wi-Fi, UI runtime, protocols, system         │
+         └─────────────────────────────┬────────────────────────────┘
+                                       │
+         ┌─────────────────────────────▼────────────────────────────┐
+         │  HAL + drivers  components/blusys/           (C)         │
+         │                 peripherals, displays, sensors, …        │
+         └─────────────────────────────┬────────────────────────────┘
+                                       │
+                                       ▼
+                                  ESP-IDF → hardware
 ```
 
-`blusys_framework` → `blusys_services` → `blusys`. Reverse dependencies
-are forbidden and the HAL/drivers boundary inside `components/blusys/`
-is enforced by `blusys lint`.
+**Rule:** `blusys_framework` → `blusys_services` → `blusys`. No reverse edges; layering is checked with `blusys lint`.
 
-### HAL modules
+| Layer | Role | Doc entry |
+|-------|------|-----------|
+| **Framework** | Product API, views, capabilities, host/device profiles | [App](docs/app/index.md) |
+| **Services** | Runtime modules (connectivity, storage, UI service, …) | [Services](docs/services/index.md) |
+| **HAL + drivers** | Registers, buses, and higher-level driver helpers | [HAL](docs/hal/index.md) |
 
-| Category | Modules |
-|---|---|
-| **I/O & Communication** | `gpio`, `uart`, `i2c`, `i2c_slave`, `spi`, `spi_slave`, `twai`, `i2s`, `i2s_rx`, `rmt`, `rmt_rx`, `one_wire`, `gpio_expander`, `touch`, `usb_host`, `usb_device` |
-| **Analog** | `adc`, `dac`, `sdm`, `pwm` |
-| **Timers & Counters** | `timer`, `pcnt`, `mcpwm` |
-| **Storage** | `nvs`, `sdmmc`, `sd_spi` |
-| **Device** | `system`, `sleep`, `wdt`, `temp_sensor`, `efuse`, `ulp` |
+Module and example indices live in **`inventory.yml`** (CI and classification source of truth).
 
-### Driver modules
+---
 
-| Category | Modules |
-|---|---|
-| **Display** | `lcd`, `led_strip`, `seven_seg` |
-| **Input** | `button`, `encoder` |
-| **Sensor** | `dht` |
-| **Actuator** | `buzzer` |
+## Usage snippets
 
-### Service modules
-
-| Category | Modules |
-|---|---|
-| **Display / Runtime** | `ui` |
-| **Input / Runtime** | `usb_hid` |
-| **Connectivity** | `wifi`, `wifi_prov`, `wifi_mesh`, `espnow`, `bluetooth`, `ble_gatt`, `mdns` |
-| **Protocol** | `mqtt`, `http_client`, `http_server`, `ws_client` |
-| **System** | `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl` |
-
-### Framework + App Layer
-
-C++ tier shipping the `blusys::app` product API and the internal
-framework spine:
-
-- **App model:** `app_spec`, `app_ctx`, reducer-driven dispatch
-  (`update(ctx, state, action)`), entry macros (`BLUSYS_APP_MAIN_HOST`,
-  `_HEADLESS`, `_DEVICE`).
-- **View layer:** action-bound widgets, reactive bindings, page helpers,
-  custom widget contract, bounded LVGL scope.
-- **Platform profiles:** host (SDL2), headless, generic SPI ST7735.
-- **Capabilities:** connectivity (Wi-Fi, SNTP, mDNS, local control),
-  storage (SPIFFS, FAT), diagnostics, provisioning, OTA, bluetooth.
-- **Widget kit:** `bu_button`, `bu_toggle`, `bu_slider`, `bu_modal`,
-  `bu_overlay`, plus layout primitives `screen` / `row` / `col` /
-  `label` / `divider`.
-- **Theme system:** single `theme_tokens` struct populated at boot.
-
-See [`components/blusys_framework/widget-author-guide.md`](components/blusys_framework/widget-author-guide.md)
-for the six-rule widget contract.
-
-## Usage
-
-Product code (recommended):
+**Product code (recommended):**
 
 ```cpp
-#include "blusys/app/app.hpp"          /* app model, entry macros, view layer */
+#include "blusys/app/app.hpp"
 ```
 
-HAL and services (direct access):
+**HAL and services (direct):**
 
 ```c
-#include "blusys/blusys.h"             /* HAL + drivers */
-#include "blusys/blusys_services.h"    /* services */
+#include "blusys/blusys.h"
+#include "blusys/blusys_services.h"
 ```
 
+**CMake `REQUIRES`:**
+
 ```cmake
-# HAL + driver examples
-idf_component_register(SRCS "main.c" REQUIRES blusys)
-
-# Service examples
-idf_component_register(SRCS "main.c" REQUIRES blusys_services)
-
-# Framework / app examples (C++)
+idf_component_register(SRCS "main.c"   REQUIRES blusys)
+idf_component_register(SRCS "main.c"   REQUIRES blusys_services)
 idf_component_register(SRCS "main.cpp" REQUIRES blusys_framework)
 ```
 
+Widget authoring: **[widget-author-guide.md](components/blusys_framework/widget-author-guide.md)**.
+
+---
+
 ## Host harness
 
-The `scripts/host/` CMake project builds LVGL against SDL2 on Linux so
-the widget kit can be iterated against without flashing hardware on
-every change. See [`scripts/host/README.md`](scripts/host/README.md) for
-the install steps.
+LVGL on **SDL2** (Linux) for fast UI iteration without flashing every change. Setup: **[scripts/host/README.md](scripts/host/README.md)**.
 
 ```sh
-sudo apt install libsdl2-dev   # or distro equivalent
+sudo apt install libsdl2-dev   # or your distro’s SDL2 dev package
 blusys host-build
 ./scripts/host/build-host/hello_lvgl
 ```
 
+---
+
 ## Examples
 
-Examples are organized into three categories:
+| Path | Purpose |
+|------|---------|
+| `examples/quickstart/` | Archetype-aligned starters (`blusys create` shapes), PR CI |
+| `examples/reference/` | Deeper demos and per-area examples, nightly CI |
+| `examples/validation/` | Internal smoke and stress, nightly CI |
 
-- `examples/quickstart/` --- archetype starters (`blusys create` shapes) using `blusys::app`
-- `examples/reference/` --- deeper demos, connectivity examples, and framework validation builds
-- `examples/validation/` --- internal stress tests and smoke tests
+Details and flags: **`inventory.yml`**.
 
-See `inventory.yml` for the full classification and CI inclusion flags.
+---
 
 ## Documentation
 
-[**oguzkaganozt.github.io/blusys**](https://oguzkaganozt.github.io/blusys/) —
-organized as Start, App, Services, HAL + Drivers, Internals, Archive.
+**[Published site](https://oguzkaganozt.github.io/blusys/)** — Start → App → Services → HAL → Internals.
 
-Build locally:
+Local preview:
 
 ```sh
 pip install -r requirements-docs.txt
 mkdocs serve
 ```
 
-## Project Status
+---
 
-Current release: **v7.0.0**. See [`ROADMAP.md`](ROADMAP.md) for current state
-and release history. See [`CLAUDE.md`](CLAUDE.md) for repo conventions.
+## Project status
+
+Current **package version** is **6.1.0** (`BLUSYS_VERSION_STRING` in [`components/blusys/include/blusys/version.h`](components/blusys/include/blusys/version.h); also `blusys version`). Product requirements: **[PRD.md](PRD.md)**. Contributor conventions: **[CLAUDE.md](CLAUDE.md)**.
+
+---
 
 ## License
 
-See [`LICENSE`](LICENSE).
+See **[LICENSE](LICENSE)**.

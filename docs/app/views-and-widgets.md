@@ -44,7 +44,7 @@ All widget helpers take the parent container as the first argument.
 | Interactive | `button`, `toggle`, `slider`, `modal`, `overlay`, `list`, `tabs`, `dropdown`, `input_field`, `knob` |
 | Display | `progress`, `card`, `gauge`, `chart`, `data_table`, `level_bar`, `vu_strip` |
 
-Authoring rules for contributors live in `components/blusys_framework/widget-author-guide.md`. A roadmap-to-repo checklist is in `docs/internals/phase-3-widget-library-gap-matrix.md`.
+Authoring rules for contributors live in `components/blusys_framework/widget-author-guide.md`.
 
 ### Labels and headings
 
