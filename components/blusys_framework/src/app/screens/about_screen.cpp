@@ -3,6 +3,7 @@
 #include "blusys/app/screens/about_screen.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
 #include "blusys/app/view/page.hpp"
+#include "blusys/app/view/shell.hpp"
 #include "blusys/framework/ui/theme.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #include "blusys/framework/ui/primitives/divider.hpp"
@@ -18,7 +19,14 @@ lv_obj_t *about_screen_create(app_ctx &ctx, const void *params,
     const auto *cfg = static_cast<const about_screen_config *>(params);
     const auto &t   = blusys::ui::theme();
 
-    auto page = view::page_create({.scrollable = true});
+    view::page page;
+    const bool in_shell =
+        ctx.shell() != nullptr && ctx.shell()->content_area != nullptr;
+    if (in_shell) {
+        page = view::page_create_in(ctx.shell()->content_area, {.scrollable = true});
+    } else {
+        page = view::page_create({.scrollable = true});
+    }
 
     // Title.
     lv_obj_t *title = lv_label_create(page.content);
@@ -107,7 +115,7 @@ lv_obj_t *about_screen_create(app_ctx &ctx, const void *params,
     if (group_out != nullptr) {
         *group_out = page.group;
     }
-    return page.screen;
+    return in_shell ? page.content : page.screen;
 }
 
 }  // namespace blusys::app::screens

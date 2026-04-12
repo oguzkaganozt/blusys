@@ -4,7 +4,9 @@
 // They isolate all SDL2 and LVGL initialization from product code.
 
 #include <SDL2/SDL.h>
+#include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 
 #include "lvgl.h"
 #include "src/drivers/sdl/lv_sdl_window.h"
@@ -17,6 +19,33 @@
 #include "blusys/framework/ui/theme.hpp"
 
 namespace blusys_app_platform {
+
+namespace {
+
+// SDL window pixel size = logical resolution × zoom. LVGL layout uses (w,h) only;
+// zoom scales the framebuffer for comfortable host viewing without changing
+// coordinates or asking products to pick a separate "host profile".
+//
+// Override: BLUSYS_HOST_ZOOM=1..8 (integer scale). Set to 1 to disable upscaling.
+std::uint8_t host_auto_zoom(int w, int h)
+{
+    const int min_side = std::min(w, h);
+    const int max_side = std::max(w, h);
+    if (min_side >= 600 || max_side >= 1200) {
+        return 1;
+    }
+    constexpr int kTargetShortPx = 640;
+    int           z                = (kTargetShortPx + min_side - 1) / min_side;
+    if (z < 2) {
+        z = 2;
+    }
+    if (z > 4) {
+        z = 4;
+    }
+    return static_cast<std::uint8_t>(z);
+}
+
+}  // namespace
 
 // ---- framework runtime binding for intent posting ----
 
@@ -145,6 +174,17 @@ void host_init(int w, int h, const char *title)
     lv_display_t *display = lv_sdl_window_create(w, h);
     if (display != nullptr) {
         lv_sdl_window_set_title(display, title);
+
+        std::uint8_t zoom = host_auto_zoom(w, h);
+        if (const char *ez = std::getenv("BLUSYS_HOST_ZOOM")) {
+            if (ez[0] != '\0') {
+                const int z = std::atoi(ez);
+                if (z >= 1 && z <= 8) {
+                    zoom = static_cast<std::uint8_t>(z);
+                }
+            }
+        }
+        lv_sdl_window_set_zoom(display, zoom);
     }
 
     (void)lv_sdl_mouse_create();

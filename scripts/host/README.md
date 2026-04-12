@@ -62,7 +62,7 @@ blusys host-build                                  # configure + build
 ./scripts/host/build-host/connected_headless_host  # headless capability + reducer smoke
 ```
 
-`hello_lvgl` opens a 480×320 SDL2 window with a centred rounded card and a footer hint. Closing the window (or pressing the SDL window close button) exits via `LV_SDL_DIRECT_EXIT`.
+`hello_lvgl` uses a 480×320 **logical** LVGL resolution (see `hello_lvgl.c`); the SDL surface is scaled automatically for visibility. Closing the window (or pressing the SDL window close button) exits via `LV_SDL_DIRECT_EXIT`.
 
 `widget_kit_demo` opens a similar window, but the screen is built entirely through the framework widget kit: a title + divider + volume slider + three buttons (`Down` / `Up` / `OK`). Clicking any of the buttons posts a semantic intent to the runtime; the `Down` / `Up` buttons mutate the slider, and `OK` submits a `show_overlay` route command that pops a transient toast. Feedback events are logged to the host console. The mouse acts as the "encoder": clicks drive the runtime exactly the way a rotary encoder press would on hardware.
 
@@ -76,6 +76,16 @@ cmake --build build-host -j
 ```
 
 The first configure pulls LVGL from `https://github.com/lvgl/lvgl.git` at the pinned tag via CMake `FetchContent` and caches it under `build-host/_deps/`. Subsequent builds reuse the cache.
+
+### Host window scaling (interactive `blusys::app` builds)
+
+`scripts/host/src/app_host_platform.cpp` creates the SDL display at the **logical** width/height from the product `host_profile` (same coordinate space as the matching device profile). It then applies an **automatic integer zoom** (via LVGL’s `lv_sdl_window_set_zoom`) so the **physical** SDL window is comfortable to use—typically scaling the short edge toward ~640 px—**without** changing layout math or asking you to maintain a separate “host resolution.”
+
+To force **1:1** logical pixels to screen pixels (e.g. debugging), run with:
+
+`BLUSYS_HOST_ZOOM=1 ./build-host/<your_app>_host`
+
+Values `1`–`8` are accepted; the default is computed from the logical size.
 
 ## What's in here
 

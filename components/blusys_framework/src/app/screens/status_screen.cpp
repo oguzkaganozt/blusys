@@ -2,6 +2,7 @@
 
 #include "blusys/app/screens/status_screen.hpp"
 #include "blusys/app/view/page.hpp"
+#include "blusys/app/view/shell.hpp"
 #include "blusys/framework/ui/theme.hpp"
 #include "blusys/framework/ui/primitives/divider.hpp"
 #include "blusys/framework/ui/widgets/card/card.hpp"
@@ -10,13 +11,21 @@ namespace blusys::app::screens {
 
 namespace {
 
-lv_obj_t *status_screen_create_impl(const status_screen_config *cfg,
-                                     status_screen_handles *handles,
-                                     lv_group_t **group_out)
+lv_obj_t *status_screen_create_impl(app_ctx &ctx,
+                                    const status_screen_config *cfg,
+                                    status_screen_handles *handles,
+                                    lv_group_t **group_out)
 {
     const auto &t = blusys::ui::theme();
 
-    auto page = view::page_create({.scrollable = true});
+    view::page page;
+    const bool in_shell =
+        ctx.shell() != nullptr && ctx.shell()->content_area != nullptr;
+    if (in_shell) {
+        page = view::page_create_in(ctx.shell()->content_area, {.scrollable = true});
+    } else {
+        page = view::page_create({.scrollable = true});
+    }
 
     // Title.
     lv_obj_t *title = lv_label_create(page.content);
@@ -57,24 +66,24 @@ lv_obj_t *status_screen_create_impl(const status_screen_config *cfg,
     if (group_out != nullptr) {
         *group_out = page.group;
     }
-    return page.screen;
+    return in_shell ? page.content : page.screen;
 }
 
 }  // namespace
 
-lv_obj_t *status_screen_create(app_ctx & /*ctx*/, const void *params,
+lv_obj_t *status_screen_create(app_ctx &ctx, const void *params,
                                 lv_group_t **group_out)
 {
     return status_screen_create_impl(
-        static_cast<const status_screen_config *>(params), nullptr, group_out);
+        ctx, static_cast<const status_screen_config *>(params), nullptr, group_out);
 }
 
-lv_obj_t *status_screen_create(app_ctx & /*ctx*/,
+lv_obj_t *status_screen_create(app_ctx &ctx,
                                 const status_screen_config &config,
                                 status_screen_handles &handles,
                                 lv_group_t **group_out)
 {
-    return status_screen_create_impl(&config, &handles, group_out);
+    return status_screen_create_impl(ctx, &config, &handles, group_out);
 }
 
 void status_screen_update(status_screen_handles &handles, const app_ctx &ctx)
