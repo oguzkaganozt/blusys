@@ -41,6 +41,8 @@ page page_create_in(lv_obj_t *parent, const page_config &config)
         .padding = pad,
     });
     lv_obj_set_size(content, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_flex_grow(content, 1);
+    lv_obj_set_style_min_height(content, 0, 0);
 
     if (config.scrollable) {
         lv_obj_add_flag(content, LV_OBJ_FLAG_SCROLLABLE);

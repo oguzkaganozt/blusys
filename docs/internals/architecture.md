@@ -156,6 +156,8 @@ The core spine is internal framework machinery. Product code does not interact w
 
 Authoring contract: every widget follows the six-rule contract (theme tokens only, config struct interface, setters own state transitions, standard state set, one folder per widget, header is the spec). Stock-backed widgets use a fixed-capacity slot pool keyed by `BLUSYS_UI_<NAME>_POOL_SIZE` for callback storage. See `components/blusys_framework/widget-author-guide.md`.
 
+**UI layout (LVGL flex):** Layout primitives (`row`, `col`, `screen`) and the interaction shell use LVGL flex and scroll so product code composes structure without ad hoc sizing. See [UI layout and LVGL flex](ui-layout-lvgl.md). Shared helpers for flex children live in `components/blusys_framework/include/blusys/framework/ui/detail/flex_layout.hpp` (included from `primitives.hpp`).
+
 End-to-end validation: `examples/reference/framework_app_basic/` exercises the full framework validation chain. `examples/reference/connected_headless/` validates the headless path with capabilities and the reducer model; `examples/reference/connected_device/` does the same for interactive + connectivity. Device-profile validation lives under `examples/reference/framework_device_basic/`.
 
 Host iteration: `scripts/host/` builds LVGL against SDL2 on Linux via `blusys host-build`, pinned to the same upstream LVGL tag as the ESP-IDF managed component. Lets the widget kit be iterated on without flashing hardware on every change.

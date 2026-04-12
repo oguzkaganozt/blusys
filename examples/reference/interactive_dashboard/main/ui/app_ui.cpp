@@ -3,6 +3,8 @@
 #include "blusys/app/screens/about_screen.hpp"
 #include "blusys/app/view/action_widgets.hpp"
 
+#include "lvgl.h"
+
 namespace interactive_dashboard::system {
 const char *dashboard_build_version_for_build();
 const char *dashboard_profile_label_for_build();
@@ -21,12 +23,35 @@ using interactive_dashboard::route_about;
 
 namespace {
 
-view::page make_page(blusys::app::app_ctx &ctx, bool scrollable)
+bool dashboard_short_viewport()
 {
-    if (ctx.shell() != nullptr) {
-        return view::page_create_in(ctx.shell()->content_area, {.scrollable = scrollable});
+    const lv_disp_t *d = lv_disp_get_default();
+    if (d == nullptr) {
+        return true;
     }
-    return view::page_create({.scrollable = scrollable});
+    return lv_disp_get_ver_res(d) <= 340;
+}
+
+bool dashboard_narrow_viewport()
+{
+    const lv_disp_t *d = lv_disp_get_default();
+    if (d == nullptr) {
+        return true;
+    }
+    return lv_disp_get_hor_res(d) <= 400;
+}
+
+view::page make_page(blusys::app::app_ctx &ctx, bool scrollable, bool compact)
+{
+    view::page_config cfg{.scrollable = scrollable};
+    if (compact) {
+        cfg.padding = 8;
+        cfg.gap     = 6;
+    }
+    if (ctx.shell() != nullptr) {
+        return view::page_create_in(ctx.shell()->content_area, cfg);
+    }
+    return view::page_create(cfg);
 }
 
 void on_overview_hide(lv_obj_t * /*screen*/, void *user_data)
@@ -81,21 +106,42 @@ lv_obj_t *create_overview(blusys::app::app_ctx &ctx, const void * /*params*/, lv
         return nullptr;
     }
 
-    auto page = make_page(ctx, true);
+    const bool compact  = dashboard_short_viewport();
+    const bool narrow   = dashboard_narrow_viewport();
+    auto       page     = make_page(ctx, true, compact);
 
-    // Full-width rows — three key_values in one horizontal row are too narrow and
-    // the value label collides with the key (space-between in a ~100px column).
-    auto *kpi_card = view::card(page.content, "Snapshot");
+    const int  split_h  = compact ? 76 : 124;
+    const int  bar_h    = compact ? 56 : 96;
+    const int  card_pad = compact ? 6 : -1;
+
+    // Wide viewports: stacked KPI rows read best. Narrow (e.g. 320-wide): one row
+    // of three metrics so the Snapshot card does not consume most of the viewport.
+    auto *kpi_card = view::card(page.content, "Snapshot", card_pad);
     lv_obj_set_width(kpi_card, LV_PCT(100));
-    st->kpi_ops   = view::key_value(kpi_card, "Throughput", "—");
-    st->kpi_temp  = view::key_value(kpi_card, "Inlet", "—");
-    st->kpi_queue = view::key_value(kpi_card, "Queue", "—");
+    if (compact) {
+        lv_obj_set_style_pad_row(kpi_card, 2, 0);
+    }
 
-    auto *split_card = view::card(page.content, "Load & trend");
+    if (narrow) {
+        auto *kpi_row = view::row(kpi_card);
+        lv_obj_set_width(kpi_row, LV_PCT(100));
+        st->kpi_ops   = view::key_value(kpi_row, "Thr", "—");
+        st->kpi_temp  = view::key_value(kpi_row, "In", "—");
+        st->kpi_queue = view::key_value(kpi_row, "Q", "—");
+        lv_obj_set_flex_grow(st->kpi_ops, 1);
+        lv_obj_set_flex_grow(st->kpi_temp, 1);
+        lv_obj_set_flex_grow(st->kpi_queue, 1);
+    } else {
+        st->kpi_ops   = view::key_value(kpi_card, "Throughput", "—");
+        st->kpi_temp  = view::key_value(kpi_card, "Inlet", "—");
+        st->kpi_queue = view::key_value(kpi_card, "Queue", "—");
+    }
+
+    auto *split_card = view::card(page.content, "Load & trend", card_pad);
     lv_obj_set_width(split_card, LV_PCT(100));
     auto *split = view::row(split_card);
     lv_obj_set_width(split, LV_PCT(100));
-    lv_obj_set_height(split, 124);
+    lv_obj_set_height(split, split_h);
 
     st->dash_gauge = view::gauge(split, 0, 100, st->load_percent, "%");
     lv_obj_set_flex_grow(st->dash_gauge, 1);
@@ -106,13 +152,13 @@ lv_obj_t *create_overview(blusys::app::app_ctx &ctx, const void * /*params*/, lv
     st->line_series = blusys::ui::chart_add_series(st->dash_line_chart,
                                                    blusys::ui::theme().color_accent);
 
-    auto *zones = view::card(page.content, "Zone mix");
+    auto *zones = view::card(page.content, "Zone mix", card_pad);
     lv_obj_set_width(zones, LV_PCT(100));
     st->dash_bar_chart =
         view::chart(zones, blusys::ui::chart_type::bar,
                     static_cast<std::int32_t>(app_state::zone_count), 0, 100);
     lv_obj_set_width(st->dash_bar_chart, LV_PCT(100));
-    lv_obj_set_height(st->dash_bar_chart, 96);
+    lv_obj_set_height(st->dash_bar_chart, bar_h);
     st->bar_series = blusys::ui::chart_add_series(st->dash_bar_chart,
                                                   blusys::ui::theme().color_primary);
 

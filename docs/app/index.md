@@ -28,6 +28,7 @@ These are handled by the framework runtime, profiles, and capabilities.
 
 ## Sections
 
+- [Golden path & escape hatches](golden-path.md) --- recommended usage vs anti-patterns
 - [Reducer Model](reducer-model.md) --- state, actions, `update()`, dispatch lifecycle, intent map
 - [App Runtime Model](app-runtime-model.md) --- intent/event queues, threading, what runs in `update()`
 - [Views & Widgets](views-and-widgets.md) --- stock widgets, page helpers, custom widget contract, bounded LVGL

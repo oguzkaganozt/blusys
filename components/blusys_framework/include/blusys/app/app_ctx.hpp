@@ -116,6 +116,15 @@ public:
         return false;
     }
 
+    // Count of actions dropped because the fixed-size action queue was full (dispatch
+    // returned false). Monotonic for the lifetime of this ctx — rebinding a runtime
+    // does not reset it. Query from update(), on_tick, or diagnostics for overload
+    // debugging.
+    [[nodiscard]] std::uint32_t action_queue_drop_count() const noexcept
+    {
+        return action_queue_drop_count_;
+    }
+
     // Pointer to the app-owned state (set by app_runtime for on_init / screen factories).
     // State must be the same type as app_spec<State, Action>::State. Casting to the wrong
     // type is undefined behavior. Not available after runtime deinit (nullptr).
@@ -165,6 +174,8 @@ private:
     friend class app_runtime_base;
 
     static void bind_capability_pointers_from_list(app_ctx &ctx, capability_list *capabilities);
+
+    std::uint32_t action_queue_drop_count_ = 0;
 
     using dispatch_fn = bool (*)(void *runtime, const void *action);
 

@@ -18,6 +18,12 @@ The widget kit has two categories. They live in different folders and follow sli
 
 Layout primitives are stateless composition factories. Interactive widgets carry callbacks and standard widget state (`normal`, `focused`, `pressed`, `disabled`, optionally `checked`/`loading`/`error`).
 
+### Layout primitives and LVGL flex
+
+Stock `row` / `col` use LVGL flex with configurable **main / cross / track** alignment (`row_config`, `col_config`). Product code can use `blusys::app::view::row` / `::col` for the same knobs. Shared helpers for sizing children inside flex strips live in `blusys/framework/ui/detail/flex_layout.hpp`. Shell, scroll viewport, and app conventions are described in [UI layout and LVGL flex](../../docs/internals/ui-layout-lvgl.md).
+
+Display widgets that wrap content-sized LVGL objects may need to reconcile size on `LV_EVENT_SIZE_CHANGED` when placed in a flex row or column — `bu_gauge` is the reference.
+
 This guide focuses on the interactive-widget rules. Layout primitives only need rules 1, 2, 5, and 6.
 
 ## The six-rule contract

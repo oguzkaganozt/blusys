@@ -102,6 +102,7 @@ jobs:
                      capability_contract_smoke \
                      operational_phase_smoke \
                      host_spine_test \
+                     action_queue_drop_smoke \
                      snapshot_buffer_smoke
           export BLUSYS_PATH="${GITHUB_WORKSPACE}"
           cmake -S examples/quickstart/edge_node/host -B examples/quickstart/edge_node/build-host-ci
@@ -118,6 +119,7 @@ jobs:
           ./scripts/host/build-host-ci/capability_contract_smoke
           ./scripts/host/build-host-ci/operational_phase_smoke
           ./scripts/host/build-host-ci/host_spine_test
+          ./scripts/host/build-host-ci/action_queue_drop_smoke
           ./scripts/host/build-host-ci/snapshot_buffer_smoke
           cd scripts/host/build-host-ci && ctest --output-on-failure
 
@@ -126,8 +128,9 @@ jobs:
         run: |
           set -euo pipefail
           cmake -S scripts/host -B scripts/host/build-host-san -DBLUSYS_HOST_SANITIZE=ON
-          cmake --build scripts/host/build-host-san -j --target host_spine_test snapshot_buffer_smoke
+          cmake --build scripts/host/build-host-san -j --target host_spine_test action_queue_drop_smoke snapshot_buffer_smoke
           ./scripts/host/build-host-san/host_spine_test
+          ./scripts/host/build-host-san/action_queue_drop_smoke
           ./scripts/host/build-host-san/snapshot_buffer_smoke
 
       - name: Scaffold smoke (blusys create × archetypes + host-build)

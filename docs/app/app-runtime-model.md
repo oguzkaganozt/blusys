@@ -22,7 +22,7 @@ flowchart LR
 ```
 
 1. **Intents** (`map_intent`) and **integration events** (`map_event`) run on the framework thread when the runtime drains its event queue. Each mapping may enqueue one app `Action`.
-2. **`ctx.dispatch(action)`** (from widgets, flows, or your own code) enqueues into the same **action queue**. It returns `false` if the queue is full (the action is dropped and a warning is logged).
+2. **`ctx.dispatch(action)`** (from widgets, flows, or your own code) enqueues into the same **action queue**. It returns `false` if the queue is full (the action is dropped and a warning is logged). **`ctx.action_queue_drop_count()`** returns how many drops have occurred since runtime init (monotonic counter)—use this for overload debugging or diagnostics surfaces.
 3. The runtime repeatedly **pops** actions and calls **`update(ctx, state, action)`** with a bounded iteration count per step to avoid unbounded recursion.
 4. Inside `update()`, mutate LVGL only through **`blusys::app::view::`** helpers — not raw `lv_` calls that take locks or talk to the framework runtime.
 

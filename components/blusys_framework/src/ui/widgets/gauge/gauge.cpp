@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/flex_layout.hpp"
 #include "blusys/framework/ui/theme.hpp"
 
 // Display-only arc gauge. No callbacks; fixed-capacity data pool via fixed_slot_pool.
@@ -84,6 +85,57 @@ void on_gauge_deleted(lv_event_t *e)
     release_data(d);
 }
 
+// Scale the arc to a square that fits inside the container. Flex layouts often
+// assign a smaller height than the arc's default size; without this the arc
+// draws past the clip and the ring looks cut off at the top/bottom.
+//
+// In a flex *row* with cross-axis center, the gauge container's height tracks
+// its content (the arc). After we shrink the arc, that height collapses to the
+// tiny arc — use the parent row's inner height so the ring fills the strip
+// (see flex_layout::effective_cross_extent_for_row_child).
+void sync_arc_size_to_container(lv_obj_t *container)
+{
+    auto *data = static_cast<gauge_data *>(lv_obj_get_user_data(container));
+    if (data == nullptr || data->arc == nullptr) {
+        return;
+    }
+
+    const lv_coord_t w = lv_obj_get_width(container);
+    const lv_coord_t h = flex_layout::effective_cross_extent_for_row_child(container);
+
+    if (w < 8 || h < 8) {
+        return;
+    }
+
+    constexpr lv_coord_t kInset = 4;
+    lv_coord_t           s      = w < h ? w : h;
+    s -= kInset;
+    if (s < 32) {
+        return;
+    }
+
+    // Early-out when the arc is already the target size. The container uses
+    // LV_SIZE_CONTENT, so resizing the arc can re-fire LV_EVENT_SIZE_CHANGED
+    // on the container — this breaks the feedback loop.
+    if (lv_obj_get_width(data->arc) == s && lv_obj_get_height(data->arc) == s) {
+        return;
+    }
+
+    lv_obj_set_size(data->arc, s, s);
+    lv_obj_center(data->arc);
+    if (data->label != nullptr) {
+        lv_obj_center(data->label);
+    }
+}
+
+void on_gauge_container_size(lv_event_t *e)
+{
+    if (lv_event_get_code(e) != LV_EVENT_SIZE_CHANGED) {
+        return;
+    }
+    sync_arc_size_to_container(static_cast<lv_obj_t *>(lv_event_get_target(e)));
+}
+
 }  // namespace
 
 lv_obj_t *gauge_create(lv_obj_t *parent, const gauge_config &config)
@@ -104,6 +156,7 @@ lv_obj_t *gauge_create(lv_obj_t *parent, const gauge_config &config)
     lv_obj_remove_flag(container, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_user_data(container, data);
     lv_obj_add_event_cb(container, on_gauge_deleted, LV_EVENT_DELETE, nullptr);
+    lv_obj_add_event_cb(container, on_gauge_container_size, LV_EVENT_SIZE_CHANGED, nullptr);
 
     // Arc.
     lv_obj_t *arc = lv_arc_create(container);

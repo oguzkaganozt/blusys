@@ -2,6 +2,7 @@
 
 // Umbrella include for layout primitives (stateless composition helpers).
 
+#include "blusys/framework/ui/detail/flex_layout.hpp"
 #include "blusys/framework/ui/primitives/col.hpp"
 #include "blusys/framework/ui/primitives/divider.hpp"
 #include "blusys/framework/ui/primitives/icon_label.hpp"

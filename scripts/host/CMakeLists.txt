@@ -346,6 +346,26 @@ target_include_directories(host_spine_test PRIVATE ${BLUSYS_FRAMEWORK_DIR}/inclu
 target_compile_options(host_spine_test PRIVATE -Wall -Wextra)
 add_test(NAME host_spine_test COMMAND host_spine_test)
 
+# ── action_queue_drop_smoke (app_runtime action queue overflow counter) ───────
+add_executable(action_queue_drop_smoke
+    src/action_queue_drop_smoke.cpp
+    src/app_headless_platform.cpp
+)
+target_link_libraries(action_queue_drop_smoke PRIVATE
+    blusys_framework_host
+    PkgConfig::SDL2
+    m
+)
+target_compile_options(action_queue_drop_smoke PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+target_compile_definitions(action_queue_drop_smoke PRIVATE SDL_MAIN_HANDLED)
+add_test(NAME action_queue_drop_smoke COMMAND action_queue_drop_smoke)
+
 # ── snapshot_buffer_smoke (stub display + partial flush, no SDL window) ───────
 add_executable(snapshot_buffer_smoke src/snapshot_buffer_smoke.cpp)
 target_link_libraries(snapshot_buffer_smoke PRIVATE lvgl m)

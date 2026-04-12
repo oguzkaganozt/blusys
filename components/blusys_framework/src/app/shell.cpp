@@ -116,10 +116,16 @@ shell shell_create(const shell_config &config)
         lv_obj_set_flex_grow(s.status, 0);
     }
 
-    // Content area — fills remaining space.
+    // Content area — fills remaining space. Use a column flex container so the
+    // scrollable page column is a flex item with a bounded height; otherwise the
+    // scroll area can size to its content and push the tab bar off-screen.
     s.content_area = lv_obj_create(s.root);
     lv_obj_set_width(s.content_area, LV_PCT(100));
     lv_obj_set_flex_grow(s.content_area, 1);
+    lv_obj_set_layout(s.content_area, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(s.content_area, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(s.content_area, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START,
+                          LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_all(s.content_area, 0, 0);
     lv_obj_set_style_bg_opa(s.content_area, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(s.content_area, 0, 0);

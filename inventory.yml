@@ -1131,6 +1131,10 @@ docs:
     section: app
     visibility: public
 
+  - path: docs/app/golden-path.md
+    section: app
+    visibility: public
+
   - path: docs/app/reducer-model.md
     section: app
     visibility: public
@@ -1399,6 +1403,18 @@ docs:
     visibility: public
 
   - path: docs/internals/guidelines.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/ui-layout-lvgl.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/adr/0001-orchestration-in-framework.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/integration-baseline.md
     section: internals
     visibility: public
 

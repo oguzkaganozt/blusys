@@ -80,6 +80,16 @@ const blusys::app::view::shell_config dashboard_shell_for_profile()
     c.header.title   = "Dashboard";
     c.status.enabled = chrome.status_enabled;
     c.tabs.enabled   = chrome.tabs_enabled;
+
+    // ILI9341-class (and narrow host) logical heights leave little room for content;
+    // shrink chrome so the scroll viewport matches user expectations.
+    const bool compact_chrome =
+        (prof.lcd.height <= 280) || (prof.lcd.width <= 360 && prof.lcd.height <= 300);
+    if (compact_chrome) {
+        c.header.height = 30;
+        c.status.height = 16;
+        c.tabs.height   = 28;
+    }
     return c;
 }
 

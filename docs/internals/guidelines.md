@@ -79,6 +79,8 @@ Breaking changes to `app_spec`, `app_ctx`, and umbrella `blusys/app/*.hpp` heade
 - **Validation examples** (`examples/validation/`) and other non-`blusys::app` demos are exempt; see `scripts/check-product-layout.py`.
 - Optional inventory flags: `layout_exempt`, `product_layout` (see `inventory.yml` header).
 
+For how the **framework** composes LVGL flex, scroll, and the interaction shell (primitives, shell `content_area`, stock widget sizing), see [UI layout and LVGL flex](ui-layout-lvgl.md).
+
 ### Product application C++ shape {#product-application-cpp-shape}
 
 - **Reducer center:** domain rules live in `update(ctx, state, action)`; keep navigation and capability sync as explicit actions.

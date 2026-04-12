@@ -6,7 +6,10 @@ Platform architecture, development guidelines, display notes, testing procedures
 
 - [Architecture](architecture.md) --- three-tier model, component dependencies, design rationale
 - [Guidelines](guidelines.md) --- API design rules, development workflow, documentation standards
+- [UI layout and LVGL flex](ui-layout-lvgl.md) --- flex/scroll usage in the framework, shell, and stock widgets
 - [Target Matrix](target-matrix.md) --- per-module target support and requirements
+- [ADR 0001 — orchestration in framework](adr/0001-orchestration-in-framework.md) --- tier roles and non-goals for product orchestration
+- [Integration baseline](integration-baseline.md) --- measuring `main/integration/` thickness (V2 metrics)
 
 ## Display & integration
 

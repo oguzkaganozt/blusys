@@ -5,6 +5,7 @@
 #include "blusys/app/app_ctx.hpp"
 #include "blusys/framework/ui/primitives/divider.hpp"
 #include "blusys/framework/ui/primitives/icon_label.hpp"
+#include "blusys/framework/ui/primitives/col.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #include "blusys/framework/ui/primitives/label.hpp"
 #include "blusys/framework/ui/primitives/row.hpp"
@@ -251,11 +252,31 @@ inline lv_obj_t *divider(lv_obj_t *parent)
     return blusys::ui::divider_create(parent, {});
 }
 
-inline lv_obj_t *row(lv_obj_t *parent, int gap = -1, int padding = 0)
+inline lv_obj_t *row(lv_obj_t *parent, int gap = -1, int padding = 0,
+                     lv_flex_align_t main_place  = LV_FLEX_ALIGN_START,
+                     lv_flex_align_t cross_place = LV_FLEX_ALIGN_CENTER,
+                     lv_flex_align_t track_place = LV_FLEX_ALIGN_CENTER)
 {
     return blusys::ui::row_create(parent, {
-        .gap     = (gap >= 0) ? gap : blusys::ui::theme().spacing_sm,
-        .padding = padding,
+        .gap          = (gap >= 0) ? gap : blusys::ui::theme().spacing_sm,
+        .padding      = padding,
+        .main_place   = main_place,
+        .cross_place  = cross_place,
+        .track_place  = track_place,
+    });
+}
+
+inline lv_obj_t *col(lv_obj_t *parent, int gap = -1, int padding = 0,
+                     lv_flex_align_t main_place  = LV_FLEX_ALIGN_START,
+                     lv_flex_align_t cross_place = LV_FLEX_ALIGN_START,
+                     lv_flex_align_t track_place = LV_FLEX_ALIGN_START)
+{
+    return blusys::ui::col_create(parent, {
+        .gap          = (gap >= 0) ? gap : blusys::ui::theme().spacing_sm,
+        .padding      = padding,
+        .main_place   = main_place,
+        .cross_place  = cross_place,
+        .track_place  = track_place,
     });
 }
 

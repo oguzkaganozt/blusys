@@ -36,7 +36,8 @@ lv_obj_t *key_value_create(lv_obj_t *parent, const key_value_config &config)
     lv_obj_t *key = lv_label_create(row);
     lv_obj_set_style_text_font(key, t.font_label, 0);
     lv_obj_set_style_text_color(key, t.color_on_surface, 0);
-    lv_obj_set_style_text_opa(key, t.opa_disabled, 0);
+    // Dimmed but readable on dark surfaces (opa_disabled is too faint for labels).
+    lv_obj_set_style_text_opa(key, LV_OPA_70, 0);
     lv_label_set_text(key, config.key != nullptr ? config.key : "");
 
     // Value label — normal weight.

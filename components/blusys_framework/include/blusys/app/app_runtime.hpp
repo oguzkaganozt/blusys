@@ -30,6 +30,11 @@ namespace blusys::app {
 
 class app_runtime_base {
 protected:
+    static void record_action_queue_drop(app_ctx &ctx)
+    {
+        ++ctx.action_queue_drop_count_;
+    }
+
     static void bind_ctx(app_ctx &ctx,
                          blusys::framework::route_sink *route_sink,
                          blusys::framework::feedback_bus *feedback_bus,
@@ -161,7 +166,12 @@ public:
 
     bool post_action(const Action &action)
     {
-        return action_queue_.push_back(action);
+        if (!action_queue_.push_back(action)) {
+            record_action_queue_drop(ctx_);
+            BLUSYS_LOGW("blusys_app", "action queue full, dispatch dropped");
+            return false;
+        }
+        return true;
     }
 
     void post_intent(blusys::framework::intent intent,
@@ -245,11 +255,7 @@ private:
     {
         auto *rt = static_cast<app_runtime *>(self);
         const auto &action = *static_cast<const Action *>(action_ptr);
-        if (!rt->action_queue_.push_back(action)) {
-            BLUSYS_LOGW("blusys_app", "action queue full, dispatch dropped");
-            return false;
-        }
-        return true;
+        return rt->post_action(action);
     }
 
     // ---- inner controller: bridges framework events to the reducer model ----
