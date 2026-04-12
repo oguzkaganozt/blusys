@@ -14,7 +14,7 @@ Start by reading the [Architecture](architecture.md) page.
 
 ### Language Policy
 
-- `components/blusys/` and `components/blusys_services/` expose C headers with `extern "C"` guards
+- `components/blusys_hal/` and `components/blusys_services/` expose C headers with `extern "C"` guards
 - `components/blusys_framework/` is the only C++ tier in V1; it exposes C++ headers
 - framework C++ uses `-std=c++20 -fno-exceptions -fno-rtti -fno-threadsafe-statics`
 - framework C++ should stay platform-facing and disciplined, not become a second copy of ESP-IDF internals

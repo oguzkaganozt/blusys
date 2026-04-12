@@ -29,7 +29,7 @@ set(blusys_services_sources
 idf_component_register(
     SRCS ${blusys_services_sources}
     INCLUDE_DIRS include
-    REQUIRES blusys freertos console esp_wifi esp_netif esp_event
+    REQUIRES blusys_hal freertos console esp_wifi esp_netif esp_event
              esp_http_client esp_http_server mqtt esp_https_ota app_update
              bt spiffs fatfs wear_levelling esp_pm tcp_transport
              wifi_provisioning protocomm esp_timer nvs_flash

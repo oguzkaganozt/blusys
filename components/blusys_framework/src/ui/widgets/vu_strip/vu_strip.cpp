@@ -19,7 +19,7 @@ struct vu_strip_meta {
 #define BLUSYS_UI_VU_STRIP_POOL_SIZE 16
 #endif
 
-vu_strip_meta g_vu_meta[BLUSYS_UI_VU_STRIP_POOL_SIZE];
+vu_strip_meta g_vu_meta[BLUSYS_UI_VU_STRIP_POOL_SIZE] = {};
 
 vu_strip_meta *acquire_meta()
 {

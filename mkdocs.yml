@@ -145,10 +145,12 @@ nav:
       - Core:
           - internals/index.md
           - Architecture: internals/architecture.md
+          - Maintaining: internals/maintaining.md
           - Guidelines: internals/guidelines.md
           - "UI layout (LVGL flex)": internals/ui-layout-lvgl.md
           - Target Matrix: internals/target-matrix.md
           - "ADR 0001 (orchestration)": internals/adr/0001-orchestration-in-framework.md
+          - "ADR 0002 (HAL component name)": internals/adr/0002-hal-component-name.md
           - "Integration baseline": internals/integration-baseline.md
       - "Display & integration":
           - "LVGL integration (ST7735, resolved)": internals/lvgl-st7735-integration.md

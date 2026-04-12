@@ -34,7 +34,7 @@ if(NOT BLUSYS_PATH)
         "(e.g. run via 'blusys host-build').")
 endif()
 
-set(BLUSYS_COMPONENT_DIR  "${BLUSYS_PATH}/components/blusys")
+set(BLUSYS_COMPONENT_DIR  "${BLUSYS_PATH}/components/blusys_hal")
 set(BLUSYS_FRAMEWORK_DIR  "${BLUSYS_PATH}/components/blusys_framework")
 set(BLUSYS_SERVICES_DIR   "${BLUSYS_PATH}/components/blusys_services")
 

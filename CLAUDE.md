@@ -2,7 +2,7 @@
 
 Guidance for working in **Blusys** — the internal ESP32 product platform. When behavior matters, trust **executable sources** (CMake, `blusys`, workflows, `inventory.yml`) over this file.
 
-**Package version:** `6.1.0` (`BLUSYS_VERSION_STRING` in `components/blusys/include/blusys/version.h`; also `blusys version`).  
+**Package version:** `6.1.1` (`BLUSYS_VERSION_STRING` in `components/blusys_hal/include/blusys/version.h`; also `blusys version`).  
 **ESP-IDF:** **v5.5+** (CI uses the `espressif/idf` container pinned in `.github/workflows/*.yml`).
 
 ---
@@ -48,7 +48,7 @@ Unless the user explicitly changes them:
 - **Configuration:** **code-first** hardware/capability wiring; Kconfig for advanced tuning.
 - **LVGL:** raw LVGL only inside custom widgets or an explicit custom view scope; app-facing UI drives behavior through **actions** and framework-approved paths.
 - **Scaffold:** one local `main/` component with **`core/`** (behavior), **`ui/`** (screens/views; may be minimal for headless), **`integration/`** (thin wiring, `app_spec`, entry).
-- **Tiers:** `blusys_framework` → `blusys_services` → `blusys` — **no reverse dependencies**; HAL, services, `blusys_ui`, and low-level primitives remain **escape hatches**, not the default product path.
+- **Tiers:** `blusys_framework` → `blusys_services` → `blusys_hal` — **no reverse dependencies**; HAL, services, `blusys_ui`, and low-level primitives remain **escape hatches**, not the default product path.
 
 ---
 
@@ -56,12 +56,12 @@ Unless the user explicitly changes them:
 
 | Component | Role |
 |-----------|------|
-| `components/blusys/` | HAL + drivers (C); `blusys_err_t` public API |
+| `components/blusys_hal/` | HAL + drivers (C); `blusys_err_t` public API |
 | `components/blusys_services/` | Runtime substrate (C): connectivity, UI service, protocols, FS, etc. |
 | `components/blusys_framework/` | Product framework (C++): `blusys::app`, views, routing, widget kit |
 
 ```text
-blusys_framework → blusys_services → blusys → ESP-IDF
+blusys_framework → blusys_services → blusys_hal → ESP-IDF
 ```
 
 **Layering:** enforced by `blusys lint` (`scripts/lint-layering.sh`) plus `python3 scripts/check-framework-ui-sources.py` (framework UI source lists / widget glob consistency).

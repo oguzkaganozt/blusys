@@ -8,7 +8,7 @@ Blusys is an internal ESP32 product platform. The repo ships three ESP-IDF compo
 sharing the `blusys/` header namespace:
 
 ```text
-components/blusys/            HAL + drivers
+components/blusys_hal/            HAL + drivers
 components/blusys_services/   runtime services
 components/blusys_framework/  framework infrastructure (C++, widget kit, core spine)
 ```
@@ -32,26 +32,26 @@ The public include namespace stays `blusys/...` across all tiers.
 Product / example app
   → Framework API           (components/blusys_framework/include/blusys/framework/...)
   → Services API            (components/blusys_services/include/blusys/<category>/*.h)
-  → HAL + drivers API       (components/blusys/include/blusys/*.h,
-                              components/blusys/include/blusys/drivers/<category>/*.h)
-  → HAL + drivers impl      (components/blusys/src/common/*.c,
-                              components/blusys/src/drivers/<category>/*.c)
-  → Internal helpers        (components/blusys/include/blusys/internal/)
-  → Target capability data  (components/blusys/src/targets/esp32*/target_caps.c)
+  → HAL + drivers API       (components/blusys_hal/include/blusys/*.h,
+                              components/blusys_hal/include/blusys/drivers/<category>/*.h)
+  → HAL + drivers impl      (components/blusys_hal/src/common/*.c,
+                              components/blusys_hal/src/drivers/<category>/*.c)
+  → Internal helpers        (components/blusys_hal/include/blusys/internal/)
+  → Target capability data  (components/blusys_hal/src/targets/esp32*/target_caps.c)
   → ESP-IDF
 ```
 
 Dependency direction is one-way:
 
 ```text
-blusys_framework → blusys_services → blusys
+blusys_framework → blusys_services → blusys_hal
 ```
 
 Reverse dependencies are forbidden.
 
 ## Tier Details
 
-### HAL + Drivers (`components/blusys/`)
+### HAL + Drivers (`components/blusys_hal/`)
 
 This component now contains two internal layers.
 
@@ -71,10 +71,10 @@ This component now contains two internal layers.
 - actuator: `buzzer`
 
 Directory split:
-- HAL implementation: `components/blusys/src/common/`
-- driver implementation: `components/blusys/src/drivers/<category>/`
-- HAL public headers: `components/blusys/include/blusys/*.h`
-- driver public headers: `components/blusys/include/blusys/drivers/<category>/*.h`
+- HAL implementation: `components/blusys_hal/src/common/`
+- driver implementation: `components/blusys_hal/src/drivers/<category>/`
+- HAL public headers: `components/blusys_hal/include/blusys/*.h`
+- driver public headers: `components/blusys_hal/include/blusys/drivers/<category>/*.h`
 
 Umbrella header:
 
@@ -174,8 +174,8 @@ Host iteration: `scripts/host/` builds LVGL against SDL2 on Linux via `blusys ho
 The HAL/drivers boundary is enforced by `blusys lint`, backed by `scripts/lint-layering.sh`.
 
 The lint checks exactly two rules:
-- no file under `components/blusys/src/common/` may include `blusys/drivers/**`
-- files under `components/blusys/src/drivers/` may only include the shared internal allowlist: `blusys_lock.h`, `blusys_esp_err.h`, `blusys_timeout.h`, and (display stack) `lcd_panel_ili.h`
+- no file under `components/blusys_hal/src/common/` may include `blusys/drivers/**`
+- files under `components/blusys_hal/src/drivers/` may only include the shared internal allowlist: `blusys_lock.h`, `blusys_esp_err.h`, `blusys_timeout.h`, and (display stack) `lcd_panel_ili.h`
 
 ## Symmetric Pairs
 
@@ -191,7 +191,7 @@ Some HAL modules expose the same peripheral in both directions under separate ha
 HAL-only or driver examples:
 
 ```cmake
-idf_component_register(SRCS "main.c" REQUIRES blusys)
+idf_component_register(SRCS "main.c" REQUIRES blusys_hal)
 ```
 
 Service examples:
@@ -230,7 +230,7 @@ here. HAL wraps ESP-IDF drivers that are themselves C. Drivers (display, input, 
 actuator) compose HAL primitives into hardware drivers; they are mostly stateless or hold
 trivial state and do not benefit meaningfully from C++ encapsulation.
 
-**Drivers live inside `components/blusys/`, not a fourth component.** The HAL/drivers
+**Drivers live inside `components/blusys_hal/`, not a fourth component.** The HAL/drivers
 boundary is enforced by directory discipline and CI lint (not a component boundary)
 because the operational boundary is about what the code *does*, not where it lives. A
 fourth component would add a `REQUIRES` edge with no meaningful encapsulation benefit.
@@ -250,7 +250,7 @@ feedback channels all benefit from the same toolset. C++ earns its keep concrete
 The pool fires a fail-loud assert on exhaustion — silent exhaustion is worse than a crash.
 This policy keeps heap fragmentation predictable on embedded targets.
 
-**Single version tag per release.** All three components (`blusys`, `blusys_services`,
+**Single version tag per release.** All three components (`blusys_hal`, `blusys_services`,
 `blusys_framework`) ship under one git tag. Product repos pin one tag in their
 `idf_component.yml`. A three-component version matrix would require product teams to
 reason about inter-component compatibility on every update.

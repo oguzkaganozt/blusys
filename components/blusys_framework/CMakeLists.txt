@@ -48,7 +48,7 @@ endif()
 idf_component_register(
     SRCS ${blusys_framework_sources}
     INCLUDE_DIRS include
-    REQUIRES blusys blusys_services spi_flash
+    REQUIRES blusys_hal blusys_services spi_flash
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE
