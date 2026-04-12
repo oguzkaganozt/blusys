@@ -1289,6 +1289,7 @@ add_library(blusys_framework_host STATIC
 
     # App layer — blusys::app product-facing API
     ${BLUSYS_FW}/src/app/app_ctx.cpp
+    ${BLUSYS_FW}/src/app/bind_capability_ptrs.cpp
     ${BLUSYS_FW}/src/app/capabilities/connectivity_host.cpp
     ${BLUSYS_FW}/src/app/capabilities/storage_host.cpp
     ${BLUSYS_FW}/src/app/capabilities/provisioning_host.cpp
@@ -1414,6 +1415,7 @@ add_library(blusys_framework_core_host STATIC
 
     # App layer (headless subset — no view/UI sources)
     ${BLUSYS_FW}/src/app/app_ctx.cpp
+    ${BLUSYS_FW}/src/app/bind_capability_ptrs.cpp
     ${BLUSYS_FW}/src/app/capabilities/connectivity_host.cpp
     ${BLUSYS_FW}/src/app/capabilities/storage_host.cpp
     ${BLUSYS_FW}/src/app/theme_presets.cpp

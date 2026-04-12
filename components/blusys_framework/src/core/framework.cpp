@@ -1,3 +1,7 @@
+// Umbrella symbols for blusys::framework (see framework.hpp). The product path
+// is driven by blusys::app and core/runtime.hpp; these entry points stay minimal
+// so validation and widget demos can include framework.hpp without side effects.
+
 #include "blusys/framework/framework.hpp"
 
 #include "blusys/log.h"
@@ -11,7 +15,7 @@ constexpr const char *kTag = "blusys_framework";
 
 void init()
 {
-    BLUSYS_LOGD(kTag, "framework init placeholder");
+    BLUSYS_LOGD(kTag, "framework init (no-op)");
 }
 
 void run_once()

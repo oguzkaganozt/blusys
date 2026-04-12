@@ -21,6 +21,14 @@
 #include "blusys/app/app_identity.hpp"
 #include "blusys/app/app_ctx.hpp"
 #include "blusys/app/capability_list.hpp"
+// Capability headers: complete *_status types for app_ctx accessor use via umbrella include.
+#include "blusys/app/capabilities/connectivity.hpp"
+#include "blusys/app/capabilities/storage.hpp"
+#include "blusys/app/capabilities/bluetooth.hpp"
+#include "blusys/app/capabilities/ota.hpp"
+#include "blusys/app/capabilities/diagnostics.hpp"
+#include "blusys/app/capabilities/telemetry.hpp"
+#include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/entry.hpp"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI

@@ -103,9 +103,19 @@ struct host_profile {
 
 namespace blusys::app::detail {
 
-// ---- host interactive entry (SDL2 + LVGL) ----
-
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
+
+// identity->theme takes precedence over spec.theme (see app_spec.hpp).
+template <typename State, typename Action>
+const blusys::ui::theme_tokens *resolve_theme_tokens(const app_spec<State, Action> &spec)
+{
+    if (spec.identity != nullptr && spec.identity->theme != nullptr) {
+        return spec.identity->theme;
+    }
+    return spec.theme;
+}
+
+// ---- host interactive entry (SDL2 + LVGL) ----
 
 template <typename State, typename Action>
 void run_host(const app_spec<State, Action> &spec,
@@ -115,13 +125,7 @@ void run_host(const app_spec<State, Action> &spec,
 {
     blusys_app_platform::host_init(hor_res, ver_res, title);
 
-    // Resolve theme: identity->theme takes precedence, then spec.theme, then default.
-    const blusys::ui::theme_tokens *resolved_theme = nullptr;
-    if (spec.identity != nullptr && spec.identity->theme != nullptr) {
-        resolved_theme = spec.identity->theme;
-    } else if (spec.theme != nullptr) {
-        resolved_theme = spec.theme;
-    }
+    const blusys::ui::theme_tokens *resolved_theme = resolve_theme_tokens(spec);
     if (resolved_theme != nullptr) {
         blusys_app_platform::host_set_theme(static_cast<const void *>(resolved_theme));
     } else {
@@ -186,13 +190,7 @@ void run_device(const app_spec<State, Action> &spec,
         return;
     }
 
-    // Resolve theme: identity->theme takes precedence, then spec.theme, then default.
-    const blusys::ui::theme_tokens *resolved_theme = nullptr;
-    if (spec.identity != nullptr && spec.identity->theme != nullptr) {
-        resolved_theme = spec.identity->theme;
-    } else if (spec.theme != nullptr) {
-        resolved_theme = spec.theme;
-    }
+    const blusys::ui::theme_tokens *resolved_theme = resolve_theme_tokens(spec);
     if (resolved_theme != nullptr) {
         blusys_app_platform::device_set_theme(static_cast<const void *>(resolved_theme));
     } else {

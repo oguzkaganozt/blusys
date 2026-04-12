@@ -29,6 +29,7 @@ typedef struct blusys_fatfs blusys_fatfs_t;
 namespace blusys::app {
 
 class app_runtime_base;
+struct capability_list;
 
 // Forward declarations for capability status types.
 struct connectivity_status;
@@ -162,6 +163,8 @@ public:
 
 private:
     friend class app_runtime_base;
+
+    static void bind_capability_pointers_from_list(app_ctx &ctx, capability_list *capabilities);
 
     using dispatch_fn = bool (*)(void *runtime, const void *action);
 

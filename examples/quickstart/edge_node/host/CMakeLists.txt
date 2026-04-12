@@ -30,6 +30,7 @@ add_library(blusys_framework_core_host STATIC
     ${BLUSYS_FW}/src/core/router.cpp
     ${BLUSYS_FW}/src/core/runtime.cpp
     ${BLUSYS_FW}/src/app/app_ctx.cpp
+    ${BLUSYS_FW}/src/app/bind_capability_ptrs.cpp
     ${BLUSYS_FW}/src/app/capabilities/connectivity_host.cpp
     ${BLUSYS_FW}/src/app/capabilities/storage_host.cpp
     ${BLUSYS_FW}/src/app/capabilities/provisioning_host.cpp

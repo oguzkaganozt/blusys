@@ -68,7 +68,7 @@ struct app_spec {
 
     // ---- product identity (optional) ----
     // When set, the runtime applies theme and feedback preset at boot.
-    // identity->theme takes precedence over the legacy .theme field.
+    // identity->theme takes precedence over spec.theme.
     const app_identity *identity = nullptr;
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI

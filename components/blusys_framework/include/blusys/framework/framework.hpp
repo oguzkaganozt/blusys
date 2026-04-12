@@ -9,7 +9,14 @@
 
 namespace blusys::framework {
 
+// Optional umbrella hook for early startup. Currently a no-op; kept as a stable
+// call site for examples and future global framework setup. Safe to call once
+// before constructing runtime/controllers. Product apps using blusys::app entry
+// macros do not need this.
 void init();
+
+// Optional hook after tearing down a minimal runtime demo. Currently a no-op;
+// reserved for symmetry with init() in validation examples.
 void run_once();
 
 }  // namespace blusys::framework

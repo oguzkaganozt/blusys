@@ -9,6 +9,7 @@ Before changing public API, docs, repo structure, examples, scaffolding, or proj
 | File | Purpose |
 |------|---------|
 | `README.md` | Product mission, locked decisions, and scaffold rules (see **Product foundations**) |
+| `PRD.md` | Pointer to the same scope as README **Product foundations** (stable name for links) |
 | `docs/internals/architecture.md` | Architecture and tiering |
 | `docs/internals/guidelines.md` | Public API rules and contribution workflow |
 | `inventory.yml` | Module, example, and doc manifest |

@@ -6,13 +6,7 @@
 #include "blusys/app/app_ctx.hpp"
 #include "blusys/app/app_spec.hpp"
 #include "blusys/app/capability_list.hpp"
-#include "blusys/app/capabilities/connectivity.hpp"
-#include "blusys/app/capabilities/storage.hpp"
-#include "blusys/app/capabilities/bluetooth.hpp"
-#include "blusys/app/capabilities/ota.hpp"
-#include "blusys/app/capabilities/diagnostics.hpp"
-#include "blusys/app/capabilities/telemetry.hpp"
-#include "blusys/app/capabilities/provisioning.hpp"
+#include "blusys/app/detail/default_route_sink.hpp"
 #include "blusys/framework/core/containers.hpp"
 #include "blusys/framework/core/controller.hpp"
 #include "blusys/framework/core/feedback.hpp"
@@ -67,59 +61,9 @@ protected:
 
     static void bind_capability_ptrs(app_ctx &ctx, capability_list *capabilities)
     {
-        if (capabilities == nullptr) {
-            return;
-        }
-        for (std::size_t i = 0; i < capabilities->count; ++i) {
-            capability_base *c = capabilities->items[i];
-            if (c == nullptr) {
-                continue;
-            }
-            switch (c->kind()) {
-            case capability_kind::connectivity:
-                ctx.connectivity_ = static_cast<connectivity_capability *>(c);
-                break;
-            case capability_kind::storage:
-                ctx.storage_ = static_cast<storage_capability *>(c);
-                break;
-            case capability_kind::bluetooth:
-                ctx.bluetooth_ = static_cast<bluetooth_capability *>(c);
-                break;
-            case capability_kind::ota:
-                ctx.ota_ = static_cast<ota_capability *>(c);
-                break;
-            case capability_kind::diagnostics:
-                ctx.diagnostics_ = static_cast<diagnostics_capability *>(c);
-                break;
-            case capability_kind::telemetry:
-                ctx.telemetry_ = static_cast<telemetry_capability *>(c);
-                break;
-            case capability_kind::provisioning:
-                ctx.provisioning_ = static_cast<provisioning_capability *>(c);
-                break;
-            case capability_kind::custom:
-                break;
-            }
-        }
+        app_ctx::bind_capability_pointers_from_list(ctx, capabilities);
     }
 };
-
-namespace detail {
-
-// ---- logging route sink (logs route commands) ----
-
-class default_route_sink final : public blusys::framework::route_sink {
-public:
-    void submit(const blusys::framework::route_command &command) override
-    {
-        BLUSYS_LOGI("blusys_app",
-                     "route: %s id=%lu",
-                     blusys::framework::route_command_type_name(command.type),
-                     static_cast<unsigned long>(command.id));
-    }
-};
-
-}  // namespace detail
 
 // ---- app_runtime: the core bridge template ----
 
