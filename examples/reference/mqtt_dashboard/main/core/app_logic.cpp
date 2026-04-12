@@ -1,6 +1,4 @@
 #include "core/app_logic.hpp"
-
-#include "blusys/app/integration_dispatch.hpp"
 #include "blusys/app/view/bindings.hpp"
 #include "blusys/log.h"
 
@@ -86,7 +84,36 @@ blusys_err_t publish_json(blusys::app::app_ctx &ctx, const char *topic, const ch
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 {
+    using CET = blusys::app::capability_event_tag;
+
     switch (event.tag) {
+    case action_tag::capability_event:
+        switch (event.cap_event.tag) {
+        case CET::mqtt_connected:
+        case CET::mqtt_disconnected:
+        case CET::mqtt_message_received:
+        case CET::mqtt_publish_failed:
+        case CET::mqtt_error:
+        case CET::mqtt_ready:
+            state.mqtt_ready = false;
+            if (auto *mh = ctx.mqtt_host(); mh != nullptr) {
+                state.mqtt_ready = mh->status().capability_ready;
+            }
+            sync_all(ctx, state);
+            break;
+        case CET::diag_snapshot_ready:
+        case CET::diagnostics_ready:
+        case CET::diag_console_ready:
+            if (const auto *d = ctx.diagnostics(); d != nullptr) {
+                state.diagnostics = *d;
+            }
+            sync_all(ctx, state);
+            break;
+        default:
+            break;
+        }
+        break;
+
     case action_tag::mqtt_refresh:
         state.mqtt_ready = false;
         if (auto *mh = ctx.mqtt_host(); mh != nullptr) {
@@ -167,23 +194,6 @@ bool map_intent(blusys::framework::intent intent, action *out)
     default:
         return false;
     }
-}
-
-bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*/, action *out)
-{
-    using namespace blusys::app::integration;
-
-    blusys::app::mqtt_host_event me{};
-    if (as_mqtt_host_event(id, &me)) {
-        *out = action{.tag = action_tag::mqtt_refresh};
-        return true;
-    }
-
-    if (event_is_diagnostics_snapshot_or_ready(id)) {
-        *out = action{.tag = action_tag::sync_diagnostics};
-        return true;
-    }
-    return false;
 }
 
 }  // namespace mqtt_dashboard

@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "blusys/app/app.hpp"
+#include "blusys/app/capability_event.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
 #include "lvgl.h"
 
@@ -15,19 +16,19 @@ enum route_id : std::uint32_t {
 };
 
 enum class action_tag : std::uint8_t {
+    capability_event,
     sample_tick,
     set_mode,
     set_target,
     nudge_load,
     show_overview,
     show_about,
-    sync_diagnostics,
-    sync_storage,
 };
 
 struct action {
-    action_tag   tag;
-    std::int32_t value = 0;
+    action_tag                      tag = action_tag::sample_tick;
+    std::int32_t                    value = 0;
+    blusys::app::capability_event   cap_event{};
 };
 
 struct app_state {

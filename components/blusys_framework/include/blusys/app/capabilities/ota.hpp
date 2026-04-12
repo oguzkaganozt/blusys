@@ -52,6 +52,8 @@ struct ota_config {
 
 class ota_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::ota;
+
     explicit ota_capability(const ota_config &cfg);
 
     [[nodiscard]] capability_kind kind() const override { return capability_kind::ota; }
@@ -100,6 +102,8 @@ struct ota_config {
 
 class ota_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::ota;
+
     explicit ota_capability(const ota_config &cfg)
         : cfg_(cfg) {}
 

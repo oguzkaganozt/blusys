@@ -58,203 +58,168 @@ const char *op_state_name(op_state s)
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 {
+    using CET = blusys::app::capability_event_tag;
+
     switch (event.tag) {
+    case action_tag::capability_event:
+        switch (event.cap_event.tag) {
+        case CET::wifi_started:
+            BLUSYS_LOGI(kTag, "wifi started");
+            break;
+        case CET::wifi_connected:
+            state.wifi_connected = true;
+            BLUSYS_LOGI(kTag, "wifi associated");
+            break;
+        case CET::wifi_connecting:
+            BLUSYS_LOGI(kTag, "wifi connecting…");
+            break;
+        case CET::wifi_got_ip:
+            state.has_ip = true;
+            if (const auto *conn = ctx.connectivity(); conn != nullptr) {
+                BLUSYS_LOGI(kTag, "ip acquired: %s", conn->ip_info.ip);
+            }
+            break;
+        case CET::wifi_disconnected:
+            state.wifi_connected = false;
+            state.has_ip = false;
+            BLUSYS_LOGW(kTag, "wifi disconnected — buffering telemetry");
+            break;
+        case CET::wifi_reconnecting:
+            BLUSYS_LOGI(kTag, "wifi reconnecting...");
+            break;
+        case CET::time_synced:
+            state.time_synced = true;
+            BLUSYS_LOGI(kTag, "time synchronized");
+            break;
+        case CET::time_sync_failed:
+            BLUSYS_LOGW(kTag, "SNTP time sync failed (continuing)");
+            break;
+        case CET::mdns_ready:
+            BLUSYS_LOGI(kTag, "mDNS advertising ready");
+            break;
+        case CET::local_ctrl_ready:
+            BLUSYS_LOGI(kTag, "local control endpoint ready");
+            break;
+        case CET::connectivity_ready:
+            state.conn_ready = true;
+            BLUSYS_LOGI(kTag, "connectivity capability ready — all services up");
+            break;
 
-    // ---- connectivity ----
+        case CET::telemetry_delivered:
+            if (const auto *tel = ctx.telemetry(); tel != nullptr) {
+                state.delivered = tel->total_delivered;
+            }
+            BLUSYS_LOGI(kTag, "telemetry batch delivered (total=%u)", state.delivered);
+            break;
+        case CET::telemetry_failed:
+            if (const auto *tel = ctx.telemetry(); tel != nullptr) {
+                state.delivery_fails = tel->total_failed;
+            }
+            BLUSYS_LOGW(kTag, "telemetry delivery failed (fails=%u)", state.delivery_fails);
+            break;
+        case CET::telemetry_buffer_full:
+            BLUSYS_LOGW(kTag, "telemetry buffer full — oldest samples dropped");
+            break;
+        case CET::telemetry_ready:
+            BLUSYS_LOGI(kTag, "telemetry capability ready");
+            break;
+        case CET::telemetry_buffer_flushed:
+            BLUSYS_LOGD(kTag, "telemetry buffer flushed to delivery path");
+            break;
 
-    case action_tag::wifi_started:
-        BLUSYS_LOGI(kTag, "wifi started");
-        break;
+        case CET::diag_snapshot_ready:
+            if (const auto *diag = ctx.diagnostics(); diag != nullptr) {
+                state.free_heap = diag->last_snapshot.free_heap;
+                state.uptime_ms = diag->last_snapshot.uptime_ms;
+            }
+            break;
+        case CET::diagnostics_ready:
+            state.diag_ready = true;
+            BLUSYS_LOGI(kTag, "diagnostics ready");
+            break;
+        case CET::diag_console_ready:
+            break;
 
-    case action_tag::wifi_connected:
-        state.wifi_connected = true;
-        BLUSYS_LOGI(kTag, "wifi associated");
-        break;
+        case CET::ota_check_started:
+            break;
+        case CET::ota_download_started:
+            state.ota_in_progress = true;
+            state.ota_progress = 0;
+            BLUSYS_LOGI(kTag, "ota: download started");
+            break;
+        case CET::ota_download_progress:
+            state.ota_progress = static_cast<std::uint8_t>(event.cap_event.value);
+            BLUSYS_LOGI(kTag, "ota: download %u%%", state.ota_progress);
+            break;
+        case CET::ota_download_complete:
+            BLUSYS_LOGI(kTag, "ota: download complete");
+            break;
+        case CET::ota_download_failed:
+            state.ota_in_progress = false;
+            BLUSYS_LOGE(kTag, "ota: download failed — resuming normal operation");
+            break;
+        case CET::ota_apply_complete:
+            state.ota_in_progress = false;
+            BLUSYS_LOGI(kTag, "ota: firmware applied — reboot pending");
+            break;
+        case CET::ota_apply_failed:
+            state.ota_in_progress = false;
+            BLUSYS_LOGE(kTag, "ota: apply failed — resuming normal operation");
+            break;
+        case CET::ota_rollback_pending:
+            BLUSYS_LOGW(kTag, "ota: rollback pending — will mark valid after verification");
+            break;
+        case CET::ota_marked_valid:
+            BLUSYS_LOGI(kTag, "ota: firmware marked valid");
+            break;
+        case CET::ota_ready:
+            state.ota_ready = true;
+            BLUSYS_LOGI(kTag, "ota ready");
+            break;
 
-    case action_tag::wifi_connecting:
-        BLUSYS_LOGI(kTag, "wifi connecting…");
-        break;
+        case CET::prov_started:
+            BLUSYS_LOGI(kTag, "provisioning started — awaiting credentials");
+            break;
+        case CET::prov_credentials_received:
+            BLUSYS_LOGI(kTag, "provisioning: credentials received");
+            break;
+        case CET::prov_success:
+            state.provisioned = true;
+            BLUSYS_LOGI(kTag, "provisioning succeeded");
+            break;
+        case CET::prov_failed:
+            BLUSYS_LOGE(kTag, "provisioning failed");
+            break;
+        case CET::prov_already_done:
+            state.provisioned = true;
+            BLUSYS_LOGI(kTag, "already provisioned — skipping setup");
+            break;
+        case CET::prov_reset_complete:
+            state.provisioned = false;
+            BLUSYS_LOGW(kTag, "provisioning credentials cleared");
+            break;
+        case CET::provisioning_ready:
+            BLUSYS_LOGI(kTag, "provisioning capability ready");
+            break;
 
-    case action_tag::wifi_got_ip:
-        state.has_ip = true;
-        if (const auto *conn = ctx.connectivity(); conn != nullptr) {
-            BLUSYS_LOGI(kTag, "ip acquired: %s", conn->ip_info.ip);
+        case CET::storage_spiffs_mounted:
+            BLUSYS_LOGI(kTag, "SPIFFS mounted");
+            break;
+        case CET::storage_fatfs_mounted:
+            BLUSYS_LOGI(kTag, "FATFS mounted");
+            break;
+        case CET::storage_ready:
+            state.storage_ready = true;
+            BLUSYS_LOGI(kTag, "storage capability ready");
+            break;
+
+        default:
+            break;
         }
         break;
-
-    case action_tag::wifi_disconnected:
-        state.wifi_connected = false;
-        state.has_ip = false;
-        BLUSYS_LOGW(kTag, "wifi disconnected — buffering telemetry");
-        break;
-
-    case action_tag::wifi_reconnecting:
-        BLUSYS_LOGI(kTag, "wifi reconnecting...");
-        break;
-
-    case action_tag::time_synced:
-        state.time_synced = true;
-        BLUSYS_LOGI(kTag, "time synchronized");
-        break;
-
-    case action_tag::time_sync_failed:
-        BLUSYS_LOGW(kTag, "SNTP time sync failed (continuing)");
-        break;
-
-    case action_tag::mdns_ready:
-        BLUSYS_LOGI(kTag, "mDNS advertising ready");
-        break;
-
-    case action_tag::local_ctrl_ready:
-        BLUSYS_LOGI(kTag, "local control endpoint ready");
-        break;
-
-    case action_tag::conn_capability_ready:
-        state.conn_ready = true;
-        BLUSYS_LOGI(kTag, "connectivity capability ready — all services up");
-        break;
-
-    // ---- telemetry ----
-
-    case action_tag::telemetry_delivered:
-        if (const auto *tel = ctx.telemetry(); tel != nullptr) {
-            state.delivered = tel->total_delivered;
-        }
-        BLUSYS_LOGI(kTag, "telemetry batch delivered (total=%u)", state.delivered);
-        break;
-
-    case action_tag::telemetry_failed:
-        if (const auto *tel = ctx.telemetry(); tel != nullptr) {
-            state.delivery_fails = tel->total_failed;
-        }
-        BLUSYS_LOGW(kTag, "telemetry delivery failed (fails=%u)", state.delivery_fails);
-        break;
-
-    case action_tag::telemetry_buffer_full:
-        BLUSYS_LOGW(kTag, "telemetry buffer full — oldest samples dropped");
-        break;
-
-    case action_tag::telemetry_capability_ready:
-        BLUSYS_LOGI(kTag, "telemetry capability ready");
-        break;
-
-    case action_tag::telemetry_buffer_flushed:
-        BLUSYS_LOGD(kTag, "telemetry buffer flushed to delivery path");
-        break;
-
-    // ---- diagnostics ----
-
-    case action_tag::diag_snapshot:
-        if (const auto *diag = ctx.diagnostics(); diag != nullptr) {
-            state.free_heap = diag->last_snapshot.free_heap;
-            state.uptime_ms = diag->last_snapshot.uptime_ms;
-        }
-        break;
-
-    case action_tag::diag_capability_ready:
-        state.diag_ready = true;
-        BLUSYS_LOGI(kTag, "diagnostics ready");
-        break;
-
-    // ---- ota ----
-
-    case action_tag::ota_download_started:
-        state.ota_in_progress = true;
-        state.ota_progress = 0;
-        BLUSYS_LOGI(kTag, "ota: download started");
-        break;
-
-    case action_tag::ota_download_progress:
-        state.ota_progress = static_cast<std::uint8_t>(event.value);
-        BLUSYS_LOGI(kTag, "ota: download %u%%", state.ota_progress);
-        break;
-
-    case action_tag::ota_download_complete:
-        BLUSYS_LOGI(kTag, "ota: download complete");
-        break;
-
-    case action_tag::ota_download_failed:
-        state.ota_in_progress = false;
-        BLUSYS_LOGE(kTag, "ota: download failed — resuming normal operation");
-        break;
-
-    case action_tag::ota_apply_complete:
-        state.ota_in_progress = false;
-        BLUSYS_LOGI(kTag, "ota: firmware applied — reboot pending");
-        break;
-
-    case action_tag::ota_apply_failed:
-        state.ota_in_progress = false;
-        BLUSYS_LOGE(kTag, "ota: apply failed — resuming normal operation");
-        break;
-
-    case action_tag::ota_rollback_pending:
-        BLUSYS_LOGW(kTag, "ota: rollback pending — will mark valid after verification");
-        break;
-
-    case action_tag::ota_marked_valid:
-        BLUSYS_LOGI(kTag, "ota: firmware marked valid");
-        break;
-
-    case action_tag::ota_capability_ready:
-        state.ota_ready = true;
-        BLUSYS_LOGI(kTag, "ota ready");
-        break;
-
-    // ---- provisioning ----
-
-    case action_tag::prov_started:
-        BLUSYS_LOGI(kTag, "provisioning started — awaiting credentials");
-        break;
-
-    case action_tag::prov_credentials_received:
-        BLUSYS_LOGI(kTag, "provisioning: credentials received");
-        break;
-
-    case action_tag::prov_success:
-        state.provisioned = true;
-        BLUSYS_LOGI(kTag, "provisioning succeeded");
-        break;
-
-    case action_tag::prov_failed:
-        BLUSYS_LOGE(kTag, "provisioning failed");
-        break;
-
-    case action_tag::prov_already_done:
-        state.provisioned = true;
-        BLUSYS_LOGI(kTag, "already provisioned — skipping setup");
-        break;
-
-    case action_tag::prov_reset_complete:
-        state.provisioned = false;
-        BLUSYS_LOGW(kTag, "provisioning credentials cleared");
-        break;
-
-    case action_tag::prov_capability_ready:
-        // provisioned is set by prov_success / prov_already_done; this event
-        // pairs with those on the wire and only confirms the service is up.
-        BLUSYS_LOGI(kTag, "provisioning capability ready");
-        break;
-
-    // ---- storage ----
-
-    case action_tag::storage_spiffs_mounted:
-        BLUSYS_LOGI(kTag, "SPIFFS mounted");
-        break;
-
-    case action_tag::storage_fatfs_mounted:
-        BLUSYS_LOGI(kTag, "FATFS mounted");
-        break;
-
-    case action_tag::storage_capability_ready:
-        state.storage_ready = true;
-        BLUSYS_LOGI(kTag, "storage capability ready");
-        break;
-
-    // ---- periodic tick ----
 
     case action_tag::sample_tick:
-        break;  // handled in on_tick
+        break;
     }
 
     refresh_phase(state);

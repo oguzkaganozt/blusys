@@ -97,7 +97,28 @@ const char *mode_name(std::int32_t index)
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 {
+    using CET = blusys::app::capability_event_tag;
+
     switch (event.tag) {
+    case action_tag::capability_event:
+        switch (event.cap_event.tag) {
+        case CET::diag_snapshot_ready:
+        case CET::diagnostics_ready:
+        case CET::diag_console_ready:
+            if (const auto *diag = ctx.diagnostics(); diag != nullptr) {
+                state.diagnostics = *diag;
+            }
+            break;
+        case CET::storage_ready:
+            if (const auto *storage = ctx.storage(); storage != nullptr) {
+                state.storage_ready = storage->capability_ready;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+
     case action_tag::sample_tick: {
         ++state.tick_count;
         const std::int32_t wobble =
@@ -154,18 +175,6 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 
     case action_tag::show_about:
         ctx.navigate_to(route_about);
-        break;
-
-    case action_tag::sync_diagnostics:
-        if (const auto *diag = ctx.diagnostics(); diag != nullptr) {
-            state.diagnostics = *diag;
-        }
-        break;
-
-    case action_tag::sync_storage:
-        if (const auto *storage = ctx.storage(); storage != nullptr) {
-            state.storage_ready = storage->capability_ready;
-        }
         break;
     }
 

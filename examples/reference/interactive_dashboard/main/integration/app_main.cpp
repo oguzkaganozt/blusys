@@ -2,7 +2,6 @@
 #include "ui/app_ui.hpp"
 
 #include "blusys/app/build_profile.hpp"
-#include "blusys/app/integration.hpp"
 #include "blusys/app/layout_surface.hpp"
 #include "blusys/app/theme_presets.hpp"
 
@@ -95,22 +94,6 @@ const blusys::app::view::shell_config dashboard_shell_for_profile()
 
 static const blusys::app::view::shell_config kShellConfig = dashboard_shell_for_profile();
 
-bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*/, action *out)
-{
-    using blusys::app::integration::event_is_diagnostics_snapshot_or_ready;
-    using blusys::app::integration::event_is_storage_capability_ready;
-
-    if (event_is_diagnostics_snapshot_or_ready(id)) {
-        *out = action{.tag = action_tag::sync_diagnostics};
-        return true;
-    }
-    if (event_is_storage_capability_ready(id)) {
-        *out = action{.tag = action_tag::sync_storage};
-        return true;
-    }
-    return false;
-}
-
 static blusys::app::diagnostics_capability diagnostics{{
     .enable_console        = false,
     .snapshot_interval_ms  = 1000,
@@ -129,7 +112,8 @@ static const blusys::app::app_spec<app_state, action> spec{
     .on_init          = ui::on_init,
     .on_tick          = on_tick,
     .map_intent       = map_intent,
-    .map_event        = map_event,
+    .capability_event_discriminant =
+        static_cast<std::uint32_t>(action_tag::capability_event),
     .tick_period_ms   = 400,
     .capabilities     = &capabilities,
     .theme            = &blusys::app::presets::expressive_dark(),

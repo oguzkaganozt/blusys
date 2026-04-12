@@ -1,6 +1,7 @@
 #pragma once
 
 #include "blusys/app/app.hpp"
+#include "blusys/app/capability_event.hpp"
 
 #include <cstdint>
 
@@ -13,17 +14,17 @@ struct State {
     int  tick_count       = 0;
 };
 
-enum class Action {
-    wifi_got_ip,
-    wifi_disconnected,
-    time_synced,
-    capability_ready,
+enum class action_tag : std::uint8_t {
+    capability_event,
     periodic_tick,
 };
 
-void update(blusys::app::app_ctx &ctx, State &state, const Action &action);
+struct Action {
+    action_tag                      tag = action_tag::periodic_tick;
+    blusys::app::capability_event   cap_event{};
+};
 
-bool map_event(std::uint32_t id, std::uint32_t code, const void *payload, Action *out);
+void update(blusys::app::app_ctx &ctx, State &state, const Action &action);
 
 void on_tick(blusys::app::app_ctx &ctx, State &state, std::uint32_t now_ms);
 

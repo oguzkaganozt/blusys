@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "blusys/app/app.hpp"
+#include "blusys/app/capability_event.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
 #include "blusys/app/screens/status_screen.hpp"
 
@@ -36,54 +37,7 @@ enum route_id : std::uint32_t {
 // ---- actions ----
 
 enum class action_tag : std::uint8_t {
-    // connectivity
-    wifi_started,
-    wifi_connected,
-    wifi_connecting,
-    wifi_got_ip,
-    wifi_disconnected,
-    wifi_reconnecting,
-    time_synced,
-    time_sync_failed,
-    mdns_ready,
-    local_ctrl_ready,
-    conn_capability_ready,
-
-    // telemetry
-    telemetry_delivered,
-    telemetry_failed,
-    telemetry_buffer_full,
-    telemetry_capability_ready,
-    telemetry_buffer_flushed,
-
-    // diagnostics
-    diag_snapshot,
-    diag_capability_ready,
-
-    // ota
-    ota_download_started,
-    ota_download_progress,
-    ota_download_complete,
-    ota_download_failed,
-    ota_apply_complete,
-    ota_apply_failed,
-    ota_rollback_pending,
-    ota_marked_valid,
-    ota_capability_ready,
-
-    // provisioning
-    prov_started,
-    prov_credentials_received,
-    prov_success,
-    prov_failed,
-    prov_already_done,
-    prov_reset_complete,
-    prov_capability_ready,
-
-    // storage
-    storage_spiffs_mounted,
-    storage_fatfs_mounted,
-    storage_capability_ready,
+    capability_event,
 
     // navigation (interactive)
     show_dashboard,
@@ -96,8 +50,9 @@ enum class action_tag : std::uint8_t {
 };
 
 struct action {
-    action_tag    tag;
-    std::int32_t  value = 0;
+    action_tag                      tag = action_tag::sample_tick;
+    std::int32_t                    value = 0;
+    blusys::app::capability_event   cap_event{};
 };
 
 // ---- app state ----

@@ -129,7 +129,8 @@ static const blusys::app::app_spec<app_state, action> spec{
     .on_init        = ui::on_init,
     .on_tick        = nullptr,
     .map_intent     = map_intent,
-    .map_event      = map_event,
+    .capability_event_discriminant =
+        static_cast<std::uint32_t>(action_tag::capability_event),
     .tick_period_ms = 50,
     .capabilities   = &capabilities,
     .theme          = &blusys::app::presets::expressive_dark(),

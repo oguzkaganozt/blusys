@@ -1,6 +1,7 @@
 #pragma once
 
 #include "blusys/app/app.hpp"
+#include "blusys/app/capability_event.hpp"
 
 #include <cstdint>
 
@@ -23,22 +24,19 @@ struct State {
 };
 
 enum class Tag : std::uint8_t {
-    wifi_got_ip,
-    wifi_disconnected,
-    capability_ready,
+    capability_event,
     brightness_up,
     brightness_down,
     confirm,
 };
 
 struct Action {
-    Tag tag;
+    Tag                             tag{};
+    blusys::app::capability_event   cap_event{};
 };
 
 void update(app_ctx &ctx, State &state, const Action &action);
 
 bool map_intent(blusys::framework::intent intent, Action *out);
-
-bool map_event(std::uint32_t id, std::uint32_t code, const void *payload, Action *out);
 
 }  // namespace connected_device

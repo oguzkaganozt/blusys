@@ -1,0 +1,97 @@
+#pragma once
+
+#include <cstdint>
+
+namespace blusys::app {
+
+// Canonical capability integration events — one tag space for all subsystems.
+// Populated by the framework from raw integration event IDs; reducers typically
+// handle these inside `action_tag::capability_event` via `action.cap_event`.
+enum class capability_event_tag : std::uint16_t {
+    none = 0,
+
+    // connectivity (0x01xx band)
+    wifi_started,
+    wifi_connecting,
+    wifi_connected,
+    wifi_got_ip,
+    wifi_disconnected,
+    wifi_reconnecting,
+    time_synced,
+    time_sync_failed,
+    mdns_ready,
+    local_ctrl_ready,
+    connectivity_ready,
+
+    // storage (0x02xx)
+    storage_spiffs_mounted,
+    storage_fatfs_mounted,
+    storage_ready,
+
+    // bluetooth (0x03xx)
+    bt_gap_ready,
+    bt_advertising_started,
+    bt_advertising_stopped,
+    bt_scan_result,
+    bt_gatt_ready,
+    bt_client_connected,
+    bt_client_disconnected,
+    bt_characteristic_written,
+    bluetooth_ready,
+
+    // ota (0x04xx)
+    ota_check_started,
+    ota_download_started,
+    ota_download_progress,
+    ota_download_complete,
+    ota_download_failed,
+    ota_apply_complete,
+    ota_apply_failed,
+    ota_rollback_pending,
+    ota_marked_valid,
+    ota_ready,
+
+    // diagnostics (0x05xx)
+    diag_snapshot_ready,
+    diag_console_ready,
+    diagnostics_ready,
+
+    // telemetry (0x06xx)
+    telemetry_delivered,
+    telemetry_failed,
+    telemetry_buffer_full,
+    telemetry_buffer_flushed,
+    telemetry_ready,
+
+    // provisioning (0x07xx)
+    prov_started,
+    prov_credentials_received,
+    prov_success,
+    prov_failed,
+    prov_already_done,
+    prov_reset_complete,
+    provisioning_ready,
+
+    // mqtt_host (0x08xx, host/SDL)
+    mqtt_connected,
+    mqtt_disconnected,
+    mqtt_message_received,
+    mqtt_publish_failed,
+    mqtt_error,
+    mqtt_ready,
+};
+
+struct capability_event {
+    capability_event_tag tag = capability_event_tag::none;
+    std::int32_t         value = 0;  // e.g. OTA download percent
+};
+
+// Maps a raw integration event (as posted by capabilities) to a canonical event.
+// Returns false for unknown IDs — those are dropped by the runtime.
+[[nodiscard]] bool map_integration_event(std::uint32_t event_id, std::uint32_t event_code,
+                                         capability_event *out) noexcept;
+
+// Sentinel for app_spec::capability_event_discriminant — auto-wrap disabled.
+inline constexpr std::uint32_t k_capability_event_discriminant_unset = 0xFFFFFFFFu;
+
+}  // namespace blusys::app

@@ -4,6 +4,7 @@
 #include <array>
 
 #include "blusys/app/app.hpp"
+#include "blusys/app/capability_event.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/screens/status_screen.hpp"
@@ -19,20 +20,19 @@ enum route_id : std::uint32_t {
 };
 
 enum class action_tag : std::uint8_t {
+    capability_event,
     sample_tick,
     set_mode,
     show_dashboard,
     show_status,
     show_settings,
     open_about,
-    sync_diagnostics,
-    sync_storage,
-    sync_connectivity,
 };
 
 struct action {
-    action_tag   tag;
-    std::int32_t value = 0;
+    action_tag                      tag = action_tag::sample_tick;
+    std::int32_t                    value = 0;
+    blusys::app::capability_event   cap_event{};
 };
 
 struct app_state {

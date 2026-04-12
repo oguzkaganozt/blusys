@@ -7,7 +7,7 @@ set(blusys_framework_sources
     src/core/router.cpp
     src/core/runtime.cpp
     src/app/app_ctx.cpp
-    src/app/bind_capability_ptrs.cpp
+    src/app/capability_event_map.cpp
 )
 
 # Capabilities — device-only (depend on blusys_services C APIs).

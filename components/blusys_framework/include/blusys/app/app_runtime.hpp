@@ -18,6 +18,21 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
+
+namespace blusys::app::detail {
+
+template <typename T, typename = void>
+struct action_has_cap_event_member : std::false_type {};
+
+template <typename T>
+struct action_has_cap_event_member<T, std::void_t<decltype(std::declval<T &>().cap_event)>>
+    : std::true_type {};
+
+template <typename T>
+inline constexpr bool action_has_cap_event_member_v = action_has_cap_event_member<T>::value;
+
+}  // namespace blusys::app::detail
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/app/view/screen_router.hpp"
@@ -140,6 +155,23 @@ public:
         start_capabilities();
         bind_capability_ptrs(ctx_, spec_.capabilities);
         bind_product_state(ctx_, static_cast<void *>(&state_));
+
+        if (spec_.capabilities != nullptr && spec_.map_event == nullptr) {
+            if constexpr (!detail::action_has_cap_event_member_v<Action>) {
+                BLUSYS_LOGE("blusys_app",
+                            "capabilities require app_spec::map_event when Action has no "
+                            "cap_event field");
+                return BLUSYS_ERR_INVALID_ARG;
+            }
+            if constexpr (detail::action_has_cap_event_member_v<Action>) {
+                if (spec_.capability_event_discriminant == k_capability_event_discriminant_unset) {
+                    BLUSYS_LOGE(
+                        "blusys_app",
+                        "capabilities registered but capability_event_discriminant is unset");
+                    return BLUSYS_ERR_INVALID_ARG;
+                }
+            }
+        }
 
         if (spec_.on_init != nullptr) {
             spec_.on_init(ctx_, state_);
@@ -283,12 +315,26 @@ private:
                     owner_.post_action(action);
                 }
             } else if (event.kind == blusys::framework::app_event_kind::integration) {
-                if (owner_.spec_.map_event == nullptr) {
+                capability_event ce{};
+                if (!map_integration_event(event.id, event.code, &ce)) {
                     return;
                 }
-                Action action;
-                if (owner_.spec_.map_event(event.id, event.code, event.payload, &action)) {
-                    owner_.post_action(action);
+                if (owner_.spec_.map_event != nullptr) {
+                    Action out_action{};
+                    if (owner_.spec_.map_event(ce, &out_action)) {
+                        owner_.post_action(out_action);
+                    }
+                } else if (owner_.spec_.capability_event_discriminant !=
+                           k_capability_event_discriminant_unset) {
+                    if constexpr (detail::action_has_cap_event_member_v<Action>) {
+                        Action out_action{};
+                        using tag_type =
+                            std::remove_const_t<std::remove_reference_t<decltype(out_action.tag)>>;
+                        out_action.tag =
+                            static_cast<tag_type>(owner_.spec_.capability_event_discriminant);
+                        out_action.cap_event = ce;
+                        owner_.post_action(out_action);
+                    }
                 }
             }
         }

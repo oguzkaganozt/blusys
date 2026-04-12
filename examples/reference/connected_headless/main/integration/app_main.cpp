@@ -45,7 +45,8 @@ static const blusys::app::app_spec<connected_headless::State, connected_headless
     .initial_state  = {},
     .update         = connected_headless::update,
     .on_tick        = connected_headless::on_tick,
-    .map_event      = connected_headless::map_event,
+    .capability_event_discriminant =
+        static_cast<std::uint32_t>(connected_headless::action_tag::capability_event),
     .tick_period_ms = 100,
     .capabilities   = &capabilities,
 };

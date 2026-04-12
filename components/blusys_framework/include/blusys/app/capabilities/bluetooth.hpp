@@ -55,6 +55,8 @@ struct bluetooth_config {
 
 class bluetooth_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::bluetooth;
+
     explicit bluetooth_capability(const bluetooth_config &cfg);
 
     [[nodiscard]] capability_kind kind() const override { return capability_kind::bluetooth; }
@@ -97,6 +99,8 @@ struct bluetooth_config {
 
 class bluetooth_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::bluetooth;
+
     explicit bluetooth_capability(const bluetooth_config &cfg)
         : cfg_(cfg) {}
 
