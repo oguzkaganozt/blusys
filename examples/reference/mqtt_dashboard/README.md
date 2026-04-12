@@ -12,7 +12,7 @@ Install **libmosquitto** (e.g. `sudo apt install libmosquitto-dev`), then:
 blusys host-build examples/reference/mqtt_dashboard
 ```
 
-Run `build-host/mqtt_dashboard_host`. Optional CMake cache: `BLUSYS_MQTT_DASH_BROKER` (default `mqtt://test.mosquitto.org`), `BLUSYS_MQTT_DASH_HOST_DISPLAY_PROFILE` (0 = 320×240, 1 = 480×320).
+Run `build-host/mqtt_dashboard_host`. Optional CMake cache: `BLUSYS_MQTT_DASH_BROKER` (default `mqtt://test.mosquitto.org`), `BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE` (0 = 320×240, 1 = 480×320).
 
 Public test brokers are for demos only—do not send secrets.
 

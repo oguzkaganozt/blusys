@@ -15,6 +15,11 @@
 //   - runtime construction and main loop
 //
 // Available entry macros:
+//   BLUSYS_APP(spec)                            — default interactive archetype when UI is
+//                                                  enabled; headless when BLUSYS_FRAMEWORK_HAS_UI
+//                                                  is off (e.g. edge_node without LVGL)
+//   BLUSYS_APP_INTERACTIVE(spec)                — interactive_controller profile (ST7735/ST7789)
+//   BLUSYS_APP_DASHBOARD(spec, host_title)      — gateway/panel/dashboard SPI profile + SDL title
 //   BLUSYS_APP_MAIN_HOST(spec)                  — interactive, SDL2 host
 //   BLUSYS_APP_MAIN_HOST_PROFILE(spec, profile) — interactive host + explicit window size/title
 //   BLUSYS_APP_MAIN_HEADLESS(spec)              — no UI, terminal
@@ -22,6 +27,7 @@
 //   BLUSYS_APP_MAIN_DEVICE(spec, profile)       — device target with LCD + optional encoder
 
 #include "blusys/app/app_runtime.hpp"
+#include "blusys/app/host_profile.hpp"
 #include "blusys/app/profiles/headless.hpp"
 #include "blusys/framework/core/runtime.hpp"
 #include "blusys/log.h"
@@ -38,6 +44,10 @@
 
 #if defined(BLUSYS_FRAMEWORK_HAS_UI) && !defined(ESP_PLATFORM)
 #include "blusys/app/touch_bridge.hpp"
+#endif
+
+#if defined(BLUSYS_FRAMEWORK_HAS_UI)
+#include "blusys/app/auto_profile.hpp"
 #endif
 
 #include <cstdint>
@@ -83,23 +93,6 @@ std::uint32_t headless_get_ticks_ms();
 void headless_delay(std::uint32_t ms);
 
 }  // namespace blusys_app_platform
-
-// ---- host profile ----
-
-#ifdef BLUSYS_FRAMEWORK_HAS_UI
-
-namespace blusys::app {
-
-// Passed to BLUSYS_APP_MAIN_HOST_PROFILE to control the SDL2 window.
-struct host_profile {
-    int         hor_res = 480;
-    int         ver_res = 320;
-    const char *title   = "Blusys App";
-};
-
-}  // namespace blusys::app
-
-#endif  // BLUSYS_FRAMEWORK_HAS_UI
 
 namespace blusys::app::detail {
 
@@ -375,9 +368,53 @@ void run_headless(const app_spec<State, Action> &spec,
         auto _blusys_profile = (profile_expr);                              \
         ::blusys::app::detail::run_device(_blusys_spec, _blusys_profile);   \
     }
+
+#define BLUSYS_APP_INTERACTIVE(spec_expr)                                   \
+    extern "C" void app_main(void) {                                        \
+        auto _blusys_spec = (spec_expr);                                    \
+        ::blusys::app::detail::run_device(_blusys_spec,                     \
+                                          ::blusys::app::auto_profile_interactive()); \
+    }
+
+#define BLUSYS_APP_DASHBOARD(spec_expr, host_title_literal)                 \
+    extern "C" void app_main(void) {                                        \
+        auto _blusys_spec = (spec_expr);                                    \
+        (void)(host_title_literal);                                         \
+        ::blusys::app::detail::run_device(_blusys_spec,                     \
+                                          ::blusys::app::auto_profile_dashboard()); \
+    }
+#else
+#define BLUSYS_APP_INTERACTIVE(spec_expr)                                   \
+    int main(void) {                                                        \
+        auto _blusys_spec = (spec_expr);                                    \
+        const auto _hp = ::blusys::app::auto_host_profile_interactive();    \
+        ::blusys::app::detail::run_host(_blusys_spec,                       \
+                                        _hp.hor_res,                        \
+                                        _hp.ver_res,                        \
+                                        _hp.title);                         \
+        return 0;                                                           \
+    }
+
+#define BLUSYS_APP_DASHBOARD(spec_expr, host_title_literal)                 \
+    int main(void) {                                                        \
+        auto _blusys_spec = (spec_expr);                                    \
+        const auto _hp = ::blusys::app::auto_host_profile_dashboard(        \
+            (host_title_literal));                                          \
+        ::blusys::app::detail::run_host(_blusys_spec,                       \
+                                        _hp.hor_res,                        \
+                                        _hp.ver_res,                        \
+                                        _hp.title);                         \
+        return 0;                                                           \
+    }
 #endif  // ESP_PLATFORM
 
+#define BLUSYS_APP(spec_expr) BLUSYS_APP_INTERACTIVE(spec_expr)
+
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
+
+#if !defined(BLUSYS_FRAMEWORK_HAS_UI)
+#define BLUSYS_APP(spec_expr) BLUSYS_APP_MAIN_HEADLESS(spec_expr)
+#endif
 
 #if defined(ESP_PLATFORM)
 #define BLUSYS_APP_MAIN_HEADLESS(spec_expr)                                 \

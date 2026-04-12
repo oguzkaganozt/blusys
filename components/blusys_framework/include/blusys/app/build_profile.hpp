@@ -4,6 +4,7 @@
 // Prefer these names in new integration entry files; `reference_build_profile.hpp` remains
 // the implementation source.
 
+#include "blusys/app/auto_profile.hpp"
 #include "blusys/app/reference_build_profile.hpp"
 
 namespace blusys::app::build_profile {
@@ -17,14 +18,14 @@ namespace blusys::app::build_profile {
 
 [[nodiscard]] inline device_profile device_profile_for_interactive()
 {
-    return reference_build::interactive_device_profile();
+    return auto_profile_interactive();
 }
 
 #else
 
 [[nodiscard]] inline device_profile host_logical_profile()
 {
-    return reference_build::interactive_host_logical_profile();
+    return auto_profile_interactive();
 }
 
 #endif
@@ -49,7 +50,7 @@ namespace blusys::app::build_profile {
 #if !defined(ESP_PLATFORM)
 [[nodiscard]] inline host_profile host_window(const char *window_title)
 {
-    return reference_build::interactive_host_window_profile(window_title);
+    return auto_host_profile_interactive(window_title);
 }
 #endif
 

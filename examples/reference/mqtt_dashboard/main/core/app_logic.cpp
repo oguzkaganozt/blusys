@@ -1,4 +1,5 @@
 #include "core/app_logic.hpp"
+#include "blusys/app/capabilities/mqtt_host.hpp"
 #include "blusys/app/view/bindings.hpp"
 #include "blusys/log.h"
 
