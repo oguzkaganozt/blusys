@@ -146,7 +146,6 @@ nav:
           - Architecture: internals/architecture.md
           - Guidelines: internals/guidelines.md
           - Target Matrix: internals/target-matrix.md
-          - "V2 plan": internals/v2-plan.md
       - "Display & integration":
           - "LVGL integration (ST7735, resolved)": internals/lvgl-st7735-integration.md
       - Testing:

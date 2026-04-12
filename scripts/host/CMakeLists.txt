@@ -30,6 +30,14 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(BLUSYS_HOST_SANITIZE "Enable AddressSanitizer + UndefinedBehaviorSanitizer for host targets" OFF)
+if(BLUSYS_HOST_SANITIZE)
+    add_compile_options(-fsanitize=address,undefined -g -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
+
+enable_testing()
+
 # Repo root — used to point the framework bridge at the in-tree
 # blusys / blusys_framework component sources.
 get_filename_component(BLUSYS_REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
@@ -331,3 +339,21 @@ target_compile_options(pomodoro_host PRIVATE
     -Wall
     -Wextra
 )
+
+# ── host_spine_test (ring_buffer / containers — no LVGL) ─────────────────────
+add_executable(host_spine_test src/host_spine_test.cpp)
+target_include_directories(host_spine_test PRIVATE ${BLUSYS_FRAMEWORK_DIR}/include)
+target_compile_options(host_spine_test PRIVATE -Wall -Wextra)
+add_test(NAME host_spine_test COMMAND host_spine_test)
+
+# ── snapshot_buffer_smoke (stub display + partial flush, no SDL window) ───────
+add_executable(snapshot_buffer_smoke src/snapshot_buffer_smoke.cpp)
+target_link_libraries(snapshot_buffer_smoke PRIVATE lvgl m)
+target_compile_options(snapshot_buffer_smoke PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    -Wall
+    -Wextra
+)
+add_test(NAME snapshot_buffer_smoke COMMAND snapshot_buffer_smoke)

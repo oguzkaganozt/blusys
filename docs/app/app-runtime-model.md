@@ -36,4 +36,4 @@ Capabilities are **started** before `on_init` and **polled** from the runtime st
 ## Related reading
 
 - [Reducer model](reducer-model.md) — `app_spec`, state, and actions
-- [Guidelines — product application shape](../internals/guidelines.md#product-application-c-shape-v7) — conventions for routes, view sync, integration
+- [Guidelines — product application shape](../internals/guidelines.md#product-application-cpp-shape) — conventions for routes, view sync, integration

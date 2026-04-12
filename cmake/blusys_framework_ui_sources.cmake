@@ -4,8 +4,22 @@
 #   - scripts/host/CMakeLists.txt (full host harness)
 #   - cmake/blusys_framework_host_widgetkit.cmake (LVGL primitives/widgets only)
 #
+# Widget translation units under src/ui/widgets/<name>/<name>.cpp (one directory
+# level under widgets/) are auto-discovered so new widgets do not require editing
+# long manual lists.
+#
 # ESP-IDF builds also compile two device-only translation units when UI is on;
 # host builds omit them.
+
+get_filename_component(_blusys_framework_root "${CMAKE_CURRENT_LIST_DIR}/../components/blusys_framework" ABSOLUTE)
+file(GLOB _blusys_ui_widget_abs CONFIGURE_DEPENDS
+    "${_blusys_framework_root}/src/ui/widgets/*/*.cpp")
+list(SORT _blusys_ui_widget_abs)
+set(BLUSYS_FRAMEWORK_UI_WIDGET_SRC_REL "")
+foreach(_w IN LISTS _blusys_ui_widget_abs)
+    file(RELATIVE_PATH _rel ${_blusys_framework_root} ${_w})
+    list(APPEND BLUSYS_FRAMEWORK_UI_WIDGET_SRC_REL ${_rel})
+endforeach()
 
 set(BLUSYS_FRAMEWORK_UI_SRC_DEVICE_ONLY
     src/app/input_bridge.cpp
@@ -33,23 +47,7 @@ set(BLUSYS_FRAMEWORK_UI_SRC_SHARED
     src/ui/primitives/icon_label.cpp
     src/ui/primitives/status_badge.cpp
     src/ui/primitives/key_value.cpp
-    src/ui/widgets/button/button.cpp
-    src/ui/widgets/card/card.cpp
-    src/ui/widgets/chart/chart.cpp
-    src/ui/widgets/data_table/data_table.cpp
-    src/ui/widgets/dropdown/dropdown.cpp
-    src/ui/widgets/gauge/gauge.cpp
-    src/ui/widgets/input_field/input_field.cpp
-    src/ui/widgets/knob/knob.cpp
-    src/ui/widgets/level_bar/level_bar.cpp
-    src/ui/widgets/list/list.cpp
-    src/ui/widgets/modal/modal.cpp
-    src/ui/widgets/overlay/overlay.cpp
-    src/ui/widgets/progress/progress.cpp
-    src/ui/widgets/slider/slider.cpp
-    src/ui/widgets/tabs/tabs.cpp
-    src/ui/widgets/toggle/toggle.cpp
-    src/ui/widgets/vu_strip/vu_strip.cpp
+    ${BLUSYS_FRAMEWORK_UI_WIDGET_SRC_REL}
     src/app/shell.cpp
     src/app/touch_bridge.cpp
     src/ui/transition.cpp
@@ -68,8 +66,8 @@ set(BLUSYS_FRAMEWORK_UI_SRC_SHARED
     src/app/screens/diagnostics_screen.cpp
 )
 
-# Minimal host examples: only LVGL-facing sources (icons, input, primitives, widgets,
-# transition, focus). Keep in sync with BLUSYS_FRAMEWORK_UI_SRC_SHARED src/ui/** entries.
+# Minimal host examples: LVGL-facing sources (icons, input, primitives, widgets,
+# transition, focus). Widget list matches BLUSYS_FRAMEWORK_UI_WIDGET_SRC_REL.
 set(BLUSYS_FRAMEWORK_HOST_WIDGETKIT_REL
     src/ui/icons/icon_set_minimal.cpp
     src/ui/input/encoder.cpp
@@ -83,23 +81,7 @@ set(BLUSYS_FRAMEWORK_HOST_WIDGETKIT_REL
     src/ui/primitives/icon_label.cpp
     src/ui/primitives/status_badge.cpp
     src/ui/primitives/key_value.cpp
-    src/ui/widgets/button/button.cpp
-    src/ui/widgets/card/card.cpp
-    src/ui/widgets/chart/chart.cpp
-    src/ui/widgets/data_table/data_table.cpp
-    src/ui/widgets/dropdown/dropdown.cpp
-    src/ui/widgets/gauge/gauge.cpp
-    src/ui/widgets/input_field/input_field.cpp
-    src/ui/widgets/knob/knob.cpp
-    src/ui/widgets/level_bar/level_bar.cpp
-    src/ui/widgets/list/list.cpp
-    src/ui/widgets/modal/modal.cpp
-    src/ui/widgets/overlay/overlay.cpp
-    src/ui/widgets/progress/progress.cpp
-    src/ui/widgets/slider/slider.cpp
-    src/ui/widgets/tabs/tabs.cpp
-    src/ui/widgets/toggle/toggle.cpp
-    src/ui/widgets/vu_strip/vu_strip.cpp
+    ${BLUSYS_FRAMEWORK_UI_WIDGET_SRC_REL}
     src/ui/transition.cpp
     src/ui/input/focus_scope.cpp
 )

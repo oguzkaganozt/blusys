@@ -184,6 +184,16 @@ target_compile_definitions(${COMPONENT_LIB} PRIVATE
 
 Sizing rule of thumb: count the maximum simultaneous live instances of that widget type across **all loaded screens**, then add a small headroom for transient overlays. Don't worry about the total RAM cost of pools — each slot is ~16 bytes; even 256 button slots is 4 KB.
 
+## Camp 3 instance data (`bu_knob`)
+
+Some widgets allocate a small per-instance struct with **LVGL’s allocator** (`lv_malloc` / `lv_free` in `LV_EVENT_DELETE`) instead of a global slot pool. Use this when you want unbounded instance counts without Kconfig pool sizing, at the cost of one allocation per interactive instance (still only at create time).
+
+- **Public API stays the same** as Camp 2 — `knob_config`, `knob_create`, setters — products do not see LVGL events.
+- **Lifecycle:** allocate `knob_data` when callbacks are needed; if `lv_arc_create` fails afterward, `lv_free` the struct before returning `nullptr`. On success, attach with `lv_obj_set_user_data`, register `LV_EVENT_VALUE_CHANGED` / `LV_EVENT_DELETE`, and `lv_free` the struct in the delete handler.
+- **Failure:** if `lv_malloc` fails, log and return `nullptr` from `knob_create` without leaking half-built state.
+
+`bu_knob` is the reference Camp 3 widget; older stock widgets remain Camp 2 until migrated individually.
+
 ## Variants and the `apply_<variant>` helper
 
 Widgets with visual variants (e.g. `button_variant::primary` / `secondary` / `ghost` / `danger`) factor styling into a single helper used by both `<widget>_create` and `<widget>_set_variant`:
@@ -258,14 +268,23 @@ Before sending a new widget for review, verify:
 - [ ] Config struct is `<name>_config` with default initializers.
 - [ ] Callbacks in the config use semantic types from `blusys/framework/ui/callbacks.hpp`.
 - [ ] All visual values come from `theme()`. No hex literals, no magic numbers, no inline fonts.
-- [ ] Slot pool size macro `BLUSYS_UI_<NAME>_POOL_SIZE` is defined with a default of 32.
-- [ ] `acquire_slot()` is called *before* `lv_<stock>_create()`.
-- [ ] Pool exhaustion logs `BLUSYS_LOGE` and `assert(false)`.
-- [ ] `LV_EVENT_DELETE` handler calls `release_slot()`.
 - [ ] State transitions go through `<name>_set_*` setters.
 - [ ] Setters null-check the handle and do not allocate.
-- [ ] Source is added to `CMakeLists.txt` under the `BLUSYS_BUILD_UI` block.
+- [ ] Stock widget `.cpp` files are picked up by `file(GLOB ...)` in `cmake/blusys_framework_ui_sources.cmake` (path `src/ui/widgets/<name>/<name>.cpp`); no manual widget list edits.
 - [ ] Header is included from `widgets.hpp`.
 - [ ] At least one example exercises the create + a setter + a callback.
 - [ ] Builds clean for esp32, esp32c3, and esp32s3 via `./blusys build examples/framework_ui_basic <target>`.
 - [ ] `./blusys lint` passes.
+
+**Camp 2 — slot pool** (most stock widgets):
+
+- [ ] Slot pool macro `BLUSYS_UI_<NAME>_POOL_SIZE` is defined with a default of 32.
+- [ ] `acquire_slot()` is called *before* `lv_<stock>_create()`.
+- [ ] Pool exhaustion logs `BLUSYS_LOGE` and `assert(false)`.
+- [ ] `LV_EVENT_DELETE` handler calls `release_slot()`.
+
+**Camp 3 — `lv_malloc` instance data** (e.g. `bu_knob` — see **Camp 3 instance data** above):
+
+- [ ] No pool macro; per-widget struct allocated with `lv_malloc` when callback storage is needed.
+- [ ] If `lv_<stock>_create` fails after `lv_malloc`, `lv_free` the struct before returning `nullptr`.
+- [ ] `LV_EVENT_DELETE` handler `lv_free`s the struct (and clears user data if needed); no `release_slot()`.

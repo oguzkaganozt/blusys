@@ -18,7 +18,7 @@ Start by reading the [Architecture](architecture.md) page.
 - `components/blusys_framework/` is the only C++ tier in V1; it exposes C++ headers
 - framework C++ uses `-std=c++20 -fno-exceptions -fno-rtti -fno-threadsafe-statics`
 - framework C++ should stay platform-facing and disciplined, not become a second copy of ESP-IDF internals
-- services migration to C++ is deferred to V2
+- services migration to C++ is out of scope; the services tier stays C
 - keep cross-tier boundaries explicit: framework depends on services, services depend on HAL + drivers
 
 See [Architecture](architecture.md) for the tier model.
@@ -67,7 +67,7 @@ See [Architecture](architecture.md) for the tier model.
 
 - do not expose target-specific behavior unless all supported targets share it
 - do not add or recommend public API without proportionate examples, docs, and validation
-- during the v7 refactor, prefer the new canonical product path over preserving additive continuity with the old one
+- prefer the canonical product path over preserving additive continuity with legacy sketches
 
 ### Framework product API versioning
 
@@ -79,7 +79,7 @@ Breaking changes to `app_spec`, `app_ctx`, and umbrella `blusys/app/*.hpp` heade
 - **Validation examples** (`examples/validation/`) and other non-`blusys::app` demos are exempt; see `scripts/check-product-layout.py`.
 - Optional inventory flags: `layout_exempt`, `product_layout` (see `inventory.yml` header).
 
-### Product application C++ shape (v7)
+### Product application C++ shape {#product-application-cpp-shape}
 
 - **Reducer center:** domain rules live in `update(ctx, state, action)`; keep navigation and capability sync as explicit actions.
 - **Strong ids:** use `enum class` for routes and overlays in product code; `app_ctx::navigate_to` / `show_overlay` accept those enums.
@@ -95,7 +95,7 @@ Breaking changes to `app_spec`, `app_ctx`, and umbrella `blusys/app/*.hpp` heade
 2. define whether the work belongs to the canonical product path, an advanced path, or validation-only infrastructure
 3. define the public API shape and ownership boundary
 4. define lifecycle and thread-safety rules
-5. implement the smallest change that moves the repo toward the v7 target
+5. implement the smallest change that advances the canonical product path
 6. add or update only the docs, examples, and validation required for that support tier
 7. validate the affected paths proportionally
 
@@ -105,7 +105,7 @@ Breaking changes to `app_spec`, `app_ctx`, and umbrella `blusys/app/*.hpp` heade
 - keep the public surface smaller than the backend surface
 - avoid target-specific public APIs unless there is a clear need
 - keep target differences internal
-- during the v7 refactor, prefer deliberate simplification over preserving broad additive surface area
+- prefer deliberate simplification over preserving broad additive surface area
 
 ### Release Rules
 
@@ -180,5 +180,5 @@ Advanced or validation-only surfaces may require a different mix of examples, do
 
 ## Project Tracking
 
-- v7 product foundations: `../README.md` (**Product foundations**)
+- product foundations: `../README.md` (**Product foundations**)
 - repository guidance for agents: `../CLAUDE.md`

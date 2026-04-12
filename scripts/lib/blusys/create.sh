@@ -253,15 +253,27 @@ Canonical starter: __ARCHETYPE_LABEL__
 
 ## Layout
 
-- `main/core/` owns product state and reducer behavior
-- `main/ui/` owns screens and rendering when the archetype uses UI
-- `main/integration/` owns entry wiring, capabilities, and runtime integration
+- `main/core/` — state, actions, `update()` (product behavior)
+- `main/ui/` — screens and view code when the archetype uses UI (may be absent or minimal for headless)
+- `main/integration/` — `app_spec`, capabilities, entry macro (`integration/app_main.cpp`)
 
-## Next steps
+## Commands (from this directory)
 
-- `blusys host-build`
-- `blusys build`
-- see `__ARCHETYPE_EXAMPLE__` for the curated reference starter
+| Goal | Command |
+|------|---------|
+| Host (SDL2, no hardware) | `blusys host-build` then run `./build-host/__PROJECT_NAME___host` |
+| Firmware build | `blusys build` (default target: check `blusys help` / your `sdkconfig`) |
+| Flash + monitor | `blusys run /dev/ttyACM0` (replace with your serial port) |
+| Flash only | `blusys flash /dev/ttyACM0` |
+| Menuconfig | `blusys menuconfig` |
+
+Set `IDF_PATH` (ESP-IDF v5.5+) before device builds, or run `blusys config-idf` once.
+
+**Host input (interactive):** arrow keys simulate encoder rotation; Enter confirms (see platform host docs).
+
+## Reference
+
+Upstream example: `__ARCHETYPE_EXAMPLE__` in the blusys repository.
 EOF
     sed -i \
         -e "s|__PROJECT_NAME__|$project_name|g" \
@@ -1420,8 +1432,11 @@ add_library(blusys_framework_core_host STATIC
     ${BLUSYS_FW}/src/app/capabilities/storage_host.cpp
     ${BLUSYS_FW}/src/app/theme_presets.cpp
 )
+set(BLUSYS_SVC  "${BLUSYS_PATH}/components/blusys_services")
+
 target_include_directories(blusys_framework_core_host PUBLIC
     ${BLUSYS_COMP}/include
+    ${BLUSYS_SVC}/include
     ${BLUSYS_FW}/include
     ${BLUSYS_PATH}/scripts/host/include_host
 )

@@ -19,6 +19,7 @@ pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 
 set(BLUSYS_COMP "${BLUSYS_PATH}/components/blusys")
 set(BLUSYS_FW   "${BLUSYS_PATH}/components/blusys_framework")
+set(BLUSYS_SVC  "${BLUSYS_PATH}/components/blusys_services")
 
 add_library(blusys_framework_core_host STATIC
     ${BLUSYS_COMP}/src/common/error.c
@@ -41,6 +42,7 @@ add_library(blusys_framework_core_host STATIC
 )
 target_include_directories(blusys_framework_core_host PUBLIC
     ${BLUSYS_COMP}/include
+    ${BLUSYS_SVC}/include
     ${BLUSYS_FW}/include
     ${BLUSYS_PATH}/scripts/host/include_host
 )

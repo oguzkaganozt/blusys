@@ -7,7 +7,6 @@ Platform architecture, development guidelines, display notes, testing procedures
 - [Architecture](architecture.md) --- three-tier model, component dependencies, design rationale
 - [Guidelines](guidelines.md) --- API design rules, development workflow, documentation standards
 - [Target Matrix](target-matrix.md) --- per-module target support and requirements
-- [V2 plan](v2-plan.md) --- post-reset platform improvements (scaffold, host tests, widgets, hardening)
 
 ## Display & integration
 

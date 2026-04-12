@@ -5,12 +5,11 @@
 #include "blusys/framework/ui/callbacks.hpp"
 #include "lvgl.h"
 
-// `bu_knob` — an interactive rotary arc control.
+// `bu_knob` — an interactive rotary arc control (Camp 3: per-instance
+// callback storage via LVGL allocator; no global slot pool).
 //
 // Visual intent: a draggable arc knob for setting a value within a
-// range. Fires `change_cb_t` on user-driven value changes. Shares
-// the arc rendering approach with `gauge` but adds interactive knob
-// and slot pool.
+// range. Fires `change_cb_t` on user-driven value changes.
 //
 // Setter discipline: `knob_set_value` does not fire the callback.
 

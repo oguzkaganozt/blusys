@@ -97,7 +97,7 @@ Values `1`–`8` are accepted; the default is computed from the logical size.
 
 ## What's coming next
 
-1. Per-widget visual snapshot tests once a headless display driver is wired in alongside the SDL2 one. See [`docs/internals/v2-plan.md`](../../docs/internals/v2-plan.md) item 7.
+1. Per-widget visual snapshot tests can build on the headless stub path (`snapshot_buffer_smoke` in `CMakeLists.txt`) and CI.
 
 ## Traceability
 
