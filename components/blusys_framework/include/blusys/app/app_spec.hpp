@@ -60,6 +60,9 @@ struct app_spec {
     // ---- integration event bridge (capabilities → app actions) ----
     // Optional override after the framework maps raw integration IDs to
     // `capability_event`. Return true and fill *out to dispatch; return false to drop.
+    // Unknown raw IDs use tag `integration_passthrough` with `raw_event_id` / `raw_event_code`
+    // / `payload` from the framework event. Canonical events also set `payload` when the
+    // integration `app_event` carried one.
     // If nullptr, the runtime wraps `{ .tag = discriminant, .cap_event = ... }`
     // (product `Action` must include a `cap_event` field — see capability_event.hpp).
     bool (*map_event)(capability_event event, Action *out) = nullptr;

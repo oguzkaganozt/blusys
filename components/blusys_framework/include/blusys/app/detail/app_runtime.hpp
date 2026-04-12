@@ -329,25 +329,55 @@ private:
             }
         } else if (event.kind == blusys::framework::app_event_kind::integration) {
             capability_event ce{};
-            if (!map_integration_event(event.id, event.code, &ce)) {
-                return;
+            const bool mapped =
+                map_integration_event(event.id, event.code, &ce);
+            if (mapped) {
+                ce.payload = event.payload;
+            } else {
+                if (owner->spec_.map_event == nullptr) {
+                    if (owner->spec_.capabilities != nullptr) {
+                        BLUSYS_LOGW("blusys_app",
+                                    "unknown integration event id=%lu code=%lu (no map_event)",
+                                    static_cast<unsigned long>(event.id),
+                                    static_cast<unsigned long>(event.code));
+                    }
+                    return;
+                }
+                ce.tag            = capability_event_tag::integration_passthrough;
+                ce.value          = 0;
+                ce.raw_event_id   = event.id;
+                ce.raw_event_code = event.code;
+                ce.payload        = event.payload;
             }
+
             if (owner->spec_.map_event != nullptr) {
                 Action out_action{};
                 if (owner->spec_.map_event(ce, &out_action)) {
                     owner->post_action(out_action);
+                } else {
+                    BLUSYS_LOGD("blusys_app",
+                                "map_event dropped integration event (tag=%u)",
+                                static_cast<unsigned>(ce.tag));
                 }
-            } else if (owner->spec_.capability_event_discriminant !=
-                       k_capability_event_discriminant_unset) {
-                if constexpr (detail::action_has_cap_event_member_v<Action>) {
-                    Action out_action{};
-                    using tag_type =
-                        std::remove_const_t<std::remove_reference_t<decltype(out_action.tag)>>;
-                    out_action.tag =
-                        static_cast<tag_type>(owner->spec_.capability_event_discriminant);
-                    out_action.cap_event = ce;
-                    owner->post_action(out_action);
-                }
+                return;
+            }
+
+            if (!mapped || ce.tag == capability_event_tag::integration_passthrough) {
+                return;
+            }
+
+            if (owner->spec_.capability_event_discriminant ==
+                k_capability_event_discriminant_unset) {
+                return;
+            }
+            if constexpr (detail::action_has_cap_event_member_v<Action>) {
+                Action out_action{};
+                using tag_type =
+                    std::remove_const_t<std::remove_reference_t<decltype(out_action.tag)>>;
+                out_action.tag =
+                    static_cast<tag_type>(owner->spec_.capability_event_discriminant);
+                out_action.cap_event = ce;
+                owner->post_action(out_action);
             }
         }
     }

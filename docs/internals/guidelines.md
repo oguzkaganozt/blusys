@@ -20,6 +20,7 @@ Start by reading the [Architecture](architecture.md) page.
 - framework C++ should stay platform-facing and disciplined, not become a second copy of ESP-IDF internals
 - services migration to C++ is out of scope; the services tier stays C
 - keep cross-tier boundaries explicit: framework depends on services, services depend on HAL + drivers
+- integration bridge: `capability_event` may carry `payload`; unmapped raw integration IDs can appear as `integration_passthrough` when `app_spec::map_event` is set (see `capability_event.hpp`)
 
 See [Architecture](architecture.md) for the tier model.
 
