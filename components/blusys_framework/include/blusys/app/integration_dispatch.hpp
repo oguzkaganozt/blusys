@@ -16,6 +16,7 @@
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
 #include "blusys/app/capabilities/ota.hpp"
+#include "blusys/app/capabilities/mqtt_host.hpp"
 #include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
@@ -25,7 +26,7 @@
 
 namespace blusys::app::integration {
 
-// Maps the high byte of event_id to capability_kind (reserved ranges 0x01–0x07).
+// Maps the high byte of event_id to capability_kind (reserved ranges 0x01–0x08).
 [[nodiscard]] inline std::optional<capability_kind> kind_for_event_id(std::uint32_t id)
 {
     const unsigned hi = (id >> 8) & 0xFFu;
@@ -44,6 +45,8 @@ namespace blusys::app::integration {
         return capability_kind::telemetry;
     case 0x07:
         return capability_kind::provisioning;
+    case 0x08:
+        return capability_kind::mqtt_host;
     default:
         return std::nullopt;
     }
@@ -188,6 +191,26 @@ namespace blusys::app::integration {
     case provisioning_event::already_provisioned:
     case provisioning_event::reset_complete:
     case provisioning_event::capability_ready:
+        *out = e;
+        return true;
+    default:
+        return false;
+    }
+}
+
+[[nodiscard]] inline bool as_mqtt_host_event(std::uint32_t id, mqtt_host_event *out)
+{
+    if (out == nullptr) {
+        return false;
+    }
+    const auto e = static_cast<mqtt_host_event>(id);
+    switch (e) {
+    case mqtt_host_event::connected:
+    case mqtt_host_event::disconnected:
+    case mqtt_host_event::message_received:
+    case mqtt_host_event::publish_failed:
+    case mqtt_host_event::error:
+    case mqtt_host_event::capability_ready:
         *out = e;
         return true;
     default:

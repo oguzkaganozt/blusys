@@ -3,6 +3,9 @@
 #include "blusys/app/capabilities/bluetooth.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
+#ifndef ESP_PLATFORM
+#include "blusys/app/capabilities/mqtt_host.hpp"
+#endif
 #include "blusys/app/capabilities/ota.hpp"
 #include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/capabilities/storage.hpp"
@@ -43,6 +46,11 @@ void app_ctx::bind_capability_pointers_from_list(app_ctx &ctx, capability_list *
             break;
         case capability_kind::provisioning:
             ctx.provisioning_ = static_cast<provisioning_capability *>(c);
+            break;
+        case capability_kind::mqtt_host:
+#ifndef ESP_PLATFORM
+            ctx.mqtt_host_ = static_cast<mqtt_host_capability *>(c);
+#endif
             break;
         case capability_kind::custom:
             break;

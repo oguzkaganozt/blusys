@@ -16,6 +16,7 @@ namespace blusys::app {
 //   diagnostics    0x0500 – 0x05FF
 //   telemetry      0x0600 – 0x06FF
 //   provisioning   0x0700 – 0x07FF
+//   mqtt (host SDL) 0x0800 – 0x08FF
 
 enum class capability_kind : std::uint8_t {
     connectivity,
@@ -25,6 +26,7 @@ enum class capability_kind : std::uint8_t {
     diagnostics,
     telemetry,
     provisioning,
+    mqtt_host,
     custom,
 };
 

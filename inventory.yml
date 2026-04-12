@@ -370,7 +370,7 @@ modules:
     support: supported
     targets: [esp32, esp32c3, esp32s3]
     doc: docs/services/mqtt.md
-    examples: [mqtt_basic]
+    examples: [mqtt_basic, mqtt_dashboard]
 
   - name: ws_client
     tier: service
@@ -435,7 +435,7 @@ modules:
     support: supported
     targets: [esp32, esp32c3, esp32s3]
     doc: docs/app/index.md
-    examples: [interactive_controller, interactive_panel, interactive_dashboard, edge_node, gateway, framework_device_basic, framework_encoder_basic, connected_device, connected_headless]
+    examples: [interactive_controller, interactive_panel, interactive_dashboard, mqtt_dashboard, edge_node, gateway, framework_device_basic, framework_encoder_basic, connected_device, connected_headless]
 
 # ---------------------------------------------------------------------------
 # Examples
@@ -516,6 +516,14 @@ examples:
     ci_nightly: true
 
   - name: interactive_dashboard
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+
+  - name: mqtt_dashboard
     category: reference
     visibility: public
     tier: framework

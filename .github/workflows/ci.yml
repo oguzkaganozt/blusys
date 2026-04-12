@@ -89,7 +89,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential cmake pkg-config libsdl2-dev
+            build-essential cmake pkg-config libsdl2-dev libmosquitto-dev
 
       - name: Configure and build host smoke targets
         shell: bash
@@ -109,6 +109,8 @@ jobs:
           cmake --build examples/quickstart/edge_node/build-host-ci -j
           cmake -S examples/reference/gateway/host -B examples/reference/gateway/build-host-ci
           cmake --build examples/reference/gateway/build-host-ci -j
+          cmake -S examples/reference/mqtt_dashboard/host -B examples/reference/mqtt_dashboard/build-host-ci
+          cmake --build examples/reference/mqtt_dashboard/build-host-ci -j
 
       - name: Run host smoke binaries
         shell: bash

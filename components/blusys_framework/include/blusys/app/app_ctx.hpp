@@ -46,6 +46,7 @@ class ota_capability;
 class diagnostics_capability;
 class telemetry_capability;
 class provisioning_capability;
+class mqtt_host_capability;
 
 class app_ctx {
 public:
@@ -158,6 +159,9 @@ public:
     [[nodiscard]] const telemetry_status *telemetry() const;
     [[nodiscard]] const provisioning_status *provisioning() const;
 
+    // Host (SDL) MQTT client — nullptr when capability not registered or on ESP-IDF product builds.
+    [[nodiscard]] mqtt_host_capability *mqtt_host();
+
 #ifdef ESP_PLATFORM
     // Direct storage handle access — nullptr if the storage capability is absent
     // or the filesystem was not configured / failed to mount.
@@ -195,6 +199,7 @@ private:
     diagnostics_capability         *diagnostics_    = nullptr;
     telemetry_capability           *telemetry_      = nullptr;
     provisioning_capability        *provisioning_   = nullptr;
+    mqtt_host_capability           *mqtt_host_      = nullptr;
 };
 
 }  // namespace blusys::app

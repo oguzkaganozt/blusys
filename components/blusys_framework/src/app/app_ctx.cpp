@@ -156,6 +156,11 @@ const provisioning_status *app_ctx::provisioning() const
     return nullptr;
 }
 
+mqtt_host_capability *app_ctx::mqtt_host()
+{
+    return mqtt_host_;
+}
+
 blusys_err_t app_ctx::request_connectivity_reconnect()
 {
     if (connectivity_ == nullptr) {
