@@ -2,6 +2,7 @@
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/app/view/bindings.hpp"
+#include "blusys/app/view/composites.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #endif
 
@@ -68,29 +69,21 @@ void sync_shell(app_state &state)
 
 void sync_dashboard(app_state &state)
 {
-    if (state.dash_devices != nullptr) {
-        char value[32];
-        std::snprintf(value, sizeof(value), "%ld / %ld",
-                      static_cast<long>(state.active_devices),
-                      static_cast<long>(state.device_count));
-        blusys::app::view::set_kv_value(state.dash_devices, value);
-    }
-    if (state.dash_throughput != nullptr) {
-        char value[16];
-        std::snprintf(value, sizeof(value), "%.1f msg/s",
-                      static_cast<double>(state.agg_throughput));
-        blusys::app::view::set_kv_value(state.dash_throughput, value);
-    }
-    if (state.dash_uplink != nullptr) {
-        blusys::app::view::set_kv_value(
-            state.dash_uplink,
-            state.conn_ready ? "Connected" : "Offline");
-    }
-    if (state.dash_storage != nullptr) {
-        blusys::app::view::set_kv_value(
-            state.dash_storage,
-            state.storage_ready ? "Mounted" : "Pending");
-    }
+    char v_devices[32];
+    char v_tput[16];
+    const char *v_uplink = state.conn_ready ? "Connected" : "Offline";
+    const char *v_storage = state.storage_ready ? "Mounted" : "Pending";
+
+    std::snprintf(v_devices, sizeof(v_devices), "%ld / %ld",
+                  static_cast<long>(state.active_devices),
+                  static_cast<long>(state.device_count));
+    std::snprintf(v_tput, sizeof(v_tput), "%.1f msg/s",
+                  static_cast<double>(state.agg_throughput));
+
+    const blusys::app::view::key_value_quad row{
+        {state.dash_devices, state.dash_throughput, state.dash_uplink, state.dash_storage},
+    };
+    blusys::app::view::sync_key_value_quad(row, v_devices, v_tput, v_uplink, v_storage);
 }
 
 void sync_status(blusys::app::app_ctx &ctx, app_state &state)

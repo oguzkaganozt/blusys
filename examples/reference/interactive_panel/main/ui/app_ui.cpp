@@ -17,9 +17,9 @@ namespace interactive_panel::ui {
 
 namespace view = blusys::app::view;
 
-namespace {
+using interactive_panel::app_state;
 
-app_state *g_state = nullptr;
+namespace {
 
 view::page make_page(blusys::app::app_ctx &ctx, bool scrollable)
 {
@@ -29,23 +29,33 @@ view::page make_page(blusys::app::app_ctx &ctx, bool scrollable)
     return view::page_create({.scrollable = scrollable});
 }
 
-void clear_dashboard_handles()
+void on_dashboard_hide(lv_obj_t * /*screen*/, void *user_data)
 {
-    if (g_state == nullptr) {
+    auto *ctx = static_cast<blusys::app::app_ctx *>(user_data);
+    if (ctx == nullptr) {
         return;
     }
-    g_state->dash_chart = nullptr;
-    g_state->dash_load = nullptr;
-    g_state->dash_temp = nullptr;
-    g_state->dash_mode = nullptr;
-    g_state->dash_table = nullptr;
-    g_state->dash_series = -1;
+    auto *st = ctx->product_state<app_state>();
+    if (st == nullptr) {
+        return;
+    }
+    st->dash_chart = nullptr;
+    st->dash_load = nullptr;
+    st->dash_temp = nullptr;
+    st->dash_mode = nullptr;
+    st->dash_table = nullptr;
+    st->dash_series = -1;
 }
 
-void clear_status_handles()
+void on_status_hide(lv_obj_t * /*screen*/, void *user_data)
 {
-    if (g_state != nullptr) {
-        g_state->status_handles = {};
+    auto *ctx = static_cast<blusys::app::app_ctx *>(user_data);
+    if (ctx == nullptr) {
+        return;
+    }
+    auto *st = ctx->product_state<app_state>();
+    if (st != nullptr) {
+        st->status_handles = {};
     }
 }
 
@@ -108,32 +118,37 @@ void on_settings_changed(void *user_ctx, std::uint32_t setting_id, std::int32_t 
 
 lv_obj_t *create_dashboard(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
 {
+    auto *st = ctx.product_state<app_state>();
+    if (st == nullptr) {
+        return nullptr;
+    }
+
     auto page = make_page(ctx, true);
 
     auto *hero = view::card(page.content, "Operations");
     lv_obj_set_width(hero, LV_PCT(100));
-    g_state->dash_chart = view::chart(hero, blusys::ui::chart_type::line,
-                                      static_cast<std::int32_t>(app_state::history_size), 0, 100);
-    g_state->dash_series = blusys::ui::chart_add_series(g_state->dash_chart,
-                                                        blusys::ui::theme().color_primary);
-    g_state->dash_load = view::key_value(hero, "Load", "34%");
-    g_state->dash_temp = view::key_value(hero, "Temp", "27 C");
-    g_state->dash_mode = view::key_value(hero, "Mode", mode_name(g_state->mode_index));
+    st->dash_chart = view::chart(hero, blusys::ui::chart_type::line,
+                                 static_cast<std::int32_t>(app_state::history_size), 0, 100);
+    st->dash_series = blusys::ui::chart_add_series(st->dash_chart,
+                                                   blusys::ui::theme().color_primary);
+    st->dash_load = view::key_value(hero, "Load", "34%");
+    st->dash_temp = view::key_value(hero, "Temp", "27 C");
+    st->dash_mode = view::key_value(hero, "Mode", mode_name(st->mode_index));
 
     static const blusys::ui::table_column columns[] = {
         {.header = "Metric"},
         {.header = "Value"},
     };
-    g_state->dash_table = blusys::ui::data_table_create(page.content, {
+    st->dash_table = blusys::ui::data_table_create(page.content, {
         .columns = columns,
         .col_count = 2,
         .row_count = 4,
     });
-    blusys::ui::data_table_set_cell(g_state->dash_table, 0, 0, "Metric");
-    blusys::ui::data_table_set_cell(g_state->dash_table, 0, 1, "Value");
-    blusys::ui::data_table_set_cell(g_state->dash_table, 1, 0, "Queue");
-    blusys::ui::data_table_set_cell(g_state->dash_table, 2, 0, "Heap");
-    blusys::ui::data_table_set_cell(g_state->dash_table, 3, 0, "Storage");
+    blusys::ui::data_table_set_cell(st->dash_table, 0, 0, "Metric");
+    blusys::ui::data_table_set_cell(st->dash_table, 0, 1, "Value");
+    blusys::ui::data_table_set_cell(st->dash_table, 1, 0, "Queue");
+    blusys::ui::data_table_set_cell(st->dash_table, 2, 0, "Heap");
+    blusys::ui::data_table_set_cell(st->dash_table, 3, 0, "Storage");
 
     auto *actions = view::row(page.content);
     view::button(actions, "Status", action{.tag = action_tag::show_status}, &ctx,
@@ -149,17 +164,27 @@ lv_obj_t *create_dashboard(blusys::app::app_ctx &ctx, const void * /*params*/, l
 
 lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
 {
+    auto *st = ctx.product_state<app_state>();
+    if (st == nullptr) {
+        return nullptr;
+    }
+
     const blusys::app::screens::status_screen_config config{
         .show_connectivity = true,
         .show_diagnostics = true,
         .show_storage = true,
         .show_bluetooth = false,
     };
-    return blusys::app::screens::status_screen_create(ctx, config, g_state->status_handles, group_out);
+    return blusys::app::screens::status_screen_create(ctx, config, st->status_handles, group_out);
 }
 
 lv_obj_t *create_settings(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
 {
+    auto *st = ctx.product_state<app_state>();
+    if (st == nullptr) {
+        return nullptr;
+    }
+
     static constexpr const char *kModeOptions[] = {"Calm", "Balanced", "Peak"};
 
     blusys::app::flows::setting_item items[] = {
@@ -171,14 +196,16 @@ lv_obj_t *create_settings(blusys::app::app_ctx &ctx, const void * /*params*/, lv
             .label = "Presentation",
             .description = "Change dashboard emphasis.",
             .type = blusys::app::flows::setting_type::dropdown,
+            .id = 1,
             .dropdown_options = kModeOptions,
             .dropdown_count = 3,
-            .dropdown_initial = g_state->mode_index,
+            .dropdown_initial = st->mode_index,
         },
         {
             .label = "About Panel",
             .description = "Inspect the archetype metadata.",
             .type = blusys::app::flows::setting_type::action_button,
+            .id = 2,
             .button_label = "Open",
         },
     };
@@ -216,11 +243,24 @@ lv_obj_t *create_about(blusys::app::app_ctx &ctx, const void * /*params*/, lv_gr
     return blusys::app::screens::about_screen_create(ctx, &config, group_out);
 }
 
+void register_all_screens(view::screen_router *router, blusys::app::app_ctx &ctx)
+{
+    static const view::screen_registration k_routes[] = {
+        view::screen_row(route_dashboard, &create_dashboard, nullptr, &on_dashboard_show,
+                         &on_dashboard_hide),
+        view::screen_row(route_status, &create_status, nullptr, &on_status_show, &on_status_hide),
+        view::screen_row(route_settings, &create_settings, nullptr, &on_settings_show, nullptr),
+        view::screen_row(route_about, &create_about, nullptr, &on_about_show, nullptr),
+    };
+
+    router->register_screens(&ctx, k_routes, sizeof(k_routes) / sizeof(k_routes[0]));
+}
+
 }  // namespace
 
 void on_init(blusys::app::app_ctx &ctx, app_state &state)
 {
-    g_state = &state;
+    (void)state;
 
     if (ctx.shell() != nullptr) {
         const view::shell_tab_item tabs[] = {
@@ -241,14 +281,7 @@ void on_init(blusys::app::app_ctx &ctx, app_state &state)
         return;
     }
 
-    router->register_screen(route_dashboard, &create_dashboard, nullptr,
-                            {.on_show = on_dashboard_show, .on_hide = +[](lv_obj_t *, void *) { clear_dashboard_handles(); }, .user_data = &ctx});
-    router->register_screen(route_status, &create_status, nullptr,
-                            {.on_show = on_status_show, .on_hide = +[](lv_obj_t *, void *) { clear_status_handles(); }, .user_data = &ctx});
-    router->register_screen(route_settings, &create_settings, nullptr,
-                            {.on_show = on_settings_show, .user_data = &ctx});
-    router->register_screen(route_about, &create_about, nullptr,
-                            {.on_show = on_about_show, .user_data = &ctx});
+    register_all_screens(router, ctx);
 
     ctx.navigate_to(route_dashboard);
 }

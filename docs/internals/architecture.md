@@ -172,7 +172,7 @@ The HAL/drivers boundary is enforced by `blusys lint`, backed by `scripts/lint-l
 
 The lint checks exactly two rules:
 - no file under `components/blusys/src/common/` may include `blusys/drivers/**`
-- files under `components/blusys/src/drivers/` may only include the shared internal allowlist: `blusys_lock.h`, `blusys_esp_err.h`, `blusys_timeout.h`
+- files under `components/blusys/src/drivers/` may only include the shared internal allowlist: `blusys_lock.h`, `blusys_esp_err.h`, `blusys_timeout.h`, and (display stack) `lcd_panel_ili.h`
 
 ## Symmetric Pairs
 

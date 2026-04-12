@@ -313,11 +313,11 @@ lv_obj_t *create_about(blusys::app::app_ctx &ctx, const void * /*params*/, lv_gr
 void register_all_screens(view::screen_router *router, blusys::app::app_ctx &ctx)
 {
     static const view::screen_registration kRoutes[] = {
-        {static_cast<std::uint32_t>(route::home), &create_home, nullptr, nullptr, &on_home_hide},
-        {static_cast<std::uint32_t>(route::status), &create_status, nullptr, nullptr, &on_status_hide},
-        {static_cast<std::uint32_t>(route::settings), &create_settings, nullptr, nullptr, nullptr},
-        {static_cast<std::uint32_t>(route::setup), &create_setup, nullptr, &on_setup_show, &on_setup_hide},
-        {static_cast<std::uint32_t>(route::about), &create_about, nullptr, &on_about_show, nullptr},
+        view::screen_row(route::home, &create_home, nullptr, nullptr, &on_home_hide),
+        view::screen_row(route::status, &create_status, nullptr, nullptr, &on_status_hide),
+        view::screen_row(route::settings, &create_settings, nullptr, nullptr, nullptr),
+        view::screen_row(route::setup, &create_setup, nullptr, &on_setup_show, &on_setup_hide),
+        view::screen_row(route::about, &create_about, nullptr, &on_about_show, nullptr),
     };
 
     router->register_screens(&ctx, kRoutes, sizeof(kRoutes) / sizeof(kRoutes[0]));
@@ -331,9 +331,9 @@ void on_init(blusys::app::app_ctx &ctx, app_state &state)
 
     if (ctx.shell() != nullptr) {
         const view::shell_tab_item tabs[] = {
-            {.label = "Ctrl", .route_id = static_cast<std::uint32_t>(route::home), .header_title = "Controller"},
-            {.label = "Stat", .route_id = static_cast<std::uint32_t>(route::status), .header_title = "Status"},
-            {.label = "Set", .route_id = static_cast<std::uint32_t>(route::settings), .header_title = "Settings"},
+            view::shell_tab_row("Ctrl", route::home, "Controller"),
+            view::shell_tab_row("Stat", route::status, "Status"),
+            view::shell_tab_row("Set", route::settings, "Settings"),
         };
         view::shell_set_tabs(*ctx.shell(), tabs, sizeof(tabs) / sizeof(tabs[0]), &ctx);
 

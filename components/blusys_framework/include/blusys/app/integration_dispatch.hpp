@@ -195,4 +195,25 @@ namespace blusys::app::integration {
     }
 }
 
+// ---- common map_event predicates (optional; keeps integration/*.cpp tables short) ----
+
+[[nodiscard]] inline bool event_is_diagnostics_snapshot_or_ready(std::uint32_t id)
+{
+    diagnostics_event de;
+    if (!as_diagnostics_event(id, &de)) {
+        return false;
+    }
+    return de == diagnostics_event::snapshot_ready ||
+           de == diagnostics_event::capability_ready;
+}
+
+[[nodiscard]] inline bool event_is_storage_capability_ready(std::uint32_t id)
+{
+    storage_event se;
+    if (!as_storage_event(id, &se)) {
+        return false;
+    }
+    return se == storage_event::capability_ready;
+}
+
 }  // namespace blusys::app::integration

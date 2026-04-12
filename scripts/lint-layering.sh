@@ -38,6 +38,7 @@ for hit in "${driver_internal_hits[@]}"; do
         *'blusys/internal/blusys_lock.h"'|*'blusys/internal/blusys_lock.h>')   ;;
         *'blusys/internal/blusys_esp_err.h"'|*'blusys/internal/blusys_esp_err.h>') ;;
         *'blusys/internal/blusys_timeout.h"'|*'blusys/internal/blusys_timeout.h>') ;;
+        *'blusys/internal/lcd_panel_ili.h"'|*'blusys/internal/lcd_panel_ili.h>') ;;
         *)
             disallowed_driver_hits+=("$hit")
             ;;

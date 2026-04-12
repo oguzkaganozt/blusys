@@ -8,6 +8,7 @@
 #include "blusys/framework/ui/widgets/dropdown/dropdown.hpp"
 #include "blusys/framework/ui/widgets/input_field/input_field.hpp"
 #include "blusys/framework/ui/widgets/list/list.hpp"
+#include "blusys/framework/ui/widgets/chart/chart.hpp"
 #include "blusys/framework/ui/widgets/gauge/gauge.hpp"
 #include "blusys/framework/ui/widgets/level_bar/level_bar.hpp"
 #include "blusys/framework/ui/widgets/progress/progress.hpp"
@@ -240,6 +241,45 @@ void sync_status_strip(const status_strip &strip,
     if (strip.detail_label != nullptr) {
         set_text(strip.detail_label, detail_text != nullptr ? detail_text : "");
     }
+}
+
+void sync_key_value_quad(const key_value_quad &row,
+                         const char *v0,
+                         const char *v1,
+                         const char *v2,
+                         const char *v3)
+{
+    const char *vals[] = {v0, v1, v2, v3};
+    for (int i = 0; i < 4; ++i) {
+        if (row.kv[i] != nullptr && vals[i] != nullptr) {
+            set_kv_value(row.kv[i], vals[i]);
+        }
+    }
+}
+
+void sync_key_value_trio(const key_value_trio &row,
+                         const char *v0,
+                         const char *v1,
+                         const char *v2)
+{
+    const char *vals[] = {v0, v1, v2};
+    for (int i = 0; i < 3; ++i) {
+        if (row.kv[i] != nullptr && vals[i] != nullptr) {
+            set_kv_value(row.kv[i], vals[i]);
+        }
+    }
+}
+
+void sync_line_chart_series(lv_obj_t *chart,
+                            std::int32_t series_index,
+                            const std::int32_t *values,
+                            std::int32_t count)
+{
+    if (chart == nullptr || values == nullptr || count <= 0 || series_index < 0) {
+        return;
+    }
+    blusys::ui::chart_set_all(chart, series_index, values, count);
+    blusys::ui::chart_refresh(chart);
 }
 
 }  // namespace blusys::app::view

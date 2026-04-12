@@ -3,10 +3,11 @@
 
 #include "blusys_examples/panel_connectivity_sync.hpp"
 
+#include "blusys/app/build_profile.hpp"
+#include "blusys/app/integration.hpp"
 #include "blusys/app/layout_surface.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/theme_presets.hpp"
-#include "blusys/version.h"
 
 #include <cstdint>
 
@@ -68,13 +69,7 @@ const char *panel_hardware_label_for_build()
 
 const char *panel_build_version_for_build()
 {
-#ifdef PROJECT_VER
-    return PROJECT_VER;
-#elif defined(BLUSYS_APP_BUILD_VERSION)
-    return BLUSYS_APP_BUILD_VERSION;
-#else
-    return BLUSYS_VERSION_STRING;
-#endif
+    return blusys::app::build_profile::version_string();
 }
 
 namespace {
@@ -95,22 +90,23 @@ static const blusys::app::view::shell_config kShellConfig = panel_shell_for_prof
 
 bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*/, action *out)
 {
+    using blusys::app::integration::event_is_diagnostics_snapshot_or_ready;
+    using blusys::app::integration::event_is_storage_capability_ready;
+
     if (blusys_examples::panel_connectivity_event_triggers_sync(id)) {
         *out = action{.tag = action_tag::sync_connectivity};
         return true;
     }
 
-    switch (id) {
-    case static_cast<std::uint32_t>(blusys::app::diagnostics_event::snapshot_ready):
-    case static_cast<std::uint32_t>(blusys::app::diagnostics_event::capability_ready):
+    if (event_is_diagnostics_snapshot_or_ready(id)) {
         *out = action{.tag = action_tag::sync_diagnostics};
         return true;
-    case static_cast<std::uint32_t>(blusys::app::storage_event::capability_ready):
+    }
+    if (event_is_storage_capability_ready(id)) {
         *out = action{.tag = action_tag::sync_storage};
         return true;
-    default:
-        return false;
     }
+    return false;
 }
 
 blusys::app::connectivity_config panel_connectivity_cfg{

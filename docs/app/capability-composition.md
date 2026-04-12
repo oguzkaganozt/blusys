@@ -68,6 +68,11 @@ Each capability posts integration events in a reserved numeric range (see `blusy
 
 Status-only updates can be ignored in the reducer if `app_ctx` queries are enough.
 
+### Typed helpers and `std::variant` actions
+
+- Use `blusys::app::integration::*` (`as_*_event`, `kind_for_event_id`, and predicates such as `event_is_diagnostics_snapshot_or_ready`) to keep `map_event` small without hiding the translation table.
+- For products that want exhaustiveness on actions, the optional path is `std::variant<...>` for `Action` plus `blusys::app::dispatch_variant` (`blusys/app/integration.hpp` / `variant_dispatch.hpp`). The default remains a plain tagged struct or enum.
+
 ## Stock Flows And Screens
 
 Operational UI (`blusys::app::flows::*`, `blusys::app::screens::*`) stays LVGL-backed and must not call runtime services directly. Wire buttons through `app_ctx::dispatch`, `error_panel_dispatch`, `confirmation_dispatch`, or `app_ctx::request_connectivity_reconnect()` as appropriate.

@@ -102,7 +102,7 @@ void on_init(blusys::app::app_ctx &ctx, app_state &state)
     }
 
     static const view::screen_registration kRoutes[] = {
-        {static_cast<std::uint32_t>(route::status), &create_status, nullptr, nullptr, nullptr},
+        view::screen_row(route::status, &create_status, nullptr, nullptr, nullptr),
     };
     router->register_screens(&ctx, kRoutes, sizeof(kRoutes) / sizeof(kRoutes[0]));
     ctx.navigate_to(route::status);

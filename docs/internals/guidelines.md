@@ -84,10 +84,10 @@ Breaking changes to `app_spec`, `app_ctx`, and umbrella `blusys/app/*.hpp` heade
 - **Reducer center:** domain rules live in `update(ctx, state, action)`; keep navigation and capability sync as explicit actions.
 - **Strong ids:** use `enum class` for routes and overlays in product code; `app_ctx::navigate_to` / `show_overlay` accept those enums.
 - **State from factories:** use `ctx.product_state<YourState>()` in screen factories instead of file-scope pointers to `app_state`.
-- **View sync:** prefer `blusys::app::view::` bindings and small composites (for example `sync_percent_output`) over calling `blusys::ui::*` setters directly from product code.
+- **View sync:** prefer `blusys::app::view::` bindings and small composites (for example `sync_percent_output`, `sync_line_chart_series`) over calling `blusys::ui::*` setters directly from product code.
 - **Route handles:** group `lv_obj_t*` handles in per-route structs with `clear()` on hide; the screen registry still owns teardown of the widget tree.
 - **Settings:** give interactive `setting_item` rows a non-zero `id` when using `settings_screen_config::on_changed`; the callback receives that stable id (or the row index when `id` is 0).
-- **Integration:** include `blusys/app/integration.hpp` when you need typed capability event IDs (`integration_dispatch.hpp`), narrow shortcuts (`integration_events.hpp`), or `dispatch_variant`; use `blusys/app/reference_build_profile.hpp` to avoid duplicated `#ifdef` matrices in `integration/app_main.cpp`.
+- **Integration:** include `blusys/app/integration.hpp` when you need typed capability event IDs (`integration_dispatch.hpp`), narrow shortcuts (`integration_events.hpp`), or `dispatch_variant`; use `blusys/app/build_profile.hpp` (or `reference_build_profile.hpp`) to avoid duplicated `#ifdef` matrices in `integration/app_main.cpp`.
 
 ## Development Workflow
 

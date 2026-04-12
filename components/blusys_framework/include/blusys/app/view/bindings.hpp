@@ -79,6 +79,12 @@ struct percent_output_cluster {
 
 void sync_percent_output(const percent_output_cluster &cluster, std::int32_t percent_0_100);
 
+// Line chart: push a full series history and refresh (`blusys::ui` chart widget).
+void sync_line_chart_series(lv_obj_t *chart,
+                            std::int32_t series_index,
+                            const std::int32_t *values,
+                            std::int32_t count);
+
 }  // namespace blusys::app::view
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI

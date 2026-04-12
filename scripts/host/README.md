@@ -99,3 +99,4 @@ The product requirements (**`PRD.md` §9 — Validation and developer loop**) ex
 - **`No package 'sdl2' found`** — install `libsdl2-dev` (or distro equivalent).
 - **CMake fails on `FetchContent`** — check that the host has network access to `github.com` or pre-populate `build-host/_deps/lvgl-src` with a manual checkout of `lvgl/lvgl` at tag `v9.2.2`.
 - **`undefined reference to lv_sdl_window_create`** — `LV_USE_SDL` is not set in `lv_conf.h`, or LVGL was configured before `LV_CONF_PATH` was passed. Wipe `build-host/` and re-run `blusys host-build`.
+- **`undefined reference to blusys::ui::...` from `bindings.cpp`** — update `cmake/blusys_framework_host_widgetkit.cmake` (included by interactive host examples) with the matching `blusys::ui` widget `.cpp` under `components/blusys_framework/src/ui/widgets/`. Use `components/blusys_framework/CMakeLists.txt` on the device side as a cross-check.

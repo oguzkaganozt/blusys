@@ -100,6 +100,9 @@ target_link_libraries(lvgl PUBLIC PkgConfig::SDL2)
 
 set(BLUSYS_COMPONENT_DIR      "${BLUSYS_REPO_ROOT}/components/blusys")
 set(BLUSYS_FRAMEWORK_DIR      "${BLUSYS_REPO_ROOT}/components/blusys_framework")
+# Same widget+primitive bundle as per-example host builds (see cmake/blusys_framework_host_widgetkit.cmake).
+set(BLUSYS_FW "${BLUSYS_FRAMEWORK_DIR}")
+include("${BLUSYS_REPO_ROOT}/cmake/blusys_framework_host_widgetkit.cmake")
 
 set(blusys_framework_host_sources
     # Minimal HAL dependency: the framework's public headers use
@@ -137,39 +140,10 @@ set(blusys_framework_host_sources
 
     # UI surface — LVGL-backed. Always on in the host harness
     # (device builds gate this behind BLUSYS_BUILD_UI).
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/icons/icon_set_minimal.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/input/encoder.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/col.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/divider.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/label.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/row.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/screen.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/theme.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/visual_feedback.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/icon_label.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/status_badge.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/primitives/key_value.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/button/button.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/card/card.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/chart/chart.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/data_table/data_table.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/dropdown/dropdown.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/gauge/gauge.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/input_field/input_field.cpp
+    ${BLUSYS_FRAMEWORK_HOST_WIDGETKIT}
     ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/knob/knob.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/level_bar/level_bar.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/list/list.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/modal/modal.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/overlay/overlay.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/progress/progress.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/slider/slider.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/tabs/tabs.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/toggle/toggle.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/vu_strip/vu_strip.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/shell.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/touch_bridge.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/transition.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/input/focus_scope.cpp
 
     # Shared operational flows
     ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/boot.cpp

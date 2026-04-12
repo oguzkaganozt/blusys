@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 #include "lvgl.h"
 
@@ -50,6 +51,15 @@ struct shell_tab_item {
     /// If null, `label` is used for both the tab button and the header title.
     const char   *header_title = nullptr;
 };
+
+// Build a tab item from an enum class (or unscoped) route id — avoids static_cast at call sites.
+template <typename RouteEnum, typename = std::enable_if_t<std::is_enum_v<RouteEnum>>>
+[[nodiscard]] constexpr shell_tab_item shell_tab_row(const char   *label,
+                                                   RouteEnum     route,
+                                                   const char   *header_title = nullptr)
+{
+    return shell_tab_item{label, static_cast<std::uint32_t>(route), header_title};
+}
 
 // The shell owns a persistent screen with optional header, status bar,
 // content area, and tab bar. Screen content is swapped inside the

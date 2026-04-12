@@ -1,39 +1,39 @@
 #include "core/app_logic.hpp"
 #include "ui/app_ui.hpp"
 
+#include "blusys/app/build_profile.hpp"
 #include "blusys/app/integration.hpp"
-#include "blusys/app/reference_build_profile.hpp"
 
 namespace interactive_controller::system {
 
 blusys::app::device_profile controller_device_profile_for_build()
 {
 #if defined(ESP_PLATFORM)
-    return blusys::app::reference_build::interactive_device_profile();
+    return blusys::app::build_profile::device_profile_for_interactive();
 #else
-    return blusys::app::reference_build::interactive_host_logical_profile();
+    return blusys::app::build_profile::host_logical_profile();
 #endif
 }
 
 const char *controller_profile_label_for_build()
 {
-    return blusys::app::reference_build::interactive_display_label();
+    return blusys::app::build_profile::panel_label();
 }
 
 const char *controller_hardware_label_for_build()
 {
-    return blusys::app::reference_build::interactive_hardware_label();
+    return blusys::app::build_profile::hardware_label();
 }
 
 const char *controller_build_version_for_build()
 {
-    return blusys::app::reference_build::build_version_string();
+    return blusys::app::build_profile::version_string();
 }
 
 namespace {
 
 static const blusys::app::view::shell_config kShellConfig =
-    blusys::app::reference_build::interactive_shell_config_for_profile(
+    blusys::app::build_profile::shell_config_for_device_profile(
         controller_device_profile_for_build());
 
 bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*/, action *out)
@@ -87,5 +87,5 @@ BLUSYS_APP_MAIN_DEVICE(interactive_controller::system::spec,
 #else
 BLUSYS_APP_MAIN_HOST_PROFILE(
     interactive_controller::system::spec,
-    blusys::app::reference_build::interactive_host_window_profile("Pulse Controller"))
+    blusys::app::build_profile::host_window("Pulse Controller"))
 #endif

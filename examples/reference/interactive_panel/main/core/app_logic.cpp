@@ -3,8 +3,8 @@
 #include "blusys_examples/archetype_percent.hpp"
 
 #include "blusys/app/view/bindings.hpp"
+#include "blusys/app/view/composites.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
-#include "blusys/framework/ui/widgets/chart/chart.hpp"
 
 #include <cstdio>
 
@@ -35,25 +35,22 @@ void sync_shell(app_state &state)
 void sync_dashboard(app_state &state)
 {
     if (state.dash_chart != nullptr && state.dash_series >= 0) {
-        blusys::ui::chart_set_all(state.dash_chart, state.dash_series,
-                                  state.load_history.data(),
-                                  static_cast<std::int32_t>(state.load_history.size()));
-        blusys::ui::chart_refresh(state.dash_chart);
+        blusys::app::view::sync_line_chart_series(
+            state.dash_chart,
+            state.dash_series,
+            state.load_history.data(),
+            static_cast<std::int32_t>(state.load_history.size()));
     }
 
-    if (state.dash_load != nullptr) {
-        char value[16];
-        std::snprintf(value, sizeof(value), "%ld%%", static_cast<long>(state.load_percent));
-        blusys::app::view::set_kv_value(state.dash_load, value);
-    }
-    if (state.dash_temp != nullptr) {
-        char value[16];
-        std::snprintf(value, sizeof(value), "%ld C", static_cast<long>(state.temp_c));
-        blusys::app::view::set_kv_value(state.dash_temp, value);
-    }
-    if (state.dash_mode != nullptr) {
-        blusys::app::view::set_kv_value(state.dash_mode, mode_name(state.mode_index));
-    }
+    char v_load[16];
+    char v_temp[16];
+    std::snprintf(v_load, sizeof(v_load), "%ld%%", static_cast<long>(state.load_percent));
+    std::snprintf(v_temp, sizeof(v_temp), "%ld C", static_cast<long>(state.temp_c));
+
+    const blusys::app::view::key_value_trio metrics{
+        {state.dash_load, state.dash_temp, state.dash_mode},
+    };
+    blusys::app::view::sync_key_value_trio(metrics, v_load, v_temp, mode_name(state.mode_index));
     if (state.dash_table != nullptr) {
         char queue[16];
         char heap[16];
