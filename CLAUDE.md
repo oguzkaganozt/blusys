@@ -8,7 +8,7 @@ Before changing public API, docs, repo structure, examples, scaffolding, or proj
 
 | File | Purpose |
 |------|---------|
-| `PRD.md` | Product requirements for the reset |
+| `README.md` | Product mission, locked decisions, and scaffold rules (see **Product foundations**) |
 | `docs/internals/architecture.md` | Architecture and tiering |
 | `docs/internals/guidelines.md` | Public API rules and contribution workflow |
 | `inventory.yml` | Module, example, and doc manifest |

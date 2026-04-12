@@ -31,4 +31,4 @@ For new products, start from **edge node** or **gateway** so provisioning, telem
 4. **OTA** — Trigger from your pipeline or test endpoint; watch `updating` phase and completion/rollback logs.
 5. **Health** — Use diagnostics capability snapshots and local control JSON for snapshot in time.
 
-For locked state/action scope, follow the edge node and gateway quickstarts’ `core/` reducers and `PRD.md` connectivity expectations.
+For locked state/action scope, follow the edge node and gateway quickstarts’ `core/` reducers and the connectivity expectations described in `README.md` (**Product foundations**) and the capability docs.

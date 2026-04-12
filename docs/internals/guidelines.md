@@ -91,7 +91,7 @@ Breaking changes to `app_spec`, `app_ctx`, and umbrella `blusys/app/*.hpp` heade
 
 ## Development Workflow
 
-1. confirm the scope against `PRD.md`
+1. confirm the scope against `README.md` (**Product foundations**) and this guide
 2. define whether the work belongs to the canonical product path, an advanced path, or validation-only infrastructure
 3. define the public API shape and ownership boundary
 4. define lifecycle and thread-safety rules
@@ -180,5 +180,5 @@ Advanced or validation-only surfaces may require a different mix of examples, do
 
 ## Project Tracking
 
-- v7 product requirements: `../PRD.md`
+- v7 product foundations: `../README.md` (**Product foundations**)
 - repository guidance for agents: `../CLAUDE.md`

@@ -35,7 +35,7 @@ These are handled by the framework runtime, profiles, and capabilities.
 - [Capability Composition](capability-composition.md) --- how capabilities fit together in `integration/`
 - [Capabilities](capabilities.md) --- connectivity, storage
 - [Profiles](profiles.md) --- host, headless, and device platform profiles
-- [Validation and host loop](validation-host-loop.md) --- PRD §9: host smokes, scaffold checks, CI mapping
+- [Validation and host loop](validation-host-loop.md) --- host smokes, scaffold checks, CI mapping (see README **Product foundations** → **Validation**)
 
 ## Example Apps
 

@@ -89,9 +89,9 @@ The first configure pulls LVGL from `https://github.com/lvgl/lvgl.git` at the pi
 
 1. Per-widget visual snapshot tests once a headless display driver is wired in alongside the SDL2 one. See [`docs/internals/v2-plan.md`](../../docs/internals/v2-plan.md) item 7.
 
-## PRD traceability
+## Traceability
 
-The product requirements (**`PRD.md` §9 — Validation and developer loop**) expect host-runnable checks and curated CI. See **`docs/app/validation-host-loop.md`** for a mapping from each PRD bullet to this harness, `scripts/scaffold-smoke.sh`, and `.github/workflows/ci.yml`.
+**[README.md](../../README.md)** (**Product foundations** → **Validation**) expects host-runnable checks and curated CI. See **`docs/app/validation-host-loop.md`** for a mapping from each goal to this harness, `scripts/scaffold-smoke.sh`, and `.github/workflows/ci.yml`.
 
 ## Troubleshooting
 

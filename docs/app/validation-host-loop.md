@@ -1,10 +1,10 @@
-# Validation and host iteration (PRD §9)
+# Validation and host iteration
 
-This page maps **`PRD.md`** (repository root) **§9 Validation And Developer Loop** to concrete tools in this repository. It is the recommended place to answer “how do we prove the product path without flashing hardware every time?”
+This page maps the **validation and host-iteration** expectations from the repository **[README](https://github.com/oguzkaganozt/blusys/blob/main/README.md)** (**Product foundations** → **Validation**) to concrete tools in this repository. It is the recommended place to answer “how do we prove the product path without flashing hardware every time?”
 
-## Requirements (PRD)
+## Requirements
 
-| PRD requirement | What we use |
+| Goal | What we use |
 |-----------------|-------------|
 | **Reducer tests runnable on host** | Small host executables under `scripts/host/` (see below) plus archetype-shared helpers tested by `interactive_archetype_reducer_smoke` and edge-node-style logic in `operational_phase_smoke`. |
 | **Capability integration tests with simulated runtime-service events** | `capability_contract_smoke` (event ID bands), `panel_connectivity_map_smoke` (connectivity `map_event` path), and the **`connected_headless_host`** harness (full headless `app_spec` + capability host stubs — run locally; see `scripts/host/README.md`). |
@@ -46,4 +46,4 @@ Creates temporary projects for all archetypes (plus gateway `--starter interacti
 - [Reducer Model](reducer-model.md)
 - [Capability Composition](capability-composition.md)
 - `scripts/host/README.md` — install and binary list
-- `PRD.md` (repository root) — release criteria and validation expectations
+- [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md) (**Product foundations**) — mission, constraints, and validation pointer
