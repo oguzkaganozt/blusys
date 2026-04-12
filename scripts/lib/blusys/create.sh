@@ -379,7 +379,7 @@ LVGL
         fi
     } >"$out"
 
-    sed -i "s/__BLUSYS_SCAFFOLD_TAG__/${BLUSYS_SCAFFOLD_PLATFORM_VERSION}/g" "$out"
+    sed -i "s|__BLUSYS_SCAFFOLD_TAG__|${BLUSYS_SCAFFOLD_PLATFORM_VERSION}|g" "$out"
 }
 
 blusys_create_main_yml_interactive() {

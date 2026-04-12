@@ -65,8 +65,8 @@ struct app_state {
 };
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event);
-bool map_intent(blusys::framework::intent intent, action *out);
-void on_tick(blusys::app::app_ctx &ctx, app_state &state, std::uint32_t now_ms);
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out);
+void on_tick(blusys::app::app_ctx &ctx,  blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms);
 
 const char *mode_name(std::int32_t index);
 

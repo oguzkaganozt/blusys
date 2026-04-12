@@ -10,8 +10,9 @@
 
 namespace framework_device_basic::ui {
 
-void on_init(blusys::app::app_ctx &ctx, AppState &state)
+void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, AppState &state)
 {
+    (void)svc;
     using Tag = framework_device_basic::Tag;
     namespace view = blusys::app::view;
 
@@ -40,7 +41,7 @@ void on_init(blusys::app::app_ctx &ctx, AppState &state)
 
     view::overlay_create(p.screen, 1,
                          {.text = "Settings saved", .duration_ms = 1500},
-                         *ctx.overlay_manager());
+                         *ctx.services().overlay_manager());
 
     view::page_load(p);
 

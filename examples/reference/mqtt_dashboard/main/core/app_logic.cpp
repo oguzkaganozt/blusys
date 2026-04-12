@@ -174,17 +174,18 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         break;
 
     case action_tag::show_live:
-        ctx.navigate_to(route_live);
+        ctx.services().navigate_to(route_live);
         break;
 
     case action_tag::show_about:
-        ctx.navigate_to(route_about);
+        ctx.services().navigate_to(route_about);
         break;
     }
 }
 
-bool map_intent(blusys::framework::intent intent, action *out)
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out)
 {
+    (void)svc;
     switch (intent) {
     case blusys::framework::intent::confirm:
         *out = action{.tag = action_tag::show_about};

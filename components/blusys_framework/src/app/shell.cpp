@@ -2,7 +2,7 @@
 
 #include "blusys/app/view/shell.hpp"
 #include "blusys/app/view/screen_registry.hpp"
-#include "blusys/app/app_ctx.hpp"
+#include "blusys/app/app_services.hpp"
 #include "blusys/framework/ui/primitives/col.hpp"
 #include "blusys/framework/ui/primitives/label.hpp"
 #include "blusys/framework/ui/primitives/row.hpp"
@@ -22,11 +22,11 @@ namespace {
 // rule). Used by callbacks that need a stable reference to the shell.
 static shell *g_active_shell = nullptr;
 
-// Back button callback — navigates back through the shell's bound app_ctx.
+// Back button callback — navigates back through the shell's bound app_services.
 void on_back_pressed(void * /*user_data*/)
 {
-    if (g_active_shell != nullptr && g_active_shell->ctx != nullptr) {
-        g_active_shell->ctx->navigate_back();
+    if (g_active_shell != nullptr && g_active_shell->svc != nullptr) {
+        g_active_shell->svc->navigate_back();
     }
 }
 
@@ -40,12 +40,12 @@ static tab_cb_data g_tab_cb_data[kMaxTabs] = {};
 void on_tab_pressed(void *user_data)
 {
     auto *data = static_cast<tab_cb_data *>(user_data);
-    if (data == nullptr || g_active_shell == nullptr || g_active_shell->ctx == nullptr) {
+    if (data == nullptr || g_active_shell == nullptr || g_active_shell->svc == nullptr) {
         return;
     }
     shell &s = *g_active_shell;
     if (data->tab_index < s.tab_count) {
-        s.ctx->navigate_to(s.tabs[data->tab_index].route_id);
+        s.svc->navigate_to(s.tabs[data->tab_index].route_id);
         shell_set_active_tab(s, data->tab_index);
     }
 }
@@ -196,13 +196,13 @@ lv_obj_t *shell_status_surface(shell &s)
 }
 
 void shell_set_tabs(shell &s, const shell_tab_item *items, std::size_t count,
-                    app_ctx *ctx)
+                    app_services *svc)
 {
     if (s.tab_bar == nullptr || items == nullptr || count == 0) {
         return;
     }
 
-    s.ctx = ctx;
+    s.svc = svc;
     s.tab_count = (count > kMaxTabs) ? kMaxTabs : count;
 
     for (std::size_t i = 0; i < s.tab_count; ++i) {

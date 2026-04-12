@@ -53,6 +53,6 @@ struct app_state {
 };
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event);
-bool map_intent(blusys::framework::intent intent, action *out);
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out);
 
 }  // namespace mqtt_dashboard

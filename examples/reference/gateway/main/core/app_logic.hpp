@@ -102,7 +102,7 @@ struct app_state {
 // ---- public functions ----
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event);
-bool map_intent(blusys::framework::intent intent, action *out);
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out);
 
 const char *op_state_name(op_state s);
 

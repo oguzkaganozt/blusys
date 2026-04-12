@@ -8,7 +8,7 @@ Capabilities are composed in `integration/` and translated into app actions.
 - keep product decisions in `core/`
 - keep rendering in `ui/`
 - map capability events into reducer actions in `integration/`
-- query capability status through `app_ctx` or the app-facing status bridge
+- query capability status through `app_ctx` (or `ctx.services()` only when routing/UI reactions are needed)
 
 ## Typical Stacks
 
@@ -75,7 +75,7 @@ Status-only updates can be ignored in the reducer if `app_ctx` queries are enoug
 
 ## Stock Flows And Screens
 
-Operational UI (`blusys::app::flows::*`, `blusys::app::screens::*`) stays LVGL-backed and must not call runtime services directly. Wire buttons through `app_ctx::dispatch`, `error_panel_dispatch`, `confirmation_dispatch`, or `app_ctx::request_connectivity_reconnect()` as appropriate.
+Operational UI (`blusys::app::flows::*`, `blusys::app::screens::*`) stays LVGL-backed and must not call runtime services directly. Wire buttons through `app_ctx::dispatch`, `error_panel_dispatch`, `confirmation_dispatch`, or `app_ctx::request_connectivity_reconnect()` as appropriate; use `ctx.services()` only for framework-approved navigation/routing from UI callbacks that already hold `app_ctx`.
 
 ## Reference `map_event` Implementations
 

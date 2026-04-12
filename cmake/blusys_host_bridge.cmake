@@ -72,7 +72,6 @@ endfunction()
 # ── Common framework sources (mode-independent) ─────────────────────────────
 set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_COMPONENT_DIR}/src/common/error.c
-    ${BLUSYS_FRAMEWORK_DIR}/src/core/controller.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback_presets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/feedback_logging_sink.cpp
@@ -80,6 +79,7 @@ set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_FRAMEWORK_DIR}/src/core/router.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/runtime.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/app_ctx.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/app_services.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capability_event_map.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/connectivity_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/storage_host.cpp

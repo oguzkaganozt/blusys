@@ -1,6 +1,7 @@
 #pragma once
 
 #include "blusys/app/app_ctx.hpp"
+#include "blusys/app/app_services.hpp"
 #include "blusys/app/app_identity.hpp"
 #include "blusys/app/capability_event.hpp"
 #include "blusys/framework/core/intent.hpp"
@@ -46,13 +47,15 @@ struct app_spec {
     void (*update)(app_ctx &ctx, State &state, const Action &action);
 
     // ---- optional lifecycle hooks ----
-    void (*on_init)(app_ctx &ctx, State &state)                       = nullptr;
-    void (*on_tick)(app_ctx &ctx, State &state, std::uint32_t now_ms) = nullptr;
+    void (*on_init)(app_ctx &ctx, app_services &svc, State &state) = nullptr;
+    void (*on_tick)(app_ctx &ctx, app_services &svc, State &state, std::uint32_t now_ms) =
+        nullptr;
 
     // ---- intent-to-action bridge (interactive path) ----
     // Return true and fill *out to map a framework intent to an app action.
     // If nullptr, framework intents are silently ignored (headless default).
-    bool (*map_intent)(blusys::framework::intent intent, Action *out) = nullptr;
+    bool (*map_intent)(app_services &svc, blusys::framework::intent intent, Action *out) =
+        nullptr;
 
     // ---- integration event bridge (capabilities → app actions) ----
     // Optional override after the framework maps raw integration IDs to

@@ -59,8 +59,9 @@ void update(app_ctx &ctx, State &state, const Action &action)
     }
 }
 
-bool map_intent(blusys::framework::intent intent, Action *out)
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out)
 {
+    (void)svc;
     switch (intent) {
     case blusys::framework::intent::increment:
         *out = Action{.tag = Tag::brightness_up};

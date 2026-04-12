@@ -23,8 +23,8 @@ namespace {
 
 view::page make_page(blusys::app::app_ctx &ctx, bool scrollable)
 {
-    if (ctx.shell() != nullptr) {
-        return view::page_create_in(ctx.shell()->content_area, {.scrollable = scrollable});
+    if (ctx.services().shell() != nullptr) {
+        return view::page_create_in(ctx.services().shell()->content_area, {.scrollable = scrollable});
     }
     return view::page_create({.scrollable = scrollable});
 }
@@ -62,38 +62,38 @@ void on_status_hide(lv_obj_t * /*screen*/, void *user_data)
 void on_dashboard_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app::app_ctx *>(user_data);
-    if (ctx == nullptr || ctx->shell() == nullptr) {
+    if (ctx == nullptr || ctx->services().shell() == nullptr) {
         return;
     }
-    view::shell_set_title(*ctx->shell(), "Panel");
-    view::shell_set_active_tab(*ctx->shell(), 0);
+    view::shell_set_title(*ctx->services().shell(), "Panel");
+    view::shell_set_active_tab(*ctx->services().shell(), 0);
 }
 
 void on_status_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app::app_ctx *>(user_data);
-    if (ctx == nullptr || ctx->shell() == nullptr) {
+    if (ctx == nullptr || ctx->services().shell() == nullptr) {
         return;
     }
-    view::shell_set_title(*ctx->shell(), "Operational Status");
-    view::shell_set_active_tab(*ctx->shell(), 1);
+    view::shell_set_title(*ctx->services().shell(), "Operational Status");
+    view::shell_set_active_tab(*ctx->services().shell(), 1);
 }
 
 void on_settings_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app::app_ctx *>(user_data);
-    if (ctx == nullptr || ctx->shell() == nullptr) {
+    if (ctx == nullptr || ctx->services().shell() == nullptr) {
         return;
     }
-    view::shell_set_title(*ctx->shell(), "Panel Settings");
-    view::shell_set_active_tab(*ctx->shell(), 2);
+    view::shell_set_title(*ctx->services().shell(), "Panel Settings");
+    view::shell_set_active_tab(*ctx->services().shell(), 2);
 }
 
 void on_about_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app::app_ctx *>(user_data);
-    if (ctx != nullptr && ctx->shell() != nullptr) {
-        view::shell_set_title(*ctx->shell(), "About");
+    if (ctx != nullptr && ctx->services().shell() != nullptr) {
+        view::shell_set_title(*ctx->services().shell(), "About");
     }
 }
 
@@ -159,7 +159,7 @@ lv_obj_t *create_dashboard(blusys::app::app_ctx &ctx, const void * /*params*/, l
     if (group_out != nullptr) {
         *group_out = page.group;
     }
-    return ctx.shell() != nullptr ? page.content : page.screen;
+    return ctx.services().shell() != nullptr ? page.content : page.screen;
 }
 
 lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
@@ -258,32 +258,33 @@ void register_all_screens(view::screen_router *router, blusys::app::app_ctx &ctx
 
 }  // namespace
 
-void on_init(blusys::app::app_ctx &ctx, app_state &state)
+void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state &state)
 {
+    (void)svc;
     (void)state;
 
-    if (ctx.shell() != nullptr) {
+    if (ctx.services().shell() != nullptr) {
         const view::shell_tab_item tabs[] = {
             {.label = "Dash", .route_id = route_dashboard},
             {.label = "State", .route_id = route_status},
             {.label = "Setup", .route_id = route_settings},
         };
-        view::shell_set_tabs(*ctx.shell(), tabs, sizeof(tabs) / sizeof(tabs[0]), &ctx);
+        view::shell_set_tabs(*ctx.services().shell(), tabs, sizeof(tabs) / sizeof(tabs[0]), &ctx.services());
 
-        if (lv_obj_t *surface = view::shell_status_surface(*ctx.shell()); surface != nullptr) {
+        if (lv_obj_t *surface = view::shell_status_surface(*ctx.services().shell()); surface != nullptr) {
             state.shell_badge = view::status_badge(surface, "Warmup", blusys::ui::badge_level::warning);
             state.shell_detail = view::label(surface, "Balanced  Q3  27C", blusys::ui::theme().font_body_sm);
         }
     }
 
-    auto *router = ctx.screen_router();
+    auto *router = ctx.services().screen_router();
     if (router == nullptr) {
         return;
     }
 
     register_all_screens(router, ctx);
 
-    ctx.navigate_to(route_dashboard);
+    ctx.services().navigate_to(route_dashboard);
 }
 
 }  // namespace interactive_panel::ui

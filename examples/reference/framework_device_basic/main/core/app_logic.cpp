@@ -33,7 +33,7 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
         break;
 
     case Tag::confirm:
-        ctx.show_overlay(1);
+        ctx.services().show_overlay(1);
         ctx.emit_feedback(blusys::framework::feedback_channel::audio,
                           blusys::framework::feedback_pattern::confirm);
         BLUSYS_LOGI(kTag, "confirmed — volume=%ld", static_cast<long>(state.volume));
@@ -41,8 +41,9 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
     }
 }
 
-bool map_intent(blusys::framework::intent intent, Action *out)
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out)
 {
+    (void)svc;
     switch (intent) {
     case blusys::framework::intent::increment:
         *out = Action{.tag = Tag::volume_up};

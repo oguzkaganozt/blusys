@@ -48,8 +48,10 @@ const char *edge_surface_label_for_build()
 #endif
 
 #ifndef BLUSYS_FRAMEWORK_HAS_UI
-void on_init_host(blusys::app::app_ctx & /*ctx*/, app_state & /*state*/)
+void on_init_host(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc,
+                  app_state & /*state*/)
 {
+    (void)svc;
     BLUSYS_LOGI("edge_node", "edge node initialized — entering operational loop");
 }
 #endif
@@ -159,8 +161,9 @@ float drift_sensor(float base, float range, std::uint32_t tick)
 // Lives in integration/ because it needs direct access to the telemetry
 // capability instance for record().
 
-void on_tick(blusys::app::app_ctx & /*ctx*/, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms)
 {
+    (void)svc;
     ++state.sample_count;
 
     // Simulate sensor readings.

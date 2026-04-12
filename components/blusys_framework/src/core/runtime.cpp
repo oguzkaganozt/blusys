@@ -9,11 +9,12 @@ constexpr const char *kTag = "blusys_runtime";
 
 }  // namespace
 
-blusys_err_t runtime::init(controller *controller,
-                           route_sink *output_route_sink,
+blusys_err_t runtime::init(route_sink *output_route_sink,
+                           const runtime_handler &handler,
                            std::uint32_t tick_period_ms)
 {
-    if (controller == nullptr || tick_period_ms == 0) {
+    if (output_route_sink == nullptr || tick_period_ms == 0 ||
+        handler.handle_event == nullptr) {
         return BLUSYS_ERR_INVALID_ARG;
     }
 
@@ -21,22 +22,19 @@ blusys_err_t runtime::init(controller *controller,
         return BLUSYS_ERR_INVALID_STATE;
     }
 
-    controller_ = controller;
+    handler_           = handler;
     output_route_sink_ = output_route_sink;
-    tick_period_ms_ = tick_period_ms;
-    last_tick_ms_ = 0;
-    tick_started_ = false;
+    tick_period_ms_    = tick_period_ms;
+    last_tick_ms_      = 0;
+    tick_started_      = false;
     event_queue_.clear();
-    route_queue_.clear();
 
-    controller_->bind_route_sink(this);
-    controller_->bind_feedback_bus(&feedback_bus_);
-
-    blusys_err_t err = controller_->init();
+    blusys_err_t err = BLUSYS_OK;
+    if (handler_.on_init != nullptr) {
+        err = handler_.on_init(handler_.context, &feedback_bus_);
+    }
     if (err != BLUSYS_OK) {
-        controller_->bind_route_sink(nullptr);
-        controller_->bind_feedback_bus(nullptr);
-        controller_ = nullptr;
+        handler_           = {};
         output_route_sink_ = nullptr;
         return err;
     }
@@ -51,16 +49,15 @@ void runtime::deinit()
         return;
     }
 
-    controller_->deinit();
-    controller_->bind_route_sink(nullptr);
-    controller_->bind_feedback_bus(nullptr);
+    if (handler_.on_deinit != nullptr) {
+        handler_.on_deinit(handler_.context);
+    }
 
-    controller_ = nullptr;
+    handler_           = {};
     output_route_sink_ = nullptr;
     event_queue_.clear();
-    route_queue_.clear();
-    initialized_ = false;
-    tick_started_ = false;
+    initialized_       = false;
+    tick_started_      = false;
 }
 
 blusys_err_t runtime::post_event(const app_event &event)
@@ -102,31 +99,21 @@ void runtime::step(std::uint32_t now_ms)
 
     app_event event;
     while (event_queue_.pop_front(&event)) {
-        controller_->handle(event);
-        flush_routes();
+        handler_.handle_event(handler_.context, event, &feedback_bus_, output_route_sink_);
     }
 
     if (!tick_started_ || (now_ms - last_tick_ms_) >= tick_period_ms_) {
-        controller_->tick(now_ms);
+        if (handler_.on_tick != nullptr) {
+            handler_.on_tick(handler_.context, now_ms);
+        }
         tick_started_ = true;
         last_tick_ms_ = now_ms;
-        flush_routes();
     }
-}
-
-bool runtime::poll_route(route_command *out_command)
-{
-    return route_queue_.pop_front(out_command);
 }
 
 std::size_t runtime::queued_event_count() const
 {
     return event_queue_.size();
-}
-
-std::size_t runtime::queued_route_count() const
-{
-    return route_queue_.size();
 }
 
 std::uint32_t runtime::tick_period_ms() const
@@ -137,25 +124,6 @@ std::uint32_t runtime::tick_period_ms() const
 bool runtime::is_initialized() const
 {
     return initialized_;
-}
-
-void runtime::submit(const route_command &command)
-{
-    if (!route_queue_.push_back(command)) {
-        BLUSYS_LOGW(kTag, "route queue full");
-    }
-}
-
-void runtime::flush_routes()
-{
-    if (output_route_sink_ == nullptr) {
-        return;
-    }
-
-    route_command command;
-    while (route_queue_.pop_front(&command)) {
-        output_route_sink_->submit(command);
-    }
 }
 
 }  // namespace blusys::framework

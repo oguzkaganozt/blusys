@@ -31,7 +31,19 @@ run_create() {
     shift
     local dir="$TMP/$name"
     mkdir "$dir"
-    (cd "$dir" && "$BLUSYS" create "$@")
+    local abs
+    abs="$(cd "$dir" && pwd)"
+    # `blusys create` uses the path's basename in sed; `.` breaks substitution — use abs path.
+    local args=()
+    local a
+    for a in "$@"; do
+        if [[ "$a" == . ]]; then
+            args+=("$abs")
+        else
+            args+=("$a")
+        fi
+    done
+    (cd "$dir" && "$BLUSYS" create "${args[@]}")
     printf 'scaffold-smoke: created %s\n' "$name"
 }
 

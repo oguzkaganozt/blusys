@@ -26,7 +26,7 @@
 //   BLUSYS_APP_MAIN_HEADLESS_PROFILE(spec, hl)  — headless + headless_profile
 //   BLUSYS_APP_MAIN_DEVICE(spec, profile)       — device target with LCD + optional encoder
 
-#include "blusys/app/app_runtime.hpp"
+#include "blusys/app/detail/app_runtime.hpp"
 #include "blusys/app/host_profile.hpp"
 #include "blusys/app/profiles/headless.hpp"
 #include "blusys/framework/core/runtime.hpp"
@@ -230,7 +230,7 @@ void run_device(const app_spec<State, Action> &spec,
                     }
                     p->runtime->screen_router().focus_scopes().refresh_current();
                     if (p->has_shell) {
-                        auto *sh = p->runtime->ctx().shell();
+                        auto *sh = p->runtime->ctx().services().shell();
                         if (sh != nullptr) {
                             p->runtime->screen_router().sync_shell_chrome(*sh);
                             view::shell_set_back_visible(

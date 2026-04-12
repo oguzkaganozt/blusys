@@ -33,6 +33,6 @@ struct Action {
 
 void update(app_ctx &ctx, AppState &state, const Action &action);
 
-bool map_intent(blusys::framework::intent intent, Action *out);
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out);
 
 }  // namespace framework_device_basic

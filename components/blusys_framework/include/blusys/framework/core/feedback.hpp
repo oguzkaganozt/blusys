@@ -52,6 +52,14 @@ private:
     blusys::static_vector<feedback_sink *, kMaxSinks> sinks_{};
 };
 
+/// Emit feedback on `bus` if non-null (escape hatch replacing `controller::emit_feedback`).
+inline void feedback_dispatch(feedback_bus *bus, const feedback_event &event)
+{
+    if (bus != nullptr) {
+        bus->emit(event);
+    }
+}
+
 const char *feedback_channel_name(feedback_channel channel);
 const char *feedback_pattern_name(feedback_pattern pattern);
 

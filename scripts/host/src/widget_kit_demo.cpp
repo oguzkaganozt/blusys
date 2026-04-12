@@ -10,11 +10,11 @@
 //   2. Give the widget kit a visual iteration loop that does not
 //      require flashing hardware — product designers can tweak the
 //      theme tokens here and see the result in seconds.
-//   3. Exercise the full spine (runtime → controller → route sink)
+//   3. Exercise the full spine (runtime → runtime_handler → route sink)
 //      end-to-end on host (PC + LVGL + SDL2) so CI and local dev have
 //      a concrete artifact. The screen has three buttons that post
 //      `intent::decrement`, `intent::increment`, and `intent::confirm`
-//      to a runtime, and a small controller mutates the slider /
+//      to a runtime, and a small event handler mutates the slider /
 //      submits a `show_overlay` route command in response — i.e. the
 //      same chain framework_app_basic validates on device.
 //
@@ -178,74 +178,80 @@ private:
     app_state *state_ = nullptr;
 };
 
-// ---- controller -------------------------------------------------------------
+// ---- runtime_handler callbacks (replaces legacy controller subclass) --------
 
-class demo_controller final : public blusys::framework::controller {
-public:
-    void bind(app_state *state) { state_ = state; }
+struct demo_handler_ctx {
+    app_state *state = nullptr;
+};
 
-    blusys_err_t init() override
-    {
-        emit_feedback({
-            .channel = blusys::framework::feedback_channel::visual,
-            .pattern = blusys::framework::feedback_pattern::focus,
-            .value   = 1,
-            .payload = nullptr,
-        });
-        return BLUSYS_OK;
+demo_handler_ctx g_demo_ctx{};
+
+static blusys_err_t demo_on_init(void *ctx, blusys::framework::feedback_bus *fb)
+{
+    (void)ctx;
+    blusys::framework::feedback_dispatch(fb, {
+        .channel = blusys::framework::feedback_channel::visual,
+        .pattern = blusys::framework::feedback_pattern::focus,
+        .value   = 1,
+        .payload = nullptr,
+    });
+    return BLUSYS_OK;
+}
+
+static void demo_on_event(void *ctx,
+                          const blusys::framework::app_event &event,
+                          blusys::framework::feedback_bus *fb,
+                          blusys::framework::route_sink *routes)
+{
+    auto *h = static_cast<demo_handler_ctx *>(ctx);
+    if (event.kind != blusys::framework::app_event_kind::intent) {
+        return;
+    }
+    if (h->state == nullptr || h->state->slider == nullptr) {
+        return;
     }
 
-    void handle(const blusys::framework::app_event &event) override
-    {
-        if (event.kind != blusys::framework::app_event_kind::intent) return;
-        if (state_ == nullptr || state_->slider == nullptr) return;
-
-        switch (blusys::framework::app_event_intent(event)) {
-        case blusys::framework::intent::increment: {
-            const int32_t cur = blusys::ui::slider_get_value(state_->slider);
-            blusys::ui::slider_set_value(state_->slider, clamp_slider(cur + kSliderStep));
-            emit_click_feedback();
-            break;
-        }
-        case blusys::framework::intent::decrement: {
-            const int32_t cur = blusys::ui::slider_get_value(state_->slider);
-            blusys::ui::slider_set_value(state_->slider, clamp_slider(cur - kSliderStep));
-            emit_click_feedback();
-            break;
-        }
-        case blusys::framework::intent::confirm: {
-            submit_route(blusys::framework::route::show_overlay(1));
-            emit_feedback({
-                .channel = blusys::framework::feedback_channel::audio,
-                .pattern = blusys::framework::feedback_pattern::confirm,
-                .value   = 1,
-                .payload = nullptr,
-            });
-            break;
-        }
-        default:
-            break;
-        }
-    }
-
-private:
-    void emit_click_feedback() const
-    {
-        emit_feedback({
+    switch (blusys::framework::app_event_intent(event)) {
+    case blusys::framework::intent::increment: {
+        const int32_t cur = blusys::ui::slider_get_value(h->state->slider);
+        blusys::ui::slider_set_value(h->state->slider, clamp_slider(cur + kSliderStep));
+        blusys::framework::feedback_dispatch(fb, {
             .channel = blusys::framework::feedback_channel::haptic,
             .pattern = blusys::framework::feedback_pattern::click,
             .value   = 1,
             .payload = nullptr,
         });
+        break;
     }
-
-    app_state *state_ = nullptr;
-};
+    case blusys::framework::intent::decrement: {
+        const int32_t cur = blusys::ui::slider_get_value(h->state->slider);
+        blusys::ui::slider_set_value(h->state->slider, clamp_slider(cur - kSliderStep));
+        blusys::framework::feedback_dispatch(fb, {
+            .channel = blusys::framework::feedback_channel::haptic,
+            .pattern = blusys::framework::feedback_pattern::click,
+            .value   = 1,
+            .payload = nullptr,
+        });
+        break;
+    }
+    case blusys::framework::intent::confirm: {
+        blusys::framework::route_dispatch(routes, blusys::framework::route::show_overlay(1));
+        blusys::framework::feedback_dispatch(fb, {
+            .channel = blusys::framework::feedback_channel::audio,
+            .pattern = blusys::framework::feedback_pattern::confirm,
+            .value   = 1,
+            .payload = nullptr,
+        });
+        break;
+    }
+    default:
+        break;
+    }
+}
 
 // ---- module-level singletons ------------------------------------------------
 
 app_state                   g_state{};
-demo_controller             g_controller{};
 ui_route_sink               g_route_sink{};
 logging_feedback_sink       g_feedback_sink{};
 blusys::framework::runtime  g_runtime{};
@@ -363,11 +369,18 @@ int main(void)
     lv_indev_set_group(encoder_indev, encoder_group);
 
     // Spine wiring — same order as framework_app_basic.
-    g_controller.bind(&g_state);
+    g_demo_ctx.state = &g_state;
     g_route_sink.bind(&g_state);
     g_runtime.register_feedback_sink(&g_feedback_sink);
 
-    const blusys_err_t init_err = g_runtime.init(&g_controller, &g_route_sink, 10);
+    blusys::framework::runtime_handler handler{};
+    handler.context      = &g_demo_ctx;
+    handler.on_init      = demo_on_init;
+    handler.handle_event = demo_on_event;
+    handler.on_tick      = nullptr;
+    handler.on_deinit    = nullptr;
+
+    const blusys_err_t init_err = g_runtime.init(&g_route_sink, handler, 10);
     if (init_err != BLUSYS_OK) {
         BLUSYS_LOGE(kTag, "runtime.init failed: %d", static_cast<int>(init_err));
         return 1;

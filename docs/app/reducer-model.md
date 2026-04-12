@@ -12,9 +12,9 @@ Defines the complete application:
 static const blusys::app::app_spec<State, Action> spec{
     .initial_state = {},      // initial value of State
     .update        = update,  // required: reducer function
-    .on_init       = on_init, // optional: UI setup for interactive apps
-    .map_intent    = map_intent, // optional: encoder/keyboard → Action
-    .on_tick       = on_tick, // optional: periodic callback
+    .on_init       = on_init, // optional: void(app_ctx&, app_services&, State&) — UI setup for interactive apps
+    .map_intent    = map_intent, // optional: bool(app_services&, intent, Action*) — encoder/keyboard → Action
+    .on_tick       = on_tick, // optional: void(app_ctx&, app_services&, State&, uint32_t) — periodic callback
     .tick_period_ms = 100,    // tick interval (default 100 ms)
 };
 ```
@@ -48,16 +48,16 @@ enum class Action {
 };
 ```
 
-### `app_ctx`
+### `app_ctx` and `app_services`
 
-The context object provided to your reducer. Use it for dispatch, navigation, and feedback:
+The context object provided to your reducer is `app_ctx`. Use it for **dispatch**, **capability status**, and **feedback**. Routing, overlays, shell/screen router, and ESP filesystem handles live on **`app_services`**, reached as **`ctx.services()`** (same accessor from `update`, `on_init`, and other hooks).
 
 ```cpp
 ctx.dispatch(Action::increment);          // queue an action (returns false if the queue is full)
-ctx.navigate_to(RouteId::settings);       // set root route
-ctx.navigate_push(RouteId::detail);       // push route
-ctx.navigate_back();                      // pop route
-ctx.show_overlay(OverlayId::confirm);     // show overlay
+ctx.services().navigate_to(RouteId::settings);   // set root route
+ctx.services().navigate_push(RouteId::detail);   // push route
+ctx.services().navigate_back();                  // pop route
+ctx.services().show_overlay(OverlayId::confirm); // show overlay
 ctx.emit_feedback(                        // haptic / audio feedback
     blusys::framework::feedback_channel::haptic,
     blusys::framework::feedback_pattern::click);
@@ -98,8 +98,9 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
 For interactive apps, `map_intent` bridges framework intents (from encoder or keyboard) to product actions:
 
 ```cpp
-bool map_intent(blusys::framework::intent intent, Action *out)
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out)
 {
+    (void)svc; // use when navigation or UI from intents is needed
     switch (intent) {
     case blusys::framework::intent::increment:
         *out = Action::increment;
@@ -121,8 +122,9 @@ bool map_intent(blusys::framework::intent intent, Action *out)
 For headless apps that need periodic work, `on_tick` runs at `tick_period_ms` intervals:
 
 ```cpp
-void on_tick(blusys::app::app_ctx &ctx, State & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
 {
+    (void)svc;
     ctx.dispatch(Action::temp_reading);
 }
 ```

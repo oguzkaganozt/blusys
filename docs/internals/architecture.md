@@ -110,9 +110,11 @@ This is the recommended product-facing API. Normal product code only touches thi
 
 - `app.hpp` — umbrella include for the product API
 - `app_spec.hpp` — `app_spec<State, Action>` template: initial state, `update()` reducer, lifecycle hooks (`on_init`, `on_tick`), intent and event bridges, capability config, theme
-- `app_ctx.hpp` — `app_ctx`: dispatch actions, navigate (`navigate_to`, `navigate_push`, `navigate_back`), show/hide overlays, emit feedback, query capability status
+- `app_ctx.hpp` — `app_ctx`: dispatch actions, emit feedback, query capability status, `product_state`, connectivity helpers; **`services()`** returns `app_services &` for routing/UI/FS
+- `app_services.hpp` — `app_services`: navigate (`navigate_to`, `navigate_push`, `navigate_back`), show/hide overlays, `screen_router` / `shell` / stack helpers, ESP `spiffs` / `fatfs` when applicable
+- `capability_list.hpp` — fixed array of capability pointers for `app_spec` (included from `app.hpp`; used in `integration/` for wiring)
 - `entry.hpp` — entry macros: `BLUSYS_APP_MAIN_HOST(spec)`, `BLUSYS_APP_MAIN_HEADLESS(spec)`, `BLUSYS_APP_MAIN_DEVICE(spec, profile)`
-- `app_runtime.hpp` — runtime engine (internal, driven by the entry macros)
+- `detail/app_runtime.hpp` — runtime engine (internal, driven by the entry macros)
 
 **View layer** (`include/blusys/app/view/`, gated by `BLUSYS_BUILD_UI`):
 - `view.hpp` — view definition and lifecycle
@@ -139,8 +141,7 @@ The core spine is internal framework machinery. Product code does not interact w
 - `router.hpp` — six route commands (`set_root`, `push`, `replace`, `pop`, `show_overlay`, `hide_overlay`) plus a `route_sink` interface; interactive products use `blusys::app::view::screen_router` as the bound sink so stack navigation and screen lifecycle stay framework-owned
 - `intent.hpp` — nine semantic intents (`press`/`long_press`/`release`/`confirm`/`cancel`/`increment`/`decrement`/`focus_next`/`focus_prev`) and the `app_event` envelope
 - `feedback.hpp` — three channels (`visual`/`audio`/`haptic`), six patterns, fixed-capacity bus
-- `controller.hpp` — `init`/`handle`/`tick`/`deinit` lifecycle base class (used internally by `app_runtime`)
-- `runtime.hpp` — event/route ring buffers, 10 ms default tick cadence, `route_sink` and `feedback_bus` integration
+- `runtime.hpp` — event ring buffer, optional tick cadence, `runtime_handler` callbacks (`on_init` / `handle_event` / `on_tick`); routes go directly to the bound `route_sink` (no internal route queue). `blusys::app::detail::app_runtime` wires this to the product reducer
 - `containers.hpp` — `static_vector`, `ring_buffer`, `array`, `string`
 
 #### Widget kit (`include/blusys/framework/ui/`, gated by `BLUSYS_BUILD_UI`)

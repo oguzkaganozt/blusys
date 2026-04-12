@@ -1,6 +1,7 @@
 #ifdef ESP_PLATFORM
 
 #include "blusys/app/capabilities/bluetooth.hpp"
+#include "blusys/app/detail/pending_events.hpp"
 #include "blusys/framework/core/intent.hpp"
 #include "blusys/framework/core/runtime.hpp"
 #include "blusys/log.h"
@@ -74,7 +75,7 @@ blusys_err_t bluetooth_capability::start(blusys::framework::runtime &rt)
 void bluetooth_capability::poll(std::uint32_t /*now_ms*/)
 {
     const std::uint32_t flags =
-        pending_flags_.exchange(kPendingNone, std::memory_order_acquire);
+        detail::drain_pending_flags(pending_flags_, kPendingNone);
     if (flags == kPendingNone) {
         return;
     }

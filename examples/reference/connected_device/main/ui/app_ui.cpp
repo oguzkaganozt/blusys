@@ -9,8 +9,9 @@
 
 namespace connected_device::ui {
 
-void on_init(blusys::app::app_ctx &ctx, State &state)
+void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State &state)
 {
+    (void)svc;
     using Tag = connected_device::Tag;
     namespace view = blusys::app::view;
 

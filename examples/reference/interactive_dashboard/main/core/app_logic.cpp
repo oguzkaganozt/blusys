@@ -170,19 +170,20 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         break;
 
     case action_tag::show_overview:
-        ctx.navigate_to(route_overview);
+        ctx.services().navigate_to(route_overview);
         break;
 
     case action_tag::show_about:
-        ctx.navigate_to(route_about);
+        ctx.services().navigate_to(route_about);
         break;
     }
 
     sync_all(state);
 }
 
-bool map_intent(blusys::framework::intent intent, action *out)
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out)
 {
+    (void)svc;
     switch (intent) {
     case blusys::framework::intent::increment:
         *out = action{.tag = action_tag::nudge_load, .value = 8};
@@ -201,8 +202,9 @@ bool map_intent(blusys::framework::intent intent, action *out)
     }
 }
 
-void on_tick(blusys::app::app_ctx &ctx, app_state & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state & /*state*/, std::uint32_t /*now_ms*/)
 {
+    (void)svc;
     ctx.dispatch(action{.tag = action_tag::sample_tick});
 }
 

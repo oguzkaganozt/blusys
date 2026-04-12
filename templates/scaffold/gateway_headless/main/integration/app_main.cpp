@@ -104,8 +104,9 @@ blusys::app::storage_capability storage{{
 blusys::app::capability_list capabilities{
     &connectivity, &telemetry, &diagnostics, &ota, &provisioning, &storage};
 
-void on_tick(blusys::app::app_ctx & /*ctx*/, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms)
 {
+    (void)svc;
     ++state.sample_count;
     state.active_devices = 1 + static_cast<std::int32_t>(state.sample_count % 3);
     state.agg_throughput = 12.0f + static_cast<float>(state.sample_count % 8);

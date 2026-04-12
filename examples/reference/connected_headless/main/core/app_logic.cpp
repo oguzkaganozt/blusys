@@ -62,8 +62,9 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
     }
 }
 
-void on_tick(blusys::app::app_ctx &ctx, State & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
 {
+    (void)svc;
     ctx.dispatch(Action{.tag = action_tag::periodic_tick});
 }
 

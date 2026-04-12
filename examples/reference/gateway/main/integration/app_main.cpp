@@ -156,8 +156,9 @@ float drift_sensor(float base, float range, std::uint32_t tick)
 
 // ---- on_tick: simulated downstream aggregation and telemetry ----
 
-void on_tick(blusys::app::app_ctx & /*ctx*/, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms)
 {
+    (void)svc;
     ++state.sample_count;
 
     // Simulate downstream device activity.

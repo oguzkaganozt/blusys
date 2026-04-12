@@ -5,7 +5,8 @@
 // Product code should include this single header. It provides:
 //   - app_spec<State, Action>  — define your app
 //   - app_identity             — product name, theme, feedback preset
-//   - app_ctx                  — dispatch (returns whether queued), navigate, feedback
+//   - app_ctx                  — dispatch (returns whether queued), capability status, feedback
+//   - app_services (via ctx.services()) — routing, overlays, screen_router/shell, ESP FS accessors
 //   - entry macros             — BLUSYS_APP, BLUSYS_APP_INTERACTIVE, BLUSYS_APP_DASHBOARD,
 //                                  BLUSYS_APP_MAIN_* (escape hatches)
 //   - theme presets            — expressive_dark, operational_light, oled

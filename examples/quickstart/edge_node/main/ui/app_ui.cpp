@@ -90,13 +90,14 @@ lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/,
 
 }  // namespace
 
-void on_init(blusys::app::app_ctx &ctx, app_state &state)
+void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state &state)
 {
+    (void)svc;
     BLUSYS_LOGI("edge_node", "edge node initialized — entering operational loop");
 
 #if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI) && \
     CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI
-    auto *router = ctx.screen_router();
+    auto *router = ctx.services().screen_router();
     if (router == nullptr) {
         return;
     }
@@ -105,7 +106,7 @@ void on_init(blusys::app::app_ctx &ctx, app_state &state)
         view::screen_row(route::status, &create_status, nullptr, nullptr, nullptr),
     };
     router->register_screens(&ctx, kRoutes, sizeof(kRoutes) / sizeof(kRoutes[0]));
-    ctx.navigate_to(route::status);
+    ctx.services().navigate_to(route::status);
 
     lv_timer_create(refresh_timer_cb, 400, &state);
 #endif

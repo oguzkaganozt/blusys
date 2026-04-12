@@ -275,19 +275,19 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         break;
 
     case action_tag::show_dashboard:
-        ctx.navigate_to(route_dashboard);
+        ctx.services().navigate_to(route_dashboard);
         break;
 
     case action_tag::show_status:
-        ctx.navigate_to(route_status);
+        ctx.services().navigate_to(route_status);
         break;
 
     case action_tag::show_settings:
-        ctx.navigate_to(route_settings);
+        ctx.services().navigate_to(route_settings);
         break;
 
     case action_tag::open_about:
-        ctx.navigate_push(route_about);
+        ctx.services().navigate_push(route_about);
         break;
 
     case action_tag::sample_tick:
@@ -301,8 +301,9 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 #endif
 }
 
-bool map_intent(blusys::framework::intent intent, action *out)
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out)
 {
+    (void)svc;
     switch (intent) {
     case blusys::framework::intent::increment:
         *out = action{.tag = action_tag::show_status};
