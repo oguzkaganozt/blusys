@@ -8,7 +8,6 @@
 #include "blusys/app/capability_list.hpp"
 #include "blusys/app/detail/default_route_sink.hpp"
 #include "blusys/framework/core/containers.hpp"
-#include "blusys/framework/core/controller.hpp"
 #include "blusys/framework/core/feedback.hpp"
 #include "blusys/framework/core/intent.hpp"
 #include "blusys/framework/core/router.hpp"
@@ -18,6 +17,21 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
+
+namespace blusys::app::detail {
+
+template <typename T, typename = void>
+struct action_has_cap_event_member : std::false_type {};
+
+template <typename T>
+struct action_has_cap_event_member<T, std::void_t<decltype(std::declval<T &>().cap_event)>>
+    : std::true_type {};
+
+template <typename T>
+inline constexpr bool action_has_cap_event_member_v = action_has_cap_event_member<T>::value;
+
+}  // namespace blusys::app::detail
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/app/view/screen_router.hpp"
@@ -36,12 +50,10 @@ protected:
     }
 
     static void bind_ctx(app_ctx &ctx,
-                         blusys::framework::route_sink *route_sink,
                          blusys::framework::feedback_bus *feedback_bus,
                          app_ctx::dispatch_fn dispatch_fn,
                          void *runtime_ptr)
     {
-        ctx.route_sink_   = route_sink;
         ctx.feedback_bus_ = feedback_bus;
         ctx.dispatch_fn_  = dispatch_fn;
         ctx.runtime_ptr_  = runtime_ptr;
@@ -52,17 +64,32 @@ protected:
         ctx.product_state_ = state;
     }
 
-#ifdef BLUSYS_FRAMEWORK_HAS_UI
-    static void bind_screen_router(app_ctx &ctx, view::screen_router *router)
+    static void bind_services_ptr(app_ctx &ctx, app_services *svc)
     {
-        ctx.screen_router_ = router;
+        ctx.services_ = svc;
     }
 
-    static void bind_shell(app_ctx &ctx, view::shell *shell)
+    static void wire_route_sink(app_services &svc, blusys::framework::route_sink *sink)
     {
-        ctx.shell_ = shell;
+        svc.route_sink_ = sink;
+    }
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+    static void wire_screen_router(app_services &svc, view::screen_router *router)
+    {
+        svc.screen_router_ = router;
+    }
+
+    static void wire_shell(app_services &svc, view::shell *shell)
+    {
+        svc.shell_ = shell;
     }
 #endif
+
+    static void sync_services_storage(app_ctx &ctx, app_services &svc)
+    {
+        svc.set_storage_for_fs(ctx.storage_);
+    }
 
     static void bind_capability_ptrs(app_ctx &ctx, capability_list *capabilities)
     {
@@ -78,9 +105,7 @@ public:
     using spec_type = app_spec<State, Action>;
 
     explicit app_runtime(const spec_type &spec)
-        : spec_(spec)
-        , state_(spec.initial_state)
-        , reducer_ctrl_(*this)
+        : spec_(spec), state_(spec.initial_state)
     {
     }
 
@@ -89,30 +114,35 @@ public:
         feedback_logging_sink_.set_identity(spec_.identity);
         framework_runtime_.register_feedback_sink(&feedback_logging_sink_);
 
+        blusys::framework::runtime_handler handler{};
+        handler.context      = this;
+        handler.on_init      = &app_runtime::reducer_on_init;
+        handler.handle_event = &app_runtime::reducer_handle_event;
+        handler.on_tick      = &app_runtime::reducer_on_tick;
+        handler.on_deinit    = nullptr;
+
         blusys_err_t err = framework_runtime_.init(
-            &reducer_ctrl_, &route_sink_ref(), spec_.tick_period_ms);
+            &route_sink_ref(), handler, spec_.tick_period_ms);
         if (err != BLUSYS_OK) {
             return err;
         }
 
-        // Bind app_ctx: the framework runtime itself implements route_sink,
-        // so we use it for navigation. Feedback goes through the controller's
-        // bound feedback_bus (set by framework_runtime_.init).
-        bind_ctx(ctx_,
-                 &framework_runtime_,          // route_sink (runtime implements it)
-                 reducer_ctrl_.get_feedback_bus(),
-                 &dispatch_trampoline,
-                 this);
+        bind_services_ptr(ctx_, &services_);
+        wire_route_sink(services_, &route_sink_ref());
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-        bind_screen_router(ctx_, &screen_router_);
+        wire_screen_router(services_, &screen_router_);
         screen_router_.bind_ctx(&ctx_);
+#endif
 
+        bind_ctx(ctx_, framework_runtime_.feedback_bus_ptr(), &dispatch_trampoline, this);
+
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
         // Create and load the interaction shell if configured.
         if (spec_.shell != nullptr) {
             shell_ = view::shell_create(*spec_.shell);
-            shell_.ctx = &ctx_;
-            bind_shell(ctx_, &shell_);
+            shell_.svc = &services_;
+            wire_shell(services_, &shell_);
             view::shell_load(shell_);
 
             // Tell the screen_registry to swap content inside the shell's
@@ -123,10 +153,10 @@ public:
             screen_router_.set_screen_changed_callback(
                 [](lv_obj_t * /*screen*/, void *user_ctx) {
                     auto *s = static_cast<view::shell *>(user_ctx);
-                    if (s == nullptr || s->ctx == nullptr) {
+                    if (s == nullptr || s->svc == nullptr) {
                         return;
                     }
-                    auto *router = s->ctx->screen_router();
+                    auto *router = s->svc->screen_router();
                     if (router == nullptr) {
                         return;
                     }
@@ -139,10 +169,28 @@ public:
 
         start_capabilities();
         bind_capability_ptrs(ctx_, spec_.capabilities);
+        sync_services_storage(ctx_, services_);
         bind_product_state(ctx_, static_cast<void *>(&state_));
 
+        if (spec_.capabilities != nullptr && spec_.map_event == nullptr) {
+            if constexpr (!detail::action_has_cap_event_member_v<Action>) {
+                BLUSYS_LOGE("blusys_app",
+                            "capabilities require app_spec::map_event when Action has no "
+                            "cap_event field");
+                return BLUSYS_ERR_INVALID_ARG;
+            }
+            if constexpr (detail::action_has_cap_event_member_v<Action>) {
+                if (spec_.capability_event_discriminant == k_capability_event_discriminant_unset) {
+                    BLUSYS_LOGE(
+                        "blusys_app",
+                        "capabilities registered but capability_event_discriminant is unset");
+                    return BLUSYS_ERR_INVALID_ARG;
+                }
+            }
+        }
+
         if (spec_.on_init != nullptr) {
-            spec_.on_init(ctx_, state_);
+            spec_.on_init(ctx_, services_, state_);
         }
 
         return BLUSYS_OK;
@@ -258,51 +306,89 @@ private:
         return rt->post_action(action);
     }
 
-    // ---- inner controller: bridges framework events to the reducer model ----
+    static blusys_err_t reducer_on_init(void * /*ctx*/, blusys::framework::feedback_bus * /*fb*/)
+    {
+        return BLUSYS_OK;
+    }
 
-    class reducer_controller final : public blusys::framework::controller {
-    public:
-        explicit reducer_controller(app_runtime &owner) : owner_(owner) {}
-
-        // Expose the protected accessor for app_runtime::init() to bind app_ctx.
-        blusys::framework::feedback_bus *get_feedback_bus() { return bound_feedback_bus(); }
-
-        blusys_err_t init() override
-        {
-            return BLUSYS_OK;
-        }
-
-        void handle(const blusys::framework::app_event &event) override
-        {
-            if (event.kind == blusys::framework::app_event_kind::intent) {
-                if (owner_.spec_.map_intent == nullptr) {
+    static void reducer_handle_event(void *ctx,
+                                     const blusys::framework::app_event &event,
+                                     blusys::framework::feedback_bus * /*fb*/,
+                                     blusys::framework::route_sink * /*routes*/)
+    {
+        auto *owner = static_cast<app_runtime *>(ctx);
+        if (event.kind == blusys::framework::app_event_kind::intent) {
+            if (owner->spec_.map_intent == nullptr) {
+                return;
+            }
+            Action action;
+            if (owner->spec_.map_intent(owner->services_,
+                                        blusys::framework::app_event_intent(event),
+                                        &action)) {
+                owner->post_action(action);
+            }
+        } else if (event.kind == blusys::framework::app_event_kind::integration) {
+            capability_event ce{};
+            const bool mapped =
+                map_integration_event(event.id, event.code, &ce);
+            if (mapped) {
+                ce.payload = event.payload;
+            } else {
+                if (owner->spec_.map_event == nullptr) {
+                    if (owner->spec_.capabilities != nullptr) {
+                        BLUSYS_LOGW("blusys_app",
+                                    "unknown integration event id=%lu code=%lu (no map_event)",
+                                    static_cast<unsigned long>(event.id),
+                                    static_cast<unsigned long>(event.code));
+                    }
                     return;
                 }
-                Action action;
-                if (owner_.spec_.map_intent(blusys::framework::app_event_intent(event), &action)) {
-                    owner_.post_action(action);
+                ce.tag            = capability_event_tag::integration_passthrough;
+                ce.value          = 0;
+                ce.raw_event_id   = event.id;
+                ce.raw_event_code = event.code;
+                ce.payload        = event.payload;
+            }
+
+            if (owner->spec_.map_event != nullptr) {
+                Action out_action{};
+                if (owner->spec_.map_event(ce, &out_action)) {
+                    owner->post_action(out_action);
+                } else {
+                    BLUSYS_LOGD("blusys_app",
+                                "map_event dropped integration event (tag=%u)",
+                                static_cast<unsigned>(ce.tag));
                 }
-            } else if (event.kind == blusys::framework::app_event_kind::integration) {
-                if (owner_.spec_.map_event == nullptr) {
-                    return;
-                }
-                Action action;
-                if (owner_.spec_.map_event(event.id, event.code, event.payload, &action)) {
-                    owner_.post_action(action);
-                }
+                return;
+            }
+
+            if (!mapped || ce.tag == capability_event_tag::integration_passthrough) {
+                return;
+            }
+
+            if (owner->spec_.capability_event_discriminant ==
+                k_capability_event_discriminant_unset) {
+                return;
+            }
+            if constexpr (detail::action_has_cap_event_member_v<Action>) {
+                Action out_action{};
+                using tag_type =
+                    std::remove_const_t<std::remove_reference_t<decltype(out_action.tag)>>;
+                out_action.tag =
+                    static_cast<tag_type>(owner->spec_.capability_event_discriminant);
+                out_action.cap_event = ce;
+                owner->post_action(out_action);
             }
         }
+    }
 
-        void tick(std::uint32_t now_ms) override
-        {
-            if (owner_.spec_.on_tick != nullptr) {
-                owner_.spec_.on_tick(owner_.ctx_, owner_.state_, now_ms);
-            }
+    static void reducer_on_tick(void *ctx, std::uint32_t now_ms)
+    {
+        auto *owner = static_cast<app_runtime *>(ctx);
+        if (owner->spec_.on_tick != nullptr) {
+            owner->spec_.on_tick(owner->ctx_, owner->services_, owner->state_, now_ms);
         }
-
-    private:
-        app_runtime &owner_;
-    };
+    }
 
     blusys::framework::route_sink &route_sink_ref()
     {
@@ -316,7 +402,7 @@ private:
     spec_type                                            spec_;
     State                                                state_;
     app_ctx                                              ctx_{};
-    reducer_controller                                   reducer_ctrl_;
+    app_services                                         services_{};
     blusys::framework::runtime                           framework_runtime_{};
     blusys::ring_buffer<Action, ActionQueueCap>          action_queue_{};
     detail::feedback_logging_sink                        feedback_logging_sink_{};

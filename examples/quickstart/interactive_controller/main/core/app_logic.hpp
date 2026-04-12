@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "blusys/app/app.hpp"
+#include "blusys/app/capability_event.hpp"
 #include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/flows/provisioning_flow.hpp"
 
@@ -23,6 +24,7 @@ enum class overlay : std::uint32_t {
 };
 
 enum class action_tag : std::uint8_t {
+    capability_event,
     level_delta,
     toggle_hold,
     set_accent,
@@ -32,13 +34,12 @@ enum class action_tag : std::uint8_t {
     show_settings,
     open_setup,
     open_about,
-    sync_storage,
-    sync_provisioning,
 };
 
 struct action {
-    action_tag   tag;
-    std::int32_t value = 0;
+    action_tag                      tag = action_tag::show_home;
+    std::int32_t                    value = 0;
+    blusys::app::capability_event   cap_event{};
 };
 
 struct app_state {
@@ -56,7 +57,7 @@ struct app_state {
 };
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event);
-bool map_intent(blusys::framework::intent intent, action *out);
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out);
 
 const char *accent_name(std::int32_t index);
 

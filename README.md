@@ -22,7 +22,7 @@ These are the grounding constraints for the platform.
 
 **Default layout** (single local **`main/`** component): **`core/`** — state, actions, reducer, product behavior; **`ui/`** — screens and widgets from state, dispatch actions (**no direct runtime-service calls**); **`integration/`** — wiring, profile, capabilities, bridges (**thin assembly**, not business logic).
 
-**Split.** The **app** owns state, actions, `update`, screens/views, optional profiles and capabilities. The **framework** owns boot/shutdown, loop/tick, routing, feedback, LVGL lifecycle and locks, overlays, host/device/headless adapters, input bridges, default service orchestration, and reusable flows. Normal product code should not depend on `runtime.init`, `route_sink`, `feedback_sink`, `blusys_ui_lock`, `lv_screen_load`, raw LCD bring-up on the canonical path, or raw Wi-Fi orchestration on the canonical path.
+**Split.** The **app** owns state, actions, `update`, screens/views, optional profiles and capabilities. The **framework** owns boot/shutdown, loop/tick, routing, feedback, LVGL lifecycle and locks, overlays, host/device/headless adapters, input bridges, default service orchestration, and reusable flows. Use `ctx.services()` for navigation, overlays, and filesystem handles exposed there — do not use `route_sink` directly from product code. Normal product code should not depend on `runtime.init`, `feedback_sink`, `blusys_ui_lock`, `lv_screen_load`, raw LCD bring-up on the canonical path, or raw Wi-Fi orchestration on the canonical path.
 
 **Non-goals.** Collapsing the three tiers; migrating runtime services to C++ as a product-path strategy; preserving obsolete product-facing APIs; a large reactive UI engine or heavy widget inheritance hierarchy; B2B vs B2C as framework runtime modes.
 
@@ -73,7 +73,7 @@ Three ESP-IDF components, strict one-way dependencies:
          └─────────────────────────────┬────────────────────────────┘
                                        │
          ┌─────────────────────────────▼────────────────────────────┐
-         │  HAL + drivers  components/blusys/           (C)         │
+         │  HAL + drivers  components/blusys_hal/           (C)         │
          │                 peripherals, displays, sensors, …        │
          └─────────────────────────────┬────────────────────────────┘
                                        │
@@ -81,7 +81,7 @@ Three ESP-IDF components, strict one-way dependencies:
                                   ESP-IDF → hardware
 ```
 
-**Rule:** `blusys_framework` → `blusys_services` → `blusys`. No reverse edges; layering is checked with `blusys lint`.
+**Rule:** `blusys_framework` → `blusys_services` → `blusys_hal`. No reverse edges; layering is checked with `blusys lint`.
 
 | Layer | Role | Doc entry |
 |-------|------|-----------|
@@ -111,7 +111,7 @@ Module and example indices live in **`inventory.yml`** (CI and classification so
 **CMake `REQUIRES`:**
 
 ```cmake
-idf_component_register(SRCS "main.c"   REQUIRES blusys)
+idf_component_register(SRCS "main.c"   REQUIRES blusys_hal)
 idf_component_register(SRCS "main.c"   REQUIRES blusys_services)
 idf_component_register(SRCS "main.cpp" REQUIRES blusys_framework)
 ```
@@ -159,7 +159,7 @@ mkdocs serve
 
 ## Project status
 
-Current **package version** is **6.1.0** (`BLUSYS_VERSION_STRING` in [`components/blusys/include/blusys/version.h`](components/blusys/include/blusys/version.h); also `blusys version`).
+Current **package version** is **6.1.1** (`BLUSYS_VERSION_STRING` in [`components/blusys_hal/include/blusys/version.h`](components/blusys_hal/include/blusys/version.h); also `blusys version`).
 
 ---
 

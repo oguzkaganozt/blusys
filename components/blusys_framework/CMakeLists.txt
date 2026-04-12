@@ -1,13 +1,13 @@
 set(blusys_framework_sources
-    src/core/controller.cpp
     src/core/feedback.cpp
     src/core/feedback_presets.cpp
     src/app/feedback_logging_sink.cpp
     src/core/framework.cpp
     src/core/router.cpp
     src/core/runtime.cpp
-    src/app/app_ctx.cpp
-    src/app/bind_capability_ptrs.cpp
+        src/app/app_ctx.cpp
+        src/app/app_services.cpp
+    src/app/capability_event_map.cpp
 )
 
 # Capabilities — device-only (depend on blusys_services C APIs).
@@ -48,7 +48,7 @@ endif()
 idf_component_register(
     SRCS ${blusys_framework_sources}
     INCLUDE_DIRS include
-    REQUIRES blusys blusys_services spi_flash
+    REQUIRES blusys_hal blusys_services spi_flash
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE

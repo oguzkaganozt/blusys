@@ -1,4 +1,4 @@
 idf_component_register(
     SRCS "pcnt_basic_main.c"
-    REQUIRES blusys
+    REQUIRES blusys_hal
 )

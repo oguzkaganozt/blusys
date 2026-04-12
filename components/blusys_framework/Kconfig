@@ -1,0 +1,37 @@
+menu "Blusys framework"
+
+    menu "Display profiles"
+
+        choice BLUSYS_DASHBOARD_DISPLAY_PROFILE
+            prompt "Dashboard-class SPI display (gateway, panel, dashboards)"
+            default BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341
+            help
+                Used by gateway, interactive_panel, interactive_dashboard, and mqtt_dashboard.
+                ILI9341 for compact dashboards; ILI9488 for large operator surfaces.
+
+        config BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341
+            bool "ILI9341 320x240 landscape"
+
+        config BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
+            bool "ILI9488 480x320 landscape"
+
+        endchoice
+
+        choice BLUSYS_INTERACTIVE_DISPLAY_PROFILE
+            prompt "Interactive controller SPI display"
+            default BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7735
+            help
+                Used by the interactive_controller quickstart. Host SDL window size follows
+                host CMake when simulating the selected profile.
+
+        config BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7735
+            bool "ST7735 160x128 (canonical)"
+
+        config BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789
+            bool "ST7789 320x240 landscape"
+
+        endchoice
+
+    endmenu
+
+endmenu

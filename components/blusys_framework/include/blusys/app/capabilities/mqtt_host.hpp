@@ -45,6 +45,8 @@ struct mqtt_host_config {
 
 class mqtt_host_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::mqtt_host;
+
     explicit mqtt_host_capability(const mqtt_host_config &cfg);
 
     mqtt_host_capability(const mqtt_host_capability &)            = delete;

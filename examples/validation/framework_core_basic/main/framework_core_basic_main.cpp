@@ -36,49 +36,49 @@ public:
     }
 };
 
-class demo_controller final : public blusys::framework::controller {
-public:
-    blusys_err_t init() override
-    {
-        emit_feedback({
-            .channel = blusys::framework::feedback_channel::visual,
-            .pattern = blusys::framework::feedback_pattern::focus,
+static blusys_err_t core_demo_on_init(void * /*ctx*/, blusys::framework::feedback_bus *fb)
+{
+    blusys::framework::feedback_dispatch(fb, {
+        .channel = blusys::framework::feedback_channel::visual,
+        .pattern = blusys::framework::feedback_pattern::focus,
+        .value = 1,
+        .payload = nullptr,
+    });
+    return BLUSYS_OK;
+}
+
+static void core_demo_on_event(void * /*ctx*/,
+                               const blusys::framework::app_event &event,
+                               blusys::framework::feedback_bus *fb,
+                               blusys::framework::route_sink *routes)
+{
+    if (event.kind != blusys::framework::app_event_kind::intent) {
+        return;
+    }
+
+    switch (blusys::framework::app_event_intent(event)) {
+    case blusys::framework::intent::press:
+        blusys::framework::route_dispatch(routes, blusys::framework::route::set_root(1));
+        blusys::framework::feedback_dispatch(fb, {
+            .channel = blusys::framework::feedback_channel::audio,
+            .pattern = blusys::framework::feedback_pattern::click,
             .value = 1,
             .payload = nullptr,
         });
-        return BLUSYS_OK;
+        break;
+    case blusys::framework::intent::confirm:
+        blusys::framework::route_dispatch(routes, blusys::framework::route::show_overlay(7));
+        blusys::framework::feedback_dispatch(fb, {
+            .channel = blusys::framework::feedback_channel::visual,
+            .pattern = blusys::framework::feedback_pattern::confirm,
+            .value = 1,
+            .payload = nullptr,
+        });
+        break;
+    default:
+        break;
     }
-
-    void handle(const blusys::framework::app_event &event) override
-    {
-        if (event.kind != blusys::framework::app_event_kind::intent) {
-            return;
-        }
-
-        switch (blusys::framework::app_event_intent(event)) {
-        case blusys::framework::intent::press:
-            submit_route(blusys::framework::route::set_root(1));
-            emit_feedback({
-                .channel = blusys::framework::feedback_channel::audio,
-                .pattern = blusys::framework::feedback_pattern::click,
-                .value = 1,
-                .payload = nullptr,
-            });
-            break;
-        case blusys::framework::intent::confirm:
-            submit_route(blusys::framework::route::show_overlay(7));
-            emit_feedback({
-                .channel = blusys::framework::feedback_channel::visual,
-                .pattern = blusys::framework::feedback_pattern::confirm,
-                .value = 1,
-                .payload = nullptr,
-            });
-            break;
-        default:
-            break;
-        }
-    }
-};
+}
 
 }  // namespace
 
@@ -87,10 +87,17 @@ extern "C" void app_main(void)
     logging_route_sink route_sink;
     logging_feedback_sink feedback_sink;
     blusys::framework::runtime runtime;
-    demo_controller controller;
 
     runtime.register_feedback_sink(&feedback_sink);
-    runtime.init(&controller, &route_sink, 10);
+
+    blusys::framework::runtime_handler handler{};
+    handler.context      = nullptr;
+    handler.on_init      = core_demo_on_init;
+    handler.handle_event = core_demo_on_event;
+    handler.on_tick      = nullptr;
+    handler.on_deinit    = nullptr;
+
+    runtime.init(&route_sink, handler, 10);
     runtime.post_intent(blusys::framework::intent::press);
     runtime.post_intent(blusys::framework::intent::confirm);
     runtime.step(0);

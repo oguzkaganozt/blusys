@@ -6,6 +6,10 @@ The Blusys codebase (~28K LOC across 3 tiers) is a well-architected ESP32 produc
 
 **Goal:** Eliminate widget-layer duplication, normalize inconsistent patterns, and extract common helpers — all without changing any public API.
 
+### Implementation status
+
+The following are **present in the repository** (verify with `git log` / current sources): `fixed_slot_pool.hpp` uses zero-init `release_ui_slot`; all Camp-2 callback widgets delegate `acquire_slot` / `release_slot` to `detail::acquire_ui_slot` / `detail::release_ui_slot`; `widget_common.hpp` provides `detail::set_widget_disabled` used by the interactive widgets listed in the audit; gauge, chart, and vu_strip data pools use the same helpers. The Phase 3 sections below retain **design rationale**; line numbers and “Before” snippets may drift—trust the source files under `components/blusys_framework/`.
+
 ---
 
 ## Phase 1 — Architecture Summary
@@ -17,7 +21,7 @@ blusys_framework (C++, ~9.8K LOC)
         ↓
 blusys_services  (C, ~8.5K LOC)
         ↓
-blusys           (C HAL, ~7K LOC)
+blusys_hal       (C HAL + drivers, ~7K LOC)
         ↓
 ESP-IDF v5.5+
 ```
@@ -28,9 +32,8 @@ Layering enforced by `blusys lint` — no reverse dependencies allowed.
 
 | Pattern | Widgets | Count |
 |---------|---------|-------|
-| Camp 2 — slot pool with hand-rolled helpers | button, dropdown, modal, list, data_table, input_field, tabs, overlay | 8 |
-| Camp 2 — slot pool using `detail::acquire_ui_slot` | slider, toggle | 2 |
-| Camp 2 — data pool with hand-rolled helpers (no callbacks) | gauge (split-array), chart, vu_strip | 3 |
+| Camp 2 — slot pool via `detail::acquire_ui_slot` / `detail::release_ui_slot` | button, dropdown, modal, list, data_table, input_field, tabs, overlay, slider, toggle | 10 |
+| Camp 2 — data pool via same helpers (no user callbacks) | gauge, chart, vu_strip | 3 |
 | Camp 3 — per-instance `lv_malloc` | knob | 1 |
 | No pool (display-only / stateless) | card, progress, level_bar | 3 |
 
@@ -462,6 +465,8 @@ After each batch:
 8. `./blusys build examples/quickstart/edge_node esp32` — headless archetype
 9. `scripts/scaffold-smoke.sh` — scaffold + host CMake sanity
 
+**Status:** Steps 5–9 have been run successfully in CI-style local verification after the widget refactors landed; re-run this block after any future pool or setter changes.
+
 ### Potential Regressions to Watch
 
 | Area | What to check | Why |
@@ -507,4 +512,4 @@ These are lower-priority items identified during the audit that could be address
 
 4. **CMake optional component detection macro** — The two-name check pattern (`espressif__foo` vs `foo`) appears 6 times across 2 CMakeLists.txt files. A `blusys_find_optional_component()` macro would save ~4 lines per occurrence.
 
-5. **Widget-author-guide.md update** — After all batches, update the guide to reference the generalized `acquire_ui_slot`/`release_ui_slot` as the standard and note that slot types no longer need a specific callback field name.
+5. **Widget-author-guide.md update** — Done: the guide documents `acquire_ui_slot`/`release_ui_slot`, zero-init release, arbitrary callback field names, and the Camp 2 checklist includes `detail::set_widget_disabled`; the example build path points to `examples/reference/framework_ui_basic`.

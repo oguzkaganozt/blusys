@@ -34,7 +34,7 @@ if(NOT BLUSYS_PATH)
         "(e.g. run via 'blusys host-build').")
 endif()
 
-set(BLUSYS_COMPONENT_DIR  "${BLUSYS_PATH}/components/blusys")
+set(BLUSYS_COMPONENT_DIR  "${BLUSYS_PATH}/components/blusys_hal")
 set(BLUSYS_FRAMEWORK_DIR  "${BLUSYS_PATH}/components/blusys_framework")
 set(BLUSYS_SERVICES_DIR   "${BLUSYS_PATH}/components/blusys_services")
 
@@ -72,7 +72,6 @@ endfunction()
 # ── Common framework sources (mode-independent) ─────────────────────────────
 set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_COMPONENT_DIR}/src/common/error.c
-    ${BLUSYS_FRAMEWORK_DIR}/src/core/controller.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback_presets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/feedback_logging_sink.cpp
@@ -80,7 +79,8 @@ set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_FRAMEWORK_DIR}/src/core/router.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/runtime.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/app_ctx.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/bind_capability_ptrs.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/app_services.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capability_event_map.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/connectivity_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/storage_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/bluetooth_host.cpp

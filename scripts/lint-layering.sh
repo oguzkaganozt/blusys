@@ -19,7 +19,7 @@ report_hits() {
 mapfile -t common_hits < <(
     grep -rEn --include='*.c' --include='*.h' \
         '#include[[:space:]]*[<"]blusys/drivers/' \
-        "$repo_root/components/blusys/src/common" || true
+        "$repo_root/components/blusys_hal/src/common" || true
 )
 
 if [[ ${#common_hits[@]} -gt 0 ]]; then
@@ -29,7 +29,7 @@ fi
 mapfile -t driver_internal_hits < <(
     grep -rEn --include='*.c' --include='*.h' \
         '#include[[:space:]]*[<"]blusys/internal/[^>"]+[>"]' \
-        "$repo_root/components/blusys/src/drivers" || true
+        "$repo_root/components/blusys_hal/src/drivers" || true
 )
 
 disallowed_driver_hits=()

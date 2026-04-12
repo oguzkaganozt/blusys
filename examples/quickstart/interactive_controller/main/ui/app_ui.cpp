@@ -35,8 +35,8 @@ enum settings_id : std::uint32_t {
 
 view::page make_page(blusys::app::app_ctx &ctx, bool scrollable)
 {
-    if (ctx.shell() != nullptr) {
-        return view::page_create_in(ctx.shell()->content_area, {.scrollable = scrollable});
+    if (ctx.services().shell() != nullptr) {
+        return view::page_create_in(ctx.services().shell()->content_area, {.scrollable = scrollable});
     }
     return view::page_create({.scrollable = scrollable});
 }
@@ -80,16 +80,16 @@ void on_setup_hide(lv_obj_t * /*screen*/, void *user_data)
 void on_setup_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app::app_ctx *>(user_data);
-    if (ctx != nullptr && ctx->shell() != nullptr) {
-        view::shell_set_title(*ctx->shell(), "Setup");
+    if (ctx != nullptr && ctx->services().shell() != nullptr) {
+        view::shell_set_title(*ctx->services().shell(), "Setup");
     }
 }
 
 void on_about_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app::app_ctx *>(user_data);
-    if (ctx != nullptr && ctx->shell() != nullptr) {
-        view::shell_set_title(*ctx->shell(), "About");
+    if (ctx != nullptr && ctx->services().shell() != nullptr) {
+        view::shell_set_title(*ctx->services().shell(), "About");
     }
 }
 
@@ -170,7 +170,7 @@ lv_obj_t *create_home(blusys::app::app_ctx &ctx, const void * /*params*/, lv_gro
     if (group_out != nullptr) {
         *group_out = page.group;
     }
-    return ctx.shell() != nullptr ? page.content : page.screen;
+    return ctx.services().shell() != nullptr ? page.content : page.screen;
 }
 
 lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
@@ -216,7 +216,7 @@ lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/, lv_g
     if (group_out != nullptr) {
         *group_out = page.group;
     }
-    return ctx.shell() != nullptr ? page.content : page.screen;
+    return ctx.services().shell() != nullptr ? page.content : page.screen;
 }
 
 lv_obj_t *create_settings(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
@@ -324,39 +324,40 @@ void register_all_screens(view::screen_router *router, blusys::app::app_ctx &ctx
 
 }  // namespace
 
-void on_init(blusys::app::app_ctx &ctx, app_state &state)
+void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state &state)
 {
+    (void)svc;
     (void)state;
 
-    if (ctx.shell() != nullptr) {
+    if (ctx.services().shell() != nullptr) {
         const view::shell_tab_item tabs[] = {
             view::shell_tab_row("Ctrl", route::home, "Controller"),
             view::shell_tab_row("Stat", route::status, "Status"),
             view::shell_tab_row("Set", route::settings, "Settings"),
         };
-        view::shell_set_tabs(*ctx.shell(), tabs, sizeof(tabs) / sizeof(tabs[0]), &ctx);
+        view::shell_set_tabs(*ctx.services().shell(), tabs, sizeof(tabs) / sizeof(tabs[0]), &ctx.services());
 
-        if (lv_obj_t *surface = view::shell_status_surface(*ctx.shell()); surface != nullptr) {
+        if (lv_obj_t *surface = view::shell_status_surface(*ctx.services().shell()); surface != nullptr) {
             state.shell.badge = view::status_badge(surface, "Setup", blusys::ui::badge_level::warning);
             state.shell.detail =
                 view::label(surface, "Punch  64%", blusys::ui::theme().font_body_sm);
         }
 
-        if (ctx.overlay_manager() != nullptr) {
-            view::overlay_create(ctx.shell()->root, static_cast<std::uint32_t>(overlay::confirm),
+        if (ctx.services().overlay_manager() != nullptr) {
+            view::overlay_create(ctx.services().shell()->root, static_cast<std::uint32_t>(overlay::confirm),
                                  {.text = "Scene committed", .duration_ms = 1200},
-                                 *ctx.overlay_manager());
+                                 *ctx.services().overlay_manager());
         }
     }
 
-    auto *router = ctx.screen_router();
+    auto *router = ctx.services().screen_router();
     if (router == nullptr) {
         return;
     }
 
     register_all_screens(router, ctx);
 
-    ctx.navigate_to(route::home);
+    ctx.services().navigate_to(route::home);
 }
 
 }  // namespace interactive_controller::ui

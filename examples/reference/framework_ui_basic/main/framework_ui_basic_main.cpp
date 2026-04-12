@@ -11,10 +11,10 @@
 //
 // The remaining two framework example scenarios live in their own examples:
 //
-//   - framework_core_basic: spine in isolation (router, intent, controller,
-//     runtime), no LVGL.
+//   - framework_core_basic: spine in isolation (router, intent,
+//     runtime_handler, runtime), no LVGL.
 //   - framework_app_basic: full spine + widgets, button-driven event flow
-//     through runtime.post_intent → controller → ui_route_sink.
+//     through runtime.post_intent → runtime_handler → ui_route_sink.
 //   - framework_encoder_basic: real lv_indev_t encoder driving
 //     create_encoder_group + auto_focus_screen end-to-end.
 //

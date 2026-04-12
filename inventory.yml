@@ -1410,6 +1410,10 @@ docs:
     section: internals
     visibility: public
 
+  - path: docs/internals/maintaining.md
+    section: internals
+    visibility: public
+
   - path: docs/internals/guidelines.md
     section: internals
     visibility: public
@@ -1419,6 +1423,10 @@ docs:
     visibility: public
 
   - path: docs/internals/adr/0001-orchestration-in-framework.md
+    section: internals
+    visibility: public
+
+  - path: docs/internals/adr/0002-hal-component-name.md
     section: internals
     visibility: public
 

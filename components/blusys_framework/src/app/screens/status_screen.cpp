@@ -20,9 +20,9 @@ lv_obj_t *status_screen_create_impl(app_ctx &ctx,
 
     view::page page;
     const bool in_shell =
-        ctx.shell() != nullptr && ctx.shell()->content_area != nullptr;
+        ctx.services().shell() != nullptr && ctx.services().shell()->content_area != nullptr;
     if (in_shell) {
-        page = view::page_create_in(ctx.shell()->content_area, {.scrollable = true});
+        page = view::page_create_in(ctx.services().shell()->content_area, {.scrollable = true});
     } else {
         page = view::page_create({.scrollable = true});
     }

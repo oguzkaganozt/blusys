@@ -3,6 +3,7 @@
 #include "blusys/app/capabilities/diagnostics.hpp"
 
 #include "blusys/app/app.hpp"
+#include "blusys/app/capability_event.hpp"
 #include "lvgl.h"
 
 #include <cstdint>
@@ -15,6 +16,7 @@ enum route_id : std::uint32_t {
 };
 
 enum class action_tag : std::uint8_t {
+    capability_event,
     mqtt_refresh,
     publish_ping,
     publish_toggle,
@@ -25,8 +27,9 @@ enum class action_tag : std::uint8_t {
 };
 
 struct action {
-    action_tag   tag;
-    std::int32_t value = 0;
+    action_tag                      tag = action_tag::mqtt_refresh;
+    std::int32_t                    value = 0;
+    blusys::app::capability_event   cap_event{};
 };
 
 struct app_state {
@@ -50,7 +53,6 @@ struct app_state {
 };
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event);
-bool map_intent(blusys::framework::intent intent, action *out);
-bool map_event(std::uint32_t id, std::uint32_t /*code*/, const void * /*payload*/, action *out);
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out);
 
 }  // namespace mqtt_dashboard

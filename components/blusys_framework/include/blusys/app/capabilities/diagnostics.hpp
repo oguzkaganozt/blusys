@@ -50,6 +50,8 @@ struct diagnostics_config {
 
 class diagnostics_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::diagnostics;
+
     explicit diagnostics_capability(const diagnostics_config &cfg);
 
     [[nodiscard]] capability_kind kind() const override { return capability_kind::diagnostics; }
@@ -85,6 +87,8 @@ struct diagnostics_config {
 
 class diagnostics_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::diagnostics;
+
     explicit diagnostics_capability(const diagnostics_config &cfg)
         : cfg_(cfg) {}
 

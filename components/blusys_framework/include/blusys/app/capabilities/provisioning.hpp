@@ -51,6 +51,8 @@ struct provisioning_config {
 
 class provisioning_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::provisioning;
+
     explicit provisioning_capability(const provisioning_config &cfg);
 
     [[nodiscard]] capability_kind kind() const override { return capability_kind::provisioning; }
@@ -101,6 +103,8 @@ struct provisioning_config {
 
 class provisioning_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::provisioning;
+
     explicit provisioning_capability(const provisioning_config &cfg)
         : cfg_(cfg) {}
 

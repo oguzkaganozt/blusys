@@ -2,13 +2,13 @@
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
+#include "blusys/app/app_services.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
 
 #include "lvgl.h"
-
-namespace blusys::app { class app_ctx; }
 
 namespace blusys::app::view {
 
@@ -80,7 +80,7 @@ struct shell {
     shell_tab_item tabs[kMaxTabs] = {};
     std::size_t    tab_count      = 0;
     std::size_t    active_tab     = 0;
-    app_ctx       *ctx            = nullptr; // bound context for tab navigation
+    app_services *svc = nullptr; // bound services for tab navigation
 };
 
 // Create the shell from config. Does not load it.
@@ -102,9 +102,9 @@ void shell_set_back_visible(shell &s, bool visible);
 lv_obj_t *shell_status_surface(shell &s);
 
 // Register tab items. Must be called before shell_load().
-// The tab bar's on_tab_changed fires ctx->navigate_to(route_id).
+// The tab bar's on_tab_changed fires svc->navigate_to(route_id).
 void shell_set_tabs(shell &s, const shell_tab_item *items, std::size_t count,
-                    app_ctx *ctx);
+                    app_services *svc);
 
 // Set the active tab by index (updates visual highlight only).
 void shell_set_active_tab(shell &s, std::size_t index);

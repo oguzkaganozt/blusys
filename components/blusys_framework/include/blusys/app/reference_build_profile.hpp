@@ -13,7 +13,7 @@
 #include <cstdint>
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-#include "blusys/app/entry.hpp"
+#include "blusys/app/host_profile.hpp"
 #endif
 
 #if defined(ESP_PLATFORM)
@@ -28,8 +28,8 @@
 
 namespace blusys::app::reference_build {
 
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_IC_DISPLAY_PROFILE_ST7789) && \
-    CONFIG_BLUSYS_IC_DISPLAY_PROFILE_ST7789
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789) && \
+    CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789
 inline device_profile interactive_device_profile()
 {
     return profiles::st7789_320x240();

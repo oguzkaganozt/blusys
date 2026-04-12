@@ -27,6 +27,14 @@ public:
     virtual void submit(const route_command &command) = 0;
 };
 
+/// Submit a route to `sink` if non-null (escape hatch replacing `controller::submit_route`).
+inline void route_dispatch(route_sink *sink, const route_command &command)
+{
+    if (sink != nullptr) {
+        sink->submit(command);
+    }
+}
+
 const char *route_command_type_name(route_command_type type);
 
 namespace route {

@@ -96,6 +96,8 @@ struct connectivity_config {
 
 class connectivity_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::connectivity;
+
     explicit connectivity_capability(const connectivity_config &cfg);
 
     [[nodiscard]] capability_kind kind() const override { return capability_kind::connectivity; }
@@ -172,6 +174,8 @@ struct connectivity_config {
 
 class connectivity_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::connectivity;
+
     explicit connectivity_capability(const connectivity_config &cfg)
         : cfg_(cfg) {}
 

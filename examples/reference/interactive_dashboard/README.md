@@ -10,7 +10,7 @@ diagnostics + storage capabilities on device.
 blusys host-build examples/reference/interactive_dashboard
 ```
 
-Pick the **device display profile** (CMake `BLUSYS_IDASH_HOST_DISPLAY_PROFILE` or `menuconfig` on device): that sets the **logical** resolution the UI is laid out for. The PC SDL window is **scaled automatically** from that resolution—you do not need a separate “host size.” Optional: `BLUSYS_HOST_ZOOM=1` disables upscaling.
+Pick the **device display profile** (Blusys framework `menuconfig` on device; CMake `BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE` on host): that sets the **logical** resolution the UI is laid out for. The PC SDL window is **scaled automatically** from that resolution—you do not need a separate “host size.” Optional: `BLUSYS_HOST_ZOOM=1` disables upscaling.
 
 Run the printed path under `examples/reference/interactive_dashboard/build-host/`
 (typically `interactive_dashboard_host`).

@@ -9,13 +9,14 @@
 #include "core/app_logic.hpp"
 #include "ui/app_ui.hpp"
 
+#include "blusys/app/auto_profile.hpp"
+#include "blusys/app/auto_shell.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
 #include "blusys/app/capabilities/ota.hpp"
 #include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
-#include "blusys/app/layout_surface.hpp"
 #include "blusys/app/theme_presets.hpp"
 #include "blusys/log.h"
 #include "blusys/version.h"
@@ -25,58 +26,18 @@
 
 #ifdef ESP_PLATFORM
 #include "sdkconfig.h"
-#include "blusys/app/profiles/ili9341.hpp"
-#include "blusys/app/profiles/ili9488.hpp"
 #endif
 
 namespace gateway::system {
 
-blusys::app::device_profile gateway_device_profile_for_build()
-{
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488) && \
-    CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488
-    return blusys::app::profiles::ili9488_480x320();
-#elif defined(ESP_PLATFORM)
-    return blusys::app::profiles::ili9341_320x240();
-#else
-    blusys::app::device_profile p{};
-#if defined(BLUSYS_GW_HOST_DISPLAY_PROFILE) && (BLUSYS_GW_HOST_DISPLAY_PROFILE == 1)
-    p.lcd.width          = 480;
-    p.lcd.height         = 320;
-#else
-    p.lcd.width          = 320;
-    p.lcd.height         = 240;
-#endif
-    p.lcd.bits_per_pixel = 16;
-    p.ui.panel_kind      = BLUSYS_UI_PANEL_KIND_RGB565;
-    return p;
-#endif
-}
-
 const char *gateway_profile_label_for_build()
 {
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488) && \
-    CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488
-    return "ILI9488 480x320";
-#elif defined(ESP_PLATFORM)
-    return "ILI9341 320x240";
-#elif defined(BLUSYS_GW_HOST_DISPLAY_PROFILE) && (BLUSYS_GW_HOST_DISPLAY_PROFILE == 1)
-    return "Host SDL 480x320";
-#else
-    return "Host SDL 320x240";
-#endif
+    return blusys::app::dashboard_profile_label();
 }
 
 const char *gateway_hardware_label_for_build()
 {
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488) && \
-    CONFIG_BLUSYS_GW_DISPLAY_PROFILE_ILI9488
-    return "ILI9488 reference";
-#elif defined(ESP_PLATFORM)
-    return "ILI9341 reference";
-#else
-    return "Host simulation";
-#endif
+    return blusys::app::dashboard_hardware_label();
 }
 
 const char *gateway_build_version_for_build()
@@ -92,19 +53,8 @@ const char *gateway_build_version_for_build()
 
 namespace {
 
-const blusys::app::view::shell_config gateway_shell_for_profile()
-{
-    const auto prof = gateway_device_profile_for_build();
-    const auto chrome = blusys::app::layout::shell_chrome_for(prof);
-    blusys::app::view::shell_config c{};
-    c.header.enabled = true;
-    c.header.title   = "Gateway";
-    c.status.enabled = chrome.status_enabled;
-    c.tabs.enabled   = chrome.tabs_enabled;
-    return c;
-}
-
-static const blusys::app::view::shell_config kShellConfig = gateway_shell_for_profile();
+static const blusys::app::view::shell_config kShellConfig =
+    blusys::app::auto_shell(blusys::app::auto_profile_dashboard(), "Gateway");
 
 // ---- telemetry delivery callback ----
 
@@ -206,8 +156,9 @@ float drift_sensor(float base, float range, std::uint32_t tick)
 
 // ---- on_tick: simulated downstream aggregation and telemetry ----
 
-void on_tick(blusys::app::app_ctx & /*ctx*/, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms)
 {
+    (void)svc;
     ++state.sample_count;
 
     // Simulate downstream device activity.
@@ -233,88 +184,6 @@ void on_tick(blusys::app::app_ctx & /*ctx*/, app_state &state, std::uint32_t now
     }
 }
 
-// ---- event bridge ----
-
-bool map_event(std::uint32_t id, std::uint32_t code,
-               const void * /*payload*/, action *out)
-{
-    // Connectivity events
-    using CE = blusys::app::connectivity_event;
-    switch (static_cast<CE>(id)) {
-    case CE::wifi_started:       *out = action{.tag = action_tag::wifi_started};       return true;
-    case CE::wifi_connecting:    *out = action{.tag = action_tag::wifi_connecting};    return true;
-    case CE::wifi_connected:     *out = action{.tag = action_tag::wifi_connected};     return true;
-    case CE::wifi_got_ip:        *out = action{.tag = action_tag::wifi_got_ip};        return true;
-    case CE::wifi_disconnected:  *out = action{.tag = action_tag::wifi_disconnected};  return true;
-    case CE::wifi_reconnecting:  *out = action{.tag = action_tag::wifi_reconnecting};  return true;
-    case CE::time_synced:        *out = action{.tag = action_tag::time_synced};        return true;
-    case CE::time_sync_failed:   *out = action{.tag = action_tag::time_sync_failed};   return true;
-    case CE::mdns_ready:         *out = action{.tag = action_tag::mdns_ready};          return true;
-    case CE::local_ctrl_ready:   *out = action{.tag = action_tag::local_ctrl_ready};  return true;
-    case CE::capability_ready:   *out = action{.tag = action_tag::conn_capability_ready}; return true;
-    default: break;
-    }
-
-    // Telemetry events
-    using TE = blusys::app::telemetry_event;
-    switch (static_cast<TE>(id)) {
-    case TE::delivery_ok:       *out = action{.tag = action_tag::telemetry_delivered}; return true;
-    case TE::delivery_failed:   *out = action{.tag = action_tag::telemetry_failed};    return true;
-    case TE::buffer_full:       *out = action{.tag = action_tag::telemetry_buffer_full}; return true;
-    case TE::buffer_flushed:    *out = action{.tag = action_tag::telemetry_buffer_flushed}; return true;
-    case TE::capability_ready:  *out = action{.tag = action_tag::telemetry_capability_ready}; return true;
-    default: break;
-    }
-
-    // Diagnostics events
-    using DE = blusys::app::diagnostics_event;
-    switch (static_cast<DE>(id)) {
-    case DE::snapshot_ready: *out = action{.tag = action_tag::diag_snapshot};     return true;
-    case DE::capability_ready:   *out = action{.tag = action_tag::diag_capability_ready}; return true;
-    default: break;
-    }
-
-    // OTA events
-    using OE = blusys::app::ota_event;
-    switch (static_cast<OE>(id)) {
-    case OE::download_started:  *out = action{.tag = action_tag::ota_download_started};  return true;
-    case OE::download_progress: *out = action{.tag = action_tag::ota_download_progress,
-                                               .value = static_cast<std::int32_t>(code)}; return true;
-    case OE::download_complete: *out = action{.tag = action_tag::ota_download_complete}; return true;
-    case OE::download_failed:    *out = action{.tag = action_tag::ota_download_failed};    return true;
-    case OE::apply_complete:    *out = action{.tag = action_tag::ota_apply_complete};    return true;
-    case OE::apply_failed:       *out = action{.tag = action_tag::ota_apply_failed};      return true;
-    case OE::rollback_pending:   *out = action{.tag = action_tag::ota_rollback_pending};   return true;
-    case OE::marked_valid:       *out = action{.tag = action_tag::ota_marked_valid};       return true;
-    case OE::capability_ready:   *out = action{.tag = action_tag::ota_capability_ready}; return true;
-    default: break;
-    }
-
-    // Provisioning events
-    using PE = blusys::app::provisioning_event;
-    switch (static_cast<PE>(id)) {
-    case PE::started:               *out = action{.tag = action_tag::prov_started};     return true;
-    case PE::credentials_received:  *out = action{.tag = action_tag::prov_credentials_received}; return true;
-    case PE::success:               *out = action{.tag = action_tag::prov_success};      return true;
-    case PE::failed:                *out = action{.tag = action_tag::prov_failed};       return true;
-    case PE::already_provisioned:   *out = action{.tag = action_tag::prov_already_done}; return true;
-    case PE::reset_complete:        *out = action{.tag = action_tag::prov_reset_complete}; return true;
-    case PE::capability_ready:      *out = action{.tag = action_tag::prov_capability_ready}; return true;
-    default: break;
-    }
-
-    // Storage events
-    using SE = blusys::app::storage_event;
-    switch (static_cast<SE>(id)) {
-    case SE::spiffs_mounted:   *out = action{.tag = action_tag::storage_spiffs_mounted}; return true;
-    case SE::fatfs_mounted:    *out = action{.tag = action_tag::storage_fatfs_mounted}; return true;
-    case SE::capability_ready: *out = action{.tag = action_tag::storage_capability_ready}; return true;
-    default: break;
-    }
-
-    return false;
-}
-
 // ---- app spec ----
 
 const blusys::app::app_spec<app_state, action> spec{
@@ -323,7 +192,8 @@ const blusys::app::app_spec<app_state, action> spec{
     .on_init        = ui::on_init,
     .on_tick        = on_tick,
     .map_intent     = map_intent,
-    .map_event      = map_event,
+    .capability_event_discriminant =
+        static_cast<std::uint32_t>(action_tag::capability_event),
     .tick_period_ms = 300,
     .capabilities   = &capabilities,
     .theme          = &blusys::app::presets::operational_light(),
@@ -334,22 +204,4 @@ const blusys::app::app_spec<app_state, action> spec{
 
 }  // namespace gateway::system
 
-// ---- platform entry ----
-
-#ifdef ESP_PLATFORM
-BLUSYS_APP_MAIN_DEVICE(gateway::system::spec,
-                       gateway::system::gateway_device_profile_for_build())
-#else
-BLUSYS_APP_MAIN_HOST_PROFILE(
-    gateway::system::spec,
-    (blusys::app::host_profile{
-#if defined(BLUSYS_GW_HOST_DISPLAY_PROFILE) && (BLUSYS_GW_HOST_DISPLAY_PROFILE == 1)
-        .hor_res = 480,
-        .ver_res = 320,
-#else
-        .hor_res = 320,
-        .ver_res = 240,
-#endif
-        .title = "Blusys Gateway",
-    }))
-#endif
+BLUSYS_APP_DASHBOARD(gateway::system::spec, "Blusys Gateway")

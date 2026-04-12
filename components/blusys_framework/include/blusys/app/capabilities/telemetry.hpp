@@ -52,6 +52,8 @@ struct telemetry_config {
 
 class telemetry_capability final : public capability_base {
 public:
+    static constexpr capability_kind kind_value = capability_kind::telemetry;
+
     explicit telemetry_capability(const telemetry_config &cfg);
 
     [[nodiscard]] capability_kind kind() const override { return capability_kind::telemetry; }

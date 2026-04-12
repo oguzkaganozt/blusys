@@ -1,10 +1,34 @@
 #pragma once
 
+#include "blusys/app/capability_event.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 
 #include <cstdint>
 
 namespace blusys_examples {
+
+/// True when a canonical connectivity tag should trigger a panel connectivity resync
+/// (status screen refresh).
+inline bool panel_connectivity_event_triggers_sync(blusys::app::capability_event_tag tag)
+{
+    using CET = blusys::app::capability_event_tag;
+    switch (tag) {
+    case CET::wifi_started:
+    case CET::wifi_connecting:
+    case CET::wifi_connected:
+    case CET::wifi_got_ip:
+    case CET::wifi_disconnected:
+    case CET::wifi_reconnecting:
+    case CET::time_synced:
+    case CET::time_sync_failed:
+    case CET::mdns_ready:
+    case CET::local_ctrl_ready:
+    case CET::connectivity_ready:
+        return true;
+    default:
+        return false;
+    }
+}
 
 /// True when `id` is a connectivity capability lifecycle ID that should trigger a panel
 /// `sync_connectivity` action (see `examples/reference/interactive_panel/main/integration/app_main.cpp`).

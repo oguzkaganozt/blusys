@@ -26,7 +26,7 @@ cmake --build examples/reference/gateway/build-host -j
 ./examples/reference/gateway/build-host/gateway_host
 ```
 
-Optional: `-DBLUSYS_GW_HOST_DISPLAY_PROFILE=1` for 480×320 SDL surface.
+Optional: `-DBLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE=1` for 480×320 SDL surface.
 
 ## Docs
 

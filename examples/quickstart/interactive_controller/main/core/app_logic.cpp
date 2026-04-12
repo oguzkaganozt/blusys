@@ -30,7 +30,32 @@ const char *accent_name(std::int32_t index)
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 {
+    using CET = blusys::app::capability_event_tag;
+
     switch (event.tag) {
+    case action_tag::capability_event:
+        switch (event.cap_event.tag) {
+        case CET::storage_ready:
+            if (const auto *storage = ctx.storage(); storage != nullptr) {
+                state.storage_ready = storage->capability_ready;
+            }
+            break;
+        case CET::prov_started:
+        case CET::prov_credentials_received:
+        case CET::prov_success:
+        case CET::prov_failed:
+        case CET::prov_already_done:
+        case CET::prov_reset_complete:
+        case CET::provisioning_ready:
+            if (const auto *prov = ctx.provisioning(); prov != nullptr) {
+                state.provisioning = *prov;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+
     case action_tag::level_delta:
         if (!state.hold_enabled) {
             state.level = blusys_examples::clamp_percent(state.level + event.value);
@@ -54,7 +79,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         break;
 
     case action_tag::confirm:
-        ctx.show_overlay(overlay::confirm);
+        ctx.services().show_overlay(overlay::confirm);
         ctx.emit_feedback(blusys::framework::feedback_channel::audio,
                           blusys::framework::feedback_pattern::confirm);
         BLUSYS_LOGI(kTag, "confirmed level=%ld accent=%s hold=%s",
@@ -64,43 +89,32 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         break;
 
     case action_tag::show_home:
-        ctx.navigate_to(route::home);
+        ctx.services().navigate_to(route::home);
         break;
 
     case action_tag::show_status:
-        ctx.navigate_to(route::status);
+        ctx.services().navigate_to(route::status);
         break;
 
     case action_tag::show_settings:
-        ctx.navigate_to(route::settings);
+        ctx.services().navigate_to(route::settings);
         break;
 
     case action_tag::open_setup:
-        ctx.navigate_push(route::setup);
+        ctx.services().navigate_push(route::setup);
         break;
 
     case action_tag::open_about:
-        ctx.navigate_push(route::about);
-        break;
-
-    case action_tag::sync_storage:
-        if (const auto *storage = ctx.storage(); storage != nullptr) {
-            state.storage_ready = storage->capability_ready;
-        }
-        break;
-
-    case action_tag::sync_provisioning:
-        if (const auto *prov = ctx.provisioning(); prov != nullptr) {
-            state.provisioning = *prov;
-        }
+        ctx.services().navigate_push(route::about);
         break;
     }
 
     ui::sync_all_panels(state);
 }
 
-bool map_intent(blusys::framework::intent intent, action *out)
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out)
 {
+    (void)svc;
     switch (intent) {
     case blusys::framework::intent::increment:
         *out = action{.tag = action_tag::level_delta, .value = 4};

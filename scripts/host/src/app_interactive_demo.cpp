@@ -21,6 +21,7 @@ constexpr const char *kTag = "volume_app";
 
 namespace view = blusys::app::view;
 using blusys::app::app_ctx;
+using blusys::app::app_services;
 
 // ---- state ----
 
@@ -75,7 +76,7 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
         break;
 
     case Tag::confirm:
-        ctx.show_overlay(1);
+        ctx.services().show_overlay(1);
         ctx.emit_feedback(blusys::framework::feedback_channel::audio,
                           blusys::framework::feedback_pattern::confirm);
         BLUSYS_LOGI(kTag, "confirmed — volume=%ld", static_cast<long>(state.volume));
@@ -85,8 +86,9 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
 
 // ---- intent-to-action map ----
 
-bool map_intent(blusys::framework::intent intent, Action *out)
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out)
 {
+    (void)svc;
     switch (intent) {
     case blusys::framework::intent::increment:
         *out = Action{.tag = Tag::volume_up};
@@ -107,8 +109,9 @@ bool map_intent(blusys::framework::intent intent, Action *out)
 
 // ---- on_init: build the UI ----
 
-void on_init(app_ctx &ctx, AppState &state)
+void on_init(app_ctx &ctx, app_services &svc, AppState &state)
 {
+    (void)svc;
     auto p = view::page_create();
 
     view::title(p.content, "Blusys Volume Control");
@@ -134,7 +137,7 @@ void on_init(app_ctx &ctx, AppState &state)
 
     view::overlay_create(p.screen, 1,
                          {.text = "Settings saved", .duration_ms = 1500},
-                         *ctx.overlay_manager());
+                         *ctx.services().overlay_manager());
 
     view::page_load(p);
 

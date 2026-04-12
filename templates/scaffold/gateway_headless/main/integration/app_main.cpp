@@ -104,8 +104,9 @@ blusys::app::storage_capability storage{{
 blusys::app::capability_list capabilities{
     &connectivity, &telemetry, &diagnostics, &ota, &provisioning, &storage};
 
-void on_tick(blusys::app::app_ctx & /*ctx*/, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms)
 {
+    (void)svc;
     ++state.sample_count;
     state.active_devices = 1 + static_cast<std::int32_t>(state.sample_count % 3);
     state.agg_throughput = 12.0f + static_cast<float>(state.sample_count % 8);
@@ -125,65 +126,12 @@ void on_tick(blusys::app::app_ctx & /*ctx*/, app_state &state, std::uint32_t now
     }
 }
 
-bool map_event(std::uint32_t id, std::uint32_t code,
-               const void * /*payload*/, action *out)
-{
-    using CE = blusys::app::connectivity_event;
-    switch (static_cast<CE>(id)) {
-    case CE::wifi_got_ip:       *out = action{.tag = action_tag::wifi_got_ip};       return true;
-    case CE::wifi_disconnected: *out = action{.tag = action_tag::wifi_disconnected}; return true;
-    case CE::wifi_reconnecting: *out = action{.tag = action_tag::wifi_reconnecting}; return true;
-    case CE::time_synced:       *out = action{.tag = action_tag::time_synced};       return true;
-    case CE::capability_ready:      *out = action{.tag = action_tag::conn_capability_ready}; return true;
-    default: break;
-    }
-
-    using TE = blusys::app::telemetry_event;
-    switch (static_cast<TE>(id)) {
-    case TE::delivery_ok:     *out = action{.tag = action_tag::telemetry_delivered}; return true;
-    case TE::delivery_failed: *out = action{.tag = action_tag::telemetry_failed};    return true;
-    default: break;
-    }
-
-    using DE = blusys::app::diagnostics_event;
-    switch (static_cast<DE>(id)) {
-    case DE::snapshot_ready: *out = action{.tag = action_tag::diag_snapshot};     return true;
-    case DE::capability_ready:   *out = action{.tag = action_tag::diag_capability_ready}; return true;
-    default: break;
-    }
-
-    using OE = blusys::app::ota_event;
-    switch (static_cast<OE>(id)) {
-    case OE::download_progress: *out = action{.tag = action_tag::ota_download_progress,
-                                               .value = static_cast<std::int32_t>(code)}; return true;
-    case OE::apply_complete:    *out = action{.tag = action_tag::ota_apply_complete};    return true;
-    case OE::apply_failed:      *out = action{.tag = action_tag::ota_apply_failed};      return true;
-    case OE::capability_ready:      *out = action{.tag = action_tag::ota_capability_ready};      return true;
-    default: break;
-    }
-
-    using PE = blusys::app::provisioning_event;
-    switch (static_cast<PE>(id)) {
-    case PE::success:             *out = action{.tag = action_tag::prov_success};      return true;
-    case PE::already_provisioned: *out = action{.tag = action_tag::prov_already_done}; return true;
-    case PE::capability_ready:        *out = action{.tag = action_tag::prov_capability_ready}; return true;
-    default: break;
-    }
-
-    using SE = blusys::app::storage_event;
-    switch (static_cast<SE>(id)) {
-    case SE::capability_ready: *out = action{.tag = action_tag::storage_capability_ready}; return true;
-    default: break;
-    }
-
-    return false;
-}
-
 const blusys::app::app_spec<app_state, action> spec{
     .initial_state  = {},
     .update         = update,
     .on_tick        = on_tick,
-    .map_event      = map_event,
+    .capability_event_discriminant =
+        static_cast<std::uint32_t>(action_tag::capability_event),
     .tick_period_ms = 300,
     .capabilities   = &capabilities,
 };

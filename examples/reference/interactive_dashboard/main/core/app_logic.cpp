@@ -97,7 +97,28 @@ const char *mode_name(std::int32_t index)
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 {
+    using CET = blusys::app::capability_event_tag;
+
     switch (event.tag) {
+    case action_tag::capability_event:
+        switch (event.cap_event.tag) {
+        case CET::diag_snapshot_ready:
+        case CET::diagnostics_ready:
+        case CET::diag_console_ready:
+            if (const auto *diag = ctx.diagnostics(); diag != nullptr) {
+                state.diagnostics = *diag;
+            }
+            break;
+        case CET::storage_ready:
+            if (const auto *storage = ctx.storage(); storage != nullptr) {
+                state.storage_ready = storage->capability_ready;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+
     case action_tag::sample_tick: {
         ++state.tick_count;
         const std::int32_t wobble =
@@ -149,31 +170,20 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         break;
 
     case action_tag::show_overview:
-        ctx.navigate_to(route_overview);
+        ctx.services().navigate_to(route_overview);
         break;
 
     case action_tag::show_about:
-        ctx.navigate_to(route_about);
-        break;
-
-    case action_tag::sync_diagnostics:
-        if (const auto *diag = ctx.diagnostics(); diag != nullptr) {
-            state.diagnostics = *diag;
-        }
-        break;
-
-    case action_tag::sync_storage:
-        if (const auto *storage = ctx.storage(); storage != nullptr) {
-            state.storage_ready = storage->capability_ready;
-        }
+        ctx.services().navigate_to(route_about);
         break;
     }
 
     sync_all(state);
 }
 
-bool map_intent(blusys::framework::intent intent, action *out)
+bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out)
 {
+    (void)svc;
     switch (intent) {
     case blusys::framework::intent::increment:
         *out = action{.tag = action_tag::nudge_load, .value = 8};
@@ -192,8 +202,9 @@ bool map_intent(blusys::framework::intent intent, action *out)
     }
 }
 
-void on_tick(blusys::app::app_ctx &ctx, app_state & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state & /*state*/, std::uint32_t /*now_ms*/)
 {
+    (void)svc;
     ctx.dispatch(action{.tag = action_tag::sample_tick});
 }
 

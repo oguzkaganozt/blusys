@@ -32,72 +32,69 @@ struct State {
 
 // ---- actions ----
 
-enum class Action {
-    wifi_started,
-    wifi_connecting,
-    wifi_got_ip,
-    wifi_disconnected,
-    time_synced,
-    mdns_ready,
-    conn_capability_ready,
-    storage_spiffs_mounted,
-    storage_capability_ready,
+enum class action_tag : std::uint8_t {
+    capability_event,
     periodic_tick,
+};
+
+struct Action {
+    action_tag                      tag = action_tag::periodic_tick;
+    blusys::app::capability_event   cap_event{};
 };
 
 // ---- reducer ----
 
 void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
 {
-    switch (action) {
-    case Action::wifi_started:
-        state.saw_wifi_started = true;
-        BLUSYS_LOGI(kTag, "wifi started");
-        break;
+    using CET = blusys::app::capability_event_tag;
 
-    case Action::wifi_connecting:
-        state.saw_wifi_connecting = true;
-        BLUSYS_LOGI(kTag, "wifi connecting");
-        break;
-
-    case Action::wifi_got_ip:
-        state.connected = true;
-        if (auto *conn = ctx.connectivity(); conn != nullptr) {
-            BLUSYS_LOGI(kTag, "Wi-Fi connected, IP: %s", conn->ip_info.ip);
+    switch (action.tag) {
+    case action_tag::capability_event:
+        switch (action.cap_event.tag) {
+        case CET::wifi_started:
+            state.saw_wifi_started = true;
+            BLUSYS_LOGI(kTag, "wifi started");
+            break;
+        case CET::wifi_connecting:
+            state.saw_wifi_connecting = true;
+            BLUSYS_LOGI(kTag, "wifi connecting");
+            break;
+        case CET::wifi_got_ip:
+            state.connected = true;
+            if (auto *conn = ctx.connectivity(); conn != nullptr) {
+                BLUSYS_LOGI(kTag, "Wi-Fi connected, IP: %s", conn->ip_info.ip);
+            }
+            break;
+        case CET::wifi_disconnected:
+            state.connected = false;
+            BLUSYS_LOGW(kTag, "Wi-Fi disconnected");
+            break;
+        case CET::time_synced:
+            state.time_synced = true;
+            BLUSYS_LOGI(kTag, "Time synced (simulated)");
+            break;
+        case CET::mdns_ready:
+            state.mdns_ready = true;
+            BLUSYS_LOGI(kTag, "mDNS ready");
+            break;
+        case CET::connectivity_ready:
+            state.conn_capability_ready = true;
+            BLUSYS_LOGI(kTag, "connectivity capability ready");
+            break;
+        case CET::storage_spiffs_mounted:
+            state.saw_spiffs = true;
+            BLUSYS_LOGI(kTag, "SPIFFS mounted (simulated)");
+            break;
+        case CET::storage_ready:
+            state.storage_ready = true;
+            BLUSYS_LOGI(kTag, "storage capability ready");
+            break;
+        default:
+            break;
         }
         break;
 
-    case Action::wifi_disconnected:
-        state.connected = false;
-        BLUSYS_LOGW(kTag, "Wi-Fi disconnected");
-        break;
-
-    case Action::time_synced:
-        state.time_synced = true;
-        BLUSYS_LOGI(kTag, "Time synced (simulated)");
-        break;
-
-    case Action::mdns_ready:
-        state.mdns_ready = true;
-        BLUSYS_LOGI(kTag, "mDNS ready");
-        break;
-
-    case Action::conn_capability_ready:
-        state.conn_capability_ready = true;
-        BLUSYS_LOGI(kTag, "connectivity capability ready");
-        break;
-
-    case Action::storage_spiffs_mounted:
-        state.saw_spiffs = true;
-        BLUSYS_LOGI(kTag, "SPIFFS mounted (simulated)");
-        break;
-
-    case Action::storage_capability_ready:
-        state.storage_ready = true;
-        BLUSYS_LOGI(kTag, "storage capability ready");
-        break;
-
-    case Action::periodic_tick:
+    case action_tag::periodic_tick:
         state.tick_count++;
         if (state.tick_count % 10 == 0) {
             BLUSYS_LOGI(kTag, "heartbeat #%d connected=%s",
@@ -108,40 +105,12 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
     }
 }
 
-// ---- event bridge ----
-
-bool map_event(std::uint32_t id, std::uint32_t /*code*/,
-               const void * /*payload*/, Action *out)
-{
-    using CE = blusys::app::connectivity_event;
-    switch (static_cast<CE>(id)) {
-    case CE::wifi_started:       *out = Action::wifi_started;       return true;
-    case CE::wifi_connecting:    *out = Action::wifi_connecting;    return true;
-    case CE::wifi_got_ip:        *out = Action::wifi_got_ip;        return true;
-    case CE::wifi_disconnected:  *out = Action::wifi_disconnected; return true;
-    case CE::time_synced:        *out = Action::time_synced;        return true;
-    case CE::mdns_ready:         *out = Action::mdns_ready;         return true;
-    case CE::capability_ready:   *out = Action::conn_capability_ready; return true;
-    default:
-        break;
-    }
-
-    using SE = blusys::app::storage_event;
-    switch (static_cast<SE>(id)) {
-    case SE::spiffs_mounted:     *out = Action::storage_spiffs_mounted; return true;
-    case SE::capability_ready:   *out = Action::storage_capability_ready; return true;
-    default:
-        break;
-    }
-
-    return false;
-}
-
 // ---- on_tick ----
 
-void on_tick(blusys::app::app_ctx &ctx, State & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
 {
-    ctx.dispatch(Action::periodic_tick);
+    (void)svc;
+    ctx.dispatch(Action{.tag = action_tag::periodic_tick});
 }
 
 // ---- capability configuration ----
@@ -167,7 +136,8 @@ static auto spec = blusys::app::app_spec<State, Action>{
     .initial_state  = {},
     .update         = update,
     .on_tick        = on_tick,
-    .map_event      = map_event,
+    .capability_event_discriminant =
+        static_cast<std::uint32_t>(action_tag::capability_event),
     .tick_period_ms = 1000,
     .capabilities   = &capabilities,
 };

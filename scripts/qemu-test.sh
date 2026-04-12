@@ -109,7 +109,8 @@ set -e
 # Check for crash/panic patterns first
 if grep -qE "$FAIL_PATTERN" "$output_file" 2>/dev/null; then
     printf 'FAIL: crash/panic detected\n'
-    printf '--- Last 30 lines ---\n'
+    # Format must not start with '-' (POSIX/busybox printf treats it as options).
+    printf '%s\n' '--- Last 30 lines ---'
     tail -30 "$output_file"
     exit 1
 fi
@@ -122,6 +123,6 @@ fi
 
 # Expected pattern not found
 printf 'FAIL: expected pattern not found: %s\n' "$EXPECT_PATTERN"
-printf '--- Last 30 lines ---\n'
+printf '%s\n' '--- Last 30 lines ---'
 tail -30 "$output_file"
 exit 1

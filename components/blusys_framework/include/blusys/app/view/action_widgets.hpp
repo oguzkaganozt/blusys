@@ -42,9 +42,10 @@ namespace detail {
 #define BLUSYS_APP_ACTION_SLOT_POOL_SIZE 32
 #endif
 
-// Maximum size of an Action struct stored in a slot. 16 bytes covers
-// typical tagged-union actions. If your Action is larger, increase this.
-static constexpr std::size_t kActionStorageSize = 16;
+// Maximum size of a single payload stored in `action_storage`. Must fit the
+// largest of: one `Action`, or `toggle_pair` (two Actions). Capability-bearing
+// actions can be ~32 bytes; toggles therefore need 64 bytes.
+static constexpr std::size_t kActionStorageSize = 64;
 
 struct action_dispatch_slot {
     app_ctx *ctx;

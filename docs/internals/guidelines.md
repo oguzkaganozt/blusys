@@ -14,12 +14,13 @@ Start by reading the [Architecture](architecture.md) page.
 
 ### Language Policy
 
-- `components/blusys/` and `components/blusys_services/` expose C headers with `extern "C"` guards
+- `components/blusys_hal/` and `components/blusys_services/` expose C headers with `extern "C"` guards
 - `components/blusys_framework/` is the only C++ tier in V1; it exposes C++ headers
 - framework C++ uses `-std=c++20 -fno-exceptions -fno-rtti -fno-threadsafe-statics`
 - framework C++ should stay platform-facing and disciplined, not become a second copy of ESP-IDF internals
 - services migration to C++ is out of scope; the services tier stays C
 - keep cross-tier boundaries explicit: framework depends on services, services depend on HAL + drivers
+- integration bridge: `capability_event` may carry `payload`; unmapped raw integration IDs can appear as `integration_passthrough` when `app_spec::map_event` is set (see `capability_event.hpp`)
 
 See [Architecture](architecture.md) for the tier model.
 
@@ -71,7 +72,7 @@ See [Architecture](architecture.md) for the tier model.
 
 ### Framework product API versioning
 
-Breaking changes to `app_spec`, `app_ctx`, and umbrella `blusys/app/*.hpp` headers are announced alongside the framework tier (changelog / release notes when applicable) and should be accompanied by updates to canonical docs and quickstarts when they touch the recommended product path. For the runtime story (queues, threading, what not to do in `update()`), see [App runtime model](../app/app-runtime-model.md).
+Breaking changes to `app_spec`, `app_ctx`, `app_services`, and umbrella `blusys/app/*.hpp` headers are announced alongside the framework tier (changelog / release notes when applicable) and should be accompanied by updates to canonical docs and quickstarts when they touch the recommended product path. For the runtime story (queues, threading, what not to do in `update()`), see [App runtime model](../app/app-runtime-model.md).
 
 ### Product application layout (enforced in CI)
 
@@ -84,7 +85,7 @@ For how the **framework** composes LVGL flex, scroll, and the interaction shell 
 ### Product application C++ shape {#product-application-cpp-shape}
 
 - **Reducer center:** domain rules live in `update(ctx, state, action)`; keep navigation and capability sync as explicit actions.
-- **Strong ids:** use `enum class` for routes and overlays in product code; `app_ctx::navigate_to` / `show_overlay` accept those enums.
+- **Strong ids:** use `enum class` for routes and overlays in product code; `ctx.services().navigate_to` / `show_overlay` accept those enums.
 - **State from factories:** use `ctx.product_state<YourState>()` in screen factories instead of file-scope pointers to `app_state`.
 - **View sync:** prefer `blusys::app::view::` bindings and small composites (for example `sync_percent_output`, `sync_line_chart_series`) over calling `blusys::ui::*` setters directly from product code.
 - **Route handles:** group `lv_obj_t*` handles in per-route structs with `clear()` on hide; the screen registry still owns teardown of the widget tree.

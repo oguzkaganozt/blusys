@@ -1,6 +1,7 @@
 #ifdef ESP_PLATFORM
 
 #include "blusys/app/capabilities/provisioning.hpp"
+#include "blusys/app/detail/pending_events.hpp"
 #include "blusys/framework/core/intent.hpp"
 #include "blusys/framework/core/runtime.hpp"
 #include "blusys/log.h"
@@ -32,7 +33,7 @@ blusys_err_t provisioning_capability::start(blusys::framework::runtime &rt)
         BLUSYS_LOGI(TAG, "already provisioned — skipping");
         // Events posted on first poll via pending flags would require
         // a different mechanism. Since we're in start(), post directly
-        // — the reducer controller isn't processing events yet at this
+        // — the app runtime is not dequeuing integration events yet at this
         // point, so we defer to poll().
         return BLUSYS_OK;
     }
@@ -80,7 +81,7 @@ void provisioning_capability::poll(std::uint32_t /*now_ms*/)
     }
 
     const std::uint32_t flags =
-        pending_flags_.exchange(kPendingNone, std::memory_order_acquire);
+        detail::drain_pending_flags(pending_flags_, kPendingNone);
     if (flags == kPendingNone) {
         return;
     }

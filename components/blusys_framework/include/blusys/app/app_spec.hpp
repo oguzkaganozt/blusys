@@ -1,7 +1,9 @@
 #pragma once
 
 #include "blusys/app/app_ctx.hpp"
+#include "blusys/app/app_services.hpp"
 #include "blusys/app/app_identity.hpp"
+#include "blusys/app/capability_event.hpp"
 #include "blusys/framework/core/intent.hpp"
 
 #include <cstdint>
@@ -23,13 +25,16 @@ struct capability_list;  // forward declaration — include capability_list.hpp 
 //   3. on_init            — screen registration, first navigation
 //   4. on_tick            — periodic work; keep light
 //   5. map_intent         — interactive: framework intents → Action
-//   6. map_event          — capabilities → Action (see blusys/app/integration.hpp)
+//   6. map_event          — optional filter: canonical capability_event → Action
 //   7. tick_period_ms
 //   8. capabilities       — device only; nullptr on host
 //   9. identity           — theme + feedback preset
 //  10. theme / shell      — interactive only (when BLUSYS_FRAMEWORK_HAS_UI)
 //
-// Optional `map_intent` / `map_event` may be nullptr; those inputs are then ignored.
+// Optional `map_intent` may be nullptr (intents ignored). Integration events: when
+// `map_event` is nullptr, the runtime wraps `capability_event` using
+// `capability_event_discriminant` (see below). When `map_event` is set, it receives
+// the framework-mapped `capability_event` and may transform or drop it.
 //
 // Alternative action models: you may use `std::variant<...>` as `Action` if every
 // alternative is dispatchable from `ctx.dispatch`. Use `blusys/app/integration.hpp`
@@ -42,20 +47,30 @@ struct app_spec {
     void (*update)(app_ctx &ctx, State &state, const Action &action);
 
     // ---- optional lifecycle hooks ----
-    void (*on_init)(app_ctx &ctx, State &state)                       = nullptr;
-    void (*on_tick)(app_ctx &ctx, State &state, std::uint32_t now_ms) = nullptr;
+    void (*on_init)(app_ctx &ctx, app_services &svc, State &state) = nullptr;
+    void (*on_tick)(app_ctx &ctx, app_services &svc, State &state, std::uint32_t now_ms) =
+        nullptr;
 
     // ---- intent-to-action bridge (interactive path) ----
     // Return true and fill *out to map a framework intent to an app action.
     // If nullptr, framework intents are silently ignored (headless default).
-    bool (*map_intent)(blusys::framework::intent intent, Action *out) = nullptr;
+    bool (*map_intent)(app_services &svc, blusys::framework::intent intent, Action *out) =
+        nullptr;
 
     // ---- integration event bridge (capabilities → app actions) ----
-    // Called when a capability posts an integration event.
-    // Return true and fill *out to convert it to an app action.
-    // If nullptr, integration events are silently ignored.
-    bool (*map_event)(std::uint32_t event_id, std::uint32_t event_code,
-                      const void *payload, Action *out) = nullptr;
+    // Optional override after the framework maps raw integration IDs to
+    // `capability_event`. Return true and fill *out to dispatch; return false to drop.
+    // Unknown raw IDs use tag `integration_passthrough` with `raw_event_id` / `raw_event_code`
+    // / `payload` from the framework event. Canonical events also set `payload` when the
+    // integration `app_event` carried one.
+    // If nullptr, the runtime wraps `{ .tag = discriminant, .cap_event = ... }`
+    // (product `Action` must include a `cap_event` field — see capability_event.hpp).
+    bool (*map_event)(capability_event event, Action *out) = nullptr;
+
+    // When `map_event` is nullptr: must equal `static_cast<std::uint32_t>(your
+    // action_tag::capability_event)` so integration events can be wrapped.
+    // Ignored when `map_event` is non-null or `capabilities` is nullptr.
+    std::uint32_t capability_event_discriminant = k_capability_event_discriminant_unset;
 
     // ---- runtime tuning ----
     std::uint32_t tick_period_ms = 10;

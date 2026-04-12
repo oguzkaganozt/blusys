@@ -189,7 +189,7 @@ target_compile_definitions(${COMPONENT_LIB} PRIVATE
 )
 ```
 
-Sizing rule of thumb: count the maximum simultaneous live instances of that widget type across **all loaded screens**, then add a small headroom for transient overlays. Don't worry about the total RAM cost of pools — each slot is ~16 bytes; even 256 button slots is 4 KB.
+Sizing rule of thumb: count the maximum simultaneous live instances of that widget type across **all loaded screens**, then add a small headroom for transient overlays. Don't worry about the total RAM cost of pools — each action-dispatch slot is on the order of tens of bytes (inline buffer sized for capability-bearing actions and toggle pairs); even 256 button slots is modest.
 
 ## Camp 3 instance data (`bu_knob`)
 
@@ -280,7 +280,7 @@ Before sending a new widget for review, verify:
 - [ ] Stock widget `.cpp` files are picked up by `file(GLOB ...)` in `cmake/blusys_framework_ui_sources.cmake` (path `src/ui/widgets/<name>/<name>.cpp`); no manual widget list edits.
 - [ ] Header is included from `widgets.hpp`.
 - [ ] At least one example exercises the create + a setter + a callback.
-- [ ] Builds clean for esp32, esp32c3, and esp32s3 via `./blusys build examples/framework_ui_basic <target>`.
+- [ ] Builds clean for esp32, esp32c3, and esp32s3 via `./blusys build examples/reference/framework_ui_basic <target>`.
 - [ ] `./blusys lint` passes.
 
 **Camp 2 — slot pool** (most stock widgets):
@@ -290,6 +290,7 @@ Before sending a new widget for review, verify:
 - [ ] `acquire_slot()` is called *before* `lv_<stock>_create()`.
 - [ ] Pool exhaustion logs `BLUSYS_LOGE` and `assert(false)` (via the shared helper).
 - [ ] `LV_EVENT_DELETE` handler calls `release_slot()`.
+- [ ] If the widget exposes `<name>_set_disabled`, implement it via `detail::set_widget_disabled` (`widget_common.hpp`) — do not duplicate `LV_STATE_DISABLED` toggles.
 
 **Camp 3 — `lv_malloc` instance data** (e.g. `bu_knob` — see **Camp 3 instance data** above):
 

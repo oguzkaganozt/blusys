@@ -3,7 +3,7 @@
 cmd_version() {
     local blusys_version
     blusys_version="$(grep '#define BLUSYS_VERSION_STRING' \
-        "$BLUSYS_REPO_ROOT/components/blusys/include/blusys/version.h" 2>/dev/null \
+        "$BLUSYS_REPO_ROOT/components/blusys_hal/include/blusys/version.h" 2>/dev/null \
         | sed 's/.*"\(.*\)"/\1/')" || true
     printf 'blusys %s\n' "${blusys_version:-unknown}"
     printf 'blusys path: %s\n' "$BLUSYS_REPO_ROOT"
