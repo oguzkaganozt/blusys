@@ -35,15 +35,12 @@ idf_component_register(
              wifi_provisioning protocomm esp_timer nvs_flash
 )
 
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/blusys_optional_component.cmake")
+
 # Optional managed component: espressif/mdns
 # Only available when the project declares espressif/mdns in its idf_component.yml.
 idf_build_get_property(build_components BUILD_COMPONENTS)
-set(blusys_mdns_component "")
-if("mdns" IN_LIST build_components)
-    set(blusys_mdns_component mdns)
-elseif("espressif__mdns" IN_LIST build_components)
-    set(blusys_mdns_component espressif__mdns)
-endif()
+blusys_optional_managed_component(blusys_mdns_component "mdns" "espressif__mdns")
 
 if(NOT blusys_mdns_component STREQUAL "")
     idf_component_get_property(mdns_lib ${blusys_mdns_component} COMPONENT_LIB)
@@ -53,12 +50,7 @@ endif()
 
 # Optional managed component: espressif/usb_host_hid
 # Only available when the project declares espressif/usb_host_hid in its idf_component.yml.
-set(blusys_usb_host_hid_component "")
-if("usb_host_hid" IN_LIST build_components)
-    set(blusys_usb_host_hid_component usb_host_hid)
-elseif("espressif__usb_host_hid" IN_LIST build_components)
-    set(blusys_usb_host_hid_component espressif__usb_host_hid)
-endif()
+blusys_optional_managed_component(blusys_usb_host_hid_component "usb_host_hid" "espressif__usb_host_hid")
 
 if(NOT blusys_usb_host_hid_component STREQUAL "")
     idf_component_get_property(usb_host_hid_lib ${blusys_usb_host_hid_component} COMPONENT_LIB)

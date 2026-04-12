@@ -1,10 +1,10 @@
 #include "blusys/framework/ui/widgets/dropdown/dropdown.hpp"
 
-#include <cassert>
 #include <cstring>
 
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 // Themed dropdown selector wrapping `lv_dropdown`.
 //
@@ -33,26 +33,12 @@ dropdown_slot g_dropdown_slots[BLUSYS_UI_DROPDOWN_POOL_SIZE] = {};
 
 dropdown_slot *acquire_slot()
 {
-    for (auto &s : g_dropdown_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_DROPDOWN_POOL_SIZE",
-                BLUSYS_UI_DROPDOWN_POOL_SIZE);
-    assert(false && "bu_dropdown slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_dropdown_slots, kTag, "BLUSYS_UI_DROPDOWN_POOL_SIZE");
 }
 
 void release_slot(dropdown_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_select = nullptr;
-        slot->user_data = nullptr;
-        slot->in_use    = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 // Join an array of strings with '\n' separators for lv_dropdown.
@@ -217,14 +203,7 @@ void dropdown_set_options(lv_obj_t *dropdown, const char * const *options, int32
 
 void dropdown_set_disabled(lv_obj_t *dropdown, bool disabled)
 {
-    if (dropdown == nullptr) {
-        return;
-    }
-    if (disabled) {
-        lv_obj_add_state(dropdown, LV_STATE_DISABLED);
-    } else {
-        lv_obj_remove_state(dropdown, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(dropdown, disabled);
 }
 
 }  // namespace blusys::ui

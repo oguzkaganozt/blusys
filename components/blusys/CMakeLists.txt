@@ -66,15 +66,12 @@ idf_component_register(
              esp_driver_uart esp_hw_support esp_system esp_timer bootloader_support fatfs nvs_flash sdmmc ulp usb esp_lcd
 )
 
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/blusys_optional_component.cmake")
+
 # Optional managed component: espressif/esp_tinyusb
 # Only available when the project declares espressif/esp_tinyusb in its idf_component.yml.
 idf_build_get_property(build_components BUILD_COMPONENTS)
-set(blusys_tinyusb_component "")
-if("esp_tinyusb" IN_LIST build_components)
-    set(blusys_tinyusb_component esp_tinyusb)
-elseif("espressif__esp_tinyusb" IN_LIST build_components)
-    set(blusys_tinyusb_component espressif__esp_tinyusb)
-endif()
+blusys_optional_managed_component(blusys_tinyusb_component "esp_tinyusb" "espressif__esp_tinyusb")
 
 if(NOT blusys_tinyusb_component STREQUAL "")
     idf_component_get_property(tinyusb_lib ${blusys_tinyusb_component} COMPONENT_LIB)

@@ -1,7 +1,6 @@
 #include "blusys/framework/ui/widgets/tabs/tabs.hpp"
 
-#include <cassert>
-
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/theme.hpp"
 #include "blusys/log.h"
 
@@ -36,28 +35,12 @@ tabs_slot g_tabs_slots[BLUSYS_UI_TABS_POOL_SIZE] = {};
 
 tabs_slot *acquire_slot()
 {
-    for (auto &s : g_tabs_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_TABS_POOL_SIZE",
-                BLUSYS_UI_TABS_POOL_SIZE);
-    assert(false && "bu_tabs slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_tabs_slots, kTag, "BLUSYS_UI_TABS_POOL_SIZE");
 }
 
 void release_slot(tabs_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_change = nullptr;
-        slot->user_data = nullptr;
-        slot->active    = 0;
-        slot->count     = 0;
-        slot->in_use    = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 // The outer container has two children:

@@ -1,5 +1,6 @@
 #include "blusys/framework/ui/widgets/knob/knob.hpp"
 
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
 #include "blusys/log.h"
 
@@ -129,14 +130,7 @@ void knob_set_range(lv_obj_t *knob, int32_t min, int32_t max)
 
 void knob_set_disabled(lv_obj_t *knob, bool disabled)
 {
-    if (knob == nullptr) {
-        return;
-    }
-    if (disabled) {
-        lv_obj_add_state(knob, LV_STATE_DISABLED);
-    } else {
-        lv_obj_remove_state(knob, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(knob, disabled);
 }
 
 }  // namespace blusys::ui

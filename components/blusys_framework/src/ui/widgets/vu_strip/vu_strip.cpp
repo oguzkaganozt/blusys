@@ -1,7 +1,7 @@
 #include "blusys/framework/ui/widgets/vu_strip/vu_strip.hpp"
 
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 namespace blusys::ui {
 namespace {
@@ -23,23 +23,12 @@ vu_strip_meta g_vu_meta[BLUSYS_UI_VU_STRIP_POOL_SIZE];
 
 vu_strip_meta *acquire_meta()
 {
-    for (auto &m : g_vu_meta) {
-        if (!m.in_use) {
-            m.in_use = true;
-            return &m;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "vu_strip meta pool exhausted (size=%d) — raise BLUSYS_UI_VU_STRIP_POOL_SIZE",
-                BLUSYS_UI_VU_STRIP_POOL_SIZE);
-    return nullptr;
+    return detail::acquire_ui_slot(g_vu_meta, kTag, "BLUSYS_UI_VU_STRIP_POOL_SIZE");
 }
 
 void release_meta(vu_strip_meta *m)
 {
-    if (m != nullptr) {
-        m->in_use = false;
-    }
+    detail::release_ui_slot(m);
 }
 
 void apply_segment_style(lv_obj_t *seg, bool lit)

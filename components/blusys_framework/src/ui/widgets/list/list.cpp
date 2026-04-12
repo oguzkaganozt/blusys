@@ -1,10 +1,9 @@
 #include "blusys/framework/ui/widgets/list/list.hpp"
 
-#include <cassert>
-
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/icons/icon_set.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 // Scrollable selectable list wrapping raw `lv_obj` containers.
 //
@@ -36,27 +35,12 @@ list_slot g_list_slots[BLUSYS_UI_LIST_POOL_SIZE] = {};
 
 list_slot *acquire_slot()
 {
-    for (auto &s : g_list_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_LIST_POOL_SIZE",
-                BLUSYS_UI_LIST_POOL_SIZE);
-    assert(false && "bu_list slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_list_slots, kTag, "BLUSYS_UI_LIST_POOL_SIZE");
 }
 
 void release_slot(list_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_select = nullptr;
-        slot->user_data = nullptr;
-        slot->selected  = -1;
-        slot->in_use    = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 void highlight_row(lv_obj_t *list, int32_t index)
@@ -264,14 +248,7 @@ int32_t list_get_selected(lv_obj_t *list)
 
 void list_set_disabled(lv_obj_t *list, bool disabled)
 {
-    if (list == nullptr) {
-        return;
-    }
-    if (disabled) {
-        lv_obj_add_state(list, LV_STATE_DISABLED);
-    } else {
-        lv_obj_remove_state(list, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(list, disabled);
 }
 
 }  // namespace blusys::ui

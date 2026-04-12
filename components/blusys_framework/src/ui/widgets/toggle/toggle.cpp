@@ -1,6 +1,7 @@
 #include "blusys/framework/ui/widgets/toggle/toggle.hpp"
 
 #include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
 
 // Camp 2 implementation: stock `lv_switch` wrapped with theme styling and
@@ -140,14 +141,7 @@ bool toggle_get_state(lv_obj_t *toggle)
 
 void toggle_set_disabled(lv_obj_t *toggle, bool disabled)
 {
-    if (toggle == nullptr) {
-        return;
-    }
-    if (disabled) {
-        lv_obj_add_state(toggle, LV_STATE_DISABLED);
-    } else {
-        lv_obj_remove_state(toggle, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(toggle, disabled);
 }
 
 }  // namespace blusys::ui

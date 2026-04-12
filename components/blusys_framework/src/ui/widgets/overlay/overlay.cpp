@@ -1,10 +1,9 @@
 #include "blusys/framework/ui/widgets/overlay/overlay.hpp"
 
-#include <cassert>
 #include <cstdint>
 
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 // Composition implementation: a compact themed container anchored to the
 // bottom of its parent, with an `lv_label` child rendering the text. The
@@ -49,29 +48,12 @@ overlay_slot g_overlay_slots[BLUSYS_UI_OVERLAY_POOL_SIZE] = {};
 
 overlay_slot *acquire_slot()
 {
-    for (auto &s : g_overlay_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_OVERLAY_POOL_SIZE",
-                BLUSYS_UI_OVERLAY_POOL_SIZE);
-    assert(false && "bu_overlay slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_overlay_slots, kTag, "BLUSYS_UI_OVERLAY_POOL_SIZE");
 }
 
 void release_slot(overlay_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_hidden   = nullptr;
-        slot->user_data   = nullptr;
-        slot->overlay     = nullptr;
-        slot->timer       = nullptr;
-        slot->duration_ms = 0;
-        slot->in_use      = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 void cancel_timer(overlay_slot *slot)

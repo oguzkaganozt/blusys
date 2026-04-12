@@ -1,9 +1,7 @@
 #include "blusys/framework/ui/widgets/modal/modal.hpp"
 
-#include <cassert>
-
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 // Composition implementation: a backdrop `lv_obj` (full screen, dim) with
 // a centered panel child holding optional title and body labels. This is
@@ -35,26 +33,12 @@ modal_slot g_modal_slots[BLUSYS_UI_MODAL_POOL_SIZE] = {};
 
 modal_slot *acquire_slot()
 {
-    for (auto &s : g_modal_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_MODAL_POOL_SIZE",
-                BLUSYS_UI_MODAL_POOL_SIZE);
-    assert(false && "bu_modal slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_modal_slots, kTag, "BLUSYS_UI_MODAL_POOL_SIZE");
 }
 
 void release_slot(modal_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_dismiss = nullptr;
-        slot->user_data  = nullptr;
-        slot->in_use     = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 void style_backdrop(lv_obj_t *backdrop)

@@ -3,8 +3,8 @@
 // Shared fixed-capacity callback slot pool logic for stock widgets — see
 // widget-author-guide.md (Camp 2, pool sizing).
 //
-// Slot types must be structs with members: in_use (bool), on_change (callback),
-// user_data (void*). Do not use these helpers for ad-hoc layouts.
+// Slot types must be POD structs with an `in_use` (bool) member. Release uses
+// zero-initialization to clear all fields. Do not use these helpers for ad-hoc layouts.
 
 #include "blusys/log.h"
 
@@ -32,14 +32,12 @@ Slot *acquire_ui_slot(Slot (&slots)[N], const char *tag, const char *raise_macro
     return nullptr;
 }
 
-// Clears Camp-2 slot fields; matches acquire_ui_slot slot layout only.
+// Clears Camp-2 slot fields via zero-init (released state for POD slots).
 template <typename Slot>
 void release_ui_slot(Slot *slot)
 {
     if (slot != nullptr) {
-        slot->on_change = nullptr;
-        slot->user_data = nullptr;
-        slot->in_use    = false;
+        *slot = {};
     }
 }
 

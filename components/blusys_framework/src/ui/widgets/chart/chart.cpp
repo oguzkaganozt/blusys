@@ -1,9 +1,9 @@
 #include "blusys/framework/ui/widgets/chart/chart.hpp"
 
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
-// Display-only chart wrapping `lv_chart`. No callbacks, no slot pool.
+// Display-only chart wrapping `lv_chart`. No callbacks; fixed-capacity data pool.
 //
 // Products add series with `chart_add_series` and push data points with
 // `chart_set_next` or `chart_set_all`. Series pointers are tracked in a
@@ -15,6 +15,10 @@ namespace {
 constexpr const char *kTag = "ui.chart";
 static constexpr int kMaxSeries = 4;
 
+#ifndef BLUSYS_UI_CHART_POOL_SIZE
+#define BLUSYS_UI_CHART_POOL_SIZE 8
+#endif
+
 struct chart_data {
     lv_chart_series_t *series[kMaxSeries];
     int32_t            series_count;
@@ -22,28 +26,16 @@ struct chart_data {
     bool               in_use;
 };
 
-static constexpr int kChartDataPoolSize = 8;
-chart_data g_chart_data[kChartDataPoolSize] = {};
+chart_data g_chart_data[BLUSYS_UI_CHART_POOL_SIZE] = {};
 
 chart_data *acquire_data()
 {
-    for (auto &d : g_chart_data) {
-        if (!d.in_use) {
-            d.in_use = true;
-            d.series_count = 0;
-            for (auto &s : d.series) { s = nullptr; }
-            return &d;
-        }
-    }
-    BLUSYS_LOGE(kTag, "data pool exhausted (size=%d)", kChartDataPoolSize);
-    return nullptr;
+    return detail::acquire_ui_slot(g_chart_data, kTag, "BLUSYS_UI_CHART_POOL_SIZE");
 }
 
 void release_data(chart_data *d)
 {
-    if (d != nullptr) {
-        d->in_use = false;
-    }
+    detail::release_ui_slot(d);
 }
 
 void on_chart_deleted(lv_event_t *e)

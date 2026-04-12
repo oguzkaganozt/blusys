@@ -1,6 +1,7 @@
 #include "blusys/framework/ui/widgets/slider/slider.hpp"
 
 #include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
 
 // Camp 2 implementation: stock `lv_slider` wrapped with theme styling and
@@ -147,14 +148,7 @@ void slider_set_range(lv_obj_t *slider, int32_t min, int32_t max)
 
 void slider_set_disabled(lv_obj_t *slider, bool disabled)
 {
-    if (slider == nullptr) {
-        return;
-    }
-    if (disabled) {
-        lv_obj_add_state(slider, LV_STATE_DISABLED);
-    } else {
-        lv_obj_remove_state(slider, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(slider, disabled);
 }
 
 }  // namespace blusys::ui

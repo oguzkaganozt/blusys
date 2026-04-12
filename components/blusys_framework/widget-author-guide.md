@@ -105,7 +105,11 @@ Camp 2 widgets wrap a stock LVGL widget. The stock widget has no room for extra 
 
 ### Anatomy
 
+Use the shared helpers in `blusys/framework/ui/detail/fixed_slot_pool.hpp`. Slot structs must be **POD** with a `bool in_use` member (and any other fields your widget needs). The callback pointer can be named `on_press`, `on_select`, `on_change`, etc. — there is no required field name. **`detail::release_ui_slot`** zero-initializes the whole slot (`*slot = {}`), so every field returns to a safe released state.
+
 ```cpp
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+
 #ifndef BLUSYS_UI_<WIDGET>_POOL_SIZE
 #define BLUSYS_UI_<WIDGET>_POOL_SIZE 32
 #endif
@@ -123,19 +127,16 @@ struct <widget>_slot {
 
 <widget>_slot *acquire_slot()
 {
-    for (auto &s : g_<widget>_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE("ui.<widget>",
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_<WIDGET>_POOL_SIZE",
-                BLUSYS_UI_<WIDGET>_POOL_SIZE);
-    assert(false && "<widget> slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_<widget>_slots, kTag, "BLUSYS_UI_<WIDGET>_POOL_SIZE");
+}
+
+void release_slot(<widget>_slot *slot)
+{
+    detail::release_ui_slot(slot);
 }
 ```
+
+Display-only widgets that keep a small static **data** pool (no callbacks) use the same `acquire_ui_slot` / `release_ui_slot` pattern; the struct still needs `in_use` plus whatever fields you track (e.g. series pointers for `bu_chart`).
 
 ### Five rules the slot pool exists to enforce
 
@@ -168,7 +169,7 @@ button_create(cfg)
 
 LVGL deletes the obj
   └─ on_lvgl_deleted(e)
-       └─ release_slot(slot)   ← in_use=false, on_*=nullptr, user_data=nullptr
+       └─ release_slot(slot)   ← full slot zero-init (released state)
 ```
 
 ### Pool sizing
@@ -279,8 +280,9 @@ Before sending a new widget for review, verify:
 **Camp 2 — slot pool** (most stock widgets):
 
 - [ ] Slot pool macro `BLUSYS_UI_<NAME>_POOL_SIZE` is defined with a default of 32.
+- [ ] `acquire_slot()` / `release_slot()` delegate to `detail::acquire_ui_slot` / `detail::release_ui_slot` (see `fixed_slot_pool.hpp`).
 - [ ] `acquire_slot()` is called *before* `lv_<stock>_create()`.
-- [ ] Pool exhaustion logs `BLUSYS_LOGE` and `assert(false)`.
+- [ ] Pool exhaustion logs `BLUSYS_LOGE` and `assert(false)` (via the shared helper).
 - [ ] `LV_EVENT_DELETE` handler calls `release_slot()`.
 
 **Camp 3 — `lv_malloc` instance data** (e.g. `bu_knob` — see **Camp 3 instance data** above):

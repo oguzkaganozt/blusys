@@ -1,9 +1,8 @@
 #include "blusys/framework/ui/widgets/input_field/input_field.hpp"
 
-#include <cassert>
-
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 // Themed text input wrapping `lv_textarea`.
 //
@@ -29,26 +28,12 @@ input_field_slot g_input_field_slots[BLUSYS_UI_INPUT_FIELD_POOL_SIZE] = {};
 
 input_field_slot *acquire_slot()
 {
-    for (auto &s : g_input_field_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_INPUT_FIELD_POOL_SIZE",
-                BLUSYS_UI_INPUT_FIELD_POOL_SIZE);
-    assert(false && "bu_input_field slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_input_field_slots, kTag, "BLUSYS_UI_INPUT_FIELD_POOL_SIZE");
 }
 
 void release_slot(input_field_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_submit = nullptr;
-        slot->user_data = nullptr;
-        slot->in_use    = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 void apply_theme(lv_obj_t *ta)
@@ -186,14 +171,7 @@ void input_field_set_placeholder(lv_obj_t *input, const char *text)
 
 void input_field_set_disabled(lv_obj_t *input, bool disabled)
 {
-    if (input == nullptr) {
-        return;
-    }
-    if (disabled) {
-        lv_obj_add_state(input, LV_STATE_DISABLED);
-    } else {
-        lv_obj_remove_state(input, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(input, disabled);
 }
 
 }  // namespace blusys::ui

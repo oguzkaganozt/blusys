@@ -1,9 +1,7 @@
 #include "blusys/framework/ui/widgets/data_table/data_table.hpp"
 
-#include <cassert>
-
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 // Themed tabular data wrapping `lv_table`.
 //
@@ -33,27 +31,12 @@ data_table_slot g_data_table_slots[BLUSYS_UI_DATA_TABLE_POOL_SIZE] = {};
 
 data_table_slot *acquire_slot()
 {
-    for (auto &s : g_data_table_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_DATA_TABLE_POOL_SIZE",
-                BLUSYS_UI_DATA_TABLE_POOL_SIZE);
-    assert(false && "bu_data_table slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_data_table_slots, kTag, "BLUSYS_UI_DATA_TABLE_POOL_SIZE");
 }
 
 void release_slot(data_table_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_row_select = nullptr;
-        slot->user_data     = nullptr;
-        slot->col_count     = 0;
-        slot->in_use        = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 void apply_theme(lv_obj_t *table)

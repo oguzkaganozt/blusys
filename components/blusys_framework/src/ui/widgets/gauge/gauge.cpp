@@ -2,10 +2,10 @@
 
 #include <cstdio>
 
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
-// Display-only arc gauge. No callbacks, no slot pool.
+// Display-only arc gauge. No callbacks; fixed-capacity data pool via fixed_slot_pool.
 //
 // Internal layout: an `lv_arc` in indicator-only mode (knob part removed)
 // with an optional centered label showing the current value and unit.
@@ -19,12 +19,17 @@ namespace {
 
 constexpr const char *kTag = "ui.gauge";
 
+#ifndef BLUSYS_UI_GAUGE_POOL_SIZE
+#define BLUSYS_UI_GAUGE_POOL_SIZE 16
+#endif
+
 struct gauge_data {
     lv_obj_t   *arc;
     lv_obj_t   *label;
     const char *unit;
     int32_t     min;
     int32_t     max;
+    bool        in_use;
 };
 
 void apply_arc_theme(lv_obj_t *arc)
@@ -60,30 +65,16 @@ void update_label(gauge_data *data, int32_t value)
 
 // We store gauge_data in a small static pool to avoid dynamic allocation.
 // Gauges are display-only and typically few per screen.
-static constexpr int kGaugeDataPoolSize = 16;
-gauge_data g_gauge_data[kGaugeDataPoolSize] = {};
-bool       g_gauge_data_used[kGaugeDataPoolSize] = {};
+gauge_data g_gauge_data[BLUSYS_UI_GAUGE_POOL_SIZE] = {};
 
 gauge_data *acquire_data()
 {
-    for (int i = 0; i < kGaugeDataPoolSize; ++i) {
-        if (!g_gauge_data_used[i]) {
-            g_gauge_data_used[i] = true;
-            return &g_gauge_data[i];
-        }
-    }
-    BLUSYS_LOGE(kTag, "data pool exhausted (size=%d)", kGaugeDataPoolSize);
-    return nullptr;
+    return detail::acquire_ui_slot(g_gauge_data, kTag, "BLUSYS_UI_GAUGE_POOL_SIZE");
 }
 
 void release_data(gauge_data *d)
 {
-    for (int i = 0; i < kGaugeDataPoolSize; ++i) {
-        if (&g_gauge_data[i] == d) {
-            g_gauge_data_used[i] = false;
-            return;
-        }
-    }
+    detail::release_ui_slot(d);
 }
 
 void on_gauge_deleted(lv_event_t *e)

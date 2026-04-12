@@ -359,9 +359,14 @@ CMAKE
     fi
 }
 
-blusys_create_main_yml_interactive() {
+# mode: interactive | headless | interactive_mdns
+blusys_create_main_yml() {
     local target_dir="$1"
-    cat > "$target_dir/main/idf_component.yml" <<'YAML'
+    local mode="$2"
+    local out="$target_dir/main/idf_component.yml"
+
+    {
+        cat <<'HEADER'
 ## Managed dependencies for the blusys platform.
 ##
 ## All three platform components must be pinned to the SAME git ref.
@@ -374,6 +379,16 @@ dependencies:
   idf:
     version: ">=5.5"
 
+HEADER
+        if [[ "$mode" == "interactive_mdns" ]]; then
+            cat <<'MDNS_BEFORE'
+  espressif/mdns:
+    version: "*"
+
+MDNS_BEFORE
+        fi
+
+        cat <<'PLATFORM'
   blusys:
     git: "https://github.com/oguzkaganozt/blusys.git"
     version: "__BLUSYS_SCAFFOLD_TAG__"
@@ -387,85 +402,34 @@ dependencies:
     version: "__BLUSYS_SCAFFOLD_TAG__"
     path: "components/blusys_framework"
 
+PLATFORM
+        if [[ "$mode" == "headless" ]]; then
+            cat <<'MDNS_AFTER'
+  espressif/mdns:
+    version: "*"
+MDNS_AFTER
+        elif [[ "$mode" == "interactive" || "$mode" == "interactive_mdns" ]]; then
+            cat <<'LVGL'
   lvgl/lvgl:
     version: "~9.2"
-YAML
-    sed -i "s/__BLUSYS_SCAFFOLD_TAG__/${BLUSYS_SCAFFOLD_PLATFORM_VERSION}/g" \
-        "$target_dir/main/idf_component.yml"
+LVGL
+        fi
+    } >"$out"
+
+    sed -i "s/__BLUSYS_SCAFFOLD_TAG__/${BLUSYS_SCAFFOLD_PLATFORM_VERSION}/g" "$out"
+}
+
+blusys_create_main_yml_interactive() {
+    blusys_create_main_yml "$1" interactive
 }
 
 blusys_create_main_yml_headless() {
-    local target_dir="$1"
-    cat > "$target_dir/main/idf_component.yml" <<'YAML'
-## Managed dependencies for the blusys platform.
-##
-## All three platform components must be pinned to the SAME git ref.
-## Mixing tiers across versions is not supported (decision 7).
-##
-## To test against a local platform checkout instead of the pinned tag,
-## replace git/version/path for each blusys_* dep with override_path, e.g.:
-##     override_path: "../../path/to/blusys/components/COMPONENT_NAME"
-dependencies:
-  idf:
-    version: ">=5.5"
-
-  blusys:
-    git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "__BLUSYS_SCAFFOLD_TAG__"
-    path: "components/blusys"
-  blusys_services:
-    git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "__BLUSYS_SCAFFOLD_TAG__"
-    path: "components/blusys_services"
-  blusys_framework:
-    git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "__BLUSYS_SCAFFOLD_TAG__"
-    path: "components/blusys_framework"
-
-  espressif/mdns:
-    version: "*"
-YAML
-    sed -i "s/__BLUSYS_SCAFFOLD_TAG__/${BLUSYS_SCAFFOLD_PLATFORM_VERSION}/g" \
-        "$target_dir/main/idf_component.yml"
+    blusys_create_main_yml "$1" headless
 }
 
 # Interactive + managed pins + mDNS (gateway interactive archetype).
 blusys_create_main_yml_interactive_mdns() {
-    local target_dir="$1"
-    cat > "$target_dir/main/idf_component.yml" <<'YAML'
-## Managed dependencies for the blusys platform.
-##
-## All three platform components must be pinned to the SAME release tag.
-## Mixing tiers across versions is not supported (decision 7).
-##
-## To test against a local platform checkout instead of the pinned tag,
-## replace git/version/path for each blusys_* dep with override_path, e.g.:
-##     override_path: "../../path/to/blusys/components/COMPONENT_NAME"
-dependencies:
-  idf:
-    version: ">=5.5"
-
-  espressif/mdns:
-    version: "*"
-
-  blusys:
-    git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "__BLUSYS_SCAFFOLD_TAG__"
-    path: "components/blusys"
-  blusys_services:
-    git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "__BLUSYS_SCAFFOLD_TAG__"
-    path: "components/blusys_services"
-  blusys_framework:
-    git: "https://github.com/oguzkaganozt/blusys.git"
-    version: "__BLUSYS_SCAFFOLD_TAG__"
-    path: "components/blusys_framework"
-
-  lvgl/lvgl:
-    version: "~9.2"
-YAML
-    sed -i "s/__BLUSYS_SCAFFOLD_TAG__/${BLUSYS_SCAFFOLD_PLATFORM_VERSION}/g" \
-        "$target_dir/main/idf_component.yml"
+    blusys_create_main_yml "$1" interactive_mdns
 }
 
 blusys_create_logic_headless() {

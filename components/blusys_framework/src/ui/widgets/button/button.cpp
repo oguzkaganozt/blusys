@@ -1,9 +1,8 @@
 #include "blusys/framework/ui/widgets/button/button.hpp"
 
-#include <cassert>
-
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 // Camp 2 implementation: stock `lv_button` wrapped with theme styling and a
 // fixed-capacity slot pool for callback storage. The pool size is set at
@@ -36,26 +35,12 @@ button_slot g_button_slots[BLUSYS_UI_BUTTON_POOL_SIZE] = {};
 
 button_slot *acquire_slot()
 {
-    for (auto &s : g_button_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_BUTTON_POOL_SIZE",
-                BLUSYS_UI_BUTTON_POOL_SIZE);
-    assert(false && "bu_button slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_button_slots, kTag, "BLUSYS_UI_BUTTON_POOL_SIZE");
 }
 
 void release_slot(button_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_press  = nullptr;
-        slot->user_data = nullptr;
-        slot->in_use    = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 lv_obj_t *button_label_child(lv_obj_t *button)
@@ -206,14 +191,7 @@ void button_set_variant(lv_obj_t *button, button_variant variant)
 
 void button_set_disabled(lv_obj_t *button, bool disabled)
 {
-    if (button == nullptr) {
-        return;
-    }
-    if (disabled) {
-        lv_obj_add_state(button, LV_STATE_DISABLED);
-    } else {
-        lv_obj_remove_state(button, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(button, disabled);
 }
 
 }  // namespace blusys::ui
