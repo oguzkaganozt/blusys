@@ -189,7 +189,7 @@ target_compile_definitions(${COMPONENT_LIB} PRIVATE
 )
 ```
 
-Sizing rule of thumb: count the maximum simultaneous live instances of that widget type across **all loaded screens**, then add a small headroom for transient overlays. Don't worry about the total RAM cost of pools — each slot is ~16 bytes; even 256 button slots is 4 KB.
+Sizing rule of thumb: count the maximum simultaneous live instances of that widget type across **all loaded screens**, then add a small headroom for transient overlays. Don't worry about the total RAM cost of pools — each action-dispatch slot is on the order of tens of bytes (inline buffer sized for capability-bearing actions and toggle pairs); even 256 button slots is modest.
 
 ## Camp 3 instance data (`bu_knob`)
 
