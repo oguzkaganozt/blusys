@@ -126,12 +126,14 @@ private:
                                    void *user_ctx);
 
     void start_dependent_services(std::uint32_t now_ms);
-    void post_event(connectivity_event ev);
+    void post_event(connectivity_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
     void check_capability_ready();
 
     connectivity_config   cfg_;
     connectivity_status   status_{};
-    blusys::framework::runtime *rt_ = nullptr;
 
     blusys_wifi_t         *wifi_  = nullptr;
     blusys_sntp_t         *sntp_  = nullptr;
@@ -184,11 +186,13 @@ public:
     blusys_err_t request_reconnect();
 
 private:
-    void post_event(connectivity_event ev);
+    void post_event(connectivity_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     connectivity_config   cfg_;
     connectivity_status   status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     bool first_poll_ = true;
 };
 

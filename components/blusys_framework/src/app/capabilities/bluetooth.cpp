@@ -137,14 +137,6 @@ void bluetooth_capability::gatt_conn_handler(std::uint16_t conn_handle,
     }
 }
 
-void bluetooth_capability::post_event(bluetooth_event ev)
-{
-    if (rt_ != nullptr) {
-        rt_->post_event(blusys::framework::make_integration_event(
-            static_cast<std::uint32_t>(ev)));
-    }
-}
-
 void bluetooth_capability::check_capability_ready()
 {
     if (status_.capability_ready) {

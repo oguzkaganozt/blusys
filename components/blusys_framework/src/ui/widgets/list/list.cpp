@@ -202,9 +202,7 @@ lv_obj_t *list_create(lv_obj_t *parent, const list_config &config)
         build_items(list, config.items, config.item_count, config.on_select != nullptr);
     }
 
-    if (config.disabled) {
-        lv_obj_add_state(list, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(list, config.disabled);
 
     return list;
 }

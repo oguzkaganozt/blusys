@@ -345,7 +345,6 @@ int main(void)
     (void)lv_sdl_mouse_create();
     (void)lv_sdl_keyboard_create();
 
-    blusys::framework::init();
     build_demo_screen();
 
     // ---- keyboard encoder simulation -------------------------------------------

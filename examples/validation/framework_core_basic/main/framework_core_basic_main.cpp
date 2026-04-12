@@ -84,8 +84,6 @@ public:
 
 extern "C" void app_main(void)
 {
-    blusys::framework::init();
-
     logging_route_sink route_sink;
     logging_feedback_sink feedback_sink;
     blusys::framework::runtime runtime;
@@ -98,6 +96,4 @@ extern "C" void app_main(void)
     runtime.step(0);
     runtime.step(10);
     runtime.deinit();
-
-    blusys::framework::run_once();
 }

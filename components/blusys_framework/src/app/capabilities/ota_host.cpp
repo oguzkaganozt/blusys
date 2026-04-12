@@ -72,14 +72,6 @@ void ota_capability::emit_download_progress(std::uint8_t pct)
     post_event(ota_event::download_progress, pct);
 }
 
-void ota_capability::post_event(ota_event ev, std::uint32_t code)
-{
-    if (rt_ != nullptr) {
-        rt_->post_event(blusys::framework::make_integration_event(
-            static_cast<std::uint32_t>(ev), code));
-    }
-}
-
 }  // namespace blusys::app
 
 #endif  // !ESP_PLATFORM

@@ -273,15 +273,6 @@ void mqtt_host_capability::notify_error(const char *msg)
     pending_.push_back(p);
 }
 
-void mqtt_host_capability::post_ev(mqtt_host_event ev)
-{
-    if (rt_ == nullptr) {
-        return;
-    }
-    (void)rt_->post_event(blusys::framework::make_integration_event(
-        static_cast<std::uint32_t>(ev), 0, nullptr));
-}
-
 void mqtt_host_capability::flush_pending()
 {
     std::vector<Pending> batch;

@@ -157,14 +157,6 @@ void provisioning_capability::prov_event_handler(blusys_wifi_prov_event_t event,
     }
 }
 
-void provisioning_capability::post_event(provisioning_event ev)
-{
-    if (rt_ != nullptr) {
-        rt_->post_event(blusys::framework::make_integration_event(
-            static_cast<std::uint32_t>(ev)));
-    }
-}
-
 }  // namespace blusys::app
 
 #endif  // ESP_PLATFORM

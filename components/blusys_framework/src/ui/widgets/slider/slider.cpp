@@ -115,9 +115,7 @@ lv_obj_t *slider_create(lv_obj_t *parent, const slider_config &config)
         lv_obj_add_event_cb(slider, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
     }
 
-    if (config.disabled) {
-        lv_obj_add_state(slider, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(slider, config.disabled);
 
     return slider;
 }

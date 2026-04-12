@@ -67,11 +67,13 @@ public:
 
 private:
     void flush();
-    void post_event(telemetry_event ev);
+    void post_event(telemetry_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     telemetry_config  cfg_;
     telemetry_status  status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     telemetry_metric  buffer_[kMaxTelemetryBuffer]{};
     std::size_t       write_pos_   = 0;
     std::uint32_t     last_flush_ms_ = 0;

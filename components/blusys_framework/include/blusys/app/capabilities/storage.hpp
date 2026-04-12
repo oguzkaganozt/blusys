@@ -67,11 +67,13 @@ public:
     [[nodiscard]] blusys_fatfs_t *fatfs()  const { return fatfs_; }
 
 private:
-    void post_event(storage_event ev);
+    void post_event(storage_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     storage_config   cfg_;
     storage_status   status_{};
-    blusys::framework::runtime *rt_ = nullptr;
 
     blusys_fs_t      *spiffs_ = nullptr;
     blusys_fatfs_t   *fatfs_  = nullptr;
@@ -93,11 +95,13 @@ public:
     [[nodiscard]] const storage_status &status() const { return status_; }
 
 private:
-    void post_event(storage_event ev);
+    void post_event(storage_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     storage_config   cfg_;
     storage_status   status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     bool first_poll_ = true;
 };
 

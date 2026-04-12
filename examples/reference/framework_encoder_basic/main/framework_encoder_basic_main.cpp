@@ -167,7 +167,6 @@ bool g_toggle_state   = false;
 
 extern "C" void app_main(void)
 {
-    blusys::framework::init();
     lv_init();
 
     // ---- stub display so screen + indev pipeline have something to attach to

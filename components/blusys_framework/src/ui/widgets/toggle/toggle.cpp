@@ -112,9 +112,7 @@ lv_obj_t *toggle_create(lv_obj_t *parent, const toggle_config &config)
         lv_obj_add_event_cb(toggle, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
     }
 
-    if (config.disabled) {
-        lv_obj_add_state(toggle, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(toggle, config.disabled);
 
     return toggle;
 }

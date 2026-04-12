@@ -81,11 +81,13 @@ private:
     };
 
     void flush_pending();
-    void post_ev(mqtt_host_event ev);
+    void post_ev(mqtt_host_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     mqtt_host_config            cfg_{};
     mqtt_host_status            status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     void                       *mosq_         = nullptr;
     bool                        started_lib_ = false;
 

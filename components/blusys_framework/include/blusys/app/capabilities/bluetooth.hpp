@@ -75,12 +75,14 @@ private:
     static void gatt_conn_handler(std::uint16_t conn_handle, bool connected,
                                   void *user_ctx);
 
-    void post_event(bluetooth_event ev);
+    void post_event(bluetooth_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
     void check_capability_ready();
 
     bluetooth_config cfg_;
     bluetooth_status status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     blusys_bluetooth_t  *bt_   = nullptr;
     blusys_ble_gatt_t   *gatt_ = nullptr;
     std::atomic<std::uint32_t> pending_flags_{kPendingNone};
@@ -107,11 +109,13 @@ public:
     [[nodiscard]] const bluetooth_status &status() const { return status_; }
 
 private:
-    void post_event(bluetooth_event ev);
+    void post_event(bluetooth_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     bluetooth_config cfg_;
     bluetooth_status status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     bool first_poll_ = true;
 };
 

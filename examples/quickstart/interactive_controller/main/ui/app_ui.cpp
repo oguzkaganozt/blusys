@@ -2,7 +2,6 @@
 
 #include "blusys/app/flows/loading.hpp"
 #include "blusys/app/flows/settings.hpp"
-#include "blusys/app/integration_events.hpp"
 #include "blusys/app/screens/about_screen.hpp"
 #include "blusys/app/view/action_widgets.hpp"
 #include "blusys/app/view/overlay_manager.hpp"

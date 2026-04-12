@@ -55,14 +55,6 @@ blusys_err_t provisioning_capability::request_reset()
     return BLUSYS_OK;
 }
 
-void provisioning_capability::post_event(provisioning_event ev)
-{
-    if (rt_ != nullptr) {
-        rt_->post_event(blusys::framework::make_integration_event(
-            static_cast<std::uint32_t>(ev)));
-    }
-}
-
 }  // namespace blusys::app
 
 #endif  // !ESP_PLATFORM

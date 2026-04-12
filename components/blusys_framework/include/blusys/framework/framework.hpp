@@ -9,14 +9,12 @@
 
 namespace blusys::framework {
 
-// Optional umbrella hook for early startup. Currently a no-op; kept as a stable
-// call site for examples and future global framework setup. Safe to call once
-// before constructing runtime/controllers. Product apps using blusys::app entry
-// macros do not need this.
-void init();
-
-// Optional hook after tearing down a minimal runtime demo. Currently a no-op;
-// reserved for symmetry with init() in validation examples.
-void run_once();
+// Umbrella header for the framework spine — aggregating includes only.
+// No global init is required: `blusys::app` entry macros and validation
+// examples instantiate `blusys::framework::runtime` directly, and the
+// widget kit has no global state beyond the theme (set via
+// `blusys::ui::set_theme`). The former `init()` / `run_once()` no-ops
+// were removed because they misdirected readers looking for the real
+// entry path (`BLUSYS_APP_MAIN_*`).
 
 }  // namespace blusys::framework

@@ -62,11 +62,13 @@ public:
 
 private:
     void collect_snapshot();
-    void post_event(diagnostics_event ev);
+    void post_event(diagnostics_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     diagnostics_config cfg_;
     diagnostics_status status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     blusys_console_t *console_ = nullptr;
     std::uint32_t last_snapshot_ms_ = 0;
     bool first_poll_ = true;
@@ -95,11 +97,13 @@ public:
     [[nodiscard]] const diagnostics_status &status() const { return status_; }
 
 private:
-    void post_event(diagnostics_event ev);
+    void post_event(diagnostics_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     diagnostics_config cfg_;
     diagnostics_status status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     bool first_poll_ = true;
     std::uint32_t last_snapshot_ms_ = 0;
 };

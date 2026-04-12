@@ -97,9 +97,7 @@ lv_obj_t *knob_create(lv_obj_t *parent, const knob_config &config)
         lv_obj_add_event_cb(arc, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
     }
 
-    if (config.disabled) {
-        lv_obj_add_state(arc, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(arc, config.disabled);
 
     return arc;
 }

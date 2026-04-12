@@ -162,9 +162,7 @@ lv_obj_t *button_create(lv_obj_t *parent, const button_config &config)
         lv_obj_add_event_cb(button, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
     }
 
-    if (config.disabled) {
-        lv_obj_add_state(button, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(button, config.disabled);
 
     return button;
 }

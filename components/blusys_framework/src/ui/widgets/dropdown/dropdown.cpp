@@ -170,9 +170,7 @@ lv_obj_t *dropdown_create(lv_obj_t *parent, const dropdown_config &config)
         lv_obj_add_event_cb(dd, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
     }
 
-    if (config.disabled) {
-        lv_obj_add_state(dd, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(dd, config.disabled);
 
     return dd;
 }

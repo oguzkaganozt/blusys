@@ -271,14 +271,6 @@ blusys_err_t connectivity_capability::request_reconnect()
     return blusys_wifi_connect(wifi_, cfg_.connect_timeout_ms);
 }
 
-void connectivity_capability::post_event(connectivity_event ev)
-{
-    if (rt_ != nullptr) {
-        rt_->post_event(blusys::framework::make_integration_event(
-            static_cast<std::uint32_t>(ev)));
-    }
-}
-
 void connectivity_capability::check_capability_ready()
 {
     if (status_.capability_ready) {

@@ -89,7 +89,7 @@ For how the **framework** composes LVGL flex, scroll, and the interaction shell 
 - **View sync:** prefer `blusys::app::view::` bindings and small composites (for example `sync_percent_output`, `sync_line_chart_series`) over calling `blusys::ui::*` setters directly from product code.
 - **Route handles:** group `lv_obj_t*` handles in per-route structs with `clear()` on hide; the screen registry still owns teardown of the widget tree.
 - **Settings:** give interactive `setting_item` rows a non-zero `id` when using `settings_screen_config::on_changed`; the callback receives that stable id (or the row index when `id` is 0).
-- **Integration:** include `blusys/app/integration.hpp` when you need typed capability event IDs (`integration_dispatch.hpp`), narrow shortcuts (`integration_events.hpp`), or `dispatch_variant`; use `blusys/app/build_profile.hpp` (or `reference_build_profile.hpp`) to avoid duplicated `#ifdef` matrices in `integration/app_main.cpp`.
+- **Integration:** include `blusys/app/integration.hpp` when you need typed capability event IDs (`integration_dispatch.hpp`) or `dispatch_variant`; use `blusys/app/build_profile.hpp` (or `reference_build_profile.hpp`) to avoid duplicated `#ifdef` matrices in `integration/app_main.cpp`.
 
 ## Development Workflow
 

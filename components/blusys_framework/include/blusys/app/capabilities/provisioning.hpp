@@ -76,11 +76,13 @@ private:
                                    const blusys_wifi_prov_credentials_t *creds,
                                    void *user_ctx);
 
-    void post_event(provisioning_event ev);
+    void post_event(provisioning_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     provisioning_config cfg_;
     provisioning_status status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     blusys_wifi_prov_t *prov_ = nullptr;
     std::atomic<std::uint32_t> pending_flags_{kPendingNone};
     bool already_posted_ = false;
@@ -113,11 +115,13 @@ public:
     blusys_err_t request_reset();
 
 private:
-    void post_event(provisioning_event ev);
+    void post_event(provisioning_event ev)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev));
+    }
 
     provisioning_config cfg_;
     provisioning_status status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     bool first_poll_ = true;
 };
 

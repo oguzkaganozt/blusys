@@ -110,12 +110,4 @@ void telemetry_capability::flush()
     post_event(telemetry_event::buffer_flushed);
 }
 
-void telemetry_capability::post_event(telemetry_event ev)
-{
-    if (rt_ != nullptr) {
-        rt_->post_event(blusys::framework::make_integration_event(
-            static_cast<std::uint32_t>(ev)));
-    }
-}
-
 }  // namespace blusys::app

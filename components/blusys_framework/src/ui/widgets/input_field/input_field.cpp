@@ -138,9 +138,7 @@ lv_obj_t *input_field_create(lv_obj_t *parent, const input_field_config &config)
         lv_obj_add_event_cb(ta, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
     }
 
-    if (config.disabled) {
-        lv_obj_add_state(ta, LV_STATE_DISABLED);
-    }
+    detail::set_widget_disabled(ta, config.disabled);
 
     return ta;
 }

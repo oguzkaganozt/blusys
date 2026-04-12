@@ -78,11 +78,13 @@ private:
     static constexpr std::uint32_t kPendingCapabilityReady    = 1 << 4;
     static constexpr std::uint32_t kPendingDownloadStarted = 1 << 5;
 
-    void post_event(ota_event ev, std::uint32_t code = 0);
+    void post_event(ota_event ev, std::uint32_t code = 0)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev), code);
+    }
 
     ota_config cfg_;
     ota_status status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     std::atomic<std::uint32_t> pending_flags_{kPendingNone};
     std::uint8_t last_progress_posted_ = 255;
 };
@@ -114,11 +116,13 @@ public:
     void emit_download_progress(std::uint8_t pct);
 
 private:
-    void post_event(ota_event ev, std::uint32_t code = 0);
+    void post_event(ota_event ev, std::uint32_t code = 0)
+    {
+        post_integration_event(static_cast<std::uint32_t>(ev), code);
+    }
 
     ota_config cfg_;
     ota_status status_{};
-    blusys::framework::runtime *rt_ = nullptr;
     bool first_poll_ = true;
     std::uint8_t last_progress_posted_ = 255;
 };

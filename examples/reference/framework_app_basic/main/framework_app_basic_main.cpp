@@ -184,7 +184,6 @@ blusys::framework::runtime *g_runtime_ptr = &g_runtime;
 
 extern "C" void app_main(void)
 {
-    blusys::framework::init();
     lv_init();
 
     blusys::ui::set_theme(blusys::app::presets::expressive_dark());

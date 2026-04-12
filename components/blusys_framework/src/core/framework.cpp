@@ -1,25 +1,7 @@
-// Umbrella symbols for blusys::framework (see framework.hpp). The product path
-// is driven by blusys::app and core/runtime.hpp; these entry points stay minimal
-// so validation and widget demos can include framework.hpp without side effects.
+// Placeholder translation unit. Keeps the framework_sources list stable
+// (see components/blusys_framework/CMakeLists.txt and
+// cmake/blusys_host_bridge.cmake). The previous no-op `init()` and
+// `run_once()` entry points were removed; instantiate
+// `blusys::framework::runtime` directly.
 
 #include "blusys/framework/framework.hpp"
-
-#include "blusys/log.h"
-
-namespace blusys::framework {
-namespace {
-
-constexpr const char *kTag = "blusys_framework";
-
-}  // namespace
-
-void init()
-{
-    BLUSYS_LOGD(kTag, "framework init (no-op)");
-}
-
-void run_once()
-{
-}
-
-}  // namespace blusys::framework

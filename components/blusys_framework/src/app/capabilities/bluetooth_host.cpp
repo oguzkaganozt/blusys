@@ -42,14 +42,6 @@ void bluetooth_capability::stop()
     rt_ = nullptr;
 }
 
-void bluetooth_capability::post_event(bluetooth_event ev)
-{
-    if (rt_ != nullptr) {
-        rt_->post_event(blusys::framework::make_integration_event(
-            static_cast<std::uint32_t>(ev)));
-    }
-}
-
 }  // namespace blusys::app
 
 #endif  // !ESP_PLATFORM
