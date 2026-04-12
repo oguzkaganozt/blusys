@@ -52,6 +52,9 @@ jobs:
       - name: Framework UI CMake source lists
         run: python3 scripts/check-framework-ui-sources.py
 
+      - name: Host bridge spine vs framework CMakeLists
+        run: python3 scripts/check-host-bridge-spine.py
+
   # ── Tier 0: Inventory Validation ───────────────────────────────────────────
   inventory:
     name: "Inventory check"

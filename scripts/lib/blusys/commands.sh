@@ -485,6 +485,7 @@ cmd_lint() {
 
     bash "$BLUSYS_REPO_ROOT/scripts/lint-layering.sh"
     python3 "$BLUSYS_REPO_ROOT/scripts/check-framework-ui-sources.py"
+    python3 "$BLUSYS_REPO_ROOT/scripts/check-host-bridge-spine.py"
 }
 
 cmd_host_build() {
@@ -545,19 +546,10 @@ cmd_host_build() {
         exit 1
     fi
 
-    # SDL2 check — only needed for interactive apps. For product builds,
-    # detect the starter type from app/product_config.cmake; for the
-    # monorepo harness always check (it always needs SDL2).
-    local needs_sdl=true
-    if [[ "$is_product" == true ]]; then
-        local config_file
-        config_file="$(dirname "$host_dir")/app/product_config.cmake"
-        if [[ -f "$config_file" ]] && grep -q 'BLUSYS_STARTER_TYPE.*headless' "$config_file"; then
-            needs_sdl=false
-        fi
-    fi
-
-    if [[ "$needs_sdl" == true ]] && ! pkg-config --exists sdl2; then
+    # SDL2 is required by both interactive and headless host paths
+    # (headless uses SDL_GetTicks/SDL_Delay for timing — see
+    # scripts/host/src/app_headless_platform.cpp).
+    if ! pkg-config --exists sdl2; then
         printf 'SDL2 development headers not found.\n' >&2
         printf 'Install libsdl2-dev (Debian/Ubuntu), SDL2-devel (Fedora),\n' >&2
         printf 'sdl2 (Arch), or sdl2 (brew on macOS). See scripts/host/README.md.\n' >&2

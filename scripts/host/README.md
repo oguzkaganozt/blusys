@@ -7,6 +7,10 @@ Two executables are built:
 - **`hello_lvgl`** — minimal LVGL-only smoke test that proves the host toolchain + SDL2 display path works end-to-end.
 - **`widget_kit_demo`** — links the full `blusys_framework` surface (core spine + V1 widget kit + layout primitives) against the host LVGL and builds a screen with `blusys::ui::*` calls rather than raw LVGL. Exercises the same runtime → controller → route sink chain as the `framework_app_basic` example.
 
+## Product example host builds
+
+Example `host/CMakeLists.txt` files include `cmake/blusys_host_bridge.cmake` via `include("$ENV{BLUSYS_PATH}/cmake/blusys_host_bridge.cmake")` after exporting `BLUSYS_PATH` (the `blusys` CLI sets this for `blusys host-build`). The bridge sets the `BLUSYS_PATH` CMake variable from the environment when needed.
+
 ## Prerequisites
 
 The host build needs SDL2 development headers, `cmake >= 3.16`, `pkg-config`, and a C/C++ toolchain.
