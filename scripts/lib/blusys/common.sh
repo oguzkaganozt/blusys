@@ -1,0 +1,363 @@
+# Sourced by repo-root `blusys` — shared utilities (project resolution, IDF, ports).
+
+blusys_resolve_project_dir() {
+    local project_arg="$1"
+    local candidate
+
+    if [[ "$project_arg" = /* ]]; then
+        candidate="$project_arg"
+    elif [[ "$project_arg" = "." ]]; then
+        candidate="$(pwd)"
+    else
+        candidate="$(pwd)/$project_arg"
+    fi
+
+    if [[ ! -d "$candidate" ]]; then
+        printf 'error: project directory not found: %s\n' "$candidate" >&2
+        printf '       create a project with: blusys create\n' >&2
+        return 1
+    fi
+
+    if [[ ! -f "$candidate/CMakeLists.txt" ]]; then
+        printf 'error: no CMakeLists.txt in %s\n' "$candidate" >&2
+        printf '       create a project with: blusys create\n' >&2
+        return 1
+    fi
+
+    printf '%s\n' "$(cd "$candidate" && pwd)"
+}
+
+blusys_detect_target() {
+    local project_dir="$1"
+    local requested_target="${2:-}"
+
+    if [[ -n "$requested_target" ]]; then
+        case "$requested_target" in
+            esp32|esp32c3|esp32s3)
+                printf '%s\n' "$requested_target"
+                return 0
+                ;;
+            *)
+                printf 'error: unsupported target: %s\n' "$requested_target" >&2
+                return 1
+                ;;
+        esac
+    fi
+
+    if [[ -f "$project_dir/build-esp32c3/sdkconfig" && ! -f "$project_dir/build-esp32s3/sdkconfig" ]]; then
+        printf 'esp32c3\n'
+        return 0
+    fi
+
+    if [[ -f "$project_dir/build-esp32s3/sdkconfig" && ! -f "$project_dir/build-esp32c3/sdkconfig" ]]; then
+        printf 'esp32s3\n'
+        return 0
+    fi
+
+    printf 'info: no target specified; defaulting to %s\n' "$BLUSYS_DEFAULT_TARGET" >&2
+    printf '%s\n' "$BLUSYS_DEFAULT_TARGET"
+}
+
+blusys_sdkconfig_args() {
+    local project_dir="$1"
+    local target="$2"
+    local build_dir="$project_dir/build-$target"
+    local common_defaults="$project_dir/sdkconfig.defaults"
+    local target_defaults="$project_dir/sdkconfig.$target"
+
+    local sdkconfig_defaults=""
+    if [[ -f "$common_defaults" ]]; then
+        sdkconfig_defaults="$common_defaults"
+    fi
+    if [[ -f "$target_defaults" ]]; then
+        if [[ -n "$sdkconfig_defaults" ]]; then
+            sdkconfig_defaults="${sdkconfig_defaults};${target_defaults}"
+        else
+            sdkconfig_defaults="$target_defaults"
+        fi
+    fi
+
+    if [[ -n "$sdkconfig_defaults" ]]; then
+        printf '%s\n' "-DSDKCONFIG_DEFAULTS=$sdkconfig_defaults"
+    fi
+
+    printf '%s\n' "-DSDKCONFIG=$build_dir/sdkconfig"
+}
+
+blusys_find_idf_path() {
+    # Priority 1: IDF_PATH env var
+    if [[ -n "${IDF_PATH:-}" && -f "$IDF_PATH/export.sh" ]]; then
+        printf '%s\n' "$IDF_PATH"
+        return 0
+    fi
+
+    # Priority 2: idf.py already in PATH
+    if command -v idf.py &>/dev/null; then
+        local idf_py_path
+        idf_py_path="$(command -v idf.py)"
+        local candidate
+        candidate="$(cd "$(dirname "$idf_py_path")/.." && pwd)"
+        if [[ -f "$candidate/export.sh" ]]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    fi
+
+    # Priority 3: Scan ~/.espressif/*/esp-idf/
+    local latest_version="" latest_path=""
+    for candidate_dir in "$HOME"/.espressif/*/esp-idf; do
+        [[ -d "$candidate_dir" && -f "$candidate_dir/export.sh" ]] || continue
+        local version_dir
+        version_dir="$(basename "$(dirname "$candidate_dir")")"
+        if [[ -z "$latest_version" ]] || [[ "$version_dir" > "$latest_version" ]]; then
+            latest_version="$version_dir"
+            latest_path="$candidate_dir"
+        fi
+    done
+
+    if [[ -n "$latest_path" ]]; then
+        printf 'info: auto-detected ESP-IDF at %s\n' "$latest_path" >&2
+        printf '%s\n' "$latest_path"
+        return 0
+    fi
+
+    # Priority 4: Failure with install instructions
+    printf 'error: ESP-IDF not found.\n' >&2
+    printf '\n' >&2
+    printf 'Install ESP-IDF v5.5+ and try one of:\n' >&2
+    printf '  1. Set IDF_PATH:    export IDF_PATH=/path/to/esp-idf\n' >&2
+    printf '  2. Source export.sh: source /path/to/esp-idf/export.sh\n' >&2
+    printf '  3. Standard install: https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/\n' >&2
+    printf '     (installs to ~/.espressif/ which blusys auto-detects)\n' >&2
+    return 1
+}
+
+blusys_find_qemu() {
+    local dir
+
+    # Helper: return the directory that contains the QEMU binaries,
+    # checking both the directory itself and its bin/ subdirectory.
+    _qemu_bin_dir() {
+        local base="$1"
+        for dir in "$base/bin" "$base"; do
+            if [[ -x "$dir/qemu-system-xtensa" || -x "$dir/qemu-system-riscv32" ]]; then
+                printf '%s\n' "$dir"
+                return 0
+            fi
+        done
+        return 1
+    }
+
+    # Priority 1: QEMU_PATH env var
+    if [[ -n "${QEMU_PATH:-}" ]]; then
+        if _qemu_bin_dir "$QEMU_PATH"; then
+            return 0
+        fi
+    fi
+
+    # Priority 2: qemu-system-xtensa already in PATH
+    if command -v qemu-system-xtensa &>/dev/null; then
+        printf '%s\n' "$(dirname "$(command -v qemu-system-xtensa)")"
+        return 0
+    fi
+
+    # Priority 3: Scan ~/.espressif/tools/qemu-*/
+    local latest_tag="" latest_path=""
+    for candidate_dir in "$HOME"/.espressif/tools/qemu-*/; do
+        [[ -d "$candidate_dir" ]] || continue
+        local found
+        found="$(_qemu_bin_dir "${candidate_dir%/}")" || continue
+        local tag
+        tag="$(basename "${candidate_dir%/}")"
+        if [[ -z "$latest_tag" ]] || [[ "$tag" > "$latest_tag" ]]; then
+            latest_tag="$tag"
+            latest_path="$found"
+        fi
+    done
+
+    if [[ -n "$latest_path" ]]; then
+        printf '%s\n' "$latest_path"
+        return 0
+    fi
+
+    printf 'error: Espressif QEMU not found.\n' >&2
+    printf 'Install it with: blusys install-qemu\n' >&2
+    return 1
+}
+
+blusys_check_idf_version() {
+    local idf_path="$1"
+    local version_str=""
+
+    if [[ -n "${IDF_VERSION:-}" ]]; then
+        version_str="$IDF_VERSION"
+    elif [[ -f "$idf_path/version.txt" ]]; then
+        version_str="$(cat "$idf_path/version.txt")"
+    elif [[ -f "$idf_path/tools/cmake/version.cmake" ]]; then
+        local major minor
+        major="$(grep 'set(IDF_VERSION_MAJOR' "$idf_path/tools/cmake/version.cmake" | grep -o '[0-9]\+')"
+        minor="$(grep 'set(IDF_VERSION_MINOR' "$idf_path/tools/cmake/version.cmake" | grep -o '[0-9]\+')"
+        if [[ -n "$major" && -n "$minor" ]]; then
+            version_str="${major}.${minor}"
+        fi
+    fi
+
+    if [[ -z "$version_str" ]]; then
+        return 0
+    fi
+
+    local major minor
+    major="$(printf '%s' "$version_str" | sed 's/^v//' | cut -d. -f1)"
+    minor="$(printf '%s' "$version_str" | sed 's/^v//' | cut -d. -f2)"
+
+    if [[ "$major" -lt "$BLUSYS_MIN_IDF_MAJOR" ]] || \
+       { [[ "$major" -eq "$BLUSYS_MIN_IDF_MAJOR" ]] && [[ "$minor" -lt "$BLUSYS_MIN_IDF_MINOR" ]]; }; then
+        printf 'warning: ESP-IDF %s detected, but blusys requires v%d.%d+\n' \
+            "$version_str" "$BLUSYS_MIN_IDF_MAJOR" "$BLUSYS_MIN_IDF_MINOR" >&2
+    fi
+}
+
+blusys_setup_idf_env() {
+    # If idf.py is already available, just check version
+    if command -v idf.py &>/dev/null; then
+        local detected_idf_path
+        detected_idf_path="$(blusys_find_idf_path)" || true
+        [[ -n "$detected_idf_path" ]] && blusys_check_idf_version "$detected_idf_path"
+        return 0
+    fi
+
+    local _idf_path
+    _idf_path="$(blusys_find_idf_path)" || return 1
+
+    # shellcheck source=/dev/null
+    source "$_idf_path/export.sh"
+    # export.sh does "unset idf_path" — use a private name to avoid the clash
+
+    blusys_check_idf_version "$_idf_path"
+}
+
+blusys_set_target_if_needed() {
+    local project_dir="$1"
+    local build_dir="$2"
+    local target="$3"
+    shift 3
+    local sdkconfig_args=("$@")
+
+    if [[ ! -f "$build_dir/CMakeCache.txt" ]]; then
+        idf.py -C "$project_dir" -B "$build_dir" "${sdkconfig_args[@]}" set-target "$target"
+    fi
+}
+
+blusys_detect_port() {
+    local requested_port="${1:-}"
+    local candidates=()
+
+    if [[ -n "$requested_port" ]]; then
+        if [[ ! -e "$requested_port" ]]; then
+            printf 'error: port not found: %s\n' "$requested_port" >&2
+            return 1
+        fi
+        printf '%s\n' "$requested_port"
+        return 0
+    fi
+
+    for dev in /dev/ttyUSB* /dev/ttyACM*; do
+        [[ -e "$dev" ]] && candidates+=("$dev")
+    done
+
+    if [[ ${#candidates[@]} -eq 0 ]]; then
+        printf 'error: no USB serial device found; connect a device or pass a port explicitly\n' >&2
+        return 1
+    fi
+
+    if [[ ${#candidates[@]} -gt 1 ]]; then
+        printf 'error: multiple USB serial devices found; specify one:\n' >&2
+        for dev in "${candidates[@]}"; do
+            printf '  %s\n' "$dev" >&2
+        done
+        return 1
+    fi
+
+    printf 'info: auto-detected port: %s\n' "${candidates[0]}" >&2
+    printf '%s\n' "${candidates[0]}"
+}
+
+# ── Shared Helpers ───────────────────────────────────────────────────────────
+
+blusys_is_target() {
+    case "${1:-}" in
+        esp32|esp32c3|esp32s3) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Parse args for commands that need a port (flash, monitor, run, erase).
+# All args are optional — defaults to cwd, auto port, auto target.
+# Sets globals: PROJECT_DIR, PORT, TARGET, BUILD_DIR, SDKCONFIG_ARGS
+blusys_setup_with_port() {
+    local project="" port_arg="" target=""
+
+    case $# in
+        0)  project="$BLUSYS_DEFAULT_PROJECT" ;;
+        1)
+            if [[ "$1" == /dev/* ]]; then
+                project="$BLUSYS_DEFAULT_PROJECT"; port_arg="$1"
+            elif blusys_is_target "$1"; then
+                project="$BLUSYS_DEFAULT_PROJECT"; target="$1"
+            else
+                project="$1"
+            fi
+            ;;
+        2)
+            if [[ "$1" == /dev/* ]]; then
+                project="$BLUSYS_DEFAULT_PROJECT"; port_arg="$1"; target="$2"
+            elif [[ "$2" == /dev/* ]]; then
+                project="$1"; port_arg="$2"
+            else
+                project="$1"; target="$2"
+            fi
+            ;;
+        3)  project="$1"; port_arg="$2"; target="$3" ;;
+    esac
+
+    PROJECT_DIR="$(blusys_resolve_project_dir "$project")"
+    PORT="$(blusys_detect_port "$port_arg")"
+    TARGET="$(blusys_detect_target "$PROJECT_DIR" "$target")"
+    BUILD_DIR="$PROJECT_DIR/build-$TARGET"
+    mapfile -t SDKCONFIG_ARGS < <(blusys_sdkconfig_args "$PROJECT_DIR" "$TARGET")
+}
+
+# Parse args for commands that don't need a port (build, config, size, clean).
+# All args are optional — defaults to cwd, auto target.
+# Sets globals: PROJECT_DIR, TARGET, BUILD_DIR, SDKCONFIG_ARGS
+blusys_setup_no_port() {
+    local project="" target=""
+
+    case $# in
+        0)  project="$BLUSYS_DEFAULT_PROJECT" ;;
+        1)
+            if blusys_is_target "$1"; then
+                project="$BLUSYS_DEFAULT_PROJECT"; target="$1"
+            else
+                project="$1"
+            fi
+            ;;
+        2)  project="$1"; target="$2" ;;
+    esac
+
+    PROJECT_DIR="$(blusys_resolve_project_dir "$project")"
+    TARGET="$(blusys_detect_target "$PROJECT_DIR" "$target")"
+    BUILD_DIR="$PROJECT_DIR/build-$TARGET"
+    mapfile -t SDKCONFIG_ARGS < <(blusys_sdkconfig_args "$PROJECT_DIR" "$TARGET")
+}
+
+blusys_print_info() {
+    printf 'Project:   %s\n' "$PROJECT_DIR"
+    printf 'Target:    %s\n' "$TARGET"
+    printf 'Build dir: %s\n' "$BUILD_DIR"
+}
+
+blusys_print_info_port() {
+    blusys_print_info
+    printf 'Port:      %s\n' "$PORT"
+}

@@ -100,9 +100,12 @@ target_link_libraries(lvgl PUBLIC PkgConfig::SDL2)
 
 set(BLUSYS_COMPONENT_DIR      "${BLUSYS_REPO_ROOT}/components/blusys")
 set(BLUSYS_FRAMEWORK_DIR      "${BLUSYS_REPO_ROOT}/components/blusys_framework")
-# Same widget+primitive bundle as per-example host builds (see cmake/blusys_framework_host_widgetkit.cmake).
-set(BLUSYS_FW "${BLUSYS_FRAMEWORK_DIR}")
-include("${BLUSYS_REPO_ROOT}/cmake/blusys_framework_host_widgetkit.cmake")
+include("${BLUSYS_REPO_ROOT}/cmake/blusys_framework_ui_sources.cmake")
+
+set(_blusys_fw_ui_shared_abs "")
+foreach(_rel IN LISTS BLUSYS_FRAMEWORK_UI_SRC_SHARED)
+    list(APPEND _blusys_fw_ui_shared_abs "${BLUSYS_FRAMEWORK_DIR}/${_rel}")
+endforeach()
 
 set(blusys_framework_host_sources
     # Minimal HAL dependency: the framework's public headers use
@@ -130,36 +133,9 @@ set(blusys_framework_host_sources
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/diagnostics_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/provisioning_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/telemetry.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/theme_presets.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/action_widgets.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/bindings.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/overlay_manager.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/page.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/screen_registry.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/screen_router.cpp
 
-    # UI surface — LVGL-backed. Always on in the host harness
-    # (device builds gate this behind BLUSYS_BUILD_UI).
-    ${BLUSYS_FRAMEWORK_HOST_WIDGETKIT}
-    ${BLUSYS_FRAMEWORK_DIR}/src/ui/widgets/knob/knob.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/shell.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/touch_bridge.cpp
-
-    # Shared operational flows
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/boot.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/loading.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/error.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/status.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/settings.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/ota_flow.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/provisioning_flow.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/connectivity_flow.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/flows/diagnostics_flow.cpp
-
-    # Stock product screens
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/about_screen.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/status_screen.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/screens/diagnostics_screen.cpp
+    # UI surface — LVGL-backed (single-sourced with components/blusys_framework/CMakeLists.txt).
+    ${_blusys_fw_ui_shared_abs}
 )
 
 add_library(blusys_framework_host STATIC ${blusys_framework_host_sources})

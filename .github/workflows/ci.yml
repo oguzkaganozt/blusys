@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "components/**"
+      - "cmake/**"
       - "examples/**"
       - "blusys"
       - "templates/**"
@@ -16,6 +17,7 @@ on:
   pull_request:
     paths:
       - "components/**"
+      - "cmake/**"
       - "examples/**"
       - "blusys"
       - "templates/**"
@@ -46,6 +48,9 @@ jobs:
       - name: Run blusys layering lint
         shell: bash
         run: bash scripts/lint-layering.sh
+
+      - name: Framework UI CMake source lists
+        run: python3 scripts/check-framework-ui-sources.py
 
   # ── Tier 0: Inventory Validation ───────────────────────────────────────────
   inventory:

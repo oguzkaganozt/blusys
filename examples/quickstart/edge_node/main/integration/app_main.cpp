@@ -12,8 +12,8 @@
 #include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
+#include "blusys/app/build_profile.hpp"
 #include "blusys/log.h"
-#include "blusys/version.h"
 
 #include <cstdio>
 #include <cstdint>
@@ -43,17 +43,6 @@ const char *edge_surface_label_for_build()
     return "SSD1306 128x64";
 #else
     return "headless";
-#endif
-}
-
-const char *edge_build_version_for_build()
-{
-#ifdef PROJECT_VER
-    return PROJECT_VER;
-#elif defined(BLUSYS_APP_BUILD_VERSION)
-    return BLUSYS_APP_BUILD_VERSION;
-#else
-    return BLUSYS_VERSION_STRING;
 #endif
 }
 #endif
@@ -95,7 +84,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len,
         "\"archetype\":\"edge_node\","
         "\"firmware\":\"%s\","
         "\"surface\":\"%s\"}",
-        edge_build_version_for_build(),
+        blusys::app::build_profile::version_string(),
         edge_surface_label_for_build());
     if (written < 0 || static_cast<size_t>(written) >= buf_len) {
         return BLUSYS_ERR_NO_MEM;

@@ -1,9 +1,7 @@
 #include "blusys/framework/ui/widgets/toggle/toggle.hpp"
 
-#include <cassert>
-
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 // Camp 2 implementation: stock `lv_switch` wrapped with theme styling and
 // a fixed-capacity slot pool for callback storage. The pattern mirrors
@@ -34,26 +32,12 @@ toggle_slot g_toggle_slots[BLUSYS_UI_TOGGLE_POOL_SIZE] = {};
 
 toggle_slot *acquire_slot()
 {
-    for (auto &s : g_toggle_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_TOGGLE_POOL_SIZE",
-                BLUSYS_UI_TOGGLE_POOL_SIZE);
-    assert(false && "bu_toggle slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_toggle_slots, kTag, "BLUSYS_UI_TOGGLE_POOL_SIZE");
 }
 
 void release_slot(toggle_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_change = nullptr;
-        slot->user_data = nullptr;
-        slot->in_use    = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 void apply_theme(lv_obj_t *toggle)

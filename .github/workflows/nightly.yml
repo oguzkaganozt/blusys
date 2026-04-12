@@ -26,6 +26,9 @@ jobs:
         shell: bash
         run: bash scripts/lint-layering.sh
 
+      - name: Framework UI CMake source lists
+        run: python3 scripts/check-framework-ui-sources.py
+
   # ── Tier 1: Build All Examples ─────────────────────────────────────────────
   build-all:
     name: "Build all (${{ matrix.target }})"

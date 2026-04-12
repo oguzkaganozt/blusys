@@ -1,9 +1,7 @@
 #include "blusys/framework/ui/widgets/slider/slider.hpp"
 
-#include <cassert>
-
+#include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/theme.hpp"
-#include "blusys/log.h"
 
 // Camp 2 implementation: stock `lv_slider` wrapped with theme styling and
 // a fixed-capacity slot pool for callback storage. The pattern mirrors
@@ -36,26 +34,12 @@ slider_slot g_slider_slots[BLUSYS_UI_SLIDER_POOL_SIZE] = {};
 
 slider_slot *acquire_slot()
 {
-    for (auto &s : g_slider_slots) {
-        if (!s.in_use) {
-            s.in_use = true;
-            return &s;
-        }
-    }
-    BLUSYS_LOGE(kTag,
-                "slot pool exhausted (size=%d) — raise BLUSYS_UI_SLIDER_POOL_SIZE",
-                BLUSYS_UI_SLIDER_POOL_SIZE);
-    assert(false && "bu_slider slot pool exhausted");
-    return nullptr;
+    return detail::acquire_ui_slot(g_slider_slots, kTag, "BLUSYS_UI_SLIDER_POOL_SIZE");
 }
 
 void release_slot(slider_slot *slot)
 {
-    if (slot != nullptr) {
-        slot->on_change = nullptr;
-        slot->user_data = nullptr;
-        slot->in_use    = false;
-    }
+    detail::release_ui_slot(slot);
 }
 
 void apply_theme(lv_obj_t *slider)
