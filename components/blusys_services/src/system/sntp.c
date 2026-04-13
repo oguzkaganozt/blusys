@@ -13,6 +13,7 @@
 #include "esp_sntp.h"
 
 #include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_global_lock.h"
 #include "blusys/internal/blusys_lock.h"
 #include "blusys/internal/blusys_timeout.h"
 
@@ -21,32 +22,9 @@ struct blusys_sntp {
     void                   *user_ctx;
 };
 
-static portMUX_TYPE   s_sntp_init_lock = portMUX_INITIALIZER_UNLOCKED;
-static blusys_lock_t  s_sntp_global_lock;
-static bool           s_sntp_global_lock_inited;
 static blusys_sntp_t *s_active_handle;
 
-static blusys_err_t ensure_global_lock(void)
-{
-    if (s_sntp_global_lock_inited) {
-        return BLUSYS_OK;
-    }
-    blusys_lock_t new_lock;
-    blusys_err_t err = blusys_lock_init(&new_lock);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-    portENTER_CRITICAL(&s_sntp_init_lock);
-    if (!s_sntp_global_lock_inited) {
-        s_sntp_global_lock = new_lock;
-        s_sntp_global_lock_inited = true;
-        portEXIT_CRITICAL(&s_sntp_init_lock);
-    } else {
-        portEXIT_CRITICAL(&s_sntp_init_lock);
-        blusys_lock_deinit(&new_lock);
-    }
-    return BLUSYS_OK;
-}
+BLUSYS_DEFINE_GLOBAL_LOCK(sntp);
 
 static void sntp_sync_cb(struct timeval *tv)
 {

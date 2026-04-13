@@ -21,25 +21,14 @@
 namespace blusys::ui {
 namespace {
 
-constexpr const char *kTag = "ui.toggle";
-
 struct toggle_slot {
     toggle_cb_t on_change;
     void       *user_data;
     bool        in_use;
 };
 
-toggle_slot g_toggle_slots[BLUSYS_UI_TOGGLE_POOL_SIZE] = {};
-
-toggle_slot *acquire_slot()
-{
-    return detail::acquire_ui_slot(g_toggle_slots, kTag, "BLUSYS_UI_TOGGLE_POOL_SIZE");
-}
-
-void release_slot(toggle_slot *slot)
-{
-    detail::release_ui_slot(slot);
-}
+detail::slot_pool<toggle_slot, BLUSYS_UI_TOGGLE_POOL_SIZE> g_toggle_pool{
+    "ui.toggle", "BLUSYS_UI_TOGGLE_POOL_SIZE"};
 
 void apply_theme(lv_obj_t *toggle)
 {
@@ -78,20 +67,13 @@ void on_lvgl_value_changed(lv_event_t *e)
     }
 }
 
-void on_lvgl_deleted(lv_event_t *e)
-{
-    auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *slot = static_cast<toggle_slot *>(lv_obj_get_user_data(obj));
-    release_slot(slot);
-}
-
 }  // namespace
 
 lv_obj_t *toggle_create(lv_obj_t *parent, const toggle_config &config)
 {
     toggle_slot *slot = nullptr;
     if (config.on_change != nullptr) {
-        slot = acquire_slot();
+        slot = g_toggle_pool.acquire();
         if (slot == nullptr) {
             return nullptr;
         }
@@ -109,7 +91,8 @@ lv_obj_t *toggle_create(lv_obj_t *parent, const toggle_config &config)
         slot->user_data = config.user_data;
         lv_obj_set_user_data(toggle, slot);
         lv_obj_add_event_cb(toggle, on_lvgl_value_changed, LV_EVENT_VALUE_CHANGED, nullptr);
-        lv_obj_add_event_cb(toggle, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
+        lv_obj_add_event_cb(toggle, detail::release_slot_on_delete<toggle_slot>,
+                            LV_EVENT_DELETE, nullptr);
     }
 
     detail::set_widget_disabled(toggle, config.disabled);

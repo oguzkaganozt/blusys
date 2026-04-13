@@ -1,6 +1,7 @@
 #include "blusys/framework/ui/widgets/modal/modal.hpp"
 
 #include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
 
 // Composition implementation: a backdrop `lv_obj` (full screen, dim) with
@@ -21,25 +22,14 @@
 namespace blusys::ui {
 namespace {
 
-constexpr const char *kTag = "ui.modal";
-
 struct modal_slot {
     press_cb_t on_dismiss;
     void      *user_data;
     bool       in_use;
 };
 
-modal_slot g_modal_slots[BLUSYS_UI_MODAL_POOL_SIZE] = {};
-
-modal_slot *acquire_slot()
-{
-    return detail::acquire_ui_slot(g_modal_slots, kTag, "BLUSYS_UI_MODAL_POOL_SIZE");
-}
-
-void release_slot(modal_slot *slot)
-{
-    detail::release_ui_slot(slot);
-}
+detail::slot_pool<modal_slot, BLUSYS_UI_MODAL_POOL_SIZE> g_modal_pool{
+    "ui.modal", "BLUSYS_UI_MODAL_POOL_SIZE"};
 
 void style_backdrop(lv_obj_t *backdrop)
 {
@@ -97,20 +87,13 @@ void on_lvgl_clicked(lv_event_t *e)
     }
 }
 
-void on_lvgl_deleted(lv_event_t *e)
-{
-    auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *slot = static_cast<modal_slot *>(lv_obj_get_user_data(obj));
-    release_slot(slot);
-}
-
 }  // namespace
 
 lv_obj_t *modal_create(lv_obj_t *parent, const modal_config &config)
 {
     modal_slot *slot = nullptr;
     if (config.on_dismiss != nullptr) {
-        slot = acquire_slot();
+        slot = g_modal_pool.acquire();
         if (slot == nullptr) {
             return nullptr;
         }
@@ -145,7 +128,8 @@ lv_obj_t *modal_create(lv_obj_t *parent, const modal_config &config)
         lv_obj_set_user_data(backdrop, slot);
         lv_obj_add_flag(backdrop, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(backdrop, on_lvgl_clicked, LV_EVENT_CLICKED, nullptr);
-        lv_obj_add_event_cb(backdrop, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
+        lv_obj_add_event_cb(backdrop, detail::release_slot_on_delete<modal_slot>,
+                            LV_EVENT_DELETE, nullptr);
     }
 
     // Created hidden by convention; product calls modal_show when ready.

@@ -33,8 +33,6 @@
 namespace blusys::ui {
 namespace {
 
-constexpr const char *kTag = "ui.overlay";
-
 struct overlay_slot {
     press_cb_t  on_hidden;
     void       *user_data;
@@ -44,17 +42,8 @@ struct overlay_slot {
     bool        in_use;
 };
 
-overlay_slot g_overlay_slots[BLUSYS_UI_OVERLAY_POOL_SIZE] = {};
-
-overlay_slot *acquire_slot()
-{
-    return detail::acquire_ui_slot(g_overlay_slots, kTag, "BLUSYS_UI_OVERLAY_POOL_SIZE");
-}
-
-void release_slot(overlay_slot *slot)
-{
-    detail::release_ui_slot(slot);
-}
+detail::slot_pool<overlay_slot, BLUSYS_UI_OVERLAY_POOL_SIZE> g_overlay_pool{
+    "ui.overlay", "BLUSYS_UI_OVERLAY_POOL_SIZE"};
 
 void cancel_timer(overlay_slot *slot)
 {
@@ -106,14 +95,14 @@ void on_lvgl_deleted(lv_event_t *e)
     auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
     auto *slot = static_cast<overlay_slot *>(lv_obj_get_user_data(obj));
     cancel_timer(slot);
-    release_slot(slot);
+    g_overlay_pool.release(slot);
 }
 
 }  // namespace
 
 lv_obj_t *overlay_create(lv_obj_t *parent, const overlay_config &config)
 {
-    overlay_slot *slot = acquire_slot();
+    overlay_slot *slot = g_overlay_pool.acquire();
     if (slot == nullptr) {
         return nullptr;
     }

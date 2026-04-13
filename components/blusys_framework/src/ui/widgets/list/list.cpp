@@ -22,8 +22,6 @@
 namespace blusys::ui {
 namespace {
 
-constexpr const char *kTag = "ui.list";
-
 struct list_slot {
     select_cb_t  on_select;
     void        *user_data;
@@ -31,17 +29,8 @@ struct list_slot {
     bool         in_use;
 };
 
-list_slot g_list_slots[BLUSYS_UI_LIST_POOL_SIZE] = {};
-
-list_slot *acquire_slot()
-{
-    return detail::acquire_ui_slot(g_list_slots, kTag, "BLUSYS_UI_LIST_POOL_SIZE");
-}
-
-void release_slot(list_slot *slot)
-{
-    detail::release_ui_slot(slot);
-}
+detail::slot_pool<list_slot, BLUSYS_UI_LIST_POOL_SIZE> g_list_pool{
+    "ui.list", "BLUSYS_UI_LIST_POOL_SIZE"};
 
 void highlight_row(lv_obj_t *list, int32_t index)
 {
@@ -72,13 +61,6 @@ void on_row_clicked(lv_event_t *e)
     slot->selected = index;
     highlight_row(list, index);
     slot->on_select(index, slot->user_data);
-}
-
-void on_list_deleted(lv_event_t *e)
-{
-    auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *slot = static_cast<list_slot *>(lv_obj_get_user_data(obj));
-    release_slot(slot);
 }
 
 void build_items(lv_obj_t *list, const list_item *items, int32_t count,
@@ -169,7 +151,7 @@ lv_obj_t *list_create(lv_obj_t *parent, const list_config &config)
 {
     list_slot *slot = nullptr;
     if (config.on_select != nullptr) {
-        slot = acquire_slot();
+        slot = g_list_pool.acquire();
         if (slot == nullptr) {
             return nullptr;
         }
@@ -195,7 +177,8 @@ lv_obj_t *list_create(lv_obj_t *parent, const list_config &config)
 
     if (slot != nullptr) {
         lv_obj_set_user_data(list, slot);
-        lv_obj_add_event_cb(list, on_list_deleted, LV_EVENT_DELETE, nullptr);
+        lv_obj_add_event_cb(list, detail::release_slot_on_delete<list_slot>,
+                            LV_EVENT_DELETE, nullptr);
     }
 
     if (config.items != nullptr && config.item_count > 0) {

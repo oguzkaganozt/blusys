@@ -4,6 +4,7 @@
 
 #include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
 #include "blusys/framework/ui/detail/flex_layout.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
 
 // Display-only arc gauge. No callbacks; fixed-capacity data pool via fixed_slot_pool.
@@ -17,8 +18,6 @@
 
 namespace blusys::ui {
 namespace {
-
-constexpr const char *kTag = "ui.gauge";
 
 #ifndef BLUSYS_UI_GAUGE_POOL_SIZE
 #define BLUSYS_UI_GAUGE_POOL_SIZE 16
@@ -64,26 +63,9 @@ void update_label(gauge_data *data, int32_t value)
     lv_label_set_text(data->label, buf);
 }
 
-// We store gauge_data in a small static pool to avoid dynamic allocation.
-// Gauges are display-only and typically few per screen.
-gauge_data g_gauge_data[BLUSYS_UI_GAUGE_POOL_SIZE] = {};
-
-gauge_data *acquire_data()
-{
-    return detail::acquire_ui_slot(g_gauge_data, kTag, "BLUSYS_UI_GAUGE_POOL_SIZE");
-}
-
-void release_data(gauge_data *d)
-{
-    detail::release_ui_slot(d);
-}
-
-void on_gauge_deleted(lv_event_t *e)
-{
-    auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *d   = static_cast<gauge_data *>(lv_obj_get_user_data(obj));
-    release_data(d);
-}
+// Display-only: gauges are typically few per screen, kept in a fixed pool.
+detail::slot_pool<gauge_data, BLUSYS_UI_GAUGE_POOL_SIZE> g_gauge_pool{
+    "ui.gauge", "BLUSYS_UI_GAUGE_POOL_SIZE"};
 
 // Scale the arc to a square that fits inside the container. Flex layouts often
 // assign a smaller height than the arc's default size; without this the arc
@@ -140,7 +122,7 @@ void on_gauge_container_size(lv_event_t *e)
 
 lv_obj_t *gauge_create(lv_obj_t *parent, const gauge_config &config)
 {
-    gauge_data *data = acquire_data();
+    gauge_data *data = g_gauge_pool.acquire();
     if (data == nullptr) {
         return nullptr;
     }
@@ -155,7 +137,8 @@ lv_obj_t *gauge_create(lv_obj_t *parent, const gauge_config &config)
     lv_obj_set_size(container, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_remove_flag(container, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_user_data(container, data);
-    lv_obj_add_event_cb(container, on_gauge_deleted, LV_EVENT_DELETE, nullptr);
+    lv_obj_add_event_cb(container, detail::release_slot_on_delete<gauge_data>,
+                        LV_EVENT_DELETE, nullptr);
     lv_obj_add_event_cb(container, on_gauge_container_size, LV_EVENT_SIZE_CHANGED, nullptr);
 
     // Arc.

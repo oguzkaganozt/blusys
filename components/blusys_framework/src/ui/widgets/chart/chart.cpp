@@ -1,6 +1,7 @@
 #include "blusys/framework/ui/widgets/chart/chart.hpp"
 
 #include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
 
 // Display-only chart wrapping `lv_chart`. No callbacks; fixed-capacity data pool.
@@ -12,7 +13,6 @@
 namespace blusys::ui {
 namespace {
 
-constexpr const char *kTag = "ui.chart";
 static constexpr int kMaxSeries = 4;
 
 #ifndef BLUSYS_UI_CHART_POOL_SIZE
@@ -26,30 +26,14 @@ struct chart_data {
     bool               in_use;
 };
 
-chart_data g_chart_data[BLUSYS_UI_CHART_POOL_SIZE] = {};
-
-chart_data *acquire_data()
-{
-    return detail::acquire_ui_slot(g_chart_data, kTag, "BLUSYS_UI_CHART_POOL_SIZE");
-}
-
-void release_data(chart_data *d)
-{
-    detail::release_ui_slot(d);
-}
-
-void on_chart_deleted(lv_event_t *e)
-{
-    auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *d   = static_cast<chart_data *>(lv_obj_get_user_data(obj));
-    release_data(d);
-}
+detail::slot_pool<chart_data, BLUSYS_UI_CHART_POOL_SIZE> g_chart_pool{
+    "ui.chart", "BLUSYS_UI_CHART_POOL_SIZE"};
 
 }  // namespace
 
 lv_obj_t *chart_create(lv_obj_t *parent, const chart_config &config)
 {
-    chart_data *data = acquire_data();
+    chart_data *data = g_chart_pool.acquire();
     if (data == nullptr) {
         return nullptr;
     }
@@ -85,7 +69,8 @@ lv_obj_t *chart_create(lv_obj_t *parent, const chart_config &config)
     lv_obj_set_height(chart, LV_PCT(100));
 
     lv_obj_set_user_data(chart, data);
-    lv_obj_add_event_cb(chart, on_chart_deleted, LV_EVENT_DELETE, nullptr);
+    lv_obj_add_event_cb(chart, detail::release_slot_on_delete<chart_data>,
+                        LV_EVENT_DELETE, nullptr);
 
     return chart;
 }

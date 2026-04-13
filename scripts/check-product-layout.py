@@ -19,35 +19,12 @@ import re
 import sys
 from pathlib import Path
 
-try:
-    import yaml
-except ImportError:
-    print("ERROR: PyYAML is required. Install with: pip install pyyaml")
-    sys.exit(2)
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
-CATEGORIES = {"quickstart", "reference", "validation"}
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from blusys.inventory_lib import find_example_dir, load_inventory  # noqa: E402
 
 PRODUCT_INCLUDE = re.compile(r'#\s*include\s*[<"]blusys/app/app\.hpp[>"]')
 PRODUCT_ENTRY = re.compile(r"\bBLUSYS_APP_MAIN_")
 MAIN_ROOT_SOURCES = re.compile(r"\.(c|cpp|cc|cxx)$", re.IGNORECASE)
-
-
-def load_inventory():
-    path = REPO_ROOT / "inventory.yml"
-    with open(path, encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
-
-def find_example_dir(name: str) -> Path | None:
-    for cat in CATEGORIES:
-        d = REPO_ROOT / "examples" / cat / name
-        if d.is_dir():
-            return d
-    d = REPO_ROOT / "examples" / name
-    if d.is_dir():
-        return d
-    return None
 
 
 def iter_main_sources(main_dir: Path):

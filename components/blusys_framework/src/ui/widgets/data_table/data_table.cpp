@@ -1,6 +1,7 @@
 #include "blusys/framework/ui/widgets/data_table/data_table.hpp"
 
 #include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
 
 // Themed tabular data wrapping `lv_table`.
@@ -18,8 +19,6 @@
 namespace blusys::ui {
 namespace {
 
-constexpr const char *kTag = "ui.data_table";
-
 struct data_table_slot {
     select_cb_t  on_row_select;
     void        *user_data;
@@ -27,17 +26,8 @@ struct data_table_slot {
     bool         in_use;
 };
 
-data_table_slot g_data_table_slots[BLUSYS_UI_DATA_TABLE_POOL_SIZE] = {};
-
-data_table_slot *acquire_slot()
-{
-    return detail::acquire_ui_slot(g_data_table_slots, kTag, "BLUSYS_UI_DATA_TABLE_POOL_SIZE");
-}
-
-void release_slot(data_table_slot *slot)
-{
-    detail::release_ui_slot(slot);
-}
+detail::slot_pool<data_table_slot, BLUSYS_UI_DATA_TABLE_POOL_SIZE> g_data_table_pool{
+    "ui.data_table", "BLUSYS_UI_DATA_TABLE_POOL_SIZE"};
 
 void apply_theme(lv_obj_t *table)
 {
@@ -82,20 +72,13 @@ void on_lvgl_value_changed(lv_event_t *e)
     slot->on_row_select(data_row, slot->user_data);
 }
 
-void on_lvgl_deleted(lv_event_t *e)
-{
-    auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *slot = static_cast<data_table_slot *>(lv_obj_get_user_data(obj));
-    release_slot(slot);
-}
-
 }  // namespace
 
 lv_obj_t *data_table_create(lv_obj_t *parent, const data_table_config &config)
 {
     data_table_slot *slot = nullptr;
     if (config.on_row_select != nullptr) {
-        slot = acquire_slot();
+        slot = g_data_table_pool.acquire();
         if (slot == nullptr) {
             return nullptr;
         }
@@ -133,7 +116,8 @@ lv_obj_t *data_table_create(lv_obj_t *parent, const data_table_config &config)
     if (slot != nullptr) {
         lv_obj_set_user_data(table, slot);
         lv_obj_add_event_cb(table, on_lvgl_value_changed, LV_EVENT_VALUE_CHANGED, nullptr);
-        lv_obj_add_event_cb(table, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
+        lv_obj_add_event_cb(table, detail::release_slot_on_delete<data_table_slot>,
+                            LV_EVENT_DELETE, nullptr);
     }
 
     return table;

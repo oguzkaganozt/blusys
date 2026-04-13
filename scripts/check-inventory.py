@@ -12,17 +12,11 @@ Checks:
   - Validation examples must be internal
 """
 
-import os
 import sys
 from pathlib import Path
 
-try:
-    import yaml
-except ImportError:
-    print("ERROR: PyYAML is required. Install with: pip install pyyaml")
-    sys.exit(2)
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from blusys.inventory_lib import REPO_ROOT, load_inventory  # noqa: E402
 
 # Valid enum values
 VALID_TIERS = {"hal", "driver", "service", "framework"}
@@ -32,15 +26,6 @@ VALID_CATEGORIES = {"quickstart", "reference", "validation"}
 VALID_VISIBILITY = {"public", "internal"}
 VALID_SECTIONS = {"start", "app", "services", "hal_drivers", "internals"}
 VALID_INTERFACES = {"handheld", "surface", "headless", "none"}
-
-
-def load_inventory():
-    path = REPO_ROOT / "inventory.yml"
-    if not path.exists():
-        print(f"ERROR: {path} not found")
-        sys.exit(1)
-    with open(path) as f:
-        return yaml.safe_load(f)
 
 
 def find_example_dirs():

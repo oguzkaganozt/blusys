@@ -18,6 +18,7 @@
 
 #include "blusys/internal/blusys_bt_stack.h"
 #include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_global_lock.h"
 #include "blusys/internal/blusys_lock.h"
 #include "blusys/internal/blusys_nvs_init.h"
 #include "blusys/internal/blusys_timeout.h"
@@ -38,32 +39,9 @@ struct blusys_bluetooth {
     uint32_t                     callback_depth;
 };
 
-static portMUX_TYPE        s_bt_init_lock = portMUX_INITIALIZER_UNLOCKED;
-static blusys_lock_t       s_bt_global_lock;
-static bool                s_bt_global_lock_inited;
 static blusys_bluetooth_t *s_active_handle;
 
-static blusys_err_t ensure_global_lock(void)
-{
-    if (s_bt_global_lock_inited) {
-        return BLUSYS_OK;
-    }
-    blusys_lock_t new_lock;
-    blusys_err_t err = blusys_lock_init(&new_lock);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-    portENTER_CRITICAL(&s_bt_init_lock);
-    if (!s_bt_global_lock_inited) {
-        s_bt_global_lock        = new_lock;
-        s_bt_global_lock_inited = true;
-        portEXIT_CRITICAL(&s_bt_init_lock);
-    } else {
-        portEXIT_CRITICAL(&s_bt_init_lock);
-        blusys_lock_deinit(&new_lock);
-    }
-    return BLUSYS_OK;
-}
+BLUSYS_DEFINE_GLOBAL_LOCK(bt);
 
 static void ble_host_task(void *param)
 {

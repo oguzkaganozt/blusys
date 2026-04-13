@@ -1,6 +1,7 @@
 #include "blusys/framework/ui/widgets/tabs/tabs.hpp"
 
 #include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
 #include "blusys/log.h"
 
@@ -31,17 +32,8 @@ struct tabs_slot {
     bool         in_use;
 };
 
-tabs_slot g_tabs_slots[BLUSYS_UI_TABS_POOL_SIZE] = {};
-
-tabs_slot *acquire_slot()
-{
-    return detail::acquire_ui_slot(g_tabs_slots, kTag, "BLUSYS_UI_TABS_POOL_SIZE");
-}
-
-void release_slot(tabs_slot *slot)
-{
-    detail::release_ui_slot(slot);
-}
+detail::slot_pool<tabs_slot, BLUSYS_UI_TABS_POOL_SIZE> g_tabs_pool{
+    "ui.tabs", "BLUSYS_UI_TABS_POOL_SIZE"};
 
 // The outer container has two children:
 //   child 0 = tab strip (horizontal row of buttons)
@@ -118,13 +110,6 @@ void on_tab_clicked(lv_event_t *e)
     }
 }
 
-void on_tabs_deleted(lv_event_t *e)
-{
-    auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *slot = static_cast<tabs_slot *>(lv_obj_get_user_data(obj));
-    release_slot(slot);
-}
-
 }  // namespace
 
 lv_obj_t *tabs_create(lv_obj_t *parent, const tabs_config &config)
@@ -136,7 +121,7 @@ lv_obj_t *tabs_create(lv_obj_t *parent, const tabs_config &config)
         return nullptr;
     }
 
-    tabs_slot *slot = acquire_slot();
+    tabs_slot *slot = g_tabs_pool.acquire();
     if (slot == nullptr) {
         return nullptr;
     }
@@ -159,7 +144,8 @@ lv_obj_t *tabs_create(lv_obj_t *parent, const tabs_config &config)
     lv_obj_set_flex_grow(tabs, 1);
     lv_obj_remove_flag(tabs, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_user_data(tabs, slot);
-    lv_obj_add_event_cb(tabs, on_tabs_deleted, LV_EVENT_DELETE, nullptr);
+    lv_obj_add_event_cb(tabs, detail::release_slot_on_delete<tabs_slot>,
+                        LV_EVENT_DELETE, nullptr);
 
     // Tab strip — horizontal row of buttons.
     lv_obj_t *strip = lv_obj_create(tabs);

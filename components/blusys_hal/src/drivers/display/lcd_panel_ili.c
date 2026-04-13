@@ -180,24 +180,39 @@ static esp_err_t panel_ili_draw_bitmap(esp_lcd_panel_t *panel, int x_start, int 
     y_start += m->y_gap;
     y_end += m->y_gap;
 
-    ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(io, LCD_CMD_CASET, (uint8_t[]){
-                                                                   (x_start >> 8) & 0xFF,
-                                                                   x_start & 0xFF,
-                                                                   ((x_end - 1) >> 8) & 0xFF,
-                                                                   (x_end - 1) & 0xFF,
-                                                               },
-                                                  4),
-                        TAG, "case");
-    ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(io, LCD_CMD_RASET, (uint8_t[]){
-                                                                   (y_start >> 8) & 0xFF,
-                                                                   y_start & 0xFF,
-                                                                   ((y_end - 1) >> 8) & 0xFF,
-                                                                   (y_end - 1) & 0xFF,
-                                                               },
-                                                  4),
-                        TAG, "ras");
-    size_t len = (size_t)(x_end - x_start) * (size_t)(y_end - y_start) * (size_t)m->fb_bits_per_pixel / 8u;
-    ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_color(io, LCD_CMD_RAMWR, color_data, len), TAG, "ramwr");
+    const size_t row_bytes = (size_t)(x_end - x_start) * (size_t)m->fb_bits_per_pixel / 8u;
+    const uint8_t *src = color_data;
+
+    /* One display row per RAMWR, matching the ST7735 path. Multi-row RASET
+     * windows plus a long pixel burst have been observed to produce diagonal
+     * shear on ESP32-C3 SPI; single-row transfers keep each DMA payload
+     * small and re-assert COLMOD between rows to prevent drift. */
+    for (int y = y_start; y < y_end; ++y) {
+        ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(io, LCD_CMD_COLMOD, &m->colmod_val, 1),
+                            TAG, "colmod");
+        ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(io, LCD_CMD_CASET, (uint8_t[]){
+                                                          (x_start >> 8) & 0xFF,
+                                                          x_start & 0xFF,
+                                                          ((x_end - 1) >> 8) & 0xFF,
+                                                          (x_end - 1) & 0xFF,
+                                                      }, 4),
+                            TAG, "caset");
+        ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(io, LCD_CMD_RASET, (uint8_t[]){
+                                                          (y >> 8) & 0xFF,
+                                                          y & 0xFF,
+                                                          (y >> 8) & 0xFF,
+                                                          y & 0xFF,
+                                                      }, 4),
+                            TAG, "raset");
+        ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_color(io, LCD_CMD_RAMWR, src, row_bytes),
+                            TAG, "ramwr");
+        src += row_bytes;
+    }
+
+    /* Small sync param tx flushes any async color tx before the source buffer
+     * (e.g. LVGL flush scratch) can be reused by the caller. */
+    ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(io, LCD_CMD_COLMOD, &m->colmod_val, 1),
+                        TAG, "sync");
     return ESP_OK;
 }
 

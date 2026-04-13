@@ -11,36 +11,11 @@ Exit codes:
   1 = one or more checks fail
 """
 
-import os
 import sys
 from pathlib import Path
 
-try:
-    import yaml
-except ImportError:
-    print("ERROR: PyYAML is required. Install with: pip install pyyaml")
-    sys.exit(2)
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
-CATEGORIES = {"quickstart", "reference", "validation"}
-
-
-def load_inventory():
-    path = REPO_ROOT / "inventory.yml"
-    with open(path) as f:
-        return yaml.safe_load(f)
-
-
-def find_example_dir(name):
-    """Find an example directory by name (supports flat and categorized)."""
-    for cat in CATEGORIES:
-        d = REPO_ROOT / "examples" / cat / name
-        if d.is_dir():
-            return d
-    d = REPO_ROOT / "examples" / name
-    if d.is_dir():
-        return d
-    return None
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from blusys.inventory_lib import CATEGORIES, REPO_ROOT, find_example_dir, load_inventory  # noqa: E402
 
 
 def main():

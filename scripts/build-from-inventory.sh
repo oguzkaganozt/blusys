@@ -21,6 +21,9 @@ TARGET="$1"
 CI_FLAG="$2"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+# shellcheck source=lib/blusys/common.sh
+. "$REPO_ROOT/scripts/lib/blusys/common.sh"
+
 if [[ "$CI_FLAG" != "ci_pr" && "$CI_FLAG" != "ci_nightly" ]]; then
     printf 'error: CI flag must be ci_pr or ci_nightly, got: %s\n' "$CI_FLAG" >&2
     exit 2
@@ -78,24 +81,12 @@ for name in "${example_names[@]}"; do
 
     build_dir="$example_dir/build-$TARGET"
 
-    # Compute sdkconfig args
-    sdkconfig_args=("-DSDKCONFIG=$build_dir/sdkconfig")
-    defaults=""
-    [ -f "$example_dir/sdkconfig.defaults" ] && defaults="$example_dir/sdkconfig.defaults"
-    chip_frag=""
-    if [ -f "$example_dir/sdkconfig.$TARGET" ]; then
-        chip_frag="$example_dir/sdkconfig.$TARGET"
-    elif [ -f "$example_dir/sdkconfig.defaults.$TARGET" ]; then
-        chip_frag="$example_dir/sdkconfig.defaults.$TARGET"
-    fi
-    if [ -n "$chip_frag" ]; then
-        if [ -n "$defaults" ]; then
-            defaults="$defaults;$chip_frag"
-        else
-            defaults="$chip_frag"
-        fi
-    fi
-    [ -n "$defaults" ] && sdkconfig_args+=("-DSDKCONFIG_DEFAULTS=$defaults")
+    mapfile -t sdkconfig_args < <(blusys_sdkconfig_args "$example_dir" "$TARGET") || {
+        printf '::error::Failed to compute sdkconfig args for %s / %s\n' "$name" "$TARGET"
+        failed_list="$failed_list $name"
+        ((fail++)) || true
+        continue
+    }
 
     printf '::group::Build %s for %s\n' "$name" "$TARGET"
 

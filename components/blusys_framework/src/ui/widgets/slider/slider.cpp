@@ -23,25 +23,14 @@
 namespace blusys::ui {
 namespace {
 
-constexpr const char *kTag = "ui.slider";
-
 struct slider_slot {
     change_cb_t on_change;
     void       *user_data;
     bool        in_use;
 };
 
-slider_slot g_slider_slots[BLUSYS_UI_SLIDER_POOL_SIZE] = {};
-
-slider_slot *acquire_slot()
-{
-    return detail::acquire_ui_slot(g_slider_slots, kTag, "BLUSYS_UI_SLIDER_POOL_SIZE");
-}
-
-void release_slot(slider_slot *slot)
-{
-    detail::release_ui_slot(slot);
-}
+detail::slot_pool<slider_slot, BLUSYS_UI_SLIDER_POOL_SIZE> g_slider_pool{
+    "ui.slider", "BLUSYS_UI_SLIDER_POOL_SIZE"};
 
 void apply_theme(lv_obj_t *slider)
 {
@@ -82,20 +71,13 @@ void on_lvgl_value_changed(lv_event_t *e)
     }
 }
 
-void on_lvgl_deleted(lv_event_t *e)
-{
-    auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *slot = static_cast<slider_slot *>(lv_obj_get_user_data(obj));
-    release_slot(slot);
-}
-
 }  // namespace
 
 lv_obj_t *slider_create(lv_obj_t *parent, const slider_config &config)
 {
     slider_slot *slot = nullptr;
     if (config.on_change != nullptr) {
-        slot = acquire_slot();
+        slot = g_slider_pool.acquire();
         if (slot == nullptr) {
             return nullptr;
         }
@@ -112,7 +94,8 @@ lv_obj_t *slider_create(lv_obj_t *parent, const slider_config &config)
         slot->user_data = config.user_data;
         lv_obj_set_user_data(slider, slot);
         lv_obj_add_event_cb(slider, on_lvgl_value_changed, LV_EVENT_VALUE_CHANGED, nullptr);
-        lv_obj_add_event_cb(slider, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
+        lv_obj_add_event_cb(slider, detail::release_slot_on_delete<slider_slot>,
+                            LV_EVENT_DELETE, nullptr);
     }
 
     detail::set_widget_disabled(slider, config.disabled);

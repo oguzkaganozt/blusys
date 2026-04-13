@@ -1,12 +1,11 @@
 #include "blusys/framework/ui/widgets/vu_strip/vu_strip.hpp"
 
 #include "blusys/framework/ui/detail/fixed_slot_pool.hpp"
+#include "blusys/framework/ui/detail/widget_common.hpp"
 #include "blusys/framework/ui/theme.hpp"
 
 namespace blusys::ui {
 namespace {
-
-constexpr const char *kTag = "ui.vu_strip";
 
 struct vu_strip_meta {
     std::uint8_t   count;
@@ -19,17 +18,8 @@ struct vu_strip_meta {
 #define BLUSYS_UI_VU_STRIP_POOL_SIZE 16
 #endif
 
-vu_strip_meta g_vu_meta[BLUSYS_UI_VU_STRIP_POOL_SIZE] = {};
-
-vu_strip_meta *acquire_meta()
-{
-    return detail::acquire_ui_slot(g_vu_meta, kTag, "BLUSYS_UI_VU_STRIP_POOL_SIZE");
-}
-
-void release_meta(vu_strip_meta *m)
-{
-    detail::release_ui_slot(m);
-}
+detail::slot_pool<vu_strip_meta, BLUSYS_UI_VU_STRIP_POOL_SIZE> g_vu_pool{
+    "ui.vu_strip", "BLUSYS_UI_VU_STRIP_POOL_SIZE"};
 
 void apply_segment_style(lv_obj_t *seg, bool lit)
 {
@@ -53,18 +43,11 @@ void refresh_strip(lv_obj_t *strip, vu_strip_meta *m)
     }
 }
 
-void on_strip_delete(lv_event_t *e)
-{
-    auto *strip = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *meta  = static_cast<vu_strip_meta *>(lv_obj_get_user_data(strip));
-    release_meta(meta);
-}
-
 }  // namespace
 
 lv_obj_t *vu_strip_create(lv_obj_t *parent, const vu_strip_config &config)
 {
-    vu_strip_meta *meta = acquire_meta();
+    vu_strip_meta *meta = g_vu_pool.acquire();
     if (meta == nullptr) {
         return nullptr;
     }
@@ -90,7 +73,8 @@ lv_obj_t *vu_strip_create(lv_obj_t *parent, const vu_strip_config &config)
     lv_obj_set_style_pad_all(cont, 0, 0);
     lv_obj_remove_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_user_data(cont, meta);
-    lv_obj_add_event_cb(cont, on_strip_delete, LV_EVENT_DELETE, nullptr);
+    lv_obj_add_event_cb(cont, detail::release_slot_on_delete<vu_strip_meta>,
+                        LV_EVENT_DELETE, nullptr);
 
     const int gap = t.spacing_xs > 1 ? t.spacing_xs / 2 : 1;
 

@@ -21,25 +21,14 @@
 namespace blusys::ui {
 namespace {
 
-constexpr const char *kTag = "ui.dropdown";
-
 struct dropdown_slot {
     select_cb_t  on_select;
     void        *user_data;
     bool         in_use;
 };
 
-dropdown_slot g_dropdown_slots[BLUSYS_UI_DROPDOWN_POOL_SIZE] = {};
-
-dropdown_slot *acquire_slot()
-{
-    return detail::acquire_ui_slot(g_dropdown_slots, kTag, "BLUSYS_UI_DROPDOWN_POOL_SIZE");
-}
-
-void release_slot(dropdown_slot *slot)
-{
-    detail::release_ui_slot(slot);
-}
+detail::slot_pool<dropdown_slot, BLUSYS_UI_DROPDOWN_POOL_SIZE> g_dropdown_pool{
+    "ui.dropdown", "BLUSYS_UI_DROPDOWN_POOL_SIZE"};
 
 // Join an array of strings with '\n' separators for lv_dropdown.
 void set_options_from_array(lv_obj_t *dd, const char * const *options, int32_t count)
@@ -134,20 +123,13 @@ void on_lvgl_value_changed(lv_event_t *e)
     }
 }
 
-void on_lvgl_deleted(lv_event_t *e)
-{
-    auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *slot = static_cast<dropdown_slot *>(lv_obj_get_user_data(obj));
-    release_slot(slot);
-}
-
 }  // namespace
 
 lv_obj_t *dropdown_create(lv_obj_t *parent, const dropdown_config &config)
 {
     dropdown_slot *slot = nullptr;
     if (config.on_select != nullptr) {
-        slot = acquire_slot();
+        slot = g_dropdown_pool.acquire();
         if (slot == nullptr) {
             return nullptr;
         }
@@ -167,7 +149,8 @@ lv_obj_t *dropdown_create(lv_obj_t *parent, const dropdown_config &config)
     if (slot != nullptr) {
         lv_obj_set_user_data(dd, slot);
         lv_obj_add_event_cb(dd, on_lvgl_value_changed, LV_EVENT_VALUE_CHANGED, nullptr);
-        lv_obj_add_event_cb(dd, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
+        lv_obj_add_event_cb(dd, detail::release_slot_on_delete<dropdown_slot>,
+                            LV_EVENT_DELETE, nullptr);
     }
 
     detail::set_widget_disabled(dd, config.disabled);

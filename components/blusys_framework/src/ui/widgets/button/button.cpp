@@ -23,25 +23,14 @@
 namespace blusys::ui {
 namespace {
 
-constexpr const char *kTag = "ui.button";
-
 struct button_slot {
     press_cb_t on_press;
     void      *user_data;
     bool       in_use;
 };
 
-button_slot g_button_slots[BLUSYS_UI_BUTTON_POOL_SIZE] = {};
-
-button_slot *acquire_slot()
-{
-    return detail::acquire_ui_slot(g_button_slots, kTag, "BLUSYS_UI_BUTTON_POOL_SIZE");
-}
-
-void release_slot(button_slot *slot)
-{
-    detail::release_ui_slot(slot);
-}
+detail::slot_pool<button_slot, BLUSYS_UI_BUTTON_POOL_SIZE> g_button_pool{
+    "ui.button", "BLUSYS_UI_BUTTON_POOL_SIZE"};
 
 lv_obj_t *button_label_child(lv_obj_t *button)
 {
@@ -116,13 +105,6 @@ void on_lvgl_clicked(lv_event_t *e)
     }
 }
 
-void on_lvgl_deleted(lv_event_t *e)
-{
-    auto *obj  = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    auto *slot = static_cast<button_slot *>(lv_obj_get_user_data(obj));
-    release_slot(slot);
-}
-
 }  // namespace
 
 lv_obj_t *button_create(lv_obj_t *parent, const button_config &config)
@@ -130,7 +112,7 @@ lv_obj_t *button_create(lv_obj_t *parent, const button_config &config)
     // Acquire the slot up front so we fail before any LVGL object exists.
     button_slot *slot = nullptr;
     if (config.on_press != nullptr) {
-        slot = acquire_slot();
+        slot = g_button_pool.acquire();
         if (slot == nullptr) {
             return nullptr;
         }
@@ -159,7 +141,8 @@ lv_obj_t *button_create(lv_obj_t *parent, const button_config &config)
         slot->user_data = config.user_data;
         lv_obj_set_user_data(button, slot);
         lv_obj_add_event_cb(button, on_lvgl_clicked, LV_EVENT_CLICKED, nullptr);
-        lv_obj_add_event_cb(button, on_lvgl_deleted, LV_EVENT_DELETE, nullptr);
+        lv_obj_add_event_cb(button, detail::release_slot_on_delete<button_slot>,
+                            LV_EVENT_DELETE, nullptr);
     }
 
     detail::set_widget_disabled(button, config.disabled);

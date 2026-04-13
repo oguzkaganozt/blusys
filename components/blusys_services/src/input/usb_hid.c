@@ -47,6 +47,7 @@
 #endif
 
 #include "blusys/internal/blusys_esp_err.h"
+#include "blusys/internal/blusys_global_lock.h"
 #include "blusys/internal/blusys_lock.h"
 
 /* ─── HID boot report sizes ────────────────────────────────────── */
@@ -99,32 +100,9 @@ struct blusys_usb_hid {
 };
 
 /* ─── Singleton ─────────────────────────────────────────────────── */
-static portMUX_TYPE       s_hid_init_lock = portMUX_INITIALIZER_UNLOCKED;
-static blusys_lock_t      s_hid_global_lock;
-static bool               s_hid_global_lock_inited;
-static blusys_usb_hid_t  *s_usb_hid_handle;
+static blusys_usb_hid_t *s_usb_hid_handle;
 
-static blusys_err_t ensure_global_lock(void)
-{
-    if (s_hid_global_lock_inited) {
-        return BLUSYS_OK;
-    }
-    blusys_lock_t new_lock;
-    blusys_err_t err = blusys_lock_init(&new_lock);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-    portENTER_CRITICAL(&s_hid_init_lock);
-    if (!s_hid_global_lock_inited) {
-        s_hid_global_lock       = new_lock;
-        s_hid_global_lock_inited = true;
-        portEXIT_CRITICAL(&s_hid_init_lock);
-    } else {
-        portEXIT_CRITICAL(&s_hid_init_lock);
-        blusys_lock_deinit(&new_lock);
-    }
-    return BLUSYS_OK;
-}
+BLUSYS_DEFINE_GLOBAL_LOCK(hid);
 
 /* ─── Report parsing helper ─────────────────────────────────────── */
 static void dispatch_raw_report(blusys_usb_hid_t *h,
