@@ -13,6 +13,7 @@
 #include "sdkconfig.h"
 #include "blusys/app/profiles/ili9341.hpp"
 #include "blusys/app/profiles/ili9488.hpp"
+#include "blusys/app/profiles/qemu_rgb.hpp"
 #endif
 
 namespace blusys::app {
@@ -45,11 +46,14 @@ namespace blusys::app {
 
 #endif
 
-// ---- dashboard class (ILI9341 / ILI9488 + host) ----
+// ---- dashboard (device: SPI ILI9341 / ILI9488 or QEMU RGB; host: SDL) ----
 
 [[nodiscard]] inline device_profile auto_profile_dashboard()
 {
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
+    CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB
+    return profiles::qemu_rgb_dashboard_320x240();
+#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
     return profiles::ili9488_480x320();
 #elif defined(ESP_PLATFORM)
@@ -89,7 +93,10 @@ namespace blusys::app {
 
 [[nodiscard]] inline const char *dashboard_profile_label()
 {
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
+    CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB
+    return "QEMU RGB 320x240";
+#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
     return "ILI9488 480x320";
 #elif defined(ESP_PLATFORM)
@@ -103,7 +110,10 @@ namespace blusys::app {
 
 [[nodiscard]] inline const char *dashboard_hardware_label()
 {
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
+#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
+    CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB
+    return "QEMU virtual panel";
+#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
     return "ILI9488 reference";
 #elif defined(ESP_PLATFORM)

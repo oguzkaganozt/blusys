@@ -37,6 +37,7 @@ These are handled by the framework runtime, profiles, and capabilities.
 - [Capabilities](capabilities.md) --- connectivity, storage
 - [Profiles](profiles.md) --- host, headless, and device platform profiles
 - [Validation and host loop](validation-host-loop.md) --- host smokes, scaffold checks, CI mapping (see README **Product foundations** → **Validation**)
+- [Device, host & QEMU CLI](cli-host-qemu.md) --- `blusys build` targets (`host`, `qemu*`), `blusys qemu` modes (`--graphics` / `--serial-only`)
 
 ## Example Apps
 

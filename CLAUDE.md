@@ -177,20 +177,20 @@ Normal workflows use the repo-root **`blusys`** launcher:
 
 ```bash
 blusys create [--archetype <name>] [--starter <headless|interactive>] [--list-archetypes] [path]
-blusys build          [project] [esp32|esp32c3|esp32s3]
+blusys build          [project] [esp32|esp32c3|esp32s3|host|qemu32|qemu32c3|qemu32s3]
 blusys flash          [project] [port] [esp32|esp32c3|esp32s3]
 blusys monitor        [project] [port] [esp32|esp32c3|esp32s3]
 blusys run            [project] [port] [esp32|esp32c3|esp32s3]
-blusys config         [project] [esp32|esp32c3|esp32s3]
-blusys menuconfig     [project] [esp32|esp32c3|esp32s3]
-blusys size           [project] [esp32|esp32c3|esp32s3]
+blusys config         [project] [esp32|esp32c3|esp32s3|qemu32|qemu32c3|qemu32s3]
+blusys menuconfig     [project] [esp32|esp32c3|esp32s3|qemu32|qemu32c3|qemu32s3]
+blusys size           [project] [esp32|esp32c3|esp32s3|qemu32|qemu32c3|qemu32s3]
 blusys erase          [project] [port] [esp32|esp32c3|esp32s3]
-blusys clean          [project] [esp32|esp32c3|esp32s3]
+blusys clean          [project] [esp32|esp32c3|esp32s3|host|qemu32|qemu32c3|qemu32s3]
 blusys fullclean      [project]
 blusys build-examples
 blusys host-build     [project]
 blusys example <name> [command] [args...]
-blusys qemu           [project] [esp32|esp32c3|esp32s3]
+blusys qemu           [--graphics|--serial-only] [project] [chip|qemu32|qemu32c3|qemu32s3]
 blusys install-qemu
 blusys lint
 blusys config-idf

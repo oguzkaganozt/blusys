@@ -19,6 +19,8 @@ typedef enum {
     BLUSYS_LCD_DRIVER_ST7735  = 3,
     BLUSYS_LCD_DRIVER_ILI9341 = 4,
     BLUSYS_LCD_DRIVER_ILI9488 = 5,
+    /** ESP-IDF QEMU virtual framebuffer (`esp_lcd_qemu_rgb`); QEMU only, not real hardware */
+    BLUSYS_LCD_DRIVER_QEMU_RGB = 6,
 } blusys_lcd_driver_t;
 
 typedef struct {

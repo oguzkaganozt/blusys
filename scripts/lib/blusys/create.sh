@@ -211,6 +211,10 @@ cmd_create() {
     cp -R "$template_dir/main/." "$target_dir/main/"
     cp -R "$template_dir/host/." "$target_dir/host/"
 
+    if [[ ! -f "$target_dir/sdkconfig.qemu" ]]; then
+        cp -f "$BLUSYS_REPO_ROOT/templates/scaffold/sdkconfig.qemu" "$target_dir/sdkconfig.qemu"
+    fi
+
     if [[ -f "$target_dir/host/CMakeLists.txt" ]]; then
         sed -i "s/${template_host_target}/${project_name}_host/g" "$target_dir/host/CMakeLists.txt"
     fi
@@ -261,8 +265,9 @@ Canonical starter: __ARCHETYPE_LABEL__
 
 | Goal | Command |
 |------|---------|
-| Host (SDL2, no hardware) | `blusys host-build` then run `./build-host/__PROJECT_NAME___host` |
-| Firmware build | `blusys build` (default target: check `blusys help` / your `sdkconfig`) |
+| Host (SDL2, no hardware) | `blusys build . host` or `blusys host-build` — run the binary under `./build-host/` |
+| Firmware (chip) | `blusys build . esp32s3` (or `esp32` / `esp32c3`) |
+| Firmware (QEMU label) | `blusys build . qemu32s3` (or `qemu32` / `qemu32c3`) — uses `build-qemu*`; edit `sdkconfig.qemu` when you need QEMU-only Kconfig (see `examples/reference/interactive_dashboard/sdkconfig.qemu`) |
 | Flash + monitor | `blusys run /dev/ttyACM0` (replace with your serial port) |
 | Flash only | `blusys flash /dev/ttyACM0` |
 | Menuconfig | `blusys menuconfig` |
@@ -270,6 +275,8 @@ Canonical starter: __ARCHETYPE_LABEL__
 Set `IDF_PATH` (ESP-IDF v5.5+) before device builds, or run `blusys config-idf` once.
 
 **Host input (interactive):** arrow keys simulate encoder rotation; Enter confirms (see platform host docs).
+
+**Chip / host / QEMU overview:** in the blusys repository, see `docs/app/cli-host-qemu.md` (device firmware, `host`, `qemu*` labels, and `blusys qemu --graphics`).
 
 ## Reference
 
@@ -287,8 +294,8 @@ EOF
     printf 'Default profile family: %s\n\n' "$archetype_default_profile"
     printf 'Next steps:\n'
     printf '  cd %s\n' "$target_dir"
-    printf '  blusys host-build           # build + run on PC (no hardware needed)\n'
-    printf '  blusys build                # build for default target\n'
+    printf '  blusys build . host         # or: blusys host-build  (SDL, no hardware)\n'
+    printf '  blusys build                # firmware for default chip target\n'
     printf '  blusys run                  # build, flash, and monitor\n'
     printf '\n'
     printf 'Product layout:\n'

@@ -106,12 +106,17 @@ cmd_build() {
         exit 1
     fi
 
-    blusys_setup_no_port "$@"
+    blusys_setup_no_port "$@" || exit 1
+    if [[ "$TARGET" = host ]]; then
+        cmd_host_build "$PROJECT_DIR"
+        return
+    fi
+
     blusys_setup_idf_env
     blusys_print_info
 
-    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$TARGET" "${SDKCONFIG_ARGS[@]}"
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" build
+    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$IDF_TARGET" "${SDKCONFIG_ARGS[@]}"
+    blusys_idf_py build
 }
 
 cmd_flash() {
@@ -120,12 +125,12 @@ cmd_flash() {
         exit 1
     fi
 
-    blusys_setup_with_port "$@"
+    blusys_setup_with_port "$@" || exit 1
     blusys_setup_idf_env
     blusys_print_info_port
 
-    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$TARGET" "${SDKCONFIG_ARGS[@]}"
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" -p "$PORT" flash
+    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$IDF_TARGET" "${SDKCONFIG_ARGS[@]}"
+    blusys_idf_py -p "$PORT" flash
 }
 
 cmd_monitor() {
@@ -134,13 +139,13 @@ cmd_monitor() {
         exit 1
     fi
 
-    blusys_setup_with_port "$@"
+    blusys_setup_with_port "$@" || exit 1
     blusys_setup_idf_env
     blusys_print_info_port
     printf 'Monitor exit: press Ctrl+]\n'
 
-    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$TARGET" "${SDKCONFIG_ARGS[@]}"
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" -p "$PORT" monitor
+    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$IDF_TARGET" "${SDKCONFIG_ARGS[@]}"
+    blusys_idf_py -p "$PORT" monitor
 }
 
 cmd_run() {
@@ -149,13 +154,13 @@ cmd_run() {
         exit 1
     fi
 
-    blusys_setup_with_port "$@"
+    blusys_setup_with_port "$@" || exit 1
     blusys_setup_idf_env
     blusys_print_info_port
     printf 'Monitor exit: press Ctrl+]\n'
 
-    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$TARGET" "${SDKCONFIG_ARGS[@]}"
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" -p "$PORT" build flash monitor
+    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$IDF_TARGET" "${SDKCONFIG_ARGS[@]}"
+    blusys_idf_py -p "$PORT" build flash monitor
 }
 
 cmd_config() {
@@ -164,12 +169,13 @@ cmd_config() {
         exit 1
     fi
 
-    blusys_setup_no_port "$@"
+    blusys_setup_no_port "$@" || exit 1
+    blusys_reject_host_target || exit 1
     blusys_setup_idf_env
     blusys_print_info
 
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" set-target "$TARGET"
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" menuconfig
+    blusys_idf_py set-target "$IDF_TARGET"
+    blusys_idf_py menuconfig
 }
 
 cmd_clean() {
@@ -178,7 +184,7 @@ cmd_clean() {
         exit 1
     fi
 
-    blusys_setup_no_port "$@"
+    blusys_setup_no_port "$@" || exit 1
 
     if [[ ! -d "$BUILD_DIR" ]]; then
         printf 'Nothing to clean: %s does not exist\n' "$BUILD_DIR"
@@ -196,12 +202,13 @@ cmd_size() {
         exit 1
     fi
 
-    blusys_setup_no_port "$@"
+    blusys_setup_no_port "$@" || exit 1
+    blusys_reject_host_target || exit 1
     blusys_setup_idf_env
     blusys_print_info
 
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" size
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" size-components
+    blusys_idf_py size
+    blusys_idf_py size-components
 }
 
 cmd_erase() {
@@ -210,11 +217,11 @@ cmd_erase() {
         exit 1
     fi
 
-    blusys_setup_with_port "$@"
+    blusys_setup_with_port "$@" || exit 1
     blusys_setup_idf_env
     blusys_print_info_port
 
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" -p "$PORT" erase-flash
+    blusys_idf_py -p "$PORT" erase-flash
 }
 
 cmd_fullclean() {
@@ -225,7 +232,7 @@ cmd_fullclean() {
 
     local project="${1:-$BLUSYS_DEFAULT_PROJECT}"
     PROJECT_DIR="$(blusys_resolve_project_dir "$project")"
-    local targets=(esp32 esp32c3 esp32s3)
+    local targets=(esp32 esp32c3 esp32s3 host qemu32 qemu32c3 qemu32s3)
     local removed=0
 
     for target in "${targets[@]}"; do
@@ -422,47 +429,116 @@ cmd_install_qemu() {
 }
 
 cmd_qemu() {
-    if [[ $# -gt 2 ]]; then
+    local launch=raw
+    local -a pos=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --graphics)
+                if [[ "$launch" != raw ]]; then
+                    printf 'error: use only one of --graphics or --serial-only\n' >&2
+                    exit 1
+                fi
+                launch=idf_gfx
+                shift
+                ;;
+            --serial-only)
+                if [[ "$launch" != raw ]]; then
+                    printf 'error: use only one of --graphics or --serial-only\n' >&2
+                    exit 1
+                fi
+                launch=idf_serial
+                shift
+                ;;
+            -h | --help)
+                blusys_help_qemu
+                exit 0
+                ;;
+            -*)
+                printf 'error: unknown option: %s\n' "$1" >&2
+                blusys_help_qemu
+                exit 1
+                ;;
+            *)
+                pos+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    if [[ ${#pos[@]} -gt 2 ]]; then
         blusys_help_qemu
         exit 1
     fi
+    set -- "${pos[@]}"
 
-    blusys_setup_no_port "$@"
+    blusys_setup_no_port "$@" || exit 1
+    blusys_reject_host_target || exit 1
     blusys_setup_idf_env
 
+    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$IDF_TARGET" "${SDKCONFIG_ARGS[@]}"
+    blusys_idf_py build
+
+    # Timer + NIC (+ icount on C3) for idf.py qemu --qemu-extra-args (matches Espressif QEMU docs).
+    local timer_driver icount=""
+    case "$IDF_TARGET" in
+        esp32) timer_driver="timer.esp32.timg" ;;
+        esp32s3) timer_driver="timer.esp32c3.timg" ;;
+        esp32c3) timer_driver="timer.esp32c3.timg"; icount="-icount 3" ;;
+        *)
+            printf 'error: unsupported IDF target for QEMU: %s\n' "$IDF_TARGET" >&2
+            exit 1
+            ;;
+    esac
+    local qemu_extra="-global driver=${timer_driver},property=wdt_disable,value=true -nic user,model=open_eth"
+    [[ -n "$icount" ]] && qemu_extra+=" $icount"
+
+    blusys_print_info
+
+    # --graphics / --serial-only: ESP-IDF's `idf.py qemu` (virtual framebuffer + monitor). Needed for esp_lcd_qemu_rgb / LVGL in QEMU.
+    if [[ "$launch" != raw ]]; then
+        if [[ "$launch" == idf_gfx ]]; then
+            case "$IDF_TARGET" in
+                esp32s3 | esp32c3)
+                    printf 'Launching: idf.py qemu --graphics monitor (SDL framebuffer where supported)\n'
+                    blusys_idf_py qemu --qemu-extra-args="$qemu_extra" --graphics monitor
+                    ;;
+                esp32)
+                    printf 'info: --graphics is esp32s3/esp32c3 in IDF; using serial monitor for esp32\n' >&2
+                    blusys_idf_py qemu --qemu-extra-args="$qemu_extra" monitor
+                    ;;
+            esac
+        else
+            printf 'Launching: idf.py qemu monitor (UART / serial UI)\n'
+            blusys_idf_py qemu --qemu-extra-args="$qemu_extra" monitor
+        fi
+        return
+    fi
+
+    # Default: direct qemu-system-* + merged flash (headless UART, good for CI-style checks).
     local qemu_dir
     qemu_dir="$(blusys_find_qemu)" || exit 1
 
-    # Select binary and machine flags based on target
-    local qemu_bin machine timer_driver extra_flags=""
-    case "$TARGET" in
+    local qemu_bin machine extra_flags=""
+    case "$IDF_TARGET" in
         esp32)
             qemu_bin="$qemu_dir/qemu-system-xtensa"
             machine="esp32"
-            timer_driver="timer.esp32.timg"
             ;;
         esp32s3)
             qemu_bin="$qemu_dir/qemu-system-xtensa"
             machine="esp32s3"
-            timer_driver="timer.esp32c3.timg"
             ;;
         esp32c3)
             qemu_bin="$qemu_dir/qemu-system-riscv32"
             machine="esp32c3"
-            timer_driver="timer.esp32c3.timg"
             extra_flags="-icount 3"
             ;;
     esac
 
-    blusys_print_info
     printf 'QEMU:      %s\n' "$qemu_bin"
 
-    blusys_set_target_if_needed "$PROJECT_DIR" "$BUILD_DIR" "$TARGET" "${SDKCONFIG_ARGS[@]}"
-    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" build
-
     printf 'Creating flash image...\n'
-    # flash_args contains relative paths — must run from BUILD_DIR
-    (cd "$BUILD_DIR" && esptool.py --chip "$TARGET" merge_bin --fill-flash-size 4MB \
+    (cd "$BUILD_DIR" && esptool.py --chip "$IDF_TARGET" merge_bin --fill-flash-size 4MB \
         -o "$BUILD_DIR/flash_image.bin" \
         @flash_args)
 

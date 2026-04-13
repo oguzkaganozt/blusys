@@ -43,6 +43,7 @@ Creates temporary projects for all archetypes (plus gateway `--starter interacti
 
 ## Related
 
+- [Device, host & QEMU CLI](cli-host-qemu.md) — single-page `blusys build` / `blusys qemu` matrix (chip, `host`, `qemu*`, `--graphics`)
 - [Reducer Model](reducer-model.md)
 - [Capability Composition](capability-composition.md)
 - `scripts/host/README.md` — install and binary list

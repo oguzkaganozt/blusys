@@ -79,6 +79,14 @@ if(NOT blusys_tinyusb_component STREQUAL "")
     target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_TINYUSB=1)
 endif()
 
+blusys_optional_managed_component(blusys_esp_lcd_qemu_rgb "esp_lcd_qemu_rgb" "espressif__esp_lcd_qemu_rgb")
+
+if(NOT blusys_esp_lcd_qemu_rgb STREQUAL "")
+    idf_component_get_property(esp_lcd_qemu_rgb_lib ${blusys_esp_lcd_qemu_rgb} COMPONENT_LIB)
+    target_link_libraries(${COMPONENT_LIB} PUBLIC ${esp_lcd_qemu_rgb_lib})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_ESP_LCD_QEMU_RGB=1)
+endif()
+
 if(CONFIG_ULP_COPROC_ENABLED AND CONFIG_ULP_COPROC_TYPE_FSM AND
    (IDF_TARGET STREQUAL "esp32" OR IDF_TARGET STREQUAL "esp32s3"))
     set(blusys_ulp_app_name blusys_ulp_gpio_watch)

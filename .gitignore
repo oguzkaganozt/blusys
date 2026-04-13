@@ -11,6 +11,7 @@ examples/**/sdkconfig.old
 examples/**/sdkconfig.*
 !examples/**/sdkconfig.defaults
 !examples/**/sdkconfig.defaults.*
+!examples/**/sdkconfig.qemu
 managed_components/
 **/managed_components/
 dependencies.lock

@@ -1,0 +1,7 @@
+# Optional merge for `blusys build … qemu32` / `qemu32c3` / `qemu32s3`.
+# If this file is empty or comment-only, the firmware uses the same Kconfig as the
+# plain chip target; only the build directory differs (`build-qemu*` vs `build-esp32*`).
+#
+# Add CONFIG_* lines when you need QEMU-specific HAL (e.g. virtual framebuffer).
+# Full example: examples/reference/interactive_dashboard/sdkconfig.qemu
+# CLI matrix: docs/app/cli-host-qemu.md (in the blusys repo)

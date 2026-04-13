@@ -73,6 +73,7 @@ nav:
       - Capabilities: app/capabilities.md
       - Profiles: app/profiles.md
       - "Validation & host loop": app/validation-host-loop.md
+      - "Device, host & QEMU CLI": app/cli-host-qemu.md
   - Services:
       - services/index.md
       - Connectivity:

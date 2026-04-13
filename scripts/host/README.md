@@ -103,6 +103,10 @@ Values `1`–`8` are accepted; the default is computed from the logical size.
 
 1. Per-widget visual snapshot tests can build on the headless stub path (`snapshot_buffer_smoke` in `CMakeLists.txt`) and CI.
 
+## Same CLI: firmware, host, and QEMU
+
+Product trees also use **`blusys build . host`** / **`blusys build . qemu32s3`** and **`blusys qemu`** (see **`docs/app/cli-host-qemu.md`**) alongside this monorepo `scripts/host` harness.
+
 ## Traceability
 
 **[README.md](../../README.md)** (**Product foundations** → **Validation**) expects host-runnable checks and curated CI. See **`docs/app/validation-host-loop.md`** for a mapping from each goal to this harness, `scripts/scaffold-smoke.sh`, and `.github/workflows/ci.yml`.

@@ -3,17 +3,22 @@ menu "Blusys framework"
     menu "Display profiles"
 
         choice BLUSYS_DASHBOARD_DISPLAY_PROFILE
-            prompt "Dashboard-class SPI display (gateway, panel, dashboards)"
+            prompt "Dashboard-class display (device)"
             default BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341
             help
                 Used by gateway, interactive_panel, interactive_dashboard, and mqtt_dashboard.
-                ILI9341 for compact dashboards; ILI9488 for large operator surfaces.
+                Pick a SPI panel for hardware, or QEMU virtual RGB for Espressif QEMU with
+                --graphics (ESP32-S3 / ESP32-C3 only; see interactive_dashboard/sdkconfig.qemu).
 
-        config BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341
-            bool "ILI9341 320x240 landscape"
+            config BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341
+                bool "ILI9341 320x240 landscape (SPI)"
 
-        config BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
-            bool "ILI9488 480x320 landscape"
+            config BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
+                bool "ILI9488 480x320 landscape (SPI)"
+
+            config BLUSYS_DASHBOARD_LCD_QEMU_RGB
+                bool "QEMU virtual RGB 320x240 (esp_lcd_qemu_rgb, idf.py qemu --graphics)"
+                depends on IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32C3
 
         endchoice
 
@@ -24,11 +29,11 @@ menu "Blusys framework"
                 Used by the interactive_controller quickstart. Host SDL window size follows
                 host CMake when simulating the selected profile.
 
-        config BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7735
-            bool "ST7735 160x128 (canonical)"
+            config BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7735
+                bool "ST7735 160x128 (canonical)"
 
-        config BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789
-            bool "ST7789 320x240 landscape"
+            config BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789
+                bool "ST7789 320x240 landscape"
 
         endchoice
 

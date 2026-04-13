@@ -29,6 +29,10 @@
 
 #include "blusys/internal/lcd_panel_ili.h"
 
+#ifdef BLUSYS_HAS_ESP_LCD_QEMU_RGB
+#include "esp_lcd_qemu_rgb.h"
+#endif
+
 struct blusys_lcd {
     esp_lcd_panel_io_handle_t io_handle;
     esp_lcd_panel_handle_t    panel_handle;
@@ -696,6 +700,36 @@ static blusys_err_t blusys_lcd_open_i2c(const blusys_lcd_config_t *config,
     return BLUSYS_OK;
 }
 
+static void lcd_qemu_ignore_not_supported(bool qemu_panel, esp_err_t *esp_err)
+{
+    if (qemu_panel && *esp_err == ESP_ERR_NOT_SUPPORTED) {
+        *esp_err = ESP_OK;
+    }
+}
+
+#if BLUSYS_HAS_ESP_LCD_QEMU_RGB
+static blusys_err_t blusys_lcd_open_qemu_rgb(const blusys_lcd_config_t *config,
+                                             blusys_lcd_t *lcd)
+{
+    esp_lcd_rgb_qemu_config_t qemu_cfg = {
+        .width  = config->width,
+        .height = config->height,
+        .bpp    = RGB_QEMU_BPP_16,
+    };
+
+    esp_err_t esp_err = esp_lcd_new_rgb_qemu(&qemu_cfg, &lcd->panel_handle);
+    if (esp_err != ESP_OK) {
+        return blusys_translate_esp_err(esp_err);
+    }
+
+    lcd->io_handle             = NULL;
+    lcd->spi_bus_owned         = false;
+    lcd->wait_color_trans_done = false;
+    lcd->color_done_sem        = NULL;
+    return BLUSYS_OK;
+}
+#endif
+
 blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
                              blusys_lcd_t **out_lcd)
 {
@@ -710,7 +744,8 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    is_spi_panel = config->driver != BLUSYS_LCD_DRIVER_SSD1306;
+    is_spi_panel = (config->driver != BLUSYS_LCD_DRIVER_SSD1306) &&
+                   (config->driver != BLUSYS_LCD_DRIVER_QEMU_RGB);
 
     switch (config->driver) {
     case BLUSYS_LCD_DRIVER_ST7789:
@@ -736,6 +771,16 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
             return BLUSYS_ERR_INVALID_ARG;
         }
         break;
+    case BLUSYS_LCD_DRIVER_QEMU_RGB:
+#if BLUSYS_HAS_ESP_LCD_QEMU_RGB
+        if (config->bits_per_pixel != 16u) {
+            return BLUSYS_ERR_INVALID_ARG;
+        }
+        break;
+#else
+        (void)config;
+        return BLUSYS_ERR_NOT_SUPPORTED;
+#endif
     default:
         return BLUSYS_ERR_INVALID_ARG;
     }
@@ -765,6 +810,11 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
     }
     xSemaphoreGive(lcd->draw_idle_sem);
 
+#if BLUSYS_HAS_ESP_LCD_QEMU_RGB
+    if (config->driver == BLUSYS_LCD_DRIVER_QEMU_RGB) {
+        err = blusys_lcd_open_qemu_rgb(config, lcd);
+    } else
+#endif
     if ((config->driver == BLUSYS_LCD_DRIVER_ST7789) ||
         (config->driver == BLUSYS_LCD_DRIVER_NT35510) ||
         (config->driver == BLUSYS_LCD_DRIVER_ST7735) ||
@@ -782,6 +832,8 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
         return err;
     }
 
+    const bool qemu_panel = (config->driver == BLUSYS_LCD_DRIVER_QEMU_RGB);
+
     esp_err = esp_lcd_panel_reset(lcd->panel_handle);
     if (esp_err == ESP_OK) {
         esp_err = esp_lcd_panel_init(lcd->panel_handle);
@@ -795,18 +847,22 @@ blusys_err_t blusys_lcd_open(const blusys_lcd_config_t *config,
     if (esp_err == ESP_OK) {
         esp_err = esp_lcd_panel_swap_xy(lcd->panel_handle, config->swap_xy);
     }
+    lcd_qemu_ignore_not_supported(qemu_panel, &esp_err);
     if (esp_err == ESP_OK) {
         esp_err = esp_lcd_panel_mirror(lcd->panel_handle,
                                        config->mirror_x,
                                        config->mirror_y);
     }
+    lcd_qemu_ignore_not_supported(qemu_panel, &esp_err);
     if (esp_err == ESP_OK) {
         esp_err = esp_lcd_panel_invert_color(lcd->panel_handle,
                                              config->invert_color);
     }
+    lcd_qemu_ignore_not_supported(qemu_panel, &esp_err);
     if (esp_err == ESP_OK) {
         esp_err = esp_lcd_panel_disp_on_off(lcd->panel_handle, true);
     }
+    lcd_qemu_ignore_not_supported(qemu_panel, &esp_err);
     if (esp_err != ESP_OK) {
         err = blusys_translate_esp_err(esp_err);
         blusys_lcd_teardown(lcd);

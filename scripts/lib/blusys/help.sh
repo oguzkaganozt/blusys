@@ -21,8 +21,8 @@ Commands:
   example          Run a command on a bundled example
   lint             Run platform lint checks
   build-examples   Build all examples for all targets
-  host-build       Build the PC + SDL2 host harness (scripts/host/)
-  qemu             Build and run project in QEMU emulator
+  host-build       Build the PC + SDL2 host harness (scripts/host/ or project host/)
+  qemu             Build firmware, then run QEMU (UART default; --graphics for IDF framebuffer)
   install-qemu     Download and install Espressif QEMU
   config-idf       Select default ESP-IDF version
   version          Show blusys and ESP-IDF version info
@@ -68,8 +68,11 @@ blusys_help_create() {
 }
 
 blusys_help_build() {
-    printf 'Usage: blusys build [project] [esp32|esp32c3|esp32s3]\n'
-    printf '\nDefaults to the current directory if no project is specified.\n'
+    printf 'Usage: blusys build [project] [esp32|esp32c3|esp32s3|host|qemu32|qemu32c3|qemu32s3]\n'
+    printf '\n  esp32*     firmware in build-esp32*\n'
+    printf '  host       SDL binary in build-host (same as host-build)\n'
+    printf '  qemu32*    firmware in build-qemu* (optional sdkconfig.qemu for QEMU-only CONFIG)\n'
+    printf '\nDefaults to cwd. Full matrix: docs/app/cli-host-qemu.md\n'
 }
 
 blusys_help_flash() {
@@ -114,7 +117,7 @@ blusys_help_menuconfig() {
 
 blusys_help_fullclean() {
     printf 'Usage: blusys fullclean [project]\n'
-    printf '\nRemove build directories for all targets (esp32, esp32c3, esp32s3).\n'
+    printf '\nRemove build directories for all targets (esp32, esp32c3, esp32s3, host, qemu32, qemu32c3, qemu32s3).\n'
 }
 
 blusys_help_example() {
@@ -169,10 +172,12 @@ blusys_help_config_idf() {
 }
 
 blusys_help_qemu() {
-    printf 'Usage: blusys qemu [project] [esp32|esp32c3|esp32s3]\n'
-    printf '\nBuild and launch project in QEMU emulator. Defaults to cwd.\n'
-    printf 'Networking enabled via OpenCores Ethernet (not WiFi).\n'
-    printf 'Press Ctrl+A, X to exit.\n'
+    printf 'Usage: blusys qemu [--graphics|--serial-only] [project] [chip|qemu32|qemu32c3|qemu32s3]\n'
+    printf '\nBuilds the project, then runs QEMU.\n'
+    printf '  (default)      merge_bin + qemu-system (-nographic) — logs / CI-style UART (Ctrl+A, X)\n'
+    printf '  --graphics     idf.py qemu --graphics monitor — SDL framebuffer (esp32s3/esp32c3; needs matching HAL + sdkconfig.qemu)\n'
+    printf '  --serial-only  idf.py qemu monitor — no SDL window\n'
+    printf 'qemu* uses the same build dir as `blusys build … qemu*`. See docs/app/cli-host-qemu.md\n'
 }
 
 blusys_help_install_qemu() {

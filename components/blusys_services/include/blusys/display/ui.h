@@ -20,6 +20,9 @@ typedef struct blusys_ui blusys_ui_t;
  *   RGB565    – byte-swap into the DMA scratch buffer and forward to
  *               blusys_lcd_draw_bitmap (default; matches ST7735 / ILI9341
  *               and other 16-bit SPI panels).
+ *   RGB565_NATIVE – same LVGL RGB565 buffers, no byte swap (use for
+ *               esp_lcd_qemu_rgb and any panel that expects LVGL's native
+ *               16-bit order, see Espressif's lcd_qemu_rgb_panel example).
  *   MONO_PAGE – threshold each RGB565 pixel to 1 bit, pack into the
  *               SSD1306-style page format (each byte = 8 vertical
  *               pixels in a page, MSB at the bottom of the page),
@@ -33,8 +36,9 @@ typedef struct blusys_ui blusys_ui_t;
  * Default value (zero-init) is RGB565 — preserves backwards
  * compatibility with every existing caller. */
 typedef enum {
-    BLUSYS_UI_PANEL_KIND_RGB565    = 0,
-    BLUSYS_UI_PANEL_KIND_MONO_PAGE = 1,
+    BLUSYS_UI_PANEL_KIND_RGB565         = 0,
+    BLUSYS_UI_PANEL_KIND_MONO_PAGE      = 1,
+    BLUSYS_UI_PANEL_KIND_RGB565_NATIVE  = 2,
 } blusys_ui_panel_kind_t;
 
 typedef struct {

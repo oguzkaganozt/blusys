@@ -17,6 +17,11 @@
 
 static const char *TAG = "blusys_ui";
 
+static bool ui_wants_rgb565_spi_byte_swap(blusys_ui_panel_kind_t kind)
+{
+    return kind == BLUSYS_UI_PANEL_KIND_RGB565;
+}
+
 #define UI_DEFAULT_TASK_PRIORITY  5
 #define UI_DEFAULT_TASK_STACK     16384
 #define UI_DEFAULT_BUF_LINES      20
@@ -31,7 +36,6 @@ struct blusys_ui {
     void                   *buf2;
     void                   *flush_buf;
     size_t                  flush_buf_size;
-    uint32_t                draw_stride;    /* bytes per row in LVGL draw buffers; fixed at open */
     TaskHandle_t            task;
     SemaphoreHandle_t       done_sem;
     volatile bool           running;
@@ -97,8 +101,9 @@ static void flush_cb_mono_page_build(blusys_ui_t *ui, const lv_area_t *area,
 /* LVGL flush callback — forwards to blusys_lcd_draw_bitmap()          */
 /* ------------------------------------------------------------------ */
 /* Copy each LVGL flush area into a DMA-safe scratch buffer packed by area
- * width (not LVGL draw-buffer stride), byte-swap in place, then send to the
- * panel in multi-row bands. */
+ * width, byte-swap in place (SPI panels only), then send to the panel.
+ * px_map row stride follows the *flush area* width (LVGL 9 partial mode
+ * reshapes the draw buffer per dirty rect — not full-display stride). */
 static void flush_cb(lv_display_t *disp, const lv_area_t *area,
                      uint8_t *px_map)
 {
@@ -123,9 +128,10 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
 
     uint32_t area_width       = (uint32_t)(area->x2 - area->x1 + 1);
     uint32_t area_height      = (uint32_t)(area->y2 - area->y1 + 1);
-    uint32_t pixel_size       = lv_color_format_get_size(lv_display_get_color_format(disp));
+    lv_color_format_t cf      = lv_display_get_color_format(disp);
+    uint32_t pixel_size       = lv_color_format_get_size(cf);
     uint32_t packed_row_bytes = area_width * pixel_size;
-    uint32_t draw_stride      = ui->draw_stride;
+    uint32_t src_stride       = lv_draw_buf_width_to_stride(area_width, cf);
 
     if ((ui->flush_buf != NULL) && (ui->flush_buf_size >= packed_row_bytes)) {
         uint32_t max_band_rows = (uint32_t)(ui->flush_buf_size / packed_row_bytes);
@@ -137,21 +143,21 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
             }
 
             /* Copy band rows into the DMA scratch buffer, stripping any LVGL
-             * row padding.  When there is no padding (draw_stride ==
-             * packed_row_bytes, which is the common case for RGB565 panels)
-             * the whole band is contiguous and a single memcpy suffices. */
-            if (draw_stride == packed_row_bytes) {
+             * row padding (src_stride vs tight RGB565 width). */
+            if (src_stride == packed_row_bytes) {
                 memcpy(ui->flush_buf,
-                       px_map + (size_t)row * draw_stride,
+                       px_map + (size_t)row * src_stride,
                        (size_t)band_rows * packed_row_bytes);
             } else {
                 for (uint32_t r = 0; r < band_rows; r++) {
                     memcpy((uint8_t *)ui->flush_buf + (size_t)r * packed_row_bytes,
-                           px_map + (size_t)(row + r) * draw_stride,
+                           px_map + (size_t)(row + r) * src_stride,
                            packed_row_bytes);
                 }
             }
-            lv_draw_sw_rgb565_swap(ui->flush_buf, area_width * band_rows);
+            if (ui_wants_rgb565_spi_byte_swap(ui->panel_kind)) {
+                lv_draw_sw_rgb565_swap(ui->flush_buf, area_width * band_rows);
+            }
 
             /* On the last band all pixel data has been copied out of
              * px_map into flush_buf.  Release the LVGL draw buffer now so
@@ -185,15 +191,19 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
          * DMA reads directly from px_map here, so flush_ready must be
          * deferred until all rows are sent (unlike the band path above). */
         for (uint32_t row = 0; row < area_height; row++) {
-            uint8_t *row_ptr = px_map + ((size_t)row * draw_stride);
-            lv_draw_sw_rgb565_swap(row_ptr, area_width);
+            uint8_t *row_ptr = px_map + ((size_t)row * src_stride);
+            if (ui_wants_rgb565_spi_byte_swap(ui->panel_kind)) {
+                lv_draw_sw_rgb565_swap(row_ptr, area_width);
+            }
             blusys_err_t draw_err = blusys_lcd_draw_bitmap(ui->lcd,
                                    area->x1,
                                    area->y1 + (int32_t)row,
                                    area->x2 + 1,
                                    area->y1 + (int32_t)row + 1,
                                    row_ptr);
-            lv_draw_sw_rgb565_swap(row_ptr, area_width);  /* restore: undo the in-place swap */
+            if (ui_wants_rgb565_spi_byte_swap(ui->panel_kind)) {
+                lv_draw_sw_rgb565_swap(row_ptr, area_width);  /* restore: undo the in-place swap */
+            }
             if (draw_err != BLUSYS_OK) {
                 ESP_LOGE(TAG, "lcd_draw_bitmap failed: %d (fallback row=%lu)",
                          (int)draw_err, (unsigned long)row);
@@ -289,7 +299,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
                          ? config->buf_lines
                          : UI_DEFAULT_BUF_LINES;
     lv_color_format_t cf = lv_display_get_color_format(ui->disp);
-    uint32_t stride = lv_draw_buf_width_to_stride(width, cf);
+    uint32_t stride    = lv_draw_buf_width_to_stride(width, cf);
     uint32_t buf_bytes = stride * (full_refresh ? height : buf_lines);
     uint32_t flush_band_lines = (buf_lines > UI_FLUSH_BAND_LINES)
                                 ? buf_lines
@@ -321,7 +331,6 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
         return BLUSYS_ERR_NO_MEM;
     }
     ui->flush_buf_size = flush_buf_bytes;
-    ui->draw_stride    = stride;
     lv_display_set_buffers(ui->disp, ui->buf1, ui->buf2,
                            buf_bytes,
                            full_refresh ? LV_DISPLAY_RENDER_MODE_FULL
@@ -335,7 +344,10 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
              (unsigned long)buf_bytes,
              (unsigned long)flush_buf_bytes,
              full_refresh ? 1 : 0,
-             ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE ? "mono_page" : "rgb565");
+             ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE
+                 ? "mono_page"
+                 : (ui->panel_kind == BLUSYS_UI_PANEL_KIND_RGB565_NATIVE ? "rgb565_native"
+                                                                         : "rgb565"));
 
     /* Start render task */
     int prio  = config->task_priority > 0 ? config->task_priority

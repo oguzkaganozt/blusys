@@ -1,5 +1,8 @@
 # Sourced by repo-root `blusys` — shared utilities (project resolution, IDF, ports).
 
+: "${BLUSYS_MIN_IDF_MAJOR:=5}"
+: "${BLUSYS_MIN_IDF_MINOR:=5}"
+
 blusys_resolve_project_dir() {
     local project_arg="$1"
     local candidate
@@ -27,18 +30,37 @@ blusys_resolve_project_dir() {
     printf '%s\n' "$(cd "$candidate" && pwd)"
 }
 
+blusys_is_qemu_build_label() {
+    case "${1:-}" in
+        qemu32|qemu32c3|qemu32s3) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Maps blusys build labels to the IDF chip name for idf.py set-target (host is handled elsewhere).
+blusys_idf_target_from_build_label() {
+    case "${1:-}" in
+        qemu32) printf 'esp32' ;;
+        qemu32c3) printf 'esp32c3' ;;
+        qemu32s3) printf 'esp32s3' ;;
+        esp32|esp32c3|esp32s3) printf '%s' "$1" ;;
+        *) return 1 ;;
+    esac
+}
+
 blusys_detect_target() {
     local project_dir="$1"
     local requested_target="${2:-}"
 
     if [[ -n "$requested_target" ]]; then
         case "$requested_target" in
-            esp32|esp32c3|esp32s3)
+            esp32|esp32c3|esp32s3|host|qemu32|qemu32c3|qemu32s3)
                 printf '%s\n' "$requested_target"
                 return 0
                 ;;
             *)
                 printf 'error: unsupported target: %s\n' "$requested_target" >&2
+                printf '       expected: esp32, esp32c3, esp32s3, host, qemu32, qemu32c3, qemu32s3\n' >&2
                 return 1
                 ;;
         esac
@@ -62,26 +84,46 @@ blusys_sdkconfig_args() {
     local project_dir="$1"
     local target="$2"
     local build_dir="$project_dir/build-$target"
-    local common_defaults="$project_dir/sdkconfig.defaults"
-    local target_defaults="$project_dir/sdkconfig.$target"
+    local idf_target
+    idf_target="$(blusys_idf_target_from_build_label "$target")" || return 1
 
-    local sdkconfig_defaults=""
-    if [[ -f "$common_defaults" ]]; then
-        sdkconfig_defaults="$common_defaults"
+    local common="$project_dir/sdkconfig.defaults"
+    local chip="$project_dir/sdkconfig.$idf_target"
+    local qemu_frag="$project_dir/sdkconfig.qemu"
+
+    local parts=()
+    [[ -f "$common" ]] && parts+=("$common")
+    [[ -f "$chip" ]] && parts+=("$chip")
+    if blusys_is_qemu_build_label "$target" && [[ -f "$qemu_frag" ]]; then
+        parts+=("$qemu_frag")
     fi
-    if [[ -f "$target_defaults" ]]; then
-        if [[ -n "$sdkconfig_defaults" ]]; then
-            sdkconfig_defaults="${sdkconfig_defaults};${target_defaults}"
-        else
-            sdkconfig_defaults="$target_defaults"
-        fi
-    fi
+
+    local sdkconfig_defaults="" p
+    for p in "${parts[@]}"; do
+        [[ -n "$sdkconfig_defaults" ]] && sdkconfig_defaults+=";"
+        sdkconfig_defaults+="$p"
+    done
 
     if [[ -n "$sdkconfig_defaults" ]]; then
         printf '%s\n' "-DSDKCONFIG_DEFAULTS=$sdkconfig_defaults"
     fi
-
     printf '%s\n' "-DSDKCONFIG=$build_dir/sdkconfig"
+}
+
+# Sets globals BUILD_DIR, IDF_TARGET, SDKCONFIG_ARGS (not used for TARGET=host).
+blusys_populate_idf_sdkconfig() {
+    local project_dir="$1"
+    local target="$2"
+    BUILD_DIR="$project_dir/build-$target"
+    IDF_TARGET="$(blusys_idf_target_from_build_label "$target")" || return 1
+    local out
+    out="$(blusys_sdkconfig_args "$project_dir" "$target")" || return 1
+    mapfile -t SDKCONFIG_ARGS <<< "$out"
+}
+
+# idf.py with current PROJECT_DIR, BUILD_DIR, SDKCONFIG_ARGS (after setup_*).
+blusys_idf_py() {
+    idf.py -C "$PROJECT_DIR" -B "$BUILD_DIR" "${SDKCONFIG_ARGS[@]}" "$@"
 }
 
 blusys_find_idf_path() {
@@ -286,14 +328,28 @@ blusys_detect_port() {
 
 blusys_is_target() {
     case "${1:-}" in
+        esp32|esp32c3|esp32s3|host|qemu32|qemu32c3|qemu32s3) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# True for esp32 / esp32c3 / esp32s3 (USB-flashable); false for host and qemu* labels.
+blusys_is_device_flash_target() {
+    case "${1:-}" in
         esp32|esp32c3|esp32s3) return 0 ;;
         *) return 1 ;;
     esac
 }
 
+# Commands that operate on IDF firmware (not the SDL host harness).
+blusys_reject_host_target() {
+    [[ "$TARGET" != host ]] && return 0
+    printf 'error: use a chip or qemu* target (not host). For SDL: blusys host-build\n' >&2
+    return 1
+}
+
 # Parse args for commands that need a port (flash, monitor, run, erase).
-# All args are optional — defaults to cwd, auto port, auto target.
-# Sets globals: PROJECT_DIR, PORT, TARGET, BUILD_DIR, SDKCONFIG_ARGS
+# Sets globals: PROJECT_DIR, PORT, TARGET, BUILD_DIR, SDKCONFIG_ARGS, IDF_TARGET
 blusys_setup_with_port() {
     local project="" port_arg="" target=""
 
@@ -321,15 +377,20 @@ blusys_setup_with_port() {
     esac
 
     PROJECT_DIR="$(blusys_resolve_project_dir "$project")"
-    PORT="$(blusys_detect_port "$port_arg")"
-    TARGET="$(blusys_detect_target "$PROJECT_DIR" "$target")"
-    BUILD_DIR="$PROJECT_DIR/build-$TARGET"
-    mapfile -t SDKCONFIG_ARGS < <(blusys_sdkconfig_args "$PROJECT_DIR" "$TARGET")
+    TARGET="$(blusys_detect_target "$PROJECT_DIR" "$target")" || return 1
+
+    if ! blusys_is_device_flash_target "$TARGET"; then
+        printf 'error: flash/monitor/run/erase need a device target (esp32, esp32c3, esp32s3), not %s\n' "$TARGET" >&2
+        return 1
+    fi
+
+    blusys_populate_idf_sdkconfig "$PROJECT_DIR" "$TARGET" || return 1
+    PORT="$(blusys_detect_port "$port_arg")" || return 1
 }
 
 # Parse args for commands that don't need a port (build, config, size, clean).
 # All args are optional — defaults to cwd, auto target.
-# Sets globals: PROJECT_DIR, TARGET, BUILD_DIR, SDKCONFIG_ARGS
+# Sets globals: PROJECT_DIR, TARGET, BUILD_DIR, SDKCONFIG_ARGS, IDF_TARGET
 blusys_setup_no_port() {
     local project="" target=""
 
@@ -346,14 +407,23 @@ blusys_setup_no_port() {
     esac
 
     PROJECT_DIR="$(blusys_resolve_project_dir "$project")"
-    TARGET="$(blusys_detect_target "$PROJECT_DIR" "$target")"
-    BUILD_DIR="$PROJECT_DIR/build-$TARGET"
-    mapfile -t SDKCONFIG_ARGS < <(blusys_sdkconfig_args "$PROJECT_DIR" "$TARGET")
+    TARGET="$(blusys_detect_target "$PROJECT_DIR" "$target")" || return 1
+
+    if [[ "$TARGET" = host ]]; then
+        IDF_TARGET=""
+        BUILD_DIR="$PROJECT_DIR/build-host"
+        SDKCONFIG_ARGS=()
+        return 0
+    fi
+
+    blusys_populate_idf_sdkconfig "$PROJECT_DIR" "$TARGET" || return 1
 }
 
 blusys_print_info() {
+    local label="$TARGET"
+    blusys_is_qemu_build_label "$TARGET" && label="$TARGET (IDF: $IDF_TARGET)"
     printf 'Project:   %s\n' "$PROJECT_DIR"
-    printf 'Target:    %s\n' "$TARGET"
+    printf 'Target:    %s\n' "$label"
     printf 'Build dir: %s\n' "$BUILD_DIR"
 }
 

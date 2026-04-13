@@ -1175,6 +1175,10 @@ docs:
     section: app
     visibility: public
 
+  - path: docs/app/cli-host-qemu.md
+    section: app
+    visibility: public
+
   # --- Services ---
   - path: docs/services/index.md
     section: services
