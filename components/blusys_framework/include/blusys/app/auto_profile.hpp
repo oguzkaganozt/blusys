@@ -20,7 +20,7 @@
 
 namespace blusys::app {
 
-// ---- interactive controller (ST7735 / ST7789 + host) ----
+// ---- handheld interactive (ST7735 / ST7789 + host) ----
 
 #if defined(ESP_PLATFORM)
 

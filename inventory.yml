@@ -435,20 +435,23 @@ modules:
     support: supported
     targets: [esp32, esp32c3, esp32s3]
     doc: docs/app/index.md
-    examples: [interactive_controller, interactive_panel, interactive_dashboard, mqtt_dashboard, edge_node, gateway, framework_device_basic, framework_encoder_basic, connected_device, connected_headless]
+    examples: [handheld_starter, surface_ops_panel, interactive_dashboard, mqtt_dashboard, headless_telemetry, surface_gateway, headless_lan_control, handheld_bluetooth, framework_device_basic, framework_encoder_basic, connected_device, connected_headless, usb_basic, lan_control_basic, headless_telemetry_low_power]
 
 # ---------------------------------------------------------------------------
 # Examples
 # ---------------------------------------------------------------------------
 examples:
   # --- Quickstart (PR CI + nightly) ---
-  - name: interactive_controller
+  - name: handheld_starter
     category: quickstart
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: true
     ci_nightly: true
+    interface: handheld
+    capabilities: [storage, connectivity]
+    policies: []
 
   - name: connected_device
     category: reference
@@ -457,6 +460,9 @@ examples:
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: handheld
+    capabilities: [connectivity]
+    policies: []
 
   - name: connected_headless
     category: reference
@@ -465,6 +471,9 @@ examples:
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: headless
+    capabilities: [connectivity, storage]
+    policies: []
 
   - name: framework_app_basic
     category: reference
@@ -473,6 +482,9 @@ examples:
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: none
+    capabilities: []
+    policies: []
 
   - name: framework_ui_basic
     category: reference
@@ -481,14 +493,20 @@ examples:
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: none
+    capabilities: []
+    policies: []
 
-  - name: edge_node
+  - name: headless_telemetry
     category: quickstart
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: true
     ci_nightly: true
+    interface: headless
+    capabilities: [connectivity, lan_control, telemetry, diagnostics, ota, storage]
+    policies: []
 
   - name: framework_device_basic
     category: reference
@@ -497,23 +515,54 @@ examples:
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: none
+    capabilities: []
+    policies: []
 
   # --- Reference (nightly only) ---
-  - name: gateway
+  - name: surface_gateway
     category: reference
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: surface
+    capabilities: [connectivity, lan_control, telemetry, diagnostics, ota, storage]
+    policies: []
 
-  - name: interactive_panel
+  - name: surface_ops_panel
     category: reference
     visibility: public
     tier: framework
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: true
     ci_nightly: true
+    interface: surface
+    capabilities: [connectivity, diagnostics, storage]
+    policies: []
+
+  - name: headless_lan_control
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+    interface: headless
+    capabilities: [connectivity, lan_control]
+    policies: []
+
+  - name: handheld_bluetooth
+    category: reference
+    visibility: public
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+    interface: handheld
+    capabilities: [storage, bluetooth]
+    policies: []
 
   - name: interactive_dashboard
     category: reference
@@ -522,6 +571,9 @@ examples:
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: surface
+    capabilities: [diagnostics, storage]
+    policies: []
 
   - name: mqtt_dashboard
     category: reference
@@ -530,6 +582,9 @@ examples:
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: surface
+    capabilities: [diagnostics, connectivity]
+    policies: []
 
   - name: gpio_basic
     category: reference
@@ -682,6 +737,9 @@ examples:
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: none
+    capabilities: []
+    policies: []
 
   # --- Validation (nightly only, internal) ---
   - name: smoke
@@ -747,6 +805,42 @@ examples:
     targets: [esp32, esp32c3, esp32s3]
     ci_pr: false
     ci_nightly: true
+    interface: none
+    capabilities: []
+    policies: []
+
+  - name: usb_basic
+    category: validation
+    visibility: internal
+    tier: framework
+    targets: [esp32s3]
+    ci_pr: false
+    ci_nightly: true
+    interface: none
+    capabilities: [usb]
+    policies: []
+
+  - name: lan_control_basic
+    category: validation
+    visibility: internal
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+    interface: headless
+    capabilities: [connectivity, lan_control]
+    policies: []
+
+  - name: headless_telemetry_low_power
+    category: validation
+    visibility: internal
+    tier: framework
+    targets: [esp32, esp32c3, esp32s3]
+    ci_pr: false
+    ci_nightly: true
+    interface: headless
+    capabilities: [connectivity, telemetry]
+    policies: [low_power]
 
   - name: gpio_interrupt
     category: validation
@@ -1122,7 +1216,7 @@ docs:
     section: start
     visibility: public
 
-  - path: docs/start/archetypes.md
+  - path: docs/start/product-shape.md
     section: start
     visibility: public
 

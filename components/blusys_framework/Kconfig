@@ -6,7 +6,7 @@ menu "Blusys framework"
             prompt "Dashboard-class display (device)"
             default BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341
             help
-                Used by gateway, interactive_panel, interactive_dashboard, and mqtt_dashboard.
+                Used by surface_gateway, surface_ops_panel, interactive_dashboard, and mqtt_dashboard.
                 Pick a SPI panel for hardware (including compact ST7735 on e.g. ESP32-C3), or QEMU
                 virtual RGB for Espressif QEMU with --graphics (ESP32-S3 / ESP32-C3 only; see
                 interactive_dashboard/sdkconfig.qemu).
@@ -30,10 +30,10 @@ menu "Blusys framework"
         endchoice
 
         choice BLUSYS_INTERACTIVE_DISPLAY_PROFILE
-            prompt "Interactive controller SPI display"
+            prompt "Handheld interactive SPI display"
             default BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7735
             help
-                Used by the interactive_controller quickstart. Host SDL window size follows
+                Used by the handheld_starter quickstart. Host SDL window size follows
                 host CMake when simulating the selected profile.
 
             config BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7735

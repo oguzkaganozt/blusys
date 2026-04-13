@@ -15,10 +15,10 @@
 //   - runtime construction and main loop
 //
 // Available entry macros:
-//   BLUSYS_APP(spec)                            — default interactive archetype when UI is
+//   BLUSYS_APP(spec)                            — default interactive product when UI is
 //                                                  enabled; headless when BLUSYS_FRAMEWORK_HAS_UI
-//                                                  is off (e.g. edge_node without LVGL)
-//   BLUSYS_APP_INTERACTIVE(spec)                — interactive_controller profile (ST7735/ST7789)
+//                                                  is off (e.g. headless_telemetry without LVGL)
+//   BLUSYS_APP_INTERACTIVE(spec)                — handheld_starter profile (ST7735/ST7789)
 //   BLUSYS_APP_DASHBOARD(spec, host_title)      — gateway/panel/dashboard SPI profile + SDL title
 //   BLUSYS_APP_MAIN_HOST(spec)                  — interactive, SDL2 host
 //   BLUSYS_APP_MAIN_HOST_PROFILE(spec, profile) — interactive host + explicit window size/title
@@ -360,7 +360,7 @@ void run_headless(const app_spec<State, Action> &spec,
     }
 
 // Like BLUSYS_APP_MAIN_HOST but reads window size and title from a
-// blusys::app::host_profile struct. Useful for product archetypes that
+// blusys::app::host_profile struct. Useful for product profiles that
 // have a fixed display size (e.g. 128×32 OLED, 320×240 TFT).
 #define BLUSYS_APP_MAIN_HOST_PROFILE(spec_expr, profile_expr)               \
     int main(void) {                                                        \

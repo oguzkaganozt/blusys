@@ -15,18 +15,19 @@
 #include "blusys/app/capabilities/bluetooth.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
+#include "blusys/app/capabilities/lan_control.hpp"
 #include "blusys/app/capabilities/ota.hpp"
 #include "blusys/app/capabilities/mqtt_host.hpp"
-#include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
+#include "blusys/app/capabilities/usb.hpp"
 
 #include <cstdint>
 #include <optional>
 
 namespace blusys::app::integration {
 
-// Maps the high byte of event_id to capability_kind (reserved ranges 0x01–0x08).
+// Maps the high byte of event_id to capability_kind.
 [[nodiscard]] inline std::optional<capability_kind> kind_for_event_id(std::uint32_t id)
 {
     const unsigned hi = (id >> 8) & 0xFFu;
@@ -43,10 +44,12 @@ namespace blusys::app::integration {
         return capability_kind::diagnostics;
     case 0x06:
         return capability_kind::telemetry;
-    case 0x07:
-        return capability_kind::provisioning;
     case 0x08:
         return capability_kind::mqtt_host;
+    case 0x0A:
+        return capability_kind::lan_control;
+    case 0x0B:
+        return capability_kind::usb;
     default:
         return std::nullopt;
     }
@@ -69,6 +72,13 @@ namespace blusys::app::integration {
     case connectivity_event::time_sync_failed:
     case connectivity_event::mdns_ready:
     case connectivity_event::local_ctrl_ready:
+    case connectivity_event::prov_started:
+    case connectivity_event::prov_credentials_received:
+    case connectivity_event::prov_success:
+    case connectivity_event::prov_failed:
+    case connectivity_event::prov_already_done:
+    case connectivity_event::prov_reset_complete:
+    case connectivity_event::provisioning_ready:
     case connectivity_event::capability_ready:
         *out = e;
         return true;
@@ -177,20 +187,39 @@ namespace blusys::app::integration {
     }
 }
 
-[[nodiscard]] inline bool as_provisioning_event(std::uint32_t id, provisioning_event *out)
+[[nodiscard]] inline bool as_lan_control_event(std::uint32_t id, lan_control_event *out)
 {
     if (out == nullptr) {
         return false;
     }
-    const auto e = static_cast<provisioning_event>(id);
+    const auto e = static_cast<lan_control_event>(id);
     switch (e) {
-    case provisioning_event::started:
-    case provisioning_event::credentials_received:
-    case provisioning_event::success:
-    case provisioning_event::failed:
-    case provisioning_event::already_provisioned:
-    case provisioning_event::reset_complete:
-    case provisioning_event::capability_ready:
+    case lan_control_event::http_ready:
+    case lan_control_event::mdns_ready:
+    case lan_control_event::capability_ready:
+        *out = e;
+        return true;
+    default:
+        return false;
+    }
+}
+
+[[nodiscard]] inline bool as_usb_event(std::uint32_t id, usb_event *out)
+{
+    if (out == nullptr) {
+        return false;
+    }
+    const auto e = static_cast<usb_event>(id);
+    switch (e) {
+    case usb_event::device_ready:
+    case usb_event::host_ready:
+    case usb_event::device_connected:
+    case usb_event::device_disconnected:
+    case usb_event::device_suspended:
+    case usb_event::device_resumed:
+    case usb_event::host_attached:
+    case usb_event::host_detached:
+    case usb_event::capability_ready:
         *out = e;
         return true;
     default:

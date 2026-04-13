@@ -592,7 +592,7 @@ cmd_host_build() {
         project_dir="$(blusys_resolve_project_dir "$project_arg")" || exit 1
         if [[ ! -f "$project_dir/host/CMakeLists.txt" ]]; then
             printf 'error: no host/CMakeLists.txt found in %s\n' "$project_dir" >&2
-            printf '       re-run: blusys create --archetype <name> %s\n' "$project_dir" >&2
+            printf '       re-run: blusys create --interface <handheld|surface|headless> %s\n' "$project_dir" >&2
             exit 1
         fi
         host_dir="$project_dir/host"

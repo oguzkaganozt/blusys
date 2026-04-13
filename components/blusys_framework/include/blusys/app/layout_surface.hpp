@@ -37,7 +37,7 @@ enum class theme_packaging_hint : std::uint8_t {
 enum class shell_density : std::uint8_t {
     minimal,   // hide or shrink header/tabs on tiny surfaces
     standard,
-    full,      // header + status + tabs where archetype expects it
+    full,      // header + status + tabs where the shell expects them
 };
 
 struct surface_hints {

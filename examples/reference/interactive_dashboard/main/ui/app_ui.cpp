@@ -289,7 +289,7 @@ lv_obj_t *create_overview(blusys::app::app_ctx &ctx, const void * /*params*/, lv
 lv_obj_t *create_about(blusys::app::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
 {
     const blusys::app::screens::about_extra_field extras[] = {
-        {.key = "Archetype", .value = "interactive dashboard"},
+        {.key = "Interface", .value = "surface"},
         {.key = "Profile", .value = interactive_dashboard::system::dashboard_profile_label_for_build()},
         {.key = "Identity", .value = "expressive_dark"},
         {.key = "Focus", .value = "gauges · trends · zones"},

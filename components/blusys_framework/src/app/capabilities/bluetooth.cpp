@@ -36,7 +36,13 @@ blusys_err_t bluetooth_capability::start(blusys::framework::runtime &rt)
 
         blusys_err_t err = blusys_ble_gatt_open(&gatt_cfg, &gatt_);
         if (err != BLUSYS_OK) {
-            BLUSYS_LOGE(TAG, "ble gatt open failed: %d", static_cast<int>(err));
+            if (err == BLUSYS_ERR_BUSY) {
+                BLUSYS_LOGE(TAG,
+                            "ble gatt open failed: BLE controller busy (Wi-Fi provisioning, "
+                            "another bluetooth_capability path, USB HID BLE, etc.)");
+            } else {
+                BLUSYS_LOGE(TAG, "ble gatt open failed: %d", static_cast<int>(err));
+            }
             return err;
         }
 
@@ -52,7 +58,13 @@ blusys_err_t bluetooth_capability::start(blusys::framework::runtime &rt)
 
         blusys_err_t err = blusys_bluetooth_open(&bt_cfg, &bt_);
         if (err != BLUSYS_OK) {
-            BLUSYS_LOGE(TAG, "bluetooth open failed: %d", static_cast<int>(err));
+            if (err == BLUSYS_ERR_BUSY) {
+                BLUSYS_LOGE(TAG,
+                            "bluetooth open failed: BLE controller busy (Wi-Fi provisioning, "
+                            "GATT path, USB HID BLE, etc.)");
+            } else {
+                BLUSYS_LOGE(TAG, "bluetooth open failed: %d", static_cast<int>(err));
+            }
             return err;
         }
 

@@ -42,6 +42,10 @@ struct bluetooth_status {
 
 #ifdef ESP_PLATFORM
 
+// NimBLE is acquired through services (`blusys_bluetooth_*` / `blusys_ble_gatt_*`),
+// which serialize access with HAL `blusys_bt_stack` alongside Wi‑Fi provisioning
+// (BLE) and USB HID BLE.
+
 struct bluetooth_config {
     const char *device_name = nullptr;
     bool auto_advertise     = true;

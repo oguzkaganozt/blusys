@@ -1,6 +1,6 @@
 // Mirrors `panel_connectivity_event_triggers_sync` from
 // `examples/include/blusys_examples/panel_connectivity_sync.hpp` (included by
-// the interactive_panel example's map_event bridge).
+// the surface_ops_panel example's map_event bridge).
 
 #include "blusys_examples/panel_connectivity_sync.hpp"
 

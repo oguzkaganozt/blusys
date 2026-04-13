@@ -55,10 +55,12 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 
 ## Example Apps
 
-- [`examples/quickstart/interactive_controller/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/interactive_controller) --- canonical interactive controller quickstart using shell navigation and setup flow
-- [`examples/reference/interactive_panel/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/interactive_panel) --- operational panel reference using the same app runtime and shell
-- [`examples/quickstart/edge_node/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/edge_node) --- headless-first connected archetype
-- [`examples/reference/gateway/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/gateway) --- coordinator/operator archetype with an optional local surface
+- [`examples/quickstart/handheld_starter/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/handheld_starter) --- canonical handheld interactive quickstart using shell navigation and setup flow
+- [`examples/reference/surface_ops_panel/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/surface_ops_panel) --- operational panel reference using the same app runtime and shell
+- [`examples/quickstart/headless_telemetry/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/headless_telemetry) --- headless-first connected reference (`interface: headless` in `inventory.yml`)
+- [`examples/reference/surface_gateway/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/surface_gateway) --- coordinator/operator reference (`interface: surface`) with optional local UI
+- [`examples/reference/headless_lan_control/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/headless_lan_control) --- minimal headless connectivity + `lan_control` reference
+- [`examples/reference/handheld_bluetooth/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/handheld_bluetooth) --- handheld interactive + `bluetooth` (GAP) reference
 - [`examples/reference/framework_device_basic/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/framework_device_basic) --- minimal interactive app for framework validation
 - [`examples/reference/connected_device/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connected_device) --- interactive product with connectivity capabilities
 - [`examples/reference/connected_headless/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connected_headless) --- headless product with connectivity capabilities

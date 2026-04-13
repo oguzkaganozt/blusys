@@ -1,6 +1,6 @@
 #include "core/app_logic.hpp"
 
-#include "blusys_examples/archetype_percent.hpp"
+#include "blusys_examples/clamp_percent.hpp"
 
 #include "blusys/app/view/bindings.hpp"
 #include "blusys/app/view/composites.hpp"

@@ -66,7 +66,7 @@ panel_fragment="$(make_fragment \
     '# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306 is not set' \
     '# CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB is not set')"
 
-gateway_fragment="$(make_fragment \
+surface_gateway_fragment="$(make_fragment \
     'CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488=y' \
     '# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341 is not set' \
     '# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735 is not set' \
@@ -74,28 +74,28 @@ gateway_fragment="$(make_fragment \
     '# CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB is not set')"
 
 edge_fragment="$(make_fragment \
-    'CONFIG_BLUSYS_EDGE_NODE_LOCAL_UI=y')"
+    'CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI=y')"
 
 build_variant \
-    "$REPO_ROOT/examples/quickstart/interactive_controller" \
+    "$REPO_ROOT/examples/quickstart/handheld_starter" \
     "build-$TARGET-display-st7789" \
     "$controller_fragment" \
-    "interactive_controller $TARGET ST7789"
+    "handheld_starter $TARGET ST7789"
 
 build_variant \
-    "$REPO_ROOT/examples/reference/interactive_panel" \
+    "$REPO_ROOT/examples/reference/surface_ops_panel" \
     "build-$TARGET-display-ili9488" \
     "$panel_fragment" \
-    "interactive_panel $TARGET ILI9488"
+    "surface_ops_panel $TARGET ILI9488"
 
 build_variant \
-    "$REPO_ROOT/examples/reference/gateway" \
+    "$REPO_ROOT/examples/reference/surface_gateway" \
     "build-$TARGET-display-ili9488" \
-    "$gateway_fragment" \
-    "gateway $TARGET ILI9488"
+    "$surface_gateway_fragment" \
+    "surface_gateway $TARGET ILI9488"
 
 build_variant \
-    "$REPO_ROOT/examples/quickstart/edge_node" \
+    "$REPO_ROOT/examples/quickstart/headless_telemetry" \
     "build-$TARGET-display-local-ui" \
     "$edge_fragment" \
-    "edge_node $TARGET SSD1306 local UI"
+    "headless_telemetry $TARGET SSD1306 local UI"

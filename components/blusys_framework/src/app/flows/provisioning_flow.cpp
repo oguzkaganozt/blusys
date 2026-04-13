@@ -82,8 +82,8 @@ lv_obj_t *provisioning_screen_create(app_ctx & /*ctx*/,
 }
 
 void provisioning_screen_update(provisioning_screen_handles &handles,
-                                 const provisioning_status &status,
-                                 const provisioning_flow_config &config)
+                                  const connectivity_provisioning_status &status,
+                                  const provisioning_flow_config &config)
 {
     if (handles.qr_label != nullptr && status.qr_payload[0] != '\0') {
         lv_label_set_text(handles.qr_label, status.qr_payload);

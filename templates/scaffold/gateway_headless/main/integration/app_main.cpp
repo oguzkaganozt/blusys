@@ -3,8 +3,8 @@
 #include "blusys/app/app.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
+#include "blusys/app/capabilities/lan_control.hpp"
 #include "blusys/app/capabilities/ota.hpp"
-#include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
 #include "blusys/log.h"
@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <cstdint>
 
-namespace gateway::system {
+namespace surface_surface_gateway::system {
 
 namespace {
 
@@ -47,8 +47,8 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len,
                                size_t *out_len, void * /*user_ctx*/)
 {
     int written = std::snprintf(json_buf, buf_len,
-        "{\"product\":\"gateway-reference\","
-        "\"archetype\":\"gateway/controller\","
+        "{\"product\":\"surface-gateway-headless\","
+        "\"interface\":\"headless\","
         "\"firmware\":\"%s\"}",
         gateway_build_version_for_build());
     if (written < 0 || static_cast<size_t>(written) >= buf_len) {
@@ -70,15 +70,20 @@ blusys::app::connectivity_config conn_cfg{
     .reconnect_delay_ms = 3000,
     .max_retries        = -1,
     .sntp_server        = "pool.ntp.org",
-    .mdns_hostname      = "blusys-gw",
-    .mdns_instance_name = "Blusys Gateway",
-    .local_ctrl_device_name = "Gateway",
-#ifdef ESP_PLATFORM
-    .local_ctrl_status_cb   = local_ctrl_status,
-#endif
+    .prov_service_name = "blusys-gw",
+    .prov_pop          = "gw1234",
+    .prov_skip_if_provisioned = true,
 };
 
 blusys::app::connectivity_capability connectivity{conn_cfg};
+blusys::app::lan_control_capability lan_control{{
+    .device_name = "Gateway",
+#ifdef ESP_PLATFORM
+    .status_cb   = local_ctrl_status,
+#endif
+    .service_name = "blusys-gw",
+    .instance_name = "Blusys Gateway",
+}};
 blusys::app::telemetry_capability telemetry{{
     .deliver           = deliver_telemetry,
     .flush_threshold   = 12,
@@ -92,17 +97,12 @@ blusys::app::ota_capability ota{{
     .firmware_url    = "https://ota.example.com/gateway.bin",
     .auto_mark_valid = true,
 }};
-blusys::app::provisioning_capability provisioning{{
-    .service_name        = "blusys-gw",
-    .pop                 = "gw1234",
-    .skip_if_provisioned = true,
-}};
 blusys::app::storage_capability storage{{
     .spiffs_base_path = "/gw",
 }};
 
 blusys::app::capability_list capabilities{
-    &connectivity, &telemetry, &diagnostics, &ota, &provisioning, &storage};
+    &connectivity, &lan_control, &telemetry, &diagnostics, &ota, &storage};
 
 void on_tick(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms)
 {
@@ -117,7 +117,7 @@ void on_tick(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc, app
     }
 
     if (state.sample_count % 30 == 0) {
-        BLUSYS_LOGI("gateway", "heartbeat #%lu  phase=%s  dev=%ld  tput=%.1f  delivered=%u fails=%u",
+        BLUSYS_LOGI("surface_gateway", "heartbeat #%lu  phase=%s  dev=%ld  tput=%.1f  delivered=%u fails=%u",
                     static_cast<unsigned long>(state.sample_count),
                     op_state_name(state.phase),
                     static_cast<long>(state.active_devices),
@@ -138,6 +138,6 @@ const blusys::app::app_spec<app_state, action> spec{
 
 }  // namespace
 
-}  // namespace gateway::system
+}  // namespace surface_surface_gateway::system
 
-BLUSYS_APP_MAIN_HEADLESS(gateway::system::spec)
+BLUSYS_APP_MAIN_HEADLESS(surface_gateway::system::spec)

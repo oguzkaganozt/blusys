@@ -2,9 +2,9 @@
 
 Build and run a display-first interactive product using the `blusys::app` path.
 
-The canonical interactive starting point is the `interactive controller` archetype:
+The default interactive starting point uses the **`handheld`** interface (compact shell, tactile bias):
 
-- example: `examples/quickstart/interactive_controller/`
+- example: `examples/quickstart/handheld_starter/`
 - visual bias: expressive and tactile
 - interaction bias: compact, encoder-friendly control flows
 - architecture: the same reducer, shell, and capability model used everywhere else
@@ -12,9 +12,12 @@ The canonical interactive starting point is the `interactive controller` archety
 ## Create the project
 
 ```bash
-blusys create --archetype interactive-controller my_product
+blusys create my_product
+# equivalent: blusys create --interface handheld my_product
 cd my_product
 ```
+
+For a denser operator shell, use **`--interface surface`** (see [Product shape](product-shape.md)).
 
 ## Run on host
 
@@ -35,8 +38,8 @@ The scaffold generates a host-first interactive app with:
 
 If you want a concrete product-shaped reference immediately, start from:
 
-- `examples/quickstart/interactive_controller/` for compact expressive control surfaces (see its `README.md` for the locked archetype brief)
-- `examples/reference/interactive_panel/` for denser operational panels (same brief pattern in `README.md`)
+- `examples/quickstart/handheld_starter/` for compact expressive control surfaces (see its `README.md`)
+- `examples/reference/surface_ops_panel/` for denser operational panels (same layout pattern)
 
 ## Project structure
 
@@ -44,6 +47,7 @@ If you want a concrete product-shaped reference immediately, start from:
 my_product/
   CMakeLists.txt       — bakes BLUSYS_BUILD_UI=ON and project name
   sdkconfig.defaults
+  blusys.project.yml   — declared interface, capabilities, policies
   main/
     CMakeLists.txt     — idf_component_register listing core, ui, and integration
     idf_component.yml
@@ -62,8 +66,8 @@ my_product/
 
 ## Next steps
 
-- [Archetype Starters](archetypes.md) --- choose between the four canonical starting shapes
-- [Reducer Model](../app/reducer-model.md) --- understand state, actions, and `update()`
-- [Views & Widgets](../app/views-and-widgets.md) --- build screens with stock widgets
-- [Profiles](../app/profiles.md) --- target a real device with `BLUSYS_APP_MAIN_DEVICE`
-- [Capabilities](../app/capabilities.md) --- add WiFi and storage
+- [Product shape](product-shape.md) — choose interface, capabilities, and policies
+- [Reducer Model](../app/reducer-model.md) — understand state, actions, and `update()`
+- [Views & Widgets](../app/views-and-widgets.md) — build screens with stock widgets
+- [Profiles](../app/profiles.md) — target a real device with `BLUSYS_APP_MAIN_DEVICE`
+- [Capabilities](../app/capabilities.md) — add WiFi and storage

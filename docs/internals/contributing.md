@@ -13,7 +13,7 @@ Run proportionate checks for the scope of your change:
 | `inventory.yml`, new modules/examples/docs | `python3 scripts/check-inventory.py` |
 | Product-shaped `main/` layouts | `python3 scripts/check-product-layout.py` |
 | Example paths | `python3 scripts/example-health.py` |
-| `blusys create`, templates, archetype host CMake | `scripts/scaffold-smoke.sh` |
+| `blusys create`, scaffold catalog/templates, generated host CMake | `scripts/scaffold-smoke.sh` |
 | Docs, `mkdocs.yml` | `mkdocs build --strict` |
 | Components or examples | `blusys build` / `blusys host-build` |
 
@@ -52,7 +52,7 @@ Workflow: `.github/workflows/ci.yml`. Triggered by push/PR to `main` on watched 
 |-------|--------------|
 | Lint | `scripts/lint-layering.sh` + `scripts/check-framework-ui-sources.py` |
 | Inventory | `scripts/check-inventory.py` + `scripts/check-product-layout.py` |
-| Host smoke | Configure/build `scripts/host`, run smokes, `ctest`, sanitizer build/run; build `edge_node` + `gateway` host examples; `scaffold-smoke.sh` |
+| Host smoke | Configure/build `scripts/host`, run smokes, `ctest`, sanitizer build/run; build `headless_telemetry` + `surface_gateway` + `handheld_bluetooth` (+ `mqtt_dashboard`) host examples; `scaffold-smoke.sh` |
 | Docs | `mkdocs build --strict` |
 | Device builds | `scripts/build-from-inventory.sh` with `ci_pr=true` across the target matrix |
 | Display variants | `scripts/build-display-variants.sh` |
@@ -67,7 +67,7 @@ PR coverage runs only examples flagged `ci_pr: true` in `inventory.yml`. Nightly
 3. If it’s a doc, add the nav entry in `mkdocs.yml`.
 4. Run `python3 scripts/check-inventory.py` and `mkdocs build --strict`.
 5. If it’s a product-shaped example, run `python3 scripts/check-product-layout.py`.
-6. If it’s a new archetype/template, run `scripts/scaffold-smoke.sh`.
+6. If it touches scaffold generation or the create matrix, run `scripts/scaffold-smoke.sh`.
 
 ## Tier discipline
 

@@ -18,7 +18,7 @@ These are the grounding constraints for the platform.
 
 **Locked decisions.** Product API: **`blusys::app`** (C++ on the product path). App logic: reducer **`update(ctx, state, action)`** with **in-place** state mutation. Core runtime modes: **`interactive`** and **`headless`** only. Default onboarding: **host-first** interactive; secondary path: **headless-first** hardware. **Consumer** and **industrial** — the usual **B2C** vs **B2B** split — are product **lenses**, not framework branches (see **B2C / B2B north stars** above). Public term: **`capabilities`** (not “bundles”). First canonical interactive hardware profile: **generic SPI ST7735**, building on **ESP32**, **ESP32-C3**, and **ESP32-S3**. **Code-first** hardware and capability configuration; **Kconfig** for advanced tuning. **Raw LVGL** only inside custom widgets or an explicit custom view scope; UI drives behavior through **actions** and approved framework behavior.
 
-**Archetypes** (starter compositions — shared building blocks, not hard branches): **interactive controller**, **interactive panel**, **edge node**, **gateway/controller** (each may be interactive or headless as appropriate).
+**Product shape** (scaffold axes): **`--interface`** (`handheld` | `surface` | `headless`), **`--with`** (framework capabilities), **`--policy`** (non-capability overlays such as `low_power`). Generated projects record the same shape in **`blusys.project.yml`**. Run **`blusys create --list`** for descriptions and dependency rules.
 
 **Default layout** (single local **`main/`** component): **`core/`** — state, actions, reducer, product behavior; **`ui/`** — screens and widgets from state, dispatch actions (**no direct runtime-service calls**); **`integration/`** — wiring, profile, capabilities, bridges (**thin assembly**, not business logic).
 
@@ -39,17 +39,18 @@ These are the grounding constraints for the platform.
 git clone https://github.com/oguzkaganozt/blusys.git ~/.blusys
 ~/.blusys/install.sh
 
-# New project (default archetype: interactive controller)
+# New project (default interface: handheld)
 mkdir ~/my_product && cd ~/my_product
-blusys create --archetype interactive-controller
+blusys create
 
-# Other archetypes — see: blusys create --list-archetypes
+# Explicit shape — see: blusys create --list
+# blusys create --interface headless --with connectivity,telemetry my_sensor
 
 # Build, flash, and monitor (from the project directory)
 blusys run /dev/ttyACM0 esp32s3
 ```
 
-ESP-IDF **v5.5+** is required; the CLI discovers it. For the full walkthrough — archetypes, connected products, host loop — start at **[Getting started](docs/start/index.md)**.
+ESP-IDF **v5.5+** is required; the CLI discovers it. For the full walkthrough — product shape, connected products, host loop — start at **[Getting started](docs/start/index.md)**.
 
 ---
 
@@ -136,7 +137,7 @@ blusys host-build
 
 | Path | Purpose |
 |------|---------|
-| `examples/quickstart/` | Archetype-aligned starters (`blusys create` shapes), PR CI |
+| `examples/quickstart/` | Canonical starters (inventory `ci_pr`), aligned with interface/capability examples |
 | `examples/reference/` | Deeper demos and per-area examples, nightly CI |
 | `examples/validation/` | Internal smoke and stress, nightly CI |
 

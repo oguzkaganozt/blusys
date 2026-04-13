@@ -3,7 +3,7 @@
 // Reference interactive profile selection for device + SDL host — collapses the
 // usual ST7735 vs ST7789 vs host matrix into one place per product entry file.
 //
-// For archetype-neutral spellings (version string, shell config, host window), prefer
+// For profile-neutral spellings (version string, shell config, host window), prefer
 // `blusys/app/build_profile.hpp` in new integration code.
 
 #include "blusys/app/layout_surface.hpp"

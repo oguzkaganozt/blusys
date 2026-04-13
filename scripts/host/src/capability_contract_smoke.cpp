@@ -4,10 +4,11 @@
 #include "blusys/app/capabilities/bluetooth.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
+#include "blusys/app/capabilities/lan_control.hpp"
 #include "blusys/app/capabilities/ota.hpp"
-#include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
+#include "blusys/app/capabilities/usb.hpp"
 #include "blusys/app/capability.hpp"
 
 #include <cstdint>
@@ -37,8 +38,10 @@ int main()
     static_assert(u(blusys::app::diagnostics_event::capability_ready) <= 0x05FF);
     static_assert(u(blusys::app::telemetry_event::buffer_flushed) >= 0x0600);
     static_assert(u(blusys::app::telemetry_event::capability_ready) <= 0x06FF);
-    static_assert(u(blusys::app::provisioning_event::started) >= 0x0700);
-    static_assert(u(blusys::app::provisioning_event::capability_ready) <= 0x07FF);
+    static_assert(u(blusys::app::lan_control_event::http_ready) >= 0x0A00);
+    static_assert(u(blusys::app::lan_control_event::capability_ready) <= 0x0AFF);
+    static_assert(u(blusys::app::usb_event::device_ready) >= 0x0B00);
+    static_assert(u(blusys::app::usb_event::capability_ready) <= 0x0BFF);
 
     return EXIT_SUCCESS;
 }

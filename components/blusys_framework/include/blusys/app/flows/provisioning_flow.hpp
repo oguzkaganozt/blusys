@@ -3,7 +3,7 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/app/app_ctx.hpp"
-#include "blusys/app/capabilities/provisioning.hpp"
+#include "blusys/app/capabilities/connectivity.hpp"
 #include "lvgl.h"
 
 namespace blusys::app::flows {
@@ -33,10 +33,11 @@ lv_obj_t *provisioning_screen_create(app_ctx &ctx,
                                       provisioning_screen_handles &handles,
                                       lv_group_t **group_out);
 
-// Update the provisioning screen widgets from the current provisioning_status.
+// Update the provisioning screen widgets from the current connectivity-owned
+// provisioning status.
 void provisioning_screen_update(provisioning_screen_handles &handles,
-                                 const provisioning_status &status,
-                                 const provisioning_flow_config &config = {});
+                                  const connectivity_provisioning_status &status,
+                                  const provisioning_flow_config &config = {});
 
 }  // namespace blusys::app::flows
 

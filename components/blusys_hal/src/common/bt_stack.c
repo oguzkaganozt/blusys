@@ -51,7 +51,7 @@ blusys_err_t blusys_bt_stack_acquire(blusys_bt_stack_owner_t owner)
 
     if (s_bt_stack_owned) {
         blusys_lock_give(&s_bt_stack_lock);
-        return BLUSYS_ERR_INVALID_STATE;
+        return BLUSYS_ERR_BUSY;
     }
 
     s_bt_stack_owner = owner;

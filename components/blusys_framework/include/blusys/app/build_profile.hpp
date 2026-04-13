@@ -1,6 +1,6 @@
 #pragma once
 
-// Archetype-neutral aliases for the stock interactive ST7735 / ST7789 / SDL host matrix.
+// Interface-neutral aliases for the stock interactive ST7735 / ST7789 / SDL host matrix.
 // Prefer these names in new integration entry files; `reference_build_profile.hpp` remains
 // the implementation source.
 

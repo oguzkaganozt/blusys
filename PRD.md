@@ -1,6 +1,6 @@
 # Product requirements (PRD)
 
-**Single source of truth** for product mission, locked decisions, non-goals, archetypes, scaffold layout, and validation expectations is **[README.md](README.md)** — see **Product foundations** there.
+**Single source of truth** for product mission, locked decisions, non-goals, scaffold layout (`interface` + capabilities + `policy`), and validation expectations is **[README.md](README.md)** — see **Product foundations** there.
 
 Supporting references (do not duplicate long requirement lists in this file):
 

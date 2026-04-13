@@ -132,23 +132,24 @@ add_executable(capability_contract_smoke src/capability_contract_smoke.cpp)
 target_include_directories(capability_contract_smoke PRIVATE
     ${BLUSYS_COMPONENT_DIR}/include
     ${BLUSYS_FRAMEWORK_DIR}/include
+    ${BLUSYS_SERVICES_DIR}/include
     ${CMAKE_CURRENT_LIST_DIR}/include_host
 )
 blusys_host_bridge_apply_exe_compile_options(capability_contract_smoke)
 
-# ── operational_phase_smoke (edge-node operational phase machine parity) ─────
+# ── operational_phase_smoke (headless-telemetry operational phase machine parity) ─
 add_executable(operational_phase_smoke src/operational_phase_smoke.cpp)
 target_compile_options(operational_phase_smoke PRIVATE
     -Wall
     -Wextra
 )
 
-# ── interactive_archetype_reducer_smoke (shared clamp_percent) ───────────────
-add_executable(interactive_archetype_reducer_smoke src/interactive_archetype_reducer_smoke.cpp)
-target_include_directories(interactive_archetype_reducer_smoke PRIVATE
+# ── handheld_starter_reducer_smoke (shared clamp_percent) ─────────────────────
+add_executable(handheld_starter_reducer_smoke src/handheld_starter_reducer_smoke.cpp)
+target_include_directories(handheld_starter_reducer_smoke PRIVATE
     ${BLUSYS_REPO_ROOT}/examples/include
 )
-target_compile_options(interactive_archetype_reducer_smoke PRIVATE
+target_compile_options(handheld_starter_reducer_smoke PRIVATE
     -Wall
     -Wextra
 )

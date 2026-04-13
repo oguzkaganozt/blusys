@@ -6,7 +6,8 @@
 #include "blusys/app/capabilities/ota.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
-#include "blusys/app/capabilities/provisioning.hpp"
+#include "blusys/app/capabilities/lan_control.hpp"
+#include "blusys/app/capabilities/usb.hpp"
 #include "blusys/app/capability_list.hpp"
 #ifndef ESP_PLATFORM
 #include "blusys/app/capabilities/mqtt_host.hpp"
@@ -76,10 +77,18 @@ const telemetry_status *app_ctx::telemetry() const
     return nullptr;
 }
 
-const provisioning_status *app_ctx::provisioning() const
+const lan_control_status *app_ctx::lan_control() const
 {
-    if (provisioning_ != nullptr) {
-        return &provisioning_->status();
+    if (lan_control_ != nullptr) {
+        return &lan_control_->status();
+    }
+    return nullptr;
+}
+
+const usb_status *app_ctx::usb() const
+{
+    if (usb_ != nullptr) {
+        return &usb_->status();
     }
     return nullptr;
 }
@@ -127,7 +136,12 @@ void app_ctx::bind_capability_pointers_from_list(app_ctx &ctx, capability_list *
             ctx.telemetry_ = static_cast<telemetry_capability *>(c);
             break;
         case capability_kind::provisioning:
-            ctx.provisioning_ = static_cast<provisioning_capability *>(c);
+            break;
+        case capability_kind::lan_control:
+            ctx.lan_control_ = static_cast<lan_control_capability *>(c);
+            break;
+        case capability_kind::usb:
+            ctx.usb_ = static_cast<usb_capability *>(c);
             break;
         case capability_kind::mqtt_host:
 #ifndef ESP_PLATFORM

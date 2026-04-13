@@ -2,13 +2,13 @@
 
 Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32-C3, and ESP32-S3 targets.
 
-## Pick a product archetype first
+## Pick a product shape first
 
-New products should start from one of four **canonical archetypes** — the same `core/` / `ui/` / `integration/` layout and reducer model; only defaults and starter content differ. Product-shaped examples in this repo must keep that layout; CI runs `scripts/check-product-layout.py` (HAL `validation/` demos are exempt).
+New products are created with **`blusys create`** using an explicit model: **interface** (how the product presents locally), **capabilities** (framework runtime bundles), and **policies** (cross-cutting defaults that are not capabilities). Product-shaped examples in this repo use the same fixed **`core/`** / **`ui/`** / **`integration/`** layout; CI runs `scripts/check-product-layout.py` (HAL `validation/` demos are exempt).
 
-- [Archetype Starters](archetypes.md) — interactive (controller vs panel) and connected (edge node vs gateway) archetypes; when to use each and `blusys create --archetype …`
+- [Product shape](product-shape.md) — `handheld` / `surface` / `headless`, `--with`, `--policy`, and how reference examples map to that model
 
-At the terminal: `blusys create --list-archetypes` prints the same four options with short descriptions.
+At the terminal: **`blusys create --list`** prints interfaces, capabilities, policies, and dependency rules.
 
 ## Guided quickstarts (after you know the shape)
 
@@ -18,7 +18,7 @@ At the terminal: `blusys create --list-archetypes` prints the same four options 
 
     ---
 
-    Host-first display product: reducer model, stock widgets, and the **interactive controller** archetype walkthrough.
+    Host-first display product: reducer model, stock widgets, and the **handheld** interface walkthrough.
 
     [:octicons-arrow-right-24: Interactive Quickstart](quickstart-interactive.md)
 
@@ -26,7 +26,7 @@ At the terminal: `blusys create --list-archetypes` prints the same four options 
 
     ---
 
-    Connected device without a display using the same runtime and reducer; aligns with **edge node**-style starters.
+    Connected device without a display using the same runtime and reducer; aligns with **`headless`** starters and the headless telemetry–style reference examples.
 
     [:octicons-arrow-right-24: Headless Quickstart](quickstart-headless.md)
 

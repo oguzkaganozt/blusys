@@ -6,7 +6,7 @@ For layout across display sizes, see [Profiles](profiles.md). For how screens ti
 
 ## Compact Control
 
-Best for **interactive controller** surfaces and dense control strips.
+Best for **handheld** / compact interactive surfaces and dense control strips.
 
 | Widget | Role | Often appears in |
 |--------|------|------------------|
@@ -15,11 +15,11 @@ Best for **interactive controller** surfaces and dense control strips.
 | `slider` | Ranged numeric control | Brightness, thresholds |
 | `gauge` | Compact numeric feedback | Status strips, monitoring |
 
-Reference starter: `examples/quickstart/interactive_controller/` (host + ST7735 path; see [Archetype Starters](../start/archetypes.md)).
+Reference starter: `examples/quickstart/handheld_starter/` (host + ST7735 path; see [Product shape](../start/product-shape.md)).
 
 ## Operational Surface
 
-Best for **interactive panel** and gateway local UI: dashboards and multi-section screens.
+Best for **surface** interactive and gateway local UI: dashboards and multi-section screens.
 
 | Widget | Role | Often appears in |
 |--------|------|------------------|
@@ -28,11 +28,11 @@ Best for **interactive panel** and gateway local UI: dashboards and multi-sectio
 | `tabs` | Screen partitioning | Multi-section flows |
 | `status_badge` | Short operational state | Shell chrome, headers |
 
-Reference starter: `examples/reference/interactive_panel/`.
+Reference starter: `examples/reference/surface_ops_panel/`.
 
 ## Data And Diagnostics
 
-Shared by panel and connected archetypes when showing health and metrics.
+Shared by surface interactive and connected products when showing health and metrics.
 
 | Widget | Role | Often appears in |
 |--------|------|------------------|
@@ -41,7 +41,7 @@ Shared by panel and connected archetypes when showing health and metrics.
 | `progress` | Long-running work | OTA, loading flows |
 | `dropdown` | Compact single choice | Filters, mode picks |
 
-Reference starters: `examples/quickstart/edge_node/`, `examples/reference/gateway/`.
+Reference starters: `examples/quickstart/headless_telemetry/`, `examples/reference/surface_gateway/`.
 
 ## Notes
 

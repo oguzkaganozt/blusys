@@ -1,0 +1,51 @@
+#ifndef ESP_PLATFORM
+
+#include "blusys/app/capabilities/lan_control.hpp"
+#include "blusys/framework/core/runtime.hpp"
+#include "blusys/log.h"
+
+static const char *TAG = "blusys_lan";
+
+namespace blusys::app {
+
+blusys_err_t lan_control_capability::start(blusys::framework::runtime &rt)
+{
+    rt_ = &rt;
+    first_poll_ = true;
+
+    if (cfg_.device_name == nullptr) {
+        BLUSYS_LOGE(TAG, "device_name is required");
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+
+    status_.http_listening = true;
+    status_.mdns_announced = cfg_.advertise_mdns;
+    status_.capability_ready = true;
+
+    BLUSYS_LOGI(TAG, "host stub: lan control ready (simulated)");
+    return BLUSYS_OK;
+}
+
+void lan_control_capability::poll(std::uint32_t /*now_ms*/)
+{
+    if (!first_poll_) {
+        return;
+    }
+    first_poll_ = false;
+
+    post_event(lan_control_event::http_ready);
+    if (cfg_.advertise_mdns) {
+        post_event(lan_control_event::mdns_ready);
+    }
+    post_event(lan_control_event::capability_ready);
+}
+
+void lan_control_capability::stop()
+{
+    status_ = {};
+    rt_ = nullptr;
+}
+
+}  // namespace blusys::app
+
+#endif  // !ESP_PLATFORM

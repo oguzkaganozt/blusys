@@ -10,42 +10,41 @@ Capabilities are composed in `integration/` and translated into app actions.
 - map capability events into reducer actions in `integration/`
 - query capability status through `app_ctx` (or `ctx.services()` only when routing/UI reactions are needed)
 
-## Typical Stacks
+## Typical stacks
 
-Each archetype has a **minimal** stack (enough to ship a credible starter) and a **full** stack (typical connected / operational product). Compose capabilities only in `integration/`; see [Archetype Starters](../start/archetypes.md) for starter mapping.
+Each **interface** suggests a different **minimal** capability set (enough for a credible starter) and a **full** stack for a typical connected product. Compose capabilities only in `integration/`; onboarding and Wi-Fi lifecycle live under **`connectivity`**. See [Product shape](../start/product-shape.md) and **`blusys create --list`** for dependency rules.
 
-### Interactive Controller
+### Handheld (`--interface handheld`)
 
 | Minimal | Full (typical) |
 |---------|----------------|
-| storage | storage, provisioning, connectivity (optional) |
-| provisioning | Bluetooth (optional, product-dependent) |
+| storage | storage, connectivity (optional) |
 
-Starter: `examples/quickstart/interactive_controller/`.
+Starter: `examples/quickstart/handheld_starter/`.
 
-### Interactive Panel
+### Surface (`--interface surface`)
 
 | Minimal | Full (typical) |
 |---------|----------------|
 | connectivity | connectivity, storage, diagnostics |
 
-Starter: `examples/reference/interactive_panel/`.
+Starter: `examples/reference/surface_ops_panel/`.
 
-### Edge Node
-
-| Minimal | Full (typical) |
-|---------|----------------|
-| connectivity, telemetry | connectivity, telemetry, provisioning, OTA, diagnostics, storage |
-
-Starter: `examples/quickstart/edge_node/`.
-
-### Gateway/Controller
+### Headless connected (`--interface headless` + connected `--with`)
 
 | Minimal | Full (typical) |
 |---------|----------------|
-| connectivity, telemetry | connectivity, telemetry, provisioning, OTA, diagnostics, storage |
+| connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: `examples/reference/gateway/` (headless default; optional local UI variant via scaffold).
+Starter: `examples/quickstart/headless_telemetry/`.
+
+### Surface coordinator
+
+| Minimal | Full (typical) |
+|---------|----------------|
+| connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
+
+Starter: `examples/reference/surface_gateway/` (optional local UI depends on build/profile; scaffold selects interface explicitly).
 
 ## Rule Of Thumb
 
@@ -58,12 +57,11 @@ Each capability posts integration events in a reserved numeric range (see `blusy
 
 | Source | Typical events to surface |
 |--------|---------------------------|
-| Connectivity | `wifi_started`, `wifi_connecting`, `wifi_connected`, `wifi_got_ip`, `wifi_disconnected`, `wifi_reconnecting`, `time_synced`, `capability_ready` |
+| Connectivity | `wifi_*`, `time_synced`, onboarding/provisioning phases (`already_provisioned`, `credentials_received`, `success`, `failed`, …), `capability_ready` |
 | Storage | `spiffs_mounted`, `fatfs_mounted`, `capability_ready` |
 | OTA | `download_started`, `download_progress` (event `code` = percent 0–100), `download_complete`, `apply_failed`, `rollback_pending`, `capability_ready` |
 | Diagnostics | `snapshot_ready`, `capability_ready` |
 | Telemetry | `buffer_flushed`, `delivery_ok`, `delivery_failed`, `capability_ready` |
-| Provisioning | `already_provisioned`, `credentials_received`, `success`, `failed`, `capability_ready` |
 | Bluetooth | `gap_ready`, `gatt_ready`, `client_connected`, `capability_ready` |
 
 Status-only updates can be ignored in the reducer if `app_ctx` queries are enough.
@@ -81,8 +79,8 @@ Operational UI (`blusys::app::flows::*`, `blusys::app::screens::*`) stays LVGL-b
 
 For a full reducer-facing translation table, see `map_event` in:
 
-- `examples/quickstart/edge_node/main/integration/app_main.cpp` (headless-first, all seven capabilities)
-- `examples/reference/gateway/main/integration/app_main.cpp` (interactive shell + connected stack)
+- `examples/quickstart/headless_telemetry/main/integration/app_main.cpp` (headless-first, all seven capabilities)
+- `examples/reference/surface_gateway/main/integration/app_main.cpp` (interactive shell + connected stack)
 
 Keep product-specific tags in `core/`; only the integration layer should map raw integration event IDs to those tags.
 
