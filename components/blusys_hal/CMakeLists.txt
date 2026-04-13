@@ -1,40 +1,40 @@
 set(blusys_sources
-    src/common/adc.c
-    src/common/bt_stack.c
-    src/common/dac.c
-    src/common/efuse.c
-    src/common/error.c
-    src/common/gpio.c
-    src/common/gpio_expander.c
-    src/common/i2c.c
-    src/common/i2c_slave.c
-    src/common/i2s.c
-    src/common/i2s_rx.c
-    src/common/mcpwm.c
-    src/common/nvs.c
-    src/common/one_wire.c
-    src/common/pcnt.c
-    src/common/pwm.c
-    src/common/rmt.c
-    src/common/rmt_rx.c
-    src/common/sd_spi.c
-    src/common/sdm.c
-    src/common/sdmmc.c
-    src/common/sleep.c
-    src/common/spi.c
-    src/common/spi_slave.c
-    src/common/system.c
-    src/common/target.c
-    src/common/temp_sensor.c
-    src/common/timer.c
-    src/common/touch.c
-    src/common/twai.c
-    src/common/ulp.c
-    src/common/uart.c
-    src/common/version.c
-    src/common/usb_device.c
-    src/common/usb_host.c
-    src/common/wdt.c
+    src/soc/adc.c
+    src/soc/dac.c
+    src/soc/gpio.c
+    src/soc/gpio_expander.c
+    src/soc/i2c.c
+    src/soc/i2c_slave.c
+    src/soc/i2s.c
+    src/soc/i2s_rx.c
+    src/soc/mcpwm.c
+    src/soc/one_wire.c
+    src/soc/pcnt.c
+    src/soc/pwm.c
+    src/soc/rmt.c
+    src/soc/rmt_rx.c
+    src/soc/sd_spi.c
+    src/soc/sdm.c
+    src/soc/sdmmc.c
+    src/soc/spi.c
+    src/soc/spi_slave.c
+    src/soc/timer.c
+    src/soc/touch.c
+    src/soc/twai.c
+    src/soc/uart.c
+    src/soc/temp_sensor.c
+    src/platform/error.c
+    src/platform/version.c
+    src/platform/nvs.c
+    src/platform/sleep.c
+    src/platform/system.c
+    src/platform/target.c
+    src/platform/wdt.c
+    src/platform/efuse.c
+    src/usb/usb_device.c
+    src/usb/usb_host.c
+    src/wireless/bt_stack.c
+    src/rt/blusys_lock_freertos.c
     src/drivers/display/lcd.c
     src/drivers/display/lcd_panel_ili.c
     src/drivers/display/led_strip.c
@@ -43,7 +43,6 @@ set(blusys_sources
     src/drivers/input/encoder.c
     src/drivers/sensor/dht.c
     src/drivers/actuator/buzzer.c
-    src/internal/blusys_lock_freertos.c
 )
 
 if(IDF_TARGET STREQUAL "esp32")
@@ -94,7 +93,7 @@ if(CONFIG_ULP_COPROC_ENABLED AND CONFIG_ULP_COPROC_TYPE_FSM AND
         "src/ulp/gpio_watch.S"
         "src/ulp/wake_up.S"
     )
-    set(blusys_ulp_dep_sources "src/common/ulp.c")
+    set(blusys_ulp_dep_sources "src/ulp/ulp.c")
     ulp_embed_binary(${blusys_ulp_app_name}
                      "${blusys_ulp_sources}"
                      "${blusys_ulp_dep_sources}"

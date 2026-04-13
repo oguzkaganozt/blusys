@@ -19,7 +19,10 @@ report_hits() {
 mapfile -t common_hits < <(
     grep -rEn --include='*.c' --include='*.h' \
         '#include[[:space:]]*[<"]blusys/drivers/' \
-        "$repo_root/components/blusys_hal/src/common" || true
+        "$repo_root/components/blusys_hal/src/soc" \
+        "$repo_root/components/blusys_hal/src/platform" \
+        "$repo_root/components/blusys_hal/src/usb" \
+        "$repo_root/components/blusys_hal/src/wireless" || true
 )
 
 if [[ ${#common_hits[@]} -gt 0 ]]; then
