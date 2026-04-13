@@ -1,4 +1,4 @@
-#include "blusys/display/ui.h"
+#include "blusys/output/display.h"
 
 #include <stdlib.h>
 #include <string.h>

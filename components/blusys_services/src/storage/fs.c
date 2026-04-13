@@ -1,4 +1,4 @@
-#include "blusys/device/fs.h"
+#include "blusys/storage/fs.h"
 
 #include <stdio.h>
 #include <stdlib.h>

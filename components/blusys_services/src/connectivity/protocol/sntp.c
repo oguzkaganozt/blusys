@@ -1,4 +1,4 @@
-#include "blusys/device/sntp.h"
+#include "blusys/connectivity/protocol/sntp.h"
 
 #include <stdlib.h>
 #include <string.h>

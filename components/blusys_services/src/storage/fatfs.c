@@ -1,4 +1,4 @@
-#include "blusys/device/fatfs.h"
+#include "blusys/storage/fatfs.h"
 
 #include <dirent.h>
 #include <errno.h>
