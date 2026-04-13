@@ -1,4 +1,4 @@
-#include "blusys/drivers/input/button.h"
+#include "blusys/drivers/button.h"
 
 #include <stdlib.h>
 

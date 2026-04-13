@@ -136,7 +136,7 @@ def main() -> None:
 
     bridge_fw, bridge_blusys = _parse_bridge_framework_sources(bridge)
 
-    expected_blusys = ["src/platform/error.c"]
+    expected_blusys = ["src/error.c"]
     if bridge_blusys != expected_blusys:
         print(
             f"check-host-bridge-spine: Bridge's blusys-component sources ({bridge_blusys!r}) differ "

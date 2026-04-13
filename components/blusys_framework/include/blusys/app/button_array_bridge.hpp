@@ -12,7 +12,7 @@
 
 #if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM)
 
-#include "blusys/drivers/input/button.h"
+#include "blusys/drivers/button.h"
 #include "blusys/error.h"
 #include "blusys/framework/core/intent.hpp"
 #include "blusys/framework/core/runtime.hpp"

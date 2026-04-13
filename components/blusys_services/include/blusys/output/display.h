@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "blusys/error.h"
-#include "blusys/drivers/display/lcd.h"
+#include "blusys/drivers/lcd.h"
 
 #ifdef __cplusplus
 extern "C" {

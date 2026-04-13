@@ -1,4 +1,4 @@
-#include "blusys/drivers/display/seven_seg.h"
+#include "blusys/drivers/seven_seg.h"
 
 #include <limits.h>
 #include <stdbool.h>

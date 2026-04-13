@@ -28,7 +28,7 @@
 
 #include "blusys/blusys.h"
 #include "blusys/blusys_services.h"
-#include "blusys/drivers/input/encoder.h"
+#include "blusys/drivers/encoder.h"
 #include "lvgl.h"
 
 #include "freertos/FreeRTOS.h"

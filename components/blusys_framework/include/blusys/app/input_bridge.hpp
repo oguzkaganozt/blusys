@@ -14,7 +14,7 @@
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
-#include "blusys/drivers/input/encoder.h"
+#include "blusys/drivers/encoder.h"
 #include "blusys/error.h"
 #include "blusys/framework/core/runtime.hpp"
 

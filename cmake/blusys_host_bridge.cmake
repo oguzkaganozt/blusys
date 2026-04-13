@@ -71,7 +71,7 @@ endfunction()
 
 # ── Common framework sources (mode-independent) ─────────────────────────────
 set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
-    ${BLUSYS_COMPONENT_DIR}/src/platform/error.c
+    ${BLUSYS_COMPONENT_DIR}/src/error.c
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback_presets.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/feedback_logging_sink.cpp

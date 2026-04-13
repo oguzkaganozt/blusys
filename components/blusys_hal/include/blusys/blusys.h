@@ -39,13 +39,13 @@ extern "C" {
 #include "blusys/version.h"
 #include "blusys/wdt.h"
 
-#include "blusys/drivers/actuator/buzzer.h"
-#include "blusys/drivers/display/lcd.h"
-#include "blusys/drivers/display/led_strip.h"
-#include "blusys/drivers/display/seven_seg.h"
-#include "blusys/drivers/input/button.h"
-#include "blusys/drivers/input/encoder.h"
-#include "blusys/drivers/sensor/dht.h"
+#include "blusys/drivers/buzzer.h"
+#include "blusys/drivers/lcd.h"
+#include "blusys/drivers/led_strip.h"
+#include "blusys/drivers/seven_seg.h"
+#include "blusys/drivers/button.h"
+#include "blusys/drivers/encoder.h"
+#include "blusys/drivers/dht.h"
 
 #ifdef __cplusplus
 }

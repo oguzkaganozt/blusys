@@ -54,7 +54,7 @@
 #include "blusys/app/theme_presets.hpp"
 #include "blusys/log.h"
 
-#include "blusys/drivers/input/encoder.h"
+#include "blusys/drivers/encoder.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

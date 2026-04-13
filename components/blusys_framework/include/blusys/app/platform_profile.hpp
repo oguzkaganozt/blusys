@@ -13,10 +13,10 @@
 // The ui.lcd pointer is left null in profile definitions; the device
 // entry path fills it after blusys_lcd_open() succeeds.
 
-#include "blusys/drivers/display/lcd.h"
+#include "blusys/drivers/lcd.h"
 #include "blusys/output/display.h"
-#include "blusys/drivers/input/encoder.h"
-#include "blusys/drivers/input/button.h"
+#include "blusys/drivers/encoder.h"
+#include "blusys/drivers/button.h"
 #include "blusys/framework/core/intent.hpp"
 
 #include <cstddef>

@@ -1,4 +1,4 @@
-#include "blusys/drivers/display/lcd.h"
+#include "blusys/drivers/lcd.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
