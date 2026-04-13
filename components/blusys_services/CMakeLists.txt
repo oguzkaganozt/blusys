@@ -1,29 +1,30 @@
 set(blusys_services_sources
-    # display
-    src/display/ui.c
+    # output
+    src/output/display.c
     # input
     src/input/usb_hid.c
-    # connectivity
+    # connectivity — transports
     src/connectivity/ble_gatt.c
     src/connectivity/bluetooth.c
     src/connectivity/espnow.c
-    src/connectivity/mdns.c
     src/connectivity/wifi.c
     src/connectivity/wifi_mesh.c
     src/connectivity/wifi_prov.c
-    # protocol
-    src/protocol/http_client.c
-    src/protocol/http_server.c
-    src/protocol/mqtt.c
-    src/protocol/ws_client.c
+    # connectivity — protocols
+    src/connectivity/protocol/http_client.c
+    src/connectivity/protocol/http_server.c
+    src/connectivity/protocol/mqtt.c
+    src/connectivity/protocol/ws_client.c
+    src/connectivity/protocol/mdns.c
+    src/connectivity/protocol/sntp.c
+    src/connectivity/protocol/local_ctrl.c
+    # storage
+    src/storage/fatfs.c
+    src/storage/fs.c
     # device
     src/device/console.c
-    src/device/fatfs.c
-    src/device/fs.c
-    src/device/local_ctrl.c
     src/device/ota.c
     src/device/power_mgmt.c
-    src/device/sntp.c
 )
 
 idf_component_register(

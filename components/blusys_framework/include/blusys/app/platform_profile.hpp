@@ -14,7 +14,7 @@
 // entry path fills it after blusys_lcd_open() succeeds.
 
 #include "blusys/drivers/display/lcd.h"
-#include "blusys/display/ui.h"
+#include "blusys/output/display.h"
 #include "blusys/drivers/input/encoder.h"
 #include "blusys/drivers/input/button.h"
 #include "blusys/framework/core/intent.hpp"

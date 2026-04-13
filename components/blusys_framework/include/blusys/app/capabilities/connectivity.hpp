@@ -7,11 +7,11 @@
 #include <atomic>
 
 #ifdef ESP_PLATFORM
-#include "blusys/connectivity/mdns.h"
 #include "blusys/connectivity/wifi.h"
 #include "blusys/connectivity/wifi_prov.h"
-#include "blusys/device/local_ctrl.h"
-#include "blusys/device/sntp.h"
+#include "blusys/connectivity/protocol/mdns.h"
+#include "blusys/connectivity/protocol/local_ctrl.h"
+#include "blusys/connectivity/protocol/sntp.h"
 #endif
 
 namespace blusys::framework { class runtime; }

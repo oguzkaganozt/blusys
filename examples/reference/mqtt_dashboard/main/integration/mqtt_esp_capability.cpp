@@ -4,7 +4,7 @@
 
 #include "blusys/framework/core/runtime.hpp"
 #include "blusys/log.h"
-#include "blusys/protocol/mqtt.h"
+#include "blusys/connectivity/protocol/mqtt.h"
 
 #include "esp_netif.h"
 

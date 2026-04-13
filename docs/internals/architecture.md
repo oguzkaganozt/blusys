@@ -91,13 +91,14 @@ Umbrella header:
 
 Services are stateful runtime modules built on HAL + drivers.
 
-- display/runtime: `ui`
-- input/runtime: `usb_hid`
-- connectivity: `wifi`, `wifi_prov`, `wifi_mesh`, `espnow`, `bluetooth`, `ble_gatt`, `mdns`
-- protocol: `mqtt`, `http_client`, `http_server`, `ws_client`
-- device: `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl`
+- output: `display` (LVGL runtime — render task, flush, thread-safe widget access)
+- input: `usb_hid`
+- connectivity/transports: `wifi`, `wifi_prov`, `wifi_mesh`, `espnow`, `bluetooth`, `ble_gatt`
+- connectivity/protocols: `http_client`, `http_server`, `mqtt`, `ws_client`, `mdns`, `sntp`, `local_ctrl`
+- storage: `fatfs`, `fs`
+- device: `ota`, `power_mgmt`, `console`
 
-`ui` stays here because it owns LVGL lifecycle, render-task behavior, and display flush orchestration. `usb_hid` stays here because it spans USB-host and BLE runtime behavior rather than acting as a simple hardware driver.
+`display` stays here because it owns LVGL lifecycle, render-task behavior, and display flush orchestration. `usb_hid` stays here because it spans USB-host and BLE runtime behavior rather than acting as a simple hardware driver. Protocol modules are nested under `connectivity/` because every protocol requires a transport connection — the directory tree makes the dependency explicit.
 
 Umbrella header:
 

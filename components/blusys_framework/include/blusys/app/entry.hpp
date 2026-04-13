@@ -40,7 +40,7 @@
 #include "blusys/app/button_array_bridge.hpp"
 #include "blusys/app/touch_bridge.hpp"
 #include "blusys/app/view/shell.hpp"
-#include "blusys/display/ui.h"
+#include "blusys/output/display.h"
 #endif
 
 #if defined(BLUSYS_FRAMEWORK_HAS_UI) && !defined(ESP_PLATFORM)

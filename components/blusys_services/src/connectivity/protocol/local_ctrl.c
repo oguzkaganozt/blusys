@@ -1,4 +1,4 @@
-#include "blusys/device/local_ctrl.h"
+#include "blusys/connectivity/protocol/local_ctrl.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -13,7 +13,7 @@
 
 #if SOC_WIFI_SUPPORTED
 
-#include "blusys/protocol/http_server.h"
+#include "blusys/connectivity/protocol/http_server.h"
 
 #define BLUSYS_LOCAL_CTRL_DEFAULT_BODY_LEN      256
 #define BLUSYS_LOCAL_CTRL_DEFAULT_RESPONSE_LEN  512

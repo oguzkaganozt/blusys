@@ -5,35 +5,37 @@
 extern "C" {
 #endif
 
-/* display */
-#include "blusys/display/ui.h"
+/* output */
+#include "blusys/output/display.h"
 
 /* input */
 #include "blusys/input/usb_hid.h"
 
-/* connectivity */
+/* connectivity — transports */
 #include "blusys/connectivity/ble_gatt.h"
 #include "blusys/connectivity/bluetooth.h"
 #include "blusys/connectivity/espnow.h"
-#include "blusys/connectivity/mdns.h"
 #include "blusys/connectivity/wifi.h"
 #include "blusys/connectivity/wifi_mesh.h"
 #include "blusys/connectivity/wifi_prov.h"
 
-/* protocol */
-#include "blusys/protocol/http_client.h"
-#include "blusys/protocol/http_server.h"
-#include "blusys/protocol/mqtt.h"
-#include "blusys/protocol/ws_client.h"
+/* connectivity — protocols */
+#include "blusys/connectivity/protocol/http_client.h"
+#include "blusys/connectivity/protocol/http_server.h"
+#include "blusys/connectivity/protocol/mqtt.h"
+#include "blusys/connectivity/protocol/ws_client.h"
+#include "blusys/connectivity/protocol/mdns.h"
+#include "blusys/connectivity/protocol/sntp.h"
+#include "blusys/connectivity/protocol/local_ctrl.h"
+
+/* storage */
+#include "blusys/storage/fatfs.h"
+#include "blusys/storage/fs.h"
 
 /* device */
 #include "blusys/device/console.h"
-#include "blusys/device/fatfs.h"
-#include "blusys/device/fs.h"
-#include "blusys/device/local_ctrl.h"
 #include "blusys/device/ota.h"
 #include "blusys/device/power_mgmt.h"
-#include "blusys/device/sntp.h"
 
 #ifdef __cplusplus
 }

@@ -2,8 +2,8 @@
 
 #include "blusys/app/capability.hpp"
 
-#include "blusys/connectivity/mdns.h"
-#include "blusys/device/local_ctrl.h"
+#include "blusys/connectivity/protocol/mdns.h"
+#include "blusys/connectivity/protocol/local_ctrl.h"
 
 #include <cstddef>
 #include <cstdint>

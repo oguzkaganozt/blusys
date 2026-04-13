@@ -1,5 +1,5 @@
-#ifndef BLUSYS_UI_H
-#define BLUSYS_UI_H
+#ifndef BLUSYS_DISPLAY_H
+#define BLUSYS_DISPLAY_H
 
 #include <stdbool.h>
 #include <stdint.h>
