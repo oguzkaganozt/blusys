@@ -1,5 +1,6 @@
 .vscode/
 .cursor/
+.ruff_cache/
 .venv-docs/
 site/
 __pycache__/

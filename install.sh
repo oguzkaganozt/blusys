@@ -4,7 +4,7 @@ set -euo pipefail
 
 BLUSYS_DIR="$(cd "$(dirname "$0")" && pwd)"
 BLUSYS_BIN="$BLUSYS_DIR/blusys"
-BLUSYS_COMPLETION="$BLUSYS_DIR/completions/blusys.bash"
+BLUSYS_COMPLETION="$BLUSYS_DIR/scripts/completions/blusys.bash"
 LINK_DIR="$HOME/.local/bin"
 LINK_PATH="$LINK_DIR/blusys"
 COMP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions"

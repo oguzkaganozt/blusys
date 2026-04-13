@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 def load_catalog(repo_root: Path) -> dict:
-    catalog_path = repo_root / "templates" / "scaffold" / "catalog.yml"
+    catalog_path = repo_root / "scripts" / "scaffold" / "catalog.yml"
     return json.loads(catalog_path.read_text())
 
 
@@ -707,7 +707,7 @@ def generate_project(
     )
     write_file(
         out_dir / "sdkconfig.qemu",
-        (repo_root / "templates" / "scaffold" / "sdkconfig.qemu").read_text(),
+        (repo_root / "scripts" / "scaffold" / "sdkconfig.qemu").read_text(),
     )
     write_file(
         out_dir / "blusys.project.yml",

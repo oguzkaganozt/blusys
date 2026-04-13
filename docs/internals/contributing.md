@@ -13,7 +13,7 @@ Run proportionate checks for the scope of your change:
 | `inventory.yml`, new modules/examples/docs | `python3 scripts/check-inventory.py` |
 | Product-shaped `main/` layouts | `python3 scripts/check-product-layout.py` |
 | Example paths | `python3 scripts/example-health.py` |
-| `blusys create`, scaffold catalog/templates, generated host CMake | `scripts/scaffold-smoke.sh` |
+| `blusys create`, `scripts/scaffold/` catalog, generated host CMake | `scripts/scaffold-smoke.sh` |
 | Docs, `mkdocs.yml` | `mkdocs build --strict` |
 | Components or examples | `blusys build` / `blusys host-build` |
 
