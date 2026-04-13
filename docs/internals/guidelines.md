@@ -80,7 +80,7 @@ Breaking changes to `app_spec`, `app_ctx`, `app_services`, and umbrella `blusys/
 - **Validation examples** (`examples/validation/`) and other non-`blusys::app` demos are exempt; see `scripts/check-product-layout.py`.
 - Optional inventory flags: `layout_exempt`, `product_layout` (see `inventory.yml` header).
 
-For how the **framework** composes LVGL flex, scroll, and the interaction shell (primitives, shell `content_area`, stock widget sizing), see [UI layout and LVGL flex](ui-layout-lvgl.md).
+For how the **framework** composes LVGL flex, scroll, and the interaction shell (primitives, shell `content_area`, stock widget sizing), see [Architecture — UI layout](architecture.md#ui-layout-lvgl-flex).
 
 ### Product application C++ shape {#product-application-cpp-shape}
 
@@ -185,3 +185,46 @@ Advanced or validation-only surfaces may require a different mix of examples, do
 
 - product foundations: `../README.md` (**Product foundations**)
 - repository guidance for agents: `../CLAUDE.md`
+
+## Maintaining
+
+The three components and their `REQUIRES` names:
+
+| Directory | Component | Role |
+|-----------|-----------|------|
+| `components/blusys_hal/` | `blusys_hal` | HAL + drivers (C); public headers under `include/blusys/` |
+| `components/blusys_services/` | `blusys_services` | Runtime services (C) |
+| `components/blusys_framework/` | `blusys_framework` | Product framework (C++) |
+
+Dependency direction: `blusys_framework` → `blusys_services` → `blusys_hal` → ESP-IDF. The `blusys/` include namespace is shared across tiers; only the on-disk component folder for HAL is `blusys_hal`.
+
+### Suggested reading order
+
+1. Repository root `README.md` — product foundations
+2. [Architecture](architecture.md) — tiers and layering
+3. This page — API and workflow
+4. Repository root `inventory.yml` — modules, examples, docs (CI manifest)
+
+### Pre-merge / pre-release checks
+
+Aligned with `.github/workflows/ci.yml` and repository root `CLAUDE.md`:
+
+- `./blusys lint` — layering (`scripts/lint-layering.sh`) + framework UI source list consistency
+- `python3 scripts/check-inventory.py`
+- `python3 scripts/check-framework-ui-sources.py` (after CMake or widget path changes)
+- `mkdocs build --strict` (any doc or `mkdocs.yml` change)
+- Representative builds: `blusys host-build` (e.g. `scripts/host` or a quickstart example with `host/`), and `blusys build` on at least one HAL validation example when components change
+
+For broader changes, also run `python3 scripts/check-product-layout.py` and `scripts/scaffold-smoke.sh`.
+
+## Integration baseline (metrics)
+
+Record before/after snapshots when shrinking `main/integration/` or adding framework-owned flows.
+
+```bash
+python3 scripts/measure_integration_baseline.py
+```
+
+The script prints lines of code in `main/integration/` and counts `map_event` / `map_intent` function bodies (heuristic) for reference examples.
+
+The default action queue capacity is `app_runtime<State, Action, 16>` unless a project overrides the third template argument. See [App runtime model](../app/app-runtime-model.md) for overflow behavior and `action_queue_drop_count()`.

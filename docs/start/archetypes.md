@@ -1,91 +1,69 @@
 # Archetype Starters
 
-Blusys ships four canonical archetype starting points built on the same `blusys::app` operating model.
+Blusys ships four canonical archetype starting points on the same `blusys::app` operating model. They are product starting shapes, not framework branches.
 
-Use them as product starting shapes, not framework branches.
+Create with `blusys create --archetype <interactive-controller|interactive-panel|edge-node|gateway-controller>`.
 
-Create them with `blusys create --archetype <interactive-controller|interactive-panel|edge-node|gateway-controller>`.
+## Shared model
 
-## Interactive Controller
+All four keep the same ownership rules and runtime model:
 
-Use the controller archetype when your product is:
+- `core/` — state, actions, reducer behavior
+- `ui/` — screens and rendering (may be empty for headless)
+- `integration/` — capabilities, profiles, `app_spec`, event wiring
+- `update(ctx, state, action)` reducer, framework-owned shell and navigation, framework-owned profile bring-up, capability events mapped into app actions
 
-- compact and interaction-led
-- encoder-first or button-first
-- centered on one primary control loop
-- visually expressive and tactile
-- biased toward setup, settings, status, and compact control flows
+## Interactive archetypes
 
-Canonical example:
+The controller and panel share the same shell + capabilities model and differ mainly in **default theme, primary input, and data density**.
 
-- `examples/quickstart/interactive_controller/`
+| Archetype | Product shape | Default theme | Inputs | Typical flows | Canonical example |
+|-----------|---------------|---------------|--------|----------------|-------------------|
+| **Interactive controller** | Compact, tactile, expressive | `expressive_dark` | Encoder primary; buttons; touch optional | Settings, status, setup/provisioning, short control loops | `examples/quickstart/interactive_controller/` (PR CI quickstart) |
+| **Interactive panel** | Glanceable operator surface, denser data | `operational_light` | Touch, button row, encoder per bridges | Dashboard, diagnostics, connectivity + storage visibility | `examples/reference/interactive_panel/` (larger default display profile, ILI9341 / ILI9488; still builds on host SDL) |
 
-## Interactive Panel
+Choose **controller** when the primary loop is “adjust and confirm” on a small display. Choose **panel** when operators need charts, tables, and system status at a glance on a larger surface.
 
-Use the panel archetype when your product is:
+Both ship `host/CMakeLists.txt`. From the repo root: `blusys host-build examples/quickstart/interactive_controller` or `blusys host-build examples/reference/interactive_panel` builds the full SDL + LVGL app under `build-host/`. `blusys host-build` with no project path builds the shared host smoke tests and widget kit in `scripts/host/`.
 
-- dashboard-led or status-led
-- denser and more operational
-- focused on monitoring, diagnostics, and local supervision
-- still local and interactive, but less character-driven than the controller
+## Connected archetypes
 
-Canonical example:
+Use when the product is connectivity-led, not display-led. Both use the same `blusys::app` reducer, capabilities, and `integration/` event bridges — no separate “connectivity framework.”
 
-- `examples/reference/interactive_panel/`
+| Archetype | Choose when… | Canonical example |
+|-----------|----------------|-------------------|
+| **Edge node** | Headless-first; telemetry/OTA/provisioning central; minimal or no local UI; “invisible when healthy, obvious when broken.” | `examples/quickstart/edge_node/` |
+| **Gateway / controller** | Coordinator or operator device; optional local panel; orchestration, diagnostics, and upstream link matter as much as local sensors. | `examples/reference/gateway/` |
 
-### Controller vs panel
+**Headless-first (default for edge node):** smallest firmware surface; status via logs, local control JSON, and telemetry. Enable the optional SSD1306 path only when a tiny local status readout is worth the hardware.
 
-Both use the same `core/` / `ui/` / `integration/` split and the same shell + capabilities model. Choose **controller** when the product is encoder-first, compact, and expressive (consumer-style tactility). Choose **panel** when the product needs glanceable operations, charts or tables, and connectivity or diagnostics on the primary status surface (industrial-style density). The controller ships as the PR CI **quickstart**; the panel is a **reference** app with a larger default display profile (ILI9341 / ILI9488) while still building on host SDL.
+**Gateway** defaults to an interactive ESP-IDF build to prove shell + dashboard + stock screens; on host, the same app runs under SDL with `BLUSYS_APP_MAIN_HOST_PROFILE`. For the local UI variant explicitly: `blusys create --archetype gateway-controller --starter interactive`.
 
-For a concise interaction and presentation comparison, see [Interaction design](interaction-design.md).
+### Operational runbook (connected products)
 
-## Edge Node
+1. **First boot** — watch logs for provisioning phase; complete SoftAP/BLE provisioning or use pre-provisioned flash.
+2. **Steady state** — confirm phase reaches `reporting` (edge) or `operational` (gateway); telemetry batches appear in delivery logs.
+3. **Connectivity loss** — expect reconnect loops; telemetry resumes after IP returns (no separate code path; capabilities + reducer handle it).
+4. **OTA** — trigger from your pipeline or a test endpoint; watch `updating` phase and completion/rollback logs.
+5. **Health** — use diagnostics capability snapshots and local control JSON.
 
-Use the edge node archetype when your product is:
+### Relation to older connectivity examples
 
-- headless-first
-- connectivity-led with telemetry or OTA
-- built around provisioning, recovery, and status over control surface
-- operationally minimal when healthy
+- `examples/reference/connected_headless/` — minimal headless demo of connectivity + storage.
+- `examples/reference/connected_device/` — minimal interactive + Wi-Fi status (historical).
 
-Canonical example:
+For new products, start from **edge node** or **gateway**.
 
-- `examples/quickstart/edge_node/`
+## Rules that apply to all archetypes
 
-## Gateway/Controller
+- **No raw LVGL** in normal product code: use `blusys::app::view`, stock widgets, and documented custom widget scope only.
+- **Capabilities** are composed in `integration/`; the reducer requests work via actions; events map back to actions in `integration/`.
+- These are **product-shaped references**, not generic demos. After fork, replace branding, copy, and domain state while keeping the structure and capability contract.
 
-Use the gateway/controller archetype when your product is:
-
-- headless by default with an optional local operator surface
-- orchestration-led or coordinator-led
-- focused on diagnostics, maintenance, and connectivity management
-- operationally clear at a glance
-
-The default starter is headless-first. Use `blusys create --archetype gateway-controller --starter interactive` for the local UI variant.
-
-Canonical example:
-
-- `examples/reference/gateway/`
-
-## Shared Model
-
-All four archetypes keep the same ownership rules:
-
-- `core/` owns state, actions, and reducer behavior
-- `ui/` owns screens and rendering
-- `integration/` owns capabilities, profiles, and wiring
-
-All four also keep the same runtime model:
-
-- `update(ctx, state, action)` reducer
-- framework-owned shell and navigation
-- framework-owned profile bring-up
-- capability events mapped into app actions
-
-## Next Pages
+## Next pages
 
 - [Interactive Quickstart](quickstart-interactive.md)
-- [Connected products](connected-products.md)
+- [Headless Quickstart](quickstart-headless.md)
 - [App](../app/index.md)
 - [Capabilities](../app/capabilities.md)
 - [Profiles](../app/profiles.md)

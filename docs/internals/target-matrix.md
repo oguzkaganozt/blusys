@@ -49,7 +49,9 @@ All service modules are available on all targets when their sdkconfig and manage
 
 | Category | Modules | Notes |
 |----------|---------|-------|
-| **Core / UI** | none yet | `components/blusys_framework/` exists as a transition stub; public framework modules land later |
+| **Product API** | `blusys::app` (`app_spec`, `app_ctx`, `app_services`, `entry`), profiles (`host`, `headless`, `st7735`), capabilities (`connectivity`, `storage`) | All three targets |
+| **View layer** | `view::` helpers, stock widgets (`bu_button`, `bu_toggle`, `bu_slider`, `bu_knob`, `bu_gauge`, `bu_chart`, …), encoder focus helpers | Gated by `BLUSYS_BUILD_UI`; host builds via SDL2 |
+| **Core spine** | `router`, `intent`, `feedback`, `runtime`, containers | Framework-internal; not called by product code |
 
 ### Target-Specific Summary
 

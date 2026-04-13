@@ -28,7 +28,7 @@ page page_create(const page_config &config = {});
 //
 // In the interaction shell, `parent` should be `shell.content_area` (a flex
 // column). The content column uses flex_grow + min_height(0) and optional
-// scroll so the viewport stays bounded — see docs/internals/ui-layout-lvgl.md.
+// scroll so the viewport stays bounded — see docs/internals/architecture.md#ui-layout-lvgl-flex.
 page page_create_in(lv_obj_t *parent, const page_config &config = {});
 
 // Load the page: calls lv_screen_load and wires encoder focus.

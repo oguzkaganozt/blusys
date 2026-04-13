@@ -20,7 +20,7 @@ Layout primitives are stateless composition factories. Interactive widgets carry
 
 ### Layout primitives and LVGL flex
 
-Stock `row` / `col` use LVGL flex with configurable **main / cross / track** alignment (`row_config`, `col_config`). Product code can use `blusys::app::view::row` / `::col` for the same knobs. Shared helpers for sizing children inside flex strips live in `blusys/framework/ui/detail/flex_layout.hpp`. Shell, scroll viewport, and app conventions are described in [UI layout and LVGL flex](../../docs/internals/ui-layout-lvgl.md).
+Stock `row` / `col` use LVGL flex with configurable **main / cross / track** alignment (`row_config`, `col_config`). Product code can use `blusys::app::view::row` / `::col` for the same knobs. Shared helpers for sizing children inside flex strips live in `blusys/framework/ui/detail/flex_layout.hpp`. Shell, scroll viewport, and app conventions are described in [Architecture — UI layout](../../docs/internals/architecture.md#ui-layout-lvgl-flex).
 
 Display widgets that wrap content-sized LVGL objects may need to reconcile size on `LV_EVENT_SIZE_CHANGED` when placed in a flex row or column — `bu_gauge` is the reference.
 

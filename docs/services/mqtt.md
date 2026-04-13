@@ -12,6 +12,37 @@ Publish/subscribe messaging client for connecting to an MQTT broker over WiFi.
 | ESP32-C3 | yes |
 | ESP32-S3 | yes |
 
+Requires WiFi to be connected before calling `blusys_mqtt_connect()`.
+
+## Quick Example
+
+```c
+#include "blusys/blusys_services.h"
+
+static void on_message(const char *topic, const uint8_t *payload,
+                       size_t len, void *ctx)
+{
+    printf("[%s] %.*s\n", topic, (int)len, (const char *)payload);
+}
+
+blusys_mqtt_t *mqtt = NULL;
+blusys_mqtt_config_t cfg = {
+    .broker_url = "mqtt://broker.example.com:1883",
+    .timeout_ms = 10000,
+    .message_cb = on_message,
+};
+blusys_mqtt_open(&cfg, &mqtt);
+blusys_mqtt_connect(mqtt);
+
+blusys_mqtt_subscribe(mqtt, "sensors/+/temp", BLUSYS_MQTT_QOS_0);
+blusys_mqtt_publish(mqtt, "sensors/kitchen/temp",
+                    (const uint8_t *)"21.4", 4, BLUSYS_MQTT_QOS_0);
+
+/* ... later ... */
+blusys_mqtt_disconnect(mqtt);
+blusys_mqtt_close(mqtt);
+```
+
 ## Types
 
 ### `blusys_mqtt_qos_t`

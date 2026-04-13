@@ -22,7 +22,7 @@ void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State &s
 
 `page_create()` accepts an optional `page_config` to set padding, gap, and scrollability.
 
-Inside the interaction shell, `page_create_in(shell.content_area, …)` produces a bounded scroll column (`flex_grow`, optional scroll) so chrome (tabs, header) stays on screen. For LVGL flex conventions, primitives (`view::row`, `view::col`), and sizing helpers used by stock widgets, see [UI layout and LVGL flex](../internals/ui-layout-lvgl.md).
+Inside the interaction shell, `page_create_in(shell.content_area, …)` produces a bounded scroll column (`flex_grow`, optional scroll) so chrome (tabs, header) stays on screen. For LVGL flex conventions, primitives (`view::row`, `view::col`), and sizing helpers used by stock widgets, see [Architecture — UI layout](../internals/architecture.md#ui-layout-lvgl-flex).
 
 ## Navigation
 

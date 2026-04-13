@@ -29,4 +29,18 @@ blusys host-build examples/quickstart/interactive_controller
 blusys build examples/quickstart/interactive_controller esp32
 ```
 
+## What you see on host
+
+The host binary opens an SDL window showing the Home screen ("Pulse Engine" control). Keyboard maps to encoder intents: **arrow keys** step the output level, **Enter** confirms / toggles hold, **Tab** cycles focus. The shell badge changes as the Status screen's setup flow completes.
+
+## What to edit first
+
+When forking into a new product:
+
+1. `core/app_logic.{hpp,cpp}` — replace the state/action model and `update()` body; keep the reducer pattern.
+2. `ui/app_ui.{hpp,cpp}` and `ui/panels.{hpp,cpp}` — rename/restyle screens; keep routing through `screen_router` and dispatch via actions.
+3. `integration/app_main.cpp` — swap profile, adjust the `capability_list`, and update `map_event` for any new capability events.
+
+When adding a new capability, see [Authoring a capability](../../../docs/app/capability-authoring.md).
+
 See [Interactive Quickstart](../../../docs/start/quickstart-interactive.md) for the full host-first flow.

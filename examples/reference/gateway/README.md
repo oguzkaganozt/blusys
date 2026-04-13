@@ -30,5 +30,5 @@ Optional: `-DBLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE=1` for 480×320 SDL surface.
 
 ## Docs
 
-- [Connected products](../../../docs/start/connected-products.md)  
+- [Archetype Starters — connected archetypes](../../../docs/start/archetypes.md#connected-archetypes)  
 - [Archetype starters](../../../docs/start/archetypes.md)  

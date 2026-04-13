@@ -94,3 +94,23 @@ bool blusys_sntp_is_synced(blusys_sntp_t *sntp);
 ```
 
 Returns `true` if the system clock has been synchronized at least once. Non-blocking.
+
+## Lifecycle
+
+Requires an active WiFi connection. Call `blusys_sntp_open()` after WiFi has an IP address. Only one instance at a time; close before re-opening with different servers.
+
+## Thread Safety
+
+- `blusys_sntp_open` / `blusys_sntp_close` are not reentrant
+- `blusys_sntp_is_synced` is safe from any task
+- `sync_cb` runs on the SNTP service task — do not block
+
+## Limitations
+
+- single active instance
+- requires WiFi (or another network interface with routable DNS) before `open`
+- system clock retains the last sync across `close`/`open` cycles; there is no “reset to epoch” helper
+
+## Example App
+
+See `examples/validation/sntp_basic/`.
