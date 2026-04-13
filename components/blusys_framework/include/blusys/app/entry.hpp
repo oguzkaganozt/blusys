@@ -40,6 +40,7 @@
 #include "blusys/app/button_array_bridge.hpp"
 #include "blusys/app/touch_bridge.hpp"
 #include "blusys/app/view/shell.hpp"
+#include "blusys/display/ui.h"
 #endif
 
 #if defined(BLUSYS_FRAMEWORK_HAS_UI) && !defined(ESP_PLATFORM)
@@ -183,6 +184,12 @@ void run_device(const app_spec<State, Action> &spec,
         return;
     }
 
+    // LVGL 9: all API (theme, widget tree, indev) must run under the same lock
+    // as lv_timer_handler() in the render task — otherwise concurrent access can
+    // trip lv_inv_area assertions and wedge the main task.
+    blusys_app_platform::device_ui_lock(ui);
+    blusys_ui_invalidation_begin(ui);
+
     const blusys::ui::theme_tokens *resolved_theme = resolve_theme_tokens(spec);
     if (resolved_theme != nullptr) {
         blusys_app_platform::device_set_theme(static_cast<const void *>(resolved_theme));
@@ -194,6 +201,8 @@ void run_device(const app_spec<State, Action> &spec,
     err = runtime.init();
     if (err != BLUSYS_OK) {
         BLUSYS_LOGE("blusys_app", "app runtime init failed: %d", static_cast<int>(err));
+        blusys_ui_invalidation_end(ui);
+        blusys_app_platform::device_ui_unlock(ui);
         blusys_app_platform::device_deinit(lcd, ui);
         return;
     }
@@ -255,6 +264,9 @@ void run_device(const app_spec<State, Action> &spec,
                         "has_touch set but no LVGL POINTER indev — skipping touch bridge");
         }
     }
+
+    blusys_ui_invalidation_end(ui);
+    blusys_app_platform::device_ui_unlock(ui);
 
     // Button array bridge (optional — only if profile declares buttons).
     button_array_bridge btn_bridge{};

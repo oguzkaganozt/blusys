@@ -5,6 +5,7 @@
 #include "blusys/app/auto_shell.hpp"
 #include "blusys/app/build_profile.hpp"
 #include "blusys/app/theme_presets.hpp"
+#include "blusys/app/view/shell.hpp"
 
 #include <cstdint>
 
@@ -31,8 +32,28 @@ const char *dashboard_build_version_for_build()
 
 namespace {
 
-static const blusys::app::view::shell_config kShellConfig =
-    blusys::app::auto_shell_adaptive(blusys::app::auto_profile_dashboard(), "Dashboard");
+static const char kShellTitle[] = "Dashboard";
+
+// ST7735-class (≤200×160): drop status bar + tighten header/tabs so the scroll
+// region has enough height; full chrome + dense flex rows can trigger LVGL flex
+// layout to spin on very narrow tracks (see blusys_ui task watchdog).
+[[nodiscard]] static blusys::app::view::shell_config make_dashboard_shell()
+{
+    const blusys::app::device_profile p = blusys::app::auto_profile_dashboard();
+    if (p.lcd.width <= 200u && p.lcd.height <= 160u) {
+        blusys::app::view::shell_config c{};
+        c.header.enabled = true;
+        c.header.title   = kShellTitle;
+        c.header.height  = 22;
+        c.status.enabled = false;
+        c.tabs.enabled   = true;
+        c.tabs.height    = 22;
+        return c;
+    }
+    return blusys::app::auto_shell_adaptive(p, kShellTitle);
+}
+
+static const blusys::app::view::shell_config kShellConfig = make_dashboard_shell();
 
 static blusys::app::diagnostics_capability diagnostics{{
     .enable_console        = false,

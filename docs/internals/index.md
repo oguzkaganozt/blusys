@@ -15,7 +15,7 @@ Platform architecture, development guidelines, display notes, testing procedures
 
 ## Display & integration
 
-- [LVGL integration (ST7735, resolved)](lvgl-st7735-integration.md) --- root-cause notes for SPI DMA + LVGL stride on ESP32-C3
+- [LVGL + ST7735](lvgl-st7735-integration.md) --- ST7735 one-row `RAMWR` fix and LVGL 9 partial flush notes
 
 ## Testing
 

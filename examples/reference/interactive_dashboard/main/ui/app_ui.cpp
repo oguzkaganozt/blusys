@@ -41,10 +41,22 @@ bool dashboard_narrow_viewport()
     return lv_disp_get_hor_res(d) <= 400;
 }
 
-view::page make_page(blusys::app::app_ctx &ctx, bool scrollable, bool compact)
+bool dashboard_tiny_viewport()
+{
+    const lv_disp_t *d = lv_disp_get_default();
+    if (d == nullptr) {
+        return true;
+    }
+    return lv_disp_get_hor_res(d) <= 200 && lv_disp_get_ver_res(d) <= 160;
+}
+
+view::page make_page(blusys::app::app_ctx &ctx, bool scrollable, bool compact, bool tiny)
 {
     view::page_config cfg{.scrollable = scrollable};
-    if (compact) {
+    if (tiny) {
+        cfg.padding = 4;
+        cfg.gap     = 4;
+    } else if (compact) {
         cfg.padding = 8;
         cfg.gap     = 6;
     }
@@ -106,13 +118,14 @@ lv_obj_t *create_overview(blusys::app::app_ctx &ctx, const void * /*params*/, lv
         return nullptr;
     }
 
-    const bool compact  = dashboard_short_viewport();
-    const bool narrow   = dashboard_narrow_viewport();
-    auto       page     = make_page(ctx, true, compact);
+    const bool tiny     = dashboard_tiny_viewport();
+    const bool compact  = dashboard_short_viewport() || tiny;
+    const bool narrow   = dashboard_narrow_viewport() || tiny;
+    auto       page     = make_page(ctx, true, compact, tiny);
 
-    const int  split_h  = compact ? 76 : 124;
-    const int  bar_h    = compact ? 56 : 96;
-    const int  card_pad = compact ? 6 : -1;
+    const int  split_h  = tiny ? 40 : (compact ? 76 : 124);
+    const int  bar_h    = tiny ? 36 : (compact ? 56 : 96);
+    const int  card_pad = (tiny || compact) ? 6 : -1;
 
     // Wide viewports: stacked KPI rows read best. Narrow (e.g. 320-wide): one row
     // of three metrics so the Snapshot card does not consume most of the viewport.
@@ -139,18 +152,36 @@ lv_obj_t *create_overview(blusys::app::app_ctx &ctx, const void * /*params*/, lv
 
     auto *split_card = view::card(page.content, "Load & trend", card_pad);
     lv_obj_set_width(split_card, LV_PCT(100));
-    auto *split = view::row(split_card);
-    lv_obj_set_width(split, LV_PCT(100));
-    lv_obj_set_height(split, split_h);
+    if (tiny) {
+        // Column + fixed heights: side-by-side flex_grow in ~160px-wide rows can
+        // send LVGL 9 flex into a tight loop (find_track_end) on device.
+        auto *split = view::col(split_card, 4, 0);
+        lv_obj_set_width(split, LV_PCT(100));
 
-    st->dash_gauge = view::gauge(split, 0, 100, st->load_percent, "%");
-    lv_obj_set_flex_grow(st->dash_gauge, 1);
+        st->dash_gauge = view::gauge(split, 0, 100, st->load_percent, "%");
+        lv_obj_set_width(st->dash_gauge, LV_PCT(100));
+        lv_obj_set_height(st->dash_gauge, 34);
 
-    st->dash_line_chart = view::chart(split, blusys::ui::chart_type::line,
-                                      static_cast<std::int32_t>(app_state::history_size), 0, 100);
-    lv_obj_set_flex_grow(st->dash_line_chart, 2);
-    st->line_series = blusys::ui::chart_add_series(st->dash_line_chart,
-                                                   blusys::ui::theme().color_accent);
+        st->dash_line_chart = view::chart(split, blusys::ui::chart_type::line,
+                                          static_cast<std::int32_t>(app_state::history_size), 0, 100);
+        lv_obj_set_width(st->dash_line_chart, LV_PCT(100));
+        lv_obj_set_height(st->dash_line_chart, split_h);
+        st->line_series = blusys::ui::chart_add_series(st->dash_line_chart,
+                                                       blusys::ui::theme().color_accent);
+    } else {
+        auto *split = view::row(split_card);
+        lv_obj_set_width(split, LV_PCT(100));
+        lv_obj_set_height(split, split_h);
+
+        st->dash_gauge = view::gauge(split, 0, 100, st->load_percent, "%");
+        lv_obj_set_flex_grow(st->dash_gauge, 1);
+
+        st->dash_line_chart = view::chart(split, blusys::ui::chart_type::line,
+                                          static_cast<std::int32_t>(app_state::history_size), 0, 100);
+        lv_obj_set_flex_grow(st->dash_line_chart, 2);
+        st->line_series = blusys::ui::chart_add_series(st->dash_line_chart,
+                                                       blusys::ui::theme().color_accent);
+    }
 
     auto *zones = view::card(page.content, "Zone mix", card_pad);
     lv_obj_set_width(zones, LV_PCT(100));
@@ -162,24 +193,48 @@ lv_obj_t *create_overview(blusys::app::app_ctx &ctx, const void * /*params*/, lv
     st->bar_series = blusys::ui::chart_add_series(st->dash_bar_chart,
                                                   blusys::ui::theme().color_primary);
 
-    auto *mode_row = view::row(page.content);
-    lv_obj_set_width(mode_row, LV_PCT(100));
-    view::label(mode_row, "Profile", blusys::ui::theme().font_body_sm);
-    view::button(mode_row, "Eco", action{.tag = action_tag::set_mode, .value = 0}, &ctx,
-                 blusys::ui::button_variant::secondary);
-    view::button(mode_row, "Balanced", action{.tag = action_tag::set_mode, .value = 1}, &ctx,
-                 blusys::ui::button_variant::secondary);
-    view::button(mode_row, "Boost", action{.tag = action_tag::set_mode, .value = 2}, &ctx,
-                 blusys::ui::button_variant::secondary);
+    if (tiny) {
+        view::label(page.content, "Profile", blusys::ui::theme().font_body_sm);
+        auto *mode_row = view::row(page.content, 2, 0);
+        lv_obj_set_width(mode_row, LV_PCT(100));
+        view::button(mode_row, "Eco", action{.tag = action_tag::set_mode, .value = 0}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        view::button(mode_row, "Bal", action{.tag = action_tag::set_mode, .value = 1}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        view::button(mode_row, "Boost", action{.tag = action_tag::set_mode, .value = 2}, &ctx,
+                     blusys::ui::button_variant::secondary);
 
-    auto *ctrl = view::row(page.content);
-    lv_obj_set_width(ctrl, LV_PCT(100));
-    view::button(ctrl, "−", action{.tag = action_tag::nudge_load, .value = -6}, &ctx,
-                 blusys::ui::button_variant::secondary);
-    view::button(ctrl, "+", action{.tag = action_tag::nudge_load, .value = 6}, &ctx,
-                 blusys::ui::button_variant::secondary);
-    view::label(ctrl, "Target", blusys::ui::theme().font_body_sm);
-    view::slider(ctrl, 0, 100, st->target_setpoint, &make_set_target, &ctx);
+        auto *ctrl_btns = view::row(page.content, 2, 0);
+        lv_obj_set_width(ctrl_btns, LV_PCT(100));
+        view::label(ctrl_btns, "Load", blusys::ui::theme().font_body_sm);
+        view::button(ctrl_btns, "−", action{.tag = action_tag::nudge_load, .value = -6}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        view::button(ctrl_btns, "+", action{.tag = action_tag::nudge_load, .value = 6}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        auto *sli = view::slider(page.content, 0, 100, st->target_setpoint, &make_set_target, &ctx);
+        if (sli != nullptr) {
+            lv_obj_set_width(sli, LV_PCT(100));
+        }
+    } else {
+        auto *mode_row = view::row(page.content);
+        lv_obj_set_width(mode_row, LV_PCT(100));
+        view::label(mode_row, "Profile", blusys::ui::theme().font_body_sm);
+        view::button(mode_row, "Eco", action{.tag = action_tag::set_mode, .value = 0}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        view::button(mode_row, "Balanced", action{.tag = action_tag::set_mode, .value = 1}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        view::button(mode_row, "Boost", action{.tag = action_tag::set_mode, .value = 2}, &ctx,
+                     blusys::ui::button_variant::secondary);
+
+        auto *ctrl = view::row(page.content);
+        lv_obj_set_width(ctrl, LV_PCT(100));
+        view::button(ctrl, "−", action{.tag = action_tag::nudge_load, .value = -6}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        view::button(ctrl, "+", action{.tag = action_tag::nudge_load, .value = 6}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        view::label(ctrl, "Target", blusys::ui::theme().font_body_sm);
+        view::slider(ctrl, 0, 100, st->target_setpoint, &make_set_target, &ctx);
+    }
 
     if (group_out != nullptr) {
         *group_out = page.group;

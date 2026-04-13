@@ -1,0 +1,7 @@
+# Default interactive_dashboard device profile for ESP32-C3: compact SPI ST7735
+# (same wiring defaults as interactive_controller / st7735_160x128()). Override pins
+# in code if your board differs — see docs/app/profiles.md.
+CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735=y
+# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341 is not set
+# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488 is not set
+# CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB is not set

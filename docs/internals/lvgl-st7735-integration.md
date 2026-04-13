@@ -1,32 +1,20 @@
-# LVGL integration — resolved
+# LVGL + ST7735 (ESP32-C3)
 
-The ST7735 + LVGL corruption on ESP32-C3 is fixed. This file records the final root-cause analysis and solution for future reference.
+## Root cause (diagonal shear / slanted text)
 
-## Root causes
+LVGL’s flush path and row stride were **correct** (`lv_draw_buf_width_to_stride()` matches LVGL 9’s partial-buffer reshape). The artifact came from the **panel transfer shape**: packing **several scanlines** into one **`RASET` window** and **one long `RAMWR`** confused some ST7735 modules on SPI, producing shear even when the byte count per row was right.
 
-Two independent bugs combined to produce the corruption:
+## Fix (HAL)
 
-### 1. SPI DMA descriptor chaining (lcd.c)
+`blusys_st7735_panel_draw_bitmap()` in `components/blusys_hal/src/drivers/display/lcd.c` sends **one display row per `RAMWR`** (each row: `COLMOD` + `CASET` + `RASET` + `RAMWR`). Throughput is lower than multi-row bursts; override in a fork only if you validate hardware.
 
-ESP-IDF's SPI master driver requires a single DMA descriptor per transfer. When a `RAMWR` payload exceeds `SPI_MAX_DMA_LEN` bytes the driver internally chains descriptors, and the ST7735 would misinterpret the chained burst as separate commands, producing sheared or duplicated output.
+`COLMOD` is still re-asserted per transaction and once more after the last `RAMWR` so DMA completion is synchronized before the next use of the source buffer.
 
-**Fix:** `blusys_st7735_panel_draw_bitmap()` now splits large bitmaps into row-aligned chunks that fit within `SPI_MAX_DMA_LEN`. Each chunk gets its own `COLMOD` + `CASET` + `RASET` + `RAMWR` sequence.
+## LVGL flush (`components/blusys_services/src/display/ui.c`)
 
-### 2. LVGL buffer stride vs. packed area width (ui.c)
+Partial-mode `flush_cb` copies each dirty region from `px_map` using `lv_draw_buf_width_to_stride(area_width, cf)`, packs into the DMA scratch buffer, optionally byte-swaps RGB565 for SPI, and calls `blusys_lcd_draw_bitmap()`. `lv_display_flush_ready()` runs **after** all SPI/DMA for that flush completes.
 
-LVGL's draw buffer has a `stride` that is often wider than the dirty area being flushed. The previous flush callback read row data using `packed_row_bytes` as the row pitch, which skipped bytes at the end of each row and fed misaligned pixel data to the LCD.
+## Notes
 
-**Fix:** `flush_cb()` now reads rows using `draw_buf->header.stride` as the source pitch, copies them packed (area-width only) into a dedicated DMA-safe scratch buffer, byte-swaps, and calls `blusys_lcd_draw_bitmap()` once per band.
-
-## Solution summary
-
-- `lcd.c` — `draw_bitmap` chunks to `SPI_MAX_DMA_LEN`; `COLMOD` re-asserted per chunk to prevent the ST7735 dropping its pixel format mid-session.
-- `lcd.c` — SPI `max_transfer_sz` sized to full panel height instead of a fixed 80-line cap.
-- `ui.c` — `flush_cb` copies LVGL rows (stride-pitched) into a packed DMA-safe scratch buffer in multi-row bands; byte-swaps the scratch buffer before each `draw_bitmap` call.
-- `ui.c` — scratch buffer always allocated (not just in full-refresh mode).
-
-## Validated configuration
-
-- Target: ESP32-C3 + ST7735 (160×128, landscape via `swap_xy=true`, `mirror_x=true`)
-- SPI clock: 8 MHz (48 MHz also validated; wire time is no longer the bottleneck)
-- LVGL mode: partial render, `buf_lines=20`, double-buffered
+- SPI default for `st7735_160x128()` is **16 MHz**; lower `pclk_hz` in product integration if wiring is marginal.
+- Typical **x/y gap** offsets for 160×128 modules remain in the profile; tune per glass if needed.

@@ -14,6 +14,7 @@
 #include "blusys/app/profiles/ili9341.hpp"
 #include "blusys/app/profiles/ili9488.hpp"
 #include "blusys/app/profiles/qemu_rgb.hpp"
+#include "blusys/app/profiles/st7735.hpp"
 #endif
 
 namespace blusys::app {
@@ -56,6 +57,9 @@ namespace blusys::app {
 #elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
     return profiles::ili9488_480x320();
+#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
+    CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
+    return profiles::st7735_160x128();
 #elif defined(ESP_PLATFORM)
     return profiles::ili9341_320x240();
 #else
@@ -63,6 +67,9 @@ namespace blusys::app {
 #if defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 1)
     p.lcd.width  = 480;
     p.lcd.height = 320;
+#elif defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 2)
+    p.lcd.width  = 160;
+    p.lcd.height = 128;
 #else
     p.lcd.width  = 320;
     p.lcd.height = 240;
@@ -81,6 +88,9 @@ namespace blusys::app {
 #if defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 1)
     hp.hor_res = 480;
     hp.ver_res = 320;
+#elif defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 2)
+    hp.hor_res = 160;
+    hp.ver_res = 128;
 #else
     hp.hor_res = 320;
     hp.ver_res = 240;
@@ -99,10 +109,15 @@ namespace blusys::app {
 #elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
     return "ILI9488 480x320";
+#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
+    CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
+    return "ST7735 160x128";
 #elif defined(ESP_PLATFORM)
     return "ILI9341 320x240";
 #elif defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 1)
     return "Host SDL 480x320";
+#elif defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 2)
+    return "Host SDL 160x128";
 #else
     return "Host SDL 320x240";
 #endif
@@ -116,6 +131,9 @@ namespace blusys::app {
 #elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
     return "ILI9488 reference";
+#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
+    CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
+    return "ST7735 reference";
 #elif defined(ESP_PLATFORM)
     return "ILI9341 reference";
 #else
