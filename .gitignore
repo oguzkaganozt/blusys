@@ -4,6 +4,7 @@
 site/
 __pycache__/
 build-*/
+scripts/host/build/
 examples/**/build*/
 examples/**/build-*.log
 examples/**/sdkconfig
