@@ -3,6 +3,10 @@
 #include "blusys/app/view/bindings.hpp"
 #include "blusys/log.h"
 
+#ifdef ESP_PLATFORM
+#include "integration/mqtt_esp_capability.hpp"
+#endif
+
 #include <cstdio>
 #include <cstring>
 
@@ -10,6 +14,22 @@ namespace mqtt_dashboard {
 namespace {
 
 constexpr const char *kTag = "mqtt_dash";
+
+[[nodiscard]] const blusys::app::mqtt_host_status *mqtt_status(blusys::app::app_ctx &ctx)
+{
+#if !defined(ESP_PLATFORM)
+    if (auto *mh = ctx.mqtt_host(); mh != nullptr) {
+        return &mh->status();
+    }
+    return nullptr;
+#else
+    if (auto *me = mqtt_dashboard::system::mqtt_esp(); me != nullptr) {
+        return &me->status();
+    }
+    (void)ctx;
+    return nullptr;
+#endif
+}
 
 void sync_shell(app_state &state)
 {
@@ -21,7 +41,11 @@ void sync_shell(app_state &state)
             ready ? blusys::ui::badge_level::success : blusys::ui::badge_level::warning);
     }
     if (state.shell_detail != nullptr) {
+#if defined(ESP_PLATFORM)
+        blusys::app::view::set_text(state.shell_detail, "Device | WiFi+MQTT");
+#else
         blusys::app::view::set_text(state.shell_detail, "Host demo | public broker");
+#endif
     }
 }
 
@@ -31,19 +55,17 @@ void sync_live(blusys::app::app_ctx &ctx, app_state &state)
         return;
     }
     char line[128];
-    auto *mh = ctx.mqtt_host();
-#if !defined(ESP_PLATFORM)
-    if (mh != nullptr) {
-        const auto &s = mh->status();
+    const blusys::app::mqtt_host_status *st = mqtt_status(ctx);
+    if (st != nullptr) {
         std::snprintf(line, sizeof(line), "%s  tx:%lu  rx:%lu",
-                      s.connected ? "Online" : "Connecting...",
-                      static_cast<unsigned long>(s.publishes_tx),
-                      static_cast<unsigned long>(s.messages_rx));
+                      st->connected ? "Online" : "Connecting...",
+                      static_cast<unsigned long>(st->publishes_tx),
+                      static_cast<unsigned long>(st->messages_rx));
         blusys::app::view::set_text(state.status_line, line);
 
         char rx[320];
-        if (s.last_topic[0] != '\0') {
-            std::snprintf(rx, sizeof(rx), "Last: %.100s -> %.100s", s.last_topic, s.last_payload);
+        if (st->last_topic[0] != '\0') {
+            std::snprintf(rx, sizeof(rx), "Last: %.100s -> %.100s", st->last_topic, st->last_payload);
         } else {
             std::snprintf(rx, sizeof(rx), "Last: --");
         }
@@ -51,18 +73,18 @@ void sync_live(blusys::app::app_ctx &ctx, app_state &state)
             blusys::app::view::set_text(state.last_rx_line, rx);
         }
 
-        if (state.metrics_line != nullptr && s.last_error[0] != '\0') {
-            blusys::app::view::set_text(state.metrics_line, s.last_error);
+        if (state.metrics_line != nullptr && st->last_error[0] != '\0') {
+            blusys::app::view::set_text(state.metrics_line, st->last_error);
         } else if (state.metrics_line != nullptr) {
             blusys::app::view::set_text(state.metrics_line, "");
         }
     } else {
+#if !defined(ESP_PLATFORM)
         blusys::app::view::set_text(state.status_line, "MQTT (host only)");
-    }
 #else
-    (void)mh;
-    blusys::app::view::set_text(state.status_line, "Use blusys host-build for MQTT");
+        blusys::app::view::set_text(state.status_line, "WiFi/MQTT starting...");
 #endif
+    }
 }
 
 void sync_all(blusys::app::app_ctx &ctx, app_state &state)
@@ -73,12 +95,21 @@ void sync_all(blusys::app::app_ctx &ctx, app_state &state)
 
 blusys_err_t publish_json(blusys::app::app_ctx &ctx, const char *topic, const char *json)
 {
+    const std::size_t len = std::strlen(json);
+#if !defined(ESP_PLATFORM)
     auto *mh = ctx.mqtt_host();
     if (mh == nullptr) {
         return BLUSYS_ERR_INVALID_STATE;
     }
-    const std::size_t len = std::strlen(json);
     return mh->publish(topic, json, len, -1);
+#else
+    (void)ctx;
+    auto *me = mqtt_dashboard::system::mqtt_esp();
+    if (me == nullptr) {
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+    return me->publish(topic, json, len, -1);
+#endif
 }
 
 }  // namespace
@@ -97,8 +128,8 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         case CET::mqtt_error:
         case CET::mqtt_ready:
             state.mqtt_ready = false;
-            if (auto *mh = ctx.mqtt_host(); mh != nullptr) {
-                state.mqtt_ready = mh->status().capability_ready;
+            if (const blusys::app::mqtt_host_status *st = mqtt_status(ctx); st != nullptr) {
+                state.mqtt_ready = st->capability_ready;
             }
             sync_all(ctx, state);
             break;
@@ -117,29 +148,26 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 
     case action_tag::mqtt_refresh:
         state.mqtt_ready = false;
-        if (auto *mh = ctx.mqtt_host(); mh != nullptr) {
-            state.mqtt_ready = mh->status().capability_ready;
+        if (const blusys::app::mqtt_host_status *st = mqtt_status(ctx); st != nullptr) {
+            state.mqtt_ready = st->capability_ready;
         }
         sync_all(ctx, state);
         break;
 
     case action_tag::publish_ping: {
-#if !defined(ESP_PLATFORM)
         static const char kTopic[] = "blusys/demo/cmd";
-        const char      *payload  = "{\"op\":\"ping\",\"v\":1}";
-        const blusys_err_t e      = publish_json(ctx, kTopic, payload);
+        const char       *payload  = "{\"op\":\"ping\",\"v\":1}";
+        const blusys_err_t e       = publish_json(ctx, kTopic, payload);
         if (e != BLUSYS_OK) {
             BLUSYS_LOGW(kTag, "publish ping failed: %d", static_cast<int>(e));
         }
         ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
                           blusys::framework::feedback_pattern::click);
-#endif
         sync_all(ctx, state);
         break;
     }
 
     case action_tag::publish_toggle: {
-#if !defined(ESP_PLATFORM)
         state.toggle_state = !state.toggle_state;
         char buf[96];
         std::snprintf(buf, sizeof(buf), "{\"op\":\"toggle\",\"on\":%s}",
@@ -147,13 +175,11 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         (void)publish_json(ctx, "blusys/demo/cmd", buf);
         ctx.emit_feedback(blusys::framework::feedback_channel::audio,
                           blusys::framework::feedback_pattern::click);
-#endif
         sync_all(ctx, state);
         break;
     }
 
     case action_tag::publish_scene: {
-#if !defined(ESP_PLATFORM)
         char buf[96];
         std::snprintf(buf, sizeof(buf), "{\"op\":\"scene\",\"id\":%ld}",
                       static_cast<long>(state.scene_id));
@@ -161,7 +187,6 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
         state.scene_id = (state.scene_id % 4) + 1;
         ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
                           blusys::framework::feedback_pattern::click);
-#endif
         sync_all(ctx, state);
         break;
     }

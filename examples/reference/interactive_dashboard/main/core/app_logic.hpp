@@ -62,6 +62,9 @@ struct app_state {
     lv_obj_t *dash_bar_chart  = nullptr;
     std::int32_t line_series  = -1;
     std::int32_t bar_series   = -1;
+
+    /** SSD1306 128×64 overview: one-line status (Load / mode); charts unused. */
+    lv_obj_t *mono_summary = nullptr;
 };
 
 void update(blusys::app::app_ctx &ctx, app_state &state, const action &event);

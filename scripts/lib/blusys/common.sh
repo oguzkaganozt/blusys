@@ -88,12 +88,19 @@ blusys_sdkconfig_args() {
     idf_target="$(blusys_idf_target_from_build_label "$target")" || return 1
 
     local common="$project_dir/sdkconfig.defaults"
-    local chip="$project_dir/sdkconfig.$idf_target"
+    # Prefer sdkconfig.<chip> (explicit); else sdkconfig.defaults.<chip> (tracked in git —
+    # examples/**/sdkconfig.* is gitignored except sdkconfig.defaults* / sdkconfig.qemu).
+    local chip=""
+    if [[ -f "$project_dir/sdkconfig.$idf_target" ]]; then
+        chip="$project_dir/sdkconfig.$idf_target"
+    elif [[ -f "$project_dir/sdkconfig.defaults.$idf_target" ]]; then
+        chip="$project_dir/sdkconfig.defaults.$idf_target"
+    fi
     local qemu_frag="$project_dir/sdkconfig.qemu"
 
     local parts=()
     [[ -f "$common" ]] && parts+=("$common")
-    [[ -f "$chip" ]] && parts+=("$chip")
+    [[ -n "$chip" ]] && parts+=("$chip")
     if blusys_is_qemu_build_label "$target" && [[ -f "$qemu_frag" ]]; then
         parts+=("$qemu_frag")
     fi

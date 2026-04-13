@@ -20,6 +20,9 @@ menu "Blusys framework"
             config BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
                 bool "ST7735 160x128 landscape (SPI)"
 
+            config BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306
+                bool "SSD1306 128x64 I2C OLED (monochrome)"
+
             config BLUSYS_DASHBOARD_LCD_QEMU_RGB
                 bool "QEMU virtual RGB 320x240 (esp_lcd_qemu_rgb, idf.py qemu --graphics)"
                 depends on IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32C3

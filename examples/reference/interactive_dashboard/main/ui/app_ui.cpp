@@ -50,6 +50,16 @@ bool dashboard_tiny_viewport()
     return lv_disp_get_hor_res(d) <= 200 && lv_disp_get_ver_res(d) <= 160;
 }
 
+/** 128×64 SSD1306 — charts/shell status are impractical; use minimal overview. */
+bool dashboard_ssd1306_viewport()
+{
+    const lv_disp_t *d = lv_disp_get_default();
+    if (d == nullptr) {
+        return false;
+    }
+    return lv_disp_get_hor_res(d) <= 128 && lv_disp_get_ver_res(d) <= 64;
+}
+
 view::page make_page(blusys::app::app_ctx &ctx, bool scrollable, bool compact, bool tiny)
 {
     view::page_config cfg{.scrollable = scrollable};
@@ -84,6 +94,7 @@ void on_overview_hide(lv_obj_t * /*screen*/, void *user_data)
     st->dash_bar_chart   = nullptr;
     st->line_series      = -1;
     st->bar_series       = -1;
+    st->mono_summary     = nullptr;
 }
 
 void on_overview_show(lv_obj_t * /*screen*/, void *user_data)
@@ -116,6 +127,39 @@ lv_obj_t *create_overview(blusys::app::app_ctx &ctx, const void * /*params*/, lv
     auto *st = ctx.product_state<app_state>();
     if (st == nullptr) {
         return nullptr;
+    }
+
+    if (dashboard_ssd1306_viewport()) {
+        auto page = make_page(ctx, true, true, true);
+        auto *kpi_card = view::card(page.content, "Snapshot", 2);
+        lv_obj_set_width(kpi_card, LV_PCT(100));
+        lv_obj_set_style_pad_row(kpi_card, 0, 0);
+        auto *kpi_row = view::row(kpi_card);
+        lv_obj_set_width(kpi_row, LV_PCT(100));
+        st->kpi_ops   = view::key_value(kpi_row, "Thr", "—");
+        st->kpi_temp  = view::key_value(kpi_row, "In", "—");
+        st->kpi_queue = view::key_value(kpi_row, "Q", "—");
+        lv_obj_set_flex_grow(st->kpi_ops, 1);
+        lv_obj_set_flex_grow(st->kpi_temp, 1);
+        lv_obj_set_flex_grow(st->kpi_queue, 1);
+
+        st->mono_summary =
+            view::label(page.content, "Load —", blusys::ui::theme().font_body_sm);
+        lv_obj_set_width(st->mono_summary, LV_PCT(100));
+
+        auto *mode_row = view::row(page.content, 2, 0);
+        lv_obj_set_width(mode_row, LV_PCT(100));
+        view::button(mode_row, "Eco", action{.tag = action_tag::set_mode, .value = 0}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        view::button(mode_row, "Bal", action{.tag = action_tag::set_mode, .value = 1}, &ctx,
+                     blusys::ui::button_variant::secondary);
+        view::button(mode_row, "Bst", action{.tag = action_tag::set_mode, .value = 2}, &ctx,
+                     blusys::ui::button_variant::secondary);
+
+        if (group_out != nullptr) {
+            *group_out = page.group;
+        }
+        return ctx.services().shell() != nullptr ? page.content : page.screen;
     }
 
     const bool tiny     = dashboard_tiny_viewport();

@@ -15,6 +15,7 @@
 #include "blusys/app/profiles/ili9488.hpp"
 #include "blusys/app/profiles/qemu_rgb.hpp"
 #include "blusys/app/profiles/st7735.hpp"
+#include "blusys/app/profiles/ssd1306.hpp"
 #endif
 
 namespace blusys::app {
@@ -60,6 +61,9 @@ namespace blusys::app {
 #elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
     return profiles::st7735_160x128();
+#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
+    CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306
+    return profiles::ssd1306_128x64();
 #elif defined(ESP_PLATFORM)
     return profiles::ili9341_320x240();
 #else
@@ -112,6 +116,9 @@ namespace blusys::app {
 #elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
     return "ST7735 160x128";
+#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
+    CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306
+    return "SSD1306 128x64";
 #elif defined(ESP_PLATFORM)
     return "ILI9341 320x240";
 #elif defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 1)
@@ -134,6 +141,9 @@ namespace blusys::app {
 #elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
     return "ST7735 reference";
+#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
+    CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306
+    return "SSD1306 I2C OLED";
 #elif defined(ESP_PLATFORM)
     return "ILI9341 reference";
 #else

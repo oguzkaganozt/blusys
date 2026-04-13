@@ -1,0 +1,31 @@
+menu "MQTT dashboard (device)"
+
+    config WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        help
+            Access point SSID used when building for ESP-IDF.
+
+    config WIFI_PASSWORD
+        string "WiFi password"
+        default "mypassword"
+        help
+            WiFi password (empty for open networks).
+
+    config WIFI_CONNECT_TIMEOUT_MS
+        int "WiFi connect timeout (ms)"
+        default 15000
+        range 5000 120000
+
+    config MQTT_BROKER_URL
+        string "MQTT broker URL"
+        default "mqtt://test.mosquitto.org"
+        help
+            Plain MQTT URI (port 1883 unless included in URL).
+
+    config MQTT_CONNECT_TIMEOUT_MS
+        int "MQTT connect timeout (ms)"
+        default 15000
+        range 5000 120000
+
+endmenu
