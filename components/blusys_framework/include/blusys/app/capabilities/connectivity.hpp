@@ -10,8 +10,8 @@
 #include "blusys/connectivity/mdns.h"
 #include "blusys/connectivity/wifi.h"
 #include "blusys/connectivity/wifi_prov.h"
-#include "blusys/system/local_ctrl.h"
-#include "blusys/system/sntp.h"
+#include "blusys/device/local_ctrl.h"
+#include "blusys/device/sntp.h"
 #endif
 
 namespace blusys::framework { class runtime; }

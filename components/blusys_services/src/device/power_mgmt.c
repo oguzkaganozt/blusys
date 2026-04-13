@@ -1,4 +1,4 @@
-#include "blusys/system/power_mgmt.h"
+#include "blusys/device/power_mgmt.h"
 
 #include "blusys/internal/blusys_esp_err.h"
 

@@ -7,7 +7,7 @@
 #include <atomic>
 
 #ifdef ESP_PLATFORM
-#include "blusys/system/ota.h"
+#include "blusys/device/ota.h"
 #endif
 
 namespace blusys::framework { class runtime; }

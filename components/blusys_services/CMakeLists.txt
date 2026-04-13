@@ -16,14 +16,14 @@ set(blusys_services_sources
     src/protocol/http_server.c
     src/protocol/mqtt.c
     src/protocol/ws_client.c
-    # system
-    src/system/console.c
-    src/system/fatfs.c
-    src/system/fs.c
-    src/system/local_ctrl.c
-    src/system/ota.c
-    src/system/power_mgmt.c
-    src/system/sntp.c
+    # device
+    src/device/console.c
+    src/device/fatfs.c
+    src/device/fs.c
+    src/device/local_ctrl.c
+    src/device/ota.c
+    src/device/power_mgmt.c
+    src/device/sntp.c
 )
 
 idf_component_register(

@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #ifdef ESP_PLATFORM
-#include "blusys/system/console.h"
+#include "blusys/device/console.h"
 #endif
 
 namespace blusys::framework { class runtime; }

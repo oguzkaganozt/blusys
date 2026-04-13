@@ -3,7 +3,7 @@
 #include "blusys/app/capability.hpp"
 
 #include "blusys/connectivity/mdns.h"
-#include "blusys/system/local_ctrl.h"
+#include "blusys/device/local_ctrl.h"
 
 #include <cstddef>
 #include <cstdint>

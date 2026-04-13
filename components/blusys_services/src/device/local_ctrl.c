@@ -1,4 +1,4 @@
-#include "blusys/system/local_ctrl.h"
+#include "blusys/device/local_ctrl.h"
 
 #include <ctype.h>
 #include <stdarg.h>

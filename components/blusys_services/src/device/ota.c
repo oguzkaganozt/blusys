@@ -1,4 +1,4 @@
-#include "blusys/system/ota.h"
+#include "blusys/device/ota.h"
 
 #include <stdlib.h>
 

@@ -26,14 +26,14 @@ extern "C" {
 #include "blusys/protocol/mqtt.h"
 #include "blusys/protocol/ws_client.h"
 
-/* system */
-#include "blusys/system/console.h"
-#include "blusys/system/fatfs.h"
-#include "blusys/system/fs.h"
-#include "blusys/system/local_ctrl.h"
-#include "blusys/system/ota.h"
-#include "blusys/system/power_mgmt.h"
-#include "blusys/system/sntp.h"
+/* device */
+#include "blusys/device/console.h"
+#include "blusys/device/fatfs.h"
+#include "blusys/device/fs.h"
+#include "blusys/device/local_ctrl.h"
+#include "blusys/device/ota.h"
+#include "blusys/device/power_mgmt.h"
+#include "blusys/device/sntp.h"
 
 #ifdef __cplusplus
 }

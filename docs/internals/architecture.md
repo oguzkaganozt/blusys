@@ -95,7 +95,7 @@ Services are stateful runtime modules built on HAL + drivers.
 - input/runtime: `usb_hid`
 - connectivity: `wifi`, `wifi_prov`, `wifi_mesh`, `espnow`, `bluetooth`, `ble_gatt`, `mdns`
 - protocol: `mqtt`, `http_client`, `http_server`, `ws_client`
-- system: `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl`
+- device: `fs`, `fatfs`, `console`, `power_mgmt`, `sntp`, `ota`, `local_ctrl`
 
 `ui` stays here because it owns LVGL lifecycle, render-task behavior, and display flush orchestration. `usb_hid` stays here because it spans USB-host and BLE runtime behavior rather than acting as a simple hardware driver.
 
