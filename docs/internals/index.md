@@ -1,24 +1,16 @@
 # Internals
 
-Platform architecture, development guidelines, display notes, testing procedures, and other engineering references.
+Platform architecture, development guidelines, target support, and testing references.
 
-## Core
-
-- [Architecture](architecture.md) --- three-tier model, component dependencies, design rationale
-- [Maintaining](maintaining.md) --- component names, suggested reading order, pre-merge checks
-- [Guidelines](guidelines.md) --- API design rules, development workflow, documentation standards
-- [UI layout and LVGL flex](ui-layout-lvgl.md) --- flex/scroll usage in the framework, shell, and stock widgets
-- [Target Matrix](target-matrix.md) --- per-module target support and requirements
-- [ADR 0001 — orchestration in framework](adr/0001-orchestration-in-framework.md) --- tier roles and non-goals for product orchestration
-- [ADR 0002 — HAL component name `blusys_hal`](adr/0002-hal-component-name.md) --- ESP-IDF component folder vs `blusys/` include namespace
-- [Integration baseline](integration-baseline.md) --- measuring `main/integration/` thickness (V2 metrics)
-
-## Display & integration
-
-- [LVGL integration (ST7735, resolved)](lvgl-st7735-integration.md) --- root-cause notes for SPI DMA + LVGL stride on ESP32-C3
+- [Architecture](architecture.md) — three-tier model, component dependencies, UI layout (LVGL flex), ST7735 display notes, design rationale
+- [Guidelines](guidelines.md) — API design rules, product layout, workflow, maintaining checklist, integration baseline
+- [Contributing](contributing.md) — local checks, CI jobs, release
+- [Target Matrix](target-matrix.md) — per-module target support and requirements
+- [ADR 0001 — orchestration in framework](adr/0001-orchestration-in-framework.md)
+- [ADR 0002 — HAL component name `blusys_hal`](adr/0002-hal-component-name.md)
 
 ## Testing
 
-- [Hardware Smoke Tests](testing/hardware-smoke-tests.md) --- manual hardware validation procedures
-- [Concurrency Tests](testing/concurrency-tests.md) --- concurrent lifecycle and locking validation
-- [Validation Report Template](testing/hardware-validation-report-template.md) --- template for hardware validation reports
+- [Hardware Smoke Tests](testing/hardware-smoke-tests.md)
+- [Concurrency Tests](testing/concurrency-tests.md)
+- [Validation Report Template](testing/hardware-validation-report-template.md)

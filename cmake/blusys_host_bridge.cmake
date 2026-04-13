@@ -86,7 +86,8 @@ set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/bluetooth_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/ota_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/diagnostics_host.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/provisioning_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/lan_control_host.cpp
+    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/usb_host.cpp
     ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/telemetry.cpp
 )
 

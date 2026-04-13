@@ -2,6 +2,23 @@
 
 Light and deep sleep with configurable wakeup sources. Light sleep halts the CPU and retains RAM; deep sleep retains only the RTC domain.
 
+## Quick Example
+
+```c
+#include "blusys/sleep.h"
+
+void app_main(void)
+{
+    blusys_sleep_wakeup_t cause = blusys_sleep_get_wakeup_cause();
+    if (cause == BLUSYS_SLEEP_WAKEUP_TIMER) {
+        /* woke from previous deep-sleep cycle */
+    }
+
+    blusys_sleep_enable_timer_wakeup(5ULL * 1000 * 1000);  /* 5 s */
+    blusys_sleep_enter_deep();                             /* does not return */
+}
+```
+
 ## Common Mistakes
 
 - forgetting that deep sleep resets all RAM and peripherals — any state must be stored in NVS or RTC slow memory (`RTC_DATA_ATTR`) before entering

@@ -1,6 +1,6 @@
 #include "core/app_logic.hpp"
 
-#include "blusys_examples/archetype_percent.hpp"
+#include "blusys_examples/clamp_percent.hpp"
 
 #include "blusys/app/view/bindings.hpp"
 #include "blusys/app/view/composites.hpp"
@@ -70,6 +70,15 @@ void sync_overview(app_state &state)
                                   state.zone_values.data(),
                                   static_cast<std::int32_t>(state.zone_values.size()));
         blusys::ui::chart_refresh(state.dash_bar_chart);
+    }
+
+    if (state.mono_summary != nullptr) {
+        char line[40];
+        std::snprintf(line, sizeof(line), "Load %ld%%  %s  sp%ld",
+                      static_cast<long>(state.load_percent),
+                      mode_name(state.mode_index),
+                      static_cast<long>(state.target_setpoint));
+        lv_label_set_text(state.mono_summary, line);
     }
 }
 

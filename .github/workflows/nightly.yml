@@ -83,11 +83,17 @@ jobs:
               sdkconfig_args=("-DSDKCONFIG=$build_dir/sdkconfig")
               defaults=""
               [ -f "$example_dir/sdkconfig.defaults" ] && defaults="$example_dir/sdkconfig.defaults"
+              chip_frag=""
               if [ -f "$example_dir/sdkconfig.$TARGET" ]; then
+                  chip_frag="$example_dir/sdkconfig.$TARGET"
+              elif [ -f "$example_dir/sdkconfig.defaults.$TARGET" ]; then
+                  chip_frag="$example_dir/sdkconfig.defaults.$TARGET"
+              fi
+              if [ -n "$chip_frag" ]; then
                   if [ -n "$defaults" ]; then
-                      defaults="$defaults;$example_dir/sdkconfig.$TARGET"
+                      defaults="$defaults;$chip_frag"
                   else
-                      defaults="$example_dir/sdkconfig.$TARGET"
+                      defaults="$chip_frag"
                   fi
               fi
               [ -n "$defaults" ] && sdkconfig_args+=("-DSDKCONFIG_DEFAULTS=$defaults")

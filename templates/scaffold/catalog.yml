@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "interfaces": {
+    "handheld": {
+      "description": "Compact interactive shell",
+      "build_ui": true,
+      "host_support": true,
+      "entry_macro": "BLUSYS_APP",
+      "host_mode": "interactive",
+      "title": "Handheld Starter"
+    },
+    "surface": {
+      "description": "Dashboard-style interactive shell",
+      "build_ui": true,
+      "host_support": true,
+      "entry_macro": "BLUSYS_APP_DASHBOARD",
+      "host_mode": "interactive",
+      "title": "Surface Starter"
+    },
+    "headless": {
+      "description": "Headless runtime without local UI",
+      "build_ui": false,
+      "host_support": true,
+      "entry_macro": "BLUSYS_APP_MAIN_HEADLESS",
+      "host_mode": "headless",
+      "title": "Headless Starter"
+    }
+  },
+  "capabilities": {
+    "connectivity": {
+      "description": "Wi-Fi, provisioning, SNTP, network identity",
+      "requires": [],
+      "requires_one_of": [],
+      "conflicts": [],
+      "targets": ["esp32", "esp32c3", "esp32s3"],
+      "managed_dependencies": [],
+      "sdkconfig_defaults": []
+    },
+    "bluetooth": {
+      "description": "General Bluetooth runtime bundle",
+      "requires": [],
+      "requires_one_of": [],
+      "conflicts": [],
+      "targets": ["esp32", "esp32c3", "esp32s3"],
+      "managed_dependencies": [],
+      "sdkconfig_defaults": ["CONFIG_BT_ENABLED=y", "CONFIG_BT_NIMBLE_ENABLED=y"]
+    },
+    "usb": {
+      "description": "USB host/device runtime bundle",
+      "requires": [],
+      "requires_one_of": [],
+      "conflicts": [],
+      "targets": ["esp32s3"],
+      "managed_dependencies": [],
+      "sdkconfig_defaults": []
+    },
+    "telemetry": {
+      "description": "Buffered telemetry delivery",
+      "requires": ["connectivity"],
+      "requires_one_of": [],
+      "conflicts": [],
+      "targets": ["esp32", "esp32c3", "esp32s3"],
+      "managed_dependencies": [],
+      "sdkconfig_defaults": []
+    },
+    "ota": {
+      "description": "Over-the-air updates",
+      "requires": [],
+      "requires_one_of": [["connectivity", "bluetooth", "usb"]],
+      "conflicts": [],
+      "targets": ["esp32", "esp32c3", "esp32s3"],
+      "managed_dependencies": [],
+      "sdkconfig_defaults": []
+    },
+    "lan_control": {
+      "description": "Local HTTP control and LAN advertisement",
+      "requires": ["connectivity"],
+      "requires_one_of": [],
+      "conflicts": [],
+      "targets": ["esp32", "esp32c3", "esp32s3"],
+      "managed_dependencies": ["espressif/mdns"],
+      "sdkconfig_defaults": []
+    },
+    "storage": {
+      "description": "Filesystem bring-up",
+      "requires": [],
+      "requires_one_of": [],
+      "conflicts": [],
+      "targets": ["esp32", "esp32c3", "esp32s3"],
+      "managed_dependencies": [],
+      "sdkconfig_defaults": []
+    },
+    "diagnostics": {
+      "description": "Health snapshots and diagnostics",
+      "requires": [],
+      "requires_one_of": [],
+      "conflicts": [],
+      "targets": ["esp32", "esp32c3", "esp32s3"],
+      "managed_dependencies": [],
+      "sdkconfig_defaults": []
+    }
+  },
+  "policies": {
+    "low_power": {
+      "description": "Low-power defaults and wiring",
+      "targets": ["esp32", "esp32c3", "esp32s3"],
+      "sdkconfig_defaults": ["CONFIG_PM_ENABLE=y"]
+    }
+  }
+}

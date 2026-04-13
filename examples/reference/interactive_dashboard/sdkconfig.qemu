@@ -1,7 +1,9 @@
 # Merged for qemu* builds (blusys build … qemu32s3 / blusys qemu … qemu32s3) after sdkconfig.defaults.
-# Picks esp_lcd_qemu_rgb (QEMU third option in BLUSYS_DASHBOARD_DISPLAY_PROFILE).
+# Picks esp_lcd_qemu_rgb (QEMU option in BLUSYS_DASHBOARD_DISPLAY_PROFILE).
 CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB=y
 # CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341 is not set
 # CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488 is not set
+# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735 is not set
+# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306 is not set
 # LVGL + dashboard bring-up needs more than the default main stack under QEMU.
-CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384

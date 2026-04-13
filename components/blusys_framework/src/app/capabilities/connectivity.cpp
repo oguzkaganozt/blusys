@@ -8,6 +8,8 @@
 
 #include "nvs_flash.h"
 
+#include <cstring>
+
 static const char *TAG = "blusys_conn";
 
 namespace blusys::app {
@@ -33,34 +35,74 @@ blusys_err_t connectivity_capability::start(blusys::framework::runtime &rt)
         return BLUSYS_ERR_INTERNAL;
     }
 
-    if (cfg_.wifi_ssid == nullptr) {
-        BLUSYS_LOGE(TAG, "wifi_ssid is required");
-        return BLUSYS_ERR_INVALID_ARG;
-    }
+    if (cfg_.wifi_ssid != nullptr) {
+        blusys_wifi_sta_config_t wifi_cfg{};
+        wifi_cfg.ssid               = cfg_.wifi_ssid;
+        wifi_cfg.password           = cfg_.wifi_password;
+        wifi_cfg.auto_reconnect     = cfg_.auto_reconnect;
+        wifi_cfg.reconnect_delay_ms = cfg_.reconnect_delay_ms;
+        wifi_cfg.max_retries        = cfg_.max_retries;
+        wifi_cfg.on_event           = wifi_event_handler;
+        wifi_cfg.user_ctx           = this;
 
-    blusys_wifi_sta_config_t wifi_cfg{};
-    wifi_cfg.ssid              = cfg_.wifi_ssid;
-    wifi_cfg.password          = cfg_.wifi_password;
-    wifi_cfg.auto_reconnect    = cfg_.auto_reconnect;
-    wifi_cfg.reconnect_delay_ms = cfg_.reconnect_delay_ms;
-    wifi_cfg.max_retries       = cfg_.max_retries;
-    wifi_cfg.on_event          = wifi_event_handler;
-    wifi_cfg.user_ctx          = this;
-
-    blusys_err_t err = blusys_wifi_open(&wifi_cfg, &wifi_);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE(TAG, "wifi open failed: %d", static_cast<int>(err));
-        return err;
-    }
-
-    err = blusys_wifi_connect(wifi_, cfg_.connect_timeout_ms);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE(TAG, "wifi connect failed: %d", static_cast<int>(err));
-        // Non-fatal if auto_reconnect is enabled — the capability will retry.
-        if (!cfg_.auto_reconnect) {
-            blusys_wifi_close(wifi_);
-            wifi_ = nullptr;
+        blusys_err_t err = blusys_wifi_open(&wifi_cfg, &wifi_);
+        if (err != BLUSYS_OK) {
+            BLUSYS_LOGE(TAG, "wifi open failed: %d", static_cast<int>(err));
             return err;
+        }
+
+        err = blusys_wifi_connect(wifi_, cfg_.connect_timeout_ms);
+        if (err != BLUSYS_OK) {
+            BLUSYS_LOGE(TAG, "wifi connect failed: %d", static_cast<int>(err));
+            // Non-fatal if auto_reconnect is enabled — the capability will retry.
+            if (!cfg_.auto_reconnect) {
+                blusys_wifi_close(wifi_);
+                wifi_ = nullptr;
+                return err;
+            }
+        }
+    }
+
+    if (cfg_.prov_service_name != nullptr) {
+        if (cfg_.prov_skip_if_provisioned && blusys_wifi_prov_is_provisioned()) {
+            status_.provisioning.is_provisioned = true;
+            status_.provisioning.capability_ready = true;
+            pending_flags_.fetch_or(kPendingProvAlreadyDone, std::memory_order_release);
+        } else {
+            blusys_wifi_prov_config_t prov_cfg{};
+            prov_cfg.transport    = cfg_.prov_transport;
+            prov_cfg.service_name = cfg_.prov_service_name;
+            prov_cfg.pop          = cfg_.prov_pop;
+            prov_cfg.service_key  = cfg_.prov_service_key;
+            prov_cfg.on_event     = prov_event_handler;
+            prov_cfg.user_ctx     = this;
+
+            blusys_err_t err = blusys_wifi_prov_open(&prov_cfg, &prov_);
+            if (err != BLUSYS_OK) {
+                if (err == BLUSYS_ERR_BUSY &&
+                    cfg_.prov_transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
+                    BLUSYS_LOGE(TAG,
+                                "prov open failed: BLE controller busy (stop bluetooth/USB HID "
+                                "BLE first, or use SoftAP provisioning)");
+                } else {
+                    BLUSYS_LOGE(TAG, "prov open failed: %d", static_cast<int>(err));
+                }
+                return err;
+            }
+
+            blusys_wifi_prov_get_qr_payload(prov_, status_.provisioning.qr_payload,
+                                            sizeof(status_.provisioning.qr_payload));
+
+            if (cfg_.prov_auto_start) {
+                err = blusys_wifi_prov_start(prov_);
+                if (err != BLUSYS_OK) {
+                    BLUSYS_LOGE(TAG, "prov start failed: %d", static_cast<int>(err));
+                    blusys_wifi_prov_close(prov_);
+                    prov_ = nullptr;
+                    return err;
+                }
+                status_.provisioning.service_running = true;
+            }
         }
     }
 
@@ -121,6 +163,35 @@ void connectivity_capability::poll(std::uint32_t now_ms)
         check_capability_ready();
     }
 
+    if (flags & kPendingProvStarted) {
+        status_.provisioning.service_running = true;
+        post_event(connectivity_event::prov_started);
+    }
+    if (flags & kPendingProvCredentials) {
+        status_.provisioning.credentials_received = true;
+        post_event(connectivity_event::prov_credentials_received);
+    }
+    if (flags & kPendingProvSuccess) {
+        status_.provisioning.provision_success = true;
+        status_.provisioning.is_provisioned = true;
+        status_.provisioning.capability_ready = true;
+        post_event(connectivity_event::prov_success);
+        post_event(connectivity_event::provisioning_ready);
+        check_capability_ready();
+    }
+    if (flags & kPendingProvFailed) {
+        status_.provisioning.provision_failed = true;
+        post_event(connectivity_event::prov_failed);
+    }
+    if (flags & kPendingProvAlreadyDone) {
+        post_event(connectivity_event::prov_already_done);
+        post_event(connectivity_event::provisioning_ready);
+        check_capability_ready();
+    }
+    if (flags & kPendingProvReset) {
+        post_event(connectivity_event::prov_reset_complete);
+    }
+
     if (sntp_ != nullptr && !status_.time_synced) {
         if (blusys_sntp_is_synced(sntp_)) {
             status_.time_synced = true;
@@ -140,6 +211,11 @@ void connectivity_capability::poll(std::uint32_t now_ms)
 
 void connectivity_capability::stop()
 {
+    if (prov_ != nullptr) {
+        blusys_wifi_prov_stop(prov_);
+        blusys_wifi_prov_close(prov_);
+        prov_ = nullptr;
+    }
     if (ctrl_ != nullptr) {
         blusys_local_ctrl_close(ctrl_);
         ctrl_ = nullptr;
@@ -192,6 +268,28 @@ void connectivity_capability::wifi_event_handler(blusys_wifi_t * /*wifi*/,
         self->pending_flags_.fetch_or(kPendingReconnecting, std::memory_order_release);
         break;
     default:
+        break;
+    }
+}
+
+void connectivity_capability::prov_event_handler(blusys_wifi_prov_event_t event,
+                                                 const blusys_wifi_prov_credentials_t * /*creds*/,
+                                                 void *user_ctx)
+{
+    auto *self = static_cast<connectivity_capability *>(user_ctx);
+
+    switch (event) {
+    case BLUSYS_WIFI_PROV_EVENT_STARTED:
+        self->pending_flags_.fetch_or(kPendingProvStarted, std::memory_order_release);
+        break;
+    case BLUSYS_WIFI_PROV_EVENT_CREDENTIALS_RECEIVED:
+        self->pending_flags_.fetch_or(kPendingProvCredentials, std::memory_order_release);
+        break;
+    case BLUSYS_WIFI_PROV_EVENT_SUCCESS:
+        self->pending_flags_.fetch_or(kPendingProvSuccess, std::memory_order_release);
+        break;
+    case BLUSYS_WIFI_PROV_EVENT_FAILED:
+        self->pending_flags_.fetch_or(kPendingProvFailed, std::memory_order_release);
         break;
     }
 }
@@ -278,7 +376,11 @@ void connectivity_capability::check_capability_ready()
         return;
     }
 
-    bool ready = status_.has_ip;
+    bool ready = true;
+
+    if (cfg_.wifi_ssid != nullptr && !status_.has_ip) {
+        ready = false;
+    }
 
     if (cfg_.sntp_server != nullptr && !status_.time_synced) {
         ready = false;
@@ -289,11 +391,15 @@ void connectivity_capability::check_capability_ready()
     if (cfg_.local_ctrl_device_name != nullptr && !status_.local_ctrl_running) {
         ready = false;
     }
+    if (cfg_.prov_service_name != nullptr && !status_.provisioning.capability_ready) {
+        ready = false;
+    }
 
     if (ready) {
         status_.capability_ready = true;
         post_event(connectivity_event::capability_ready);
-        BLUSYS_LOGI(TAG, "connectivity capability ready (ip=%s)", status_.ip_info.ip);
+        BLUSYS_LOGI(TAG, "connectivity capability ready (ip=%s)",
+                    cfg_.wifi_ssid != nullptr ? status_.ip_info.ip : "n/a");
     }
 }
 

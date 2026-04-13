@@ -30,7 +30,7 @@ void app_main(void)
 
 - choosing a GPIO that is not safe for output on the current board
 - using zero-length pulse durations
-- expecting RX, callbacks, or protocol decoders from the first `rmt` release
+- expecting callbacks, carrier modulation, or protocol decoders from the current `rmt` release
 
 ## Target Support
 

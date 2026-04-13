@@ -6,4 +6,5 @@
 #include "blusys/app/capabilities/ota.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
-#include "blusys/app/capabilities/provisioning.hpp"
+#include "blusys/app/capabilities/lan_control.hpp"
+#include "blusys/app/capabilities/usb.hpp"

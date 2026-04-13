@@ -253,7 +253,7 @@ For every failure or blocked test, record:
 - ESP32 smoke set complete:
 - ESP32-C3 smoke set complete:
 - ESP32-S3 smoke set complete:
-- PR CI / archetype quickstarts validated on hardware:
+- PR CI / quickstart examples validated on hardware:
 - Remaining blockers:
 - Recommendation:
   - keep the release in stabilization

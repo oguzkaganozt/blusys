@@ -19,6 +19,8 @@ namespace blusys::app {
 //   mqtt (host SDL) 0x0800 – 0x08FF
 //   product custom 0x0900 – 0x09FF (map in `capability_event_map.cpp` or handle via
 //                  `app_spec::map_event` as `integration_passthrough` until mapped)
+//   lan_control    0x0A00 – 0x0AFF
+//   usb            0x0B00 – 0x0BFF
 
 enum class capability_kind : std::uint8_t {
     connectivity,
@@ -29,6 +31,8 @@ enum class capability_kind : std::uint8_t {
     telemetry,
     provisioning,
     mqtt_host,
+    lan_control,
+    usb,
     custom,
 };
 

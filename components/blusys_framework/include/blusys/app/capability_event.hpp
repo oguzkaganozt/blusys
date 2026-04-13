@@ -76,6 +76,18 @@ enum class capability_event_tag : std::uint16_t {
     prov_reset_complete,
     provisioning_ready,
 
+    // lan_control (raw IDs: 0x0Axx)
+    lan_control_ready,
+
+    // usb (raw IDs: 0x0Bxx)
+    usb_device_ready,
+    usb_host_ready,
+    usb_device_connected,
+    usb_device_disconnected,
+    usb_host_attached,
+    usb_host_detached,
+    usb_ready,
+
     // mqtt_host (raw IDs: 0x08xx, host/SDL)
     mqtt_connected,
     mqtt_disconnected,

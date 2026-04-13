@@ -42,7 +42,7 @@ Unless the user explicitly changes them:
 - **Runtime modes:** **`interactive`** and **`headless`** only.
 - **Onboarding defaults:** **host-first** interactive; **headless-first** hardware as the secondary path.
 - **B2C vs B2B:** product **lenses**, not separate framework runtimes.
-- **Archetypes (starters):** interactive controller, interactive panel, edge node, gateway/controller.
+- **Scaffold model:** **`--interface`** (`handheld` \| `surface` \| `headless`), **`--with`** (capabilities), **`--policy`** (e.g. `low_power`); generated **`blusys.project.yml`** mirrors the same shape. Canonical example directories include **`handheld_starter`**, **`headless_telemetry`**, **`surface_ops_panel`**, **`surface_gateway`** (see **`inventory.yml`**).
 - **First canonical interactive hardware profile:** generic SPI **ST7735** (ESP32, ESP32-C3, ESP32-S3).
 - **Terminology:** **`capabilities`**, not “bundles”.
 - **Configuration:** **code-first** hardware/capability wiring; Kconfig for advanced tuning.
@@ -80,12 +80,11 @@ blusys_framework → blusys_services → blusys_hal → ESP-IDF
 
 ## Scaffold and project creation
 
-- **`blusys create`** copies from **canonical examples** (e.g. `examples/quickstart/interactive_controller`, `examples/quickstart/edge_node`, `examples/reference/gateway`) — see `scripts/lib/blusys/create.sh`.
-- Generated projects get a top-level `CMakeLists.txt`, `sdkconfig.defaults`, `main/` tree, and **`host/CMakeLists.txt`** where the archetype supports host builds.
-- **Gateway headless** may overlay files from `templates/scaffold/gateway_headless/` after the example copy.
-- **`scripts/scaffold-smoke.sh`** exercises create × archetypes + `blusys host-build` (also runs in CI).
+- **`blusys create`** generates from **`templates/scaffold/catalog.yml`** via **`scripts/lib/blusys/scaffold_generator.py`** (see `scripts/lib/blusys/create.sh`).
+- Generated projects get a top-level `CMakeLists.txt`, `sdkconfig.defaults`, **`blusys.project.yml`**, `main/` tree, and **`host/CMakeLists.txt`** when the selected interface is interactive (handheld/surface).
+- **`scripts/scaffold-smoke.sh`** exercises an interface/capability/policy matrix + `blusys host-build` (also runs in CI).
 
-Do **not** introduce competing default `main/` layouts per archetype.
+Do **not** introduce competing default `main/` layouts per product shape.
 
 ---
 
@@ -100,7 +99,7 @@ Do **not** introduce competing default `main/` layouts per archetype.
 - **Sanitizers:** configure with **`-DBLUSYS_HOST_SANITIZE=ON`** for ASan/UBSan on selected targets (see CI “Host spine tests (sanitizer)” job).
 - **Deps:** `libsdl2-dev`, `pkg-config`, `cmake` — see `scripts/host/README.md`.
 
-Headless host builds that compile `integration/app_main.cpp` with **`build_profile.hpp`** need **`components/blusys_services/include`** on the include path (see `examples/quickstart/edge_node/host/CMakeLists.txt`) so `blusys/display/ui.h` resolves.
+Headless host builds that compile `integration/app_main.cpp` with **`build_profile.hpp`** need **`components/blusys_services/include`** on the include path (see `examples/quickstart/headless_telemetry/host/CMakeLists.txt`) so `blusys/display/ui.h` resolves.
 
 ---
 
@@ -122,7 +121,7 @@ Typical stages:
 
 1. **Lint:** `scripts/lint-layering.sh` + `scripts/check-framework-ui-sources.py`
 2. **Inventory:** `scripts/check-inventory.py` + `scripts/check-product-layout.py`
-3. **Host smoke:** configure/build `scripts/host` (including spine + snapshot smokes), run smoke binaries, **`ctest`**, sanitizer build/run for spine tests; build **edge_node** + **gateway** host examples; **`scripts/scaffold-smoke.sh`**
+3. **Host smoke:** configure/build `scripts/host` (including spine + snapshot smokes), run smoke binaries, **`ctest`**, sanitizer build/run for spine tests; build **headless_telemetry** + **surface_gateway** host examples; **`scripts/scaffold-smoke.sh`**
 4. **Docs:** `mkdocs build --strict`
 5. **Device builds:** `scripts/build-from-inventory.sh` with `ci_pr=true` per target matrix
 6. **Display variants:** `scripts/build-display-variants.sh`
@@ -147,7 +146,7 @@ Use proportionate checks:
 | `python3 scripts/check-product-layout.py` | Product-shaped `main/` layouts |
 | `python3 scripts/check-framework-ui-sources.py` | `cmake/blusys_framework_ui_sources.cmake` |
 | `python3 scripts/example-health.py` | Example paths vs inventory |
-| `scripts/scaffold-smoke.sh` | `blusys create`, templates, host CMake for archetypes |
+| `scripts/scaffold-smoke.sh` | `blusys create`, catalog/templates, host CMake for generated projects |
 
 After app-flow or integration changes, prioritize: **host interactive**, **headless**, **scaffold**, and **ST7735-class** device builds on **esp32 / esp32c3 / esp32s3**.
 
@@ -176,7 +175,7 @@ After app-flow or integration changes, prioritize: **host interactive**, **headl
 Normal workflows use the repo-root **`blusys`** launcher:
 
 ```bash
-blusys create [--archetype <name>] [--starter <headless|interactive>] [--list-archetypes] [path]
+blusys create [--interface handheld|surface|headless] [--with cap1,cap2,...] [--policy p1,...] [--list] [path]
 blusys build          [project] [esp32|esp32c3|esp32s3|host|qemu32|qemu32c3|qemu32s3]
 blusys flash          [project] [port] [esp32|esp32c3|esp32s3]
 blusys monitor        [project] [port] [esp32|esp32c3|esp32s3]

@@ -26,11 +26,17 @@ EXAMPLE_NAME="$(basename "$EXAMPLE_DIR")"
 sdkconfig_args=("-DSDKCONFIG=$BUILD_DIR/sdkconfig")
 defaults=""
 [ -f "$EXAMPLE_DIR/sdkconfig.defaults" ] && defaults="$EXAMPLE_DIR/sdkconfig.defaults"
+chip_frag=""
 if [ -f "$EXAMPLE_DIR/sdkconfig.$TARGET" ]; then
+    chip_frag="$EXAMPLE_DIR/sdkconfig.$TARGET"
+elif [ -f "$EXAMPLE_DIR/sdkconfig.defaults.$TARGET" ]; then
+    chip_frag="$EXAMPLE_DIR/sdkconfig.defaults.$TARGET"
+fi
+if [ -n "$chip_frag" ]; then
     if [ -n "$defaults" ]; then
-        defaults="$defaults;$EXAMPLE_DIR/sdkconfig.$TARGET"
+        defaults="$defaults;$chip_frag"
     else
-        defaults="$EXAMPLE_DIR/sdkconfig.$TARGET"
+        defaults="$chip_frag"
     fi
 fi
 [ -n "$defaults" ] && sdkconfig_args+=("-DSDKCONFIG_DEFAULTS=$defaults")

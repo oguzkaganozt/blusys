@@ -112,7 +112,11 @@ lv_obj_t *create_about(blusys::app::app_ctx &ctx, const void * /*params*/, lv_gr
     const blusys::app::screens::about_extra_field extras[] = {
         {.key = "Example", .value = "mqtt_dashboard"},
         {.key = "Profile", .value = mqtt_dashboard::system::mqtt_dashboard_profile_label_for_build()},
+#if defined(ESP_PLATFORM)
+        {.key = "Focus", .value = "MQTT on device"},
+#else
         {.key = "Focus", .value = "MQTT / host SDL"},
+#endif
     };
 
     const blusys::app::screens::about_screen_config config{

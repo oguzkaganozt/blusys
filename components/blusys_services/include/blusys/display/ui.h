@@ -74,6 +74,14 @@ blusys_err_t blusys_ui_close(blusys_ui_t *ui);
 blusys_err_t blusys_ui_lock(blusys_ui_t *ui);
 blusys_err_t blusys_ui_unlock(blusys_ui_t *ui);
 
+/* Batch UI construction: LVGL 9 must not queue invalidations while the display
+ * is mid-refresh (see lv_refr.c / lv_inv_area). Building a deep dashboard tree
+ * under the UI lock can otherwise trip assertions or wedge the main task on
+ * slow MCUs. Call begin/end around theme + first screen assembly with the lock
+ * held; end() re-enables invalidation and marks the active screen dirty. */
+void blusys_ui_invalidation_begin(blusys_ui_t *ui);
+void blusys_ui_invalidation_end(blusys_ui_t *ui);
+
 #ifdef __cplusplus
 }
 #endif

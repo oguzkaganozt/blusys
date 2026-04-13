@@ -1,6 +1,6 @@
 # LCD
 
-SPI and I2C display driver supporting ST7789, ST7735, SSD1306, and NT35510 panels via ESP-IDF's `esp_lcd`.
+SPI and I2C display driver supporting ST7789, ST7735, SSD1306, NT35510, ILI9341, and ILI9488 panels via ESP-IDF's `esp_lcd`. A QEMU virtual-framebuffer driver (`BLUSYS_LCD_DRIVER_QEMU_RGB`) is also available for QEMU-only builds.
 
 ## Quick Example
 
@@ -76,10 +76,14 @@ Opaque handle returned by `blusys_lcd_open()`.
 
 ```c
 typedef enum {
-    BLUSYS_LCD_DRIVER_ST7789  = 0,
-    BLUSYS_LCD_DRIVER_SSD1306 = 1,
-    BLUSYS_LCD_DRIVER_NT35510 = 2,
-    BLUSYS_LCD_DRIVER_ST7735  = 3,
+    BLUSYS_LCD_DRIVER_ST7789   = 0,
+    BLUSYS_LCD_DRIVER_SSD1306  = 1,
+    BLUSYS_LCD_DRIVER_NT35510  = 2,
+    BLUSYS_LCD_DRIVER_ST7735   = 3,
+    BLUSYS_LCD_DRIVER_ILI9341  = 4,
+    BLUSYS_LCD_DRIVER_ILI9488  = 5,
+    /* ESP-IDF QEMU virtual framebuffer (esp_lcd_qemu_rgb); QEMU only */
+    BLUSYS_LCD_DRIVER_QEMU_RGB = 6,
 } blusys_lcd_driver_t;
 ```
 
@@ -97,6 +101,16 @@ typedef struct {
     uint32_t pclk_hz;
     int      x_offset;  /* GRAM column offset (default 0) */
     int      y_offset;  /* GRAM row offset (default 0) */
+
+    /* Optional LEDC PWM backlight dimming. When bl_ledc_enabled is false
+     * (the default), the driver drives bl_pin as a plain GPIO and
+     * blusys_lcd_set_brightness() maps any non-zero value to full on.
+     * When true, the driver programs LEDC at open time and
+     * blusys_lcd_set_brightness() maps 0–100 linearly to the PWM duty. */
+    bool     bl_ledc_enabled;
+    int      bl_ledc_channel;  /* LEDC channel 0–7 */
+    int      bl_ledc_timer;    /* LEDC timer   0–3 */
+    uint32_t bl_ledc_freq_hz;  /* PWM frequency (0 → 5000 Hz) */
 } blusys_lcd_spi_config_t;
 ```
 
@@ -133,7 +147,7 @@ typedef struct {
 } blusys_lcd_config_t;
 ```
 
-Use the `spi` union member for ST7789, ST7735, and NT35510 drivers. Use the `i2c` union member for the SSD1306 driver.
+Use the `spi` union member for ST7789, ST7735, NT35510, ILI9341, and ILI9488 drivers. Use the `i2c` union member for the SSD1306 driver. The `QEMU_RGB` driver is selected only in QEMU builds and ignores transport pins.
 
 Set `swap_xy`, `mirror_x`, `mirror_y`, and `invert_color` when a panel needs a specific orientation or hardware color inversion immediately after init. For common 128x160 ST7735 modules, portrait mode is often `swap_xy = true`, `mirror_x = true`, `mirror_y = false`, `invert_color = false`.
 
@@ -245,7 +259,7 @@ Inverts all displayed colors.
 blusys_err_t blusys_lcd_set_brightness(blusys_lcd_t *lcd, int percent);
 ```
 
-Controls the backlight. The current implementation uses GPIO on/off: any `percent > 0` turns the backlight on, `0` turns it off. No-op if `bl_pin` was set to `-1`.
+Controls the backlight. When `bl_ledc_enabled` is false, the driver uses plain GPIO on/off: any `percent > 0` turns the backlight on, `0` turns it off. When `bl_ledc_enabled` is true, `percent` is mapped linearly (0–100) to the LEDC PWM duty. No-op if `bl_pin` was set to `-1`.
 
 **Parameters:**
 
@@ -284,8 +298,9 @@ All functions are thread-safe via an internal mutex. Note that `blusys_lcd_draw_
 ## Limitations
 
 - The LCD module takes exclusive ownership of the SPI or I2C bus. Do not use the same bus index with `blusys_spi_open()` or `blusys_i2c_open()`.
-- Backlight control is GPIO on/off only (not PWM dimming).
+- Backlight control defaults to GPIO on/off. Opt in to PWM dimming by setting `bl_ledc_enabled = true` and picking a free LEDC timer/channel.
 - Coordinates passed to `blusys_lcd_draw_bitmap()` must be within the panel dimensions; no automatic clipping is performed.
+- On ST7735 panels over SPI, the driver issues **one display row per RAMWR** command (column/row address window is re-asserted per row) to avoid diagonal shear observed with multi-row pixel bursts. See `docs/internals/architecture.md#display-notes-st7735-on-spi`.
 
 ## Example App
 

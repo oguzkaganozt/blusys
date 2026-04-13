@@ -1,5 +1,5 @@
 # LVGL primitives + widgets for minimal host example builds (see
-# examples/quickstart/interactive_controller/host/CMakeLists.txt).
+# examples/quickstart/handheld_starter/host/CMakeLists.txt).
 #
 # Requires BLUSYS_FW = absolute path to components/blusys_framework before include.
 # Paths are derived from cmake/blusys_framework_ui_sources.cmake (single source of truth).

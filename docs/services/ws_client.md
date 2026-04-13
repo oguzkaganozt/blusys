@@ -13,6 +13,35 @@ Full-duplex WebSocket client for real-time communication with a server over WiFi
 
 Requires WiFi to be connected before calling `blusys_ws_client_connect()`.
 
+## Quick Example
+
+```c
+#include "blusys/blusys_services.h"
+
+static void on_message(blusys_ws_msg_type_t type, const uint8_t *data,
+                       size_t len, void *ctx)
+{
+    if (type == BLUSYS_WS_MSG_TEXT) {
+        printf("text: %.*s\n", (int)len, (const char *)data);
+    }
+}
+
+blusys_ws_client_t *ws = NULL;
+blusys_ws_client_config_t cfg = {
+    .url        = "ws://echo.example.com/",
+    .message_cb = on_message,
+    .timeout_ms = 10000,
+};
+blusys_ws_client_open(&cfg, &ws);
+blusys_ws_client_connect(ws);
+
+blusys_ws_client_send_text(ws, "hello");
+
+/* ... later ... */
+blusys_ws_client_disconnect(ws);
+blusys_ws_client_close(ws);
+```
+
 ## Types
 
 ### `blusys_ws_msg_type_t`

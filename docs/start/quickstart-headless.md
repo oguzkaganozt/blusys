@@ -2,14 +2,16 @@
 
 Build a headless-first connected product using the same `blusys::app` reducer model.
 
-The canonical headless starting point is the `edge node` archetype.
+The canonical headless reference in-tree is **`examples/quickstart/headless_telemetry/`** (inventory: `interface: headless` with a full connected capability stack).
 
 ## Create the project
 
 ```bash
-blusys create --archetype edge-node my_sensor
+blusys create --interface headless my_sensor
 cd my_sensor
 ```
+
+Add capabilities with **`--with`** (see **`blusys create --list`** for rules). A minimal headless project has no UI or LVGL dependencies; richer connected products add `connectivity`, `telemetry`, `ota`, and so on explicitly.
 
 ## Run on host
 
@@ -33,8 +35,8 @@ The scaffold generates a minimal headless app with:
 
 - a `State` with a tick counter, periodic heartbeat log
 - `on_tick` dispatching `Action::periodic_tick` every 100 ms
-- `main/idf_component.yml` with managed git pins for all three platform tiers (plus `espressif/mdns` for connected starters); set `BLUSYS_SCAFFOLD_PLATFORM_VERSION` to change the tag
-- no UI or LVGL dependencies
+- `main/idf_component.yml` with managed git pins for all three platform tiers (plus managed deps when you select connected capabilities); set `BLUSYS_SCAFFOLD_PLATFORM_VERSION` to change the tag
+- no UI or LVGL dependencies unless you add capabilities or code that pull them in
 
 ## Project structure
 
@@ -42,6 +44,7 @@ The scaffold generates a minimal headless app with:
 my_sensor/
   CMakeLists.txt       — bakes BLUSYS_BUILD_UI=OFF and project name
   sdkconfig.defaults
+  blusys.project.yml
   main/
     CMakeLists.txt     — idf_component_register listing core + integration
     idf_component.yml
@@ -56,7 +59,7 @@ my_sensor/
 
 ## Next steps
 
-- [Archetype Starters](archetypes.md) --- choose the canonical starting shape
-- [Reducer Model](../app/reducer-model.md) --- understand state, actions, and `update()`
-- [Capabilities](../app/capabilities.md) --- add WiFi, SNTP, and storage
-- [Profiles](../app/profiles.md) --- understand headless and device profiles
+- [Product shape](product-shape.md) — capabilities and policies for connected products
+- [Reducer Model](../app/reducer-model.md) — understand state, actions, and `update()`
+- [Capabilities](../app/capabilities.md) — add WiFi, SNTP, and storage
+- [Profiles](../app/profiles.md) — understand headless and device profiles

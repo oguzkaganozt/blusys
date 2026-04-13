@@ -3,11 +3,12 @@
 #include "blusys/app/capabilities/bluetooth.hpp"
 #include "blusys/app/capabilities/connectivity.hpp"
 #include "blusys/app/capabilities/diagnostics.hpp"
+#include "blusys/app/capabilities/lan_control.hpp"
 #include "blusys/app/capabilities/mqtt_host.hpp"
 #include "blusys/app/capabilities/ota.hpp"
-#include "blusys/app/capabilities/provisioning.hpp"
 #include "blusys/app/capabilities/storage.hpp"
 #include "blusys/app/capabilities/telemetry.hpp"
+#include "blusys/app/capabilities/usb.hpp"
 
 namespace blusys::app {
 namespace {
@@ -56,6 +57,27 @@ bool map_integration_event(std::uint32_t event_id, std::uint32_t event_code,
             return true;
         case connectivity_event::local_ctrl_ready:
             *out = {capability_event_tag::local_ctrl_ready, 0};
+            return true;
+        case connectivity_event::prov_started:
+            *out = {capability_event_tag::prov_started, 0};
+            return true;
+        case connectivity_event::prov_credentials_received:
+            *out = {capability_event_tag::prov_credentials_received, 0};
+            return true;
+        case connectivity_event::prov_success:
+            *out = {capability_event_tag::prov_success, 0};
+            return true;
+        case connectivity_event::prov_failed:
+            *out = {capability_event_tag::prov_failed, 0};
+            return true;
+        case connectivity_event::prov_already_done:
+            *out = {capability_event_tag::prov_already_done, 0};
+            return true;
+        case connectivity_event::prov_reset_complete:
+            *out = {capability_event_tag::prov_reset_complete, 0};
+            return true;
+        case connectivity_event::provisioning_ready:
+            *out = {capability_event_tag::provisioning_ready, 0};
             return true;
         case connectivity_event::capability_ready:
             *out = {capability_event_tag::connectivity_ready, 0};
@@ -191,34 +213,6 @@ bool map_integration_event(std::uint32_t event_id, std::uint32_t event_code,
         }
     }
 
-    if (band == 0x0700u) {
-        switch (static_cast<provisioning_event>(event_id)) {
-        case provisioning_event::started:
-            *out = {capability_event_tag::prov_started, 0};
-            return true;
-        case provisioning_event::credentials_received:
-            *out = {capability_event_tag::prov_credentials_received, 0};
-            return true;
-        case provisioning_event::success:
-            *out = {capability_event_tag::prov_success, 0};
-            return true;
-        case provisioning_event::failed:
-            *out = {capability_event_tag::prov_failed, 0};
-            return true;
-        case provisioning_event::already_provisioned:
-            *out = {capability_event_tag::prov_already_done, 0};
-            return true;
-        case provisioning_event::reset_complete:
-            *out = {capability_event_tag::prov_reset_complete, 0};
-            return true;
-        case provisioning_event::capability_ready:
-            *out = {capability_event_tag::provisioning_ready, 0};
-            return true;
-        default:
-            break;
-        }
-    }
-
     if (band == 0x0800u) {
         switch (static_cast<mqtt_host_event>(event_id)) {
         case mqtt_host_event::connected:
@@ -238,6 +232,53 @@ bool map_integration_event(std::uint32_t event_id, std::uint32_t event_code,
             return true;
         case mqtt_host_event::capability_ready:
             *out = {capability_event_tag::mqtt_ready, 0};
+            return true;
+        default:
+            break;
+        }
+    }
+
+    if (band == 0x0A00u) {
+        switch (static_cast<lan_control_event>(event_id)) {
+        case lan_control_event::http_ready:
+            *out = {capability_event_tag::local_ctrl_ready, 0};
+            return true;
+        case lan_control_event::mdns_ready:
+            *out = {capability_event_tag::mdns_ready, 0};
+            return true;
+        case lan_control_event::capability_ready:
+            *out = {capability_event_tag::lan_control_ready, 0};
+            return true;
+        default:
+            break;
+        }
+    }
+
+    if (band == 0x0B00u) {
+        switch (static_cast<usb_event>(event_id)) {
+        case usb_event::device_ready:
+            *out = {capability_event_tag::usb_device_ready, 0};
+            return true;
+        case usb_event::host_ready:
+            *out = {capability_event_tag::usb_host_ready, 0};
+            return true;
+        case usb_event::device_connected:
+            *out = {capability_event_tag::usb_device_connected, 0};
+            return true;
+        case usb_event::device_disconnected:
+            *out = {capability_event_tag::usb_device_disconnected, 0};
+            return true;
+        case usb_event::host_attached:
+            *out = {capability_event_tag::usb_host_attached, 0};
+            return true;
+        case usb_event::host_detached:
+            *out = {capability_event_tag::usb_host_detached, 0};
+            return true;
+        case usb_event::device_suspended:
+        case usb_event::device_resumed:
+            return false;
+        case usb_event::capability_ready:
+            *out = {capability_event_tag::usb_ready, 0};
             return true;
         default:
             break;

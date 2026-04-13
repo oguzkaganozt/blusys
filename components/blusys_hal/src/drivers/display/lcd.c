@@ -234,16 +234,13 @@ static esp_err_t blusys_st7735_panel_draw_bitmap(esp_lcd_panel_t *panel,
     y_end += y_gap;
 
     row_bytes = (size_t)(x_end - x_start) * st7735->fb_bits_per_pixel / 8u;
-    max_rows_per_tx = row_bytes > 0u ? (size_t)(SPI_MAX_DMA_LEN / row_bytes) : 0u;
-    if (max_rows_per_tx == 0u) {
-        max_rows_per_tx = 1u;
-    }
+    /* Always one display row per RAMWR. Multi-row RASET windows plus a long
+     * pixel burst have been observed to produce diagonal shear on some ST7735
+     * modules with ESP32-C3 SPI (software row stride and LVGL were already
+     * correct). Single-row transfers match common Arduino/ST7735 drivers and
+     * keep each DMA payload small (well under SPI_MAX_DMA_LEN). */
+    max_rows_per_tx = 1u;
 
-    /* Large ST7735 bitmap writes on esp32c3 become unreliable once the SPI
-     * master has to chain multiple DMA descriptors for a single RAMWR burst.
-     * Split them into row-aligned chunks that stay within one SPI DMA block,
-     * which keeps LVGL's fast band flush path correct while remaining much
-     * faster than one-row writes. */
     for (int row = 0; row < (y_end - y_start); row += (int)max_rows_per_tx) {
         int chunk_rows = (y_end - y_start) - row;
         size_t len;
@@ -252,12 +249,8 @@ static esp_err_t blusys_st7735_panel_draw_bitmap(esp_lcd_panel_t *panel,
             chunk_rows = (int)max_rows_per_tx;
         }
 
-        /* Re-assert the pixel format on every draw. This looks redundant because
-         * COLMOD is also set in panel_init, but the earlier investigation showed
-         * that without it the ST7735 will occasionally drop back to a different
-         * pixel format mid-session, producing sheared/corrupted output when
-         * several bitmap writes arrive back-to-back (e.g. from the LVGL flush
-         * callback). Do not remove. */
+        /* Re-assert pixel format every row; some ST7735s drift COLMOD during
+         * long sessions without it. */
         esp_err = esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_COLMOD,
                                             &st7735->colmod_val, 1);
         if (esp_err != ESP_OK) {
@@ -294,11 +287,8 @@ static esp_err_t blusys_st7735_panel_draw_bitmap(esp_lcd_panel_t *panel,
         src += len;
     }
 
-    /* Final sync transaction: acquiring the SPI bus here waits for the last
-     * async RAMWR DMA to finish, ensuring all color_done callbacks have fired
-     * before this function returns.  Without this, callers that reuse the
-     * source buffer (e.g. the LVGL flush scratch buffer) on the very next
-     * call can corrupt the tail of a multi-chunk transfer. */
+    /* Sync: wait for last async RAMWR before returning so callers can reuse
+     * the source buffer (e.g. LVGL flush scratch) safely. */
     esp_err = esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_COLMOD,
                                         &st7735->colmod_val, 1);
     if (esp_err != ESP_OK) {

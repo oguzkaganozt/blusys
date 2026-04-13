@@ -38,7 +38,7 @@ void app_main(void)
 - expecting useful analog output without an external I2S DAC or codec
 - wiring the external device to a different sample format than stereo 16-bit Philips mode
 - calling `blusys_i2s_tx_write()` before `blusys_i2s_tx_start()`
-- assuming RX or full-duplex support exists in the first release
+- assuming full-duplex support exists — TX and RX are separate channels and cannot share a single port
 
 ## Target Support
 

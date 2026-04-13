@@ -100,7 +100,7 @@ jobs:
           set -euo pipefail
           cmake -S scripts/host -B scripts/host/build-host-ci
           cmake --build scripts/host/build-host-ci -j \
-            --target interactive_archetype_reducer_smoke \
+            --target handheld_starter_reducer_smoke \
                      panel_connectivity_map_smoke \
                      capability_contract_smoke \
                      operational_phase_smoke \
@@ -108,10 +108,12 @@ jobs:
                      action_queue_drop_smoke \
                      snapshot_buffer_smoke
           export BLUSYS_PATH="${GITHUB_WORKSPACE}"
-          cmake -S examples/quickstart/edge_node/host -B examples/quickstart/edge_node/build-host-ci
-          cmake --build examples/quickstart/edge_node/build-host-ci -j
-          cmake -S examples/reference/gateway/host -B examples/reference/gateway/build-host-ci
-          cmake --build examples/reference/gateway/build-host-ci -j
+          cmake -S examples/quickstart/headless_telemetry/host -B examples/quickstart/headless_telemetry/build-host-ci
+          cmake --build examples/quickstart/headless_telemetry/build-host-ci -j
+          cmake -S examples/reference/surface_gateway/host -B examples/reference/surface_gateway/build-host-ci
+          cmake --build examples/reference/surface_gateway/build-host-ci -j
+          cmake -S examples/reference/handheld_bluetooth/host -B examples/reference/handheld_bluetooth/build-host-ci
+          cmake --build examples/reference/handheld_bluetooth/build-host-ci -j
           cmake -S examples/reference/mqtt_dashboard/host -B examples/reference/mqtt_dashboard/build-host-ci
           cmake --build examples/reference/mqtt_dashboard/build-host-ci -j
 
@@ -119,7 +121,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ./scripts/host/build-host-ci/interactive_archetype_reducer_smoke
+          ./scripts/host/build-host-ci/handheld_starter_reducer_smoke
           ./scripts/host/build-host-ci/panel_connectivity_map_smoke
           ./scripts/host/build-host-ci/capability_contract_smoke
           ./scripts/host/build-host-ci/operational_phase_smoke
@@ -138,7 +140,7 @@ jobs:
           ./scripts/host/build-host-san/action_queue_drop_smoke
           ./scripts/host/build-host-san/snapshot_buffer_smoke
 
-      - name: Scaffold smoke (blusys create × archetypes + host-build)
+      - name: Scaffold smoke (blusys create × interface/capability matrix + host-build)
         shell: bash
         env:
           BLUSYS_PATH: ${{ github.workspace }}

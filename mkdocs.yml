@@ -59,18 +59,16 @@ nav:
       - start/index.md
       - Interactive Quickstart: start/quickstart-interactive.md
       - Headless Quickstart: start/quickstart-headless.md
-      - Archetype Starters: start/archetypes.md
-      - Connected products: start/connected-products.md
-      - Interaction design: start/interaction-design.md
+      - Product shape: start/product-shape.md
   - App:
       - app/index.md
-      - "Golden path & escape hatches": app/golden-path.md
       - Reducer Model: app/reducer-model.md
       - App Runtime Model: app/app-runtime-model.md
       - Views & Widgets: app/views-and-widgets.md
       - Widget Gallery: app/widget-gallery.md
       - Capability Composition: app/capability-composition.md
       - Capabilities: app/capabilities.md
+      - "Authoring a capability": app/capability-authoring.md
       - Profiles: app/profiles.md
       - "Validation & host loop": app/validation-host-loop.md
       - "Device, host & QEMU CLI": app/cli-host-qemu.md
@@ -143,18 +141,13 @@ nav:
           - DHT: hal/dht.md
           - Buzzer: hal/buzzer.md
   - Internals:
-      - Core:
-          - internals/index.md
-          - Architecture: internals/architecture.md
-          - Maintaining: internals/maintaining.md
-          - Guidelines: internals/guidelines.md
-          - "UI layout (LVGL flex)": internals/ui-layout-lvgl.md
-          - Target Matrix: internals/target-matrix.md
-          - "ADR 0001 (orchestration)": internals/adr/0001-orchestration-in-framework.md
-          - "ADR 0002 (HAL component name)": internals/adr/0002-hal-component-name.md
-          - "Integration baseline": internals/integration-baseline.md
-      - "Display & integration":
-          - "LVGL integration (ST7735, resolved)": internals/lvgl-st7735-integration.md
+      - internals/index.md
+      - Architecture: internals/architecture.md
+      - Guidelines: internals/guidelines.md
+      - Contributing: internals/contributing.md
+      - Target Matrix: internals/target-matrix.md
+      - "ADR 0001 (orchestration)": internals/adr/0001-orchestration-in-framework.md
+      - "ADR 0002 (HAL component name)": internals/adr/0002-hal-component-name.md
       - Testing:
           - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md
           - Concurrency Tests: internals/testing/concurrency-tests.md

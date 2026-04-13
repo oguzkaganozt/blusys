@@ -19,7 +19,8 @@ if(ESP_PLATFORM)
         src/app/capabilities/bluetooth.cpp
         src/app/capabilities/ota.cpp
         src/app/capabilities/diagnostics.cpp
-        src/app/capabilities/provisioning.cpp
+        src/app/capabilities/lan_control.cpp
+        src/app/capabilities/usb.cpp
         src/app/button_array_bridge.cpp
     )
 endif()

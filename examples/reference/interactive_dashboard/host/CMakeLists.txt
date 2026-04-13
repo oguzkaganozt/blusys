@@ -37,7 +37,7 @@ target_compile_definitions(interactive_dashboard_host PRIVATE
 
 # Logical resolution only (matches device Kconfig). SDL window size is scaled in
 # scripts/host/src/app_host_platform.cpp — no separate host resolution.
-# 0 = ILI9341 320x240, 1 = ILI9488 480x320 (default: roomier host preview).
-set(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE "1" CACHE STRING "Host SDL: 0=320x240 1=480x320")
+# 0 = ILI9341 320x240, 1 = ILI9488 480x320, 2 = ST7735 160x128 (default: roomier host preview).
+set(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE "1" CACHE STRING "Host SDL: 0=320x240 1=480x320 2=160x128")
 target_compile_definitions(interactive_dashboard_host PRIVATE
     BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE=${BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE})

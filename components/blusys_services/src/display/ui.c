@@ -67,9 +67,8 @@ static uint32_t tick_get_cb(void)
  * bytes — exactly the SSD1306 frame buffer size.
  *
  * This function only builds the page buffer in flush_buf.  The caller
- * (flush_cb) is responsible for the actual DMA send so that
- * lv_display_flush_ready() can be called before the transfer starts,
- * freeing the LVGL draw buffer while DMA is in flight. */
+ * (flush_cb) sends it with blusys_lcd_draw_bitmap(), then calls
+ * lv_display_flush_ready() after the transfer completes. */
 static void flush_cb_mono_page_build(blusys_ui_t *ui, const lv_area_t *area,
                                      const uint8_t *px_map)
 {
@@ -114,7 +113,6 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
          * before starting DMA.  flush_buf is a separate DMA-capable allocation
          * so LVGL can render into buf1/buf2 while the transfer is in flight. */
         flush_cb_mono_page_build(ui, area, px_map);
-        lv_display_flush_ready(disp);
         blusys_err_t draw_err = blusys_lcd_draw_bitmap(ui->lcd,
                                0, 0,
                                (int32_t)ui->panel_width,
@@ -123,6 +121,7 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
         if (draw_err != BLUSYS_OK) {
             ESP_LOGE(TAG, "lcd_draw_bitmap failed: %d (mono_page)", (int)draw_err);
         }
+        lv_display_flush_ready(disp);
         return;
     }
 
@@ -159,16 +158,6 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
                 lv_draw_sw_rgb565_swap(ui->flush_buf, area_width * band_rows);
             }
 
-            /* On the last band all pixel data has been copied out of
-             * px_map into flush_buf.  Release the LVGL draw buffer now so
-             * LVGL can start rendering the next dirty area into buf1/buf2
-             * while this band's DMA transfer is still in flight.  Earlier
-             * bands cannot call flush_ready because px_map is still being
-             * read in subsequent iterations. */
-            if (row + band_rows >= area_height) {
-                lv_display_flush_ready(disp);
-            }
-
             blusys_err_t draw_err = blusys_lcd_draw_bitmap(ui->lcd,
                                    area->x1,
                                    area->y1 + (int32_t)row,
@@ -180,7 +169,14 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
                          (int)draw_err, (unsigned long)row);
             }
         }
+        /* All rows copied from px_map; all DMA to panel finished (draw_bitmap
+         * waits for SPI).  Safe to release LVGL's draw buffer. */
+        lv_display_flush_ready(disp);
     } else {
+        ESP_LOGW(TAG,
+                 "flush_cb: DMA scratch too small (have %u need >= %u for row); using row fallback",
+                 (unsigned)ui->flush_buf_size,
+                 (unsigned)packed_row_bytes);
         /* Fallback when scratch buffer is unavailable: send row-by-row
          * directly from the LVGL buffer with a temporary in-place byte-swap.
          * The swap is reversed after each DMA call so that px_map (LVGL's
@@ -417,6 +413,26 @@ blusys_err_t blusys_ui_unlock(blusys_ui_t *ui)
     return BLUSYS_OK;
 }
 
+void blusys_ui_invalidation_begin(blusys_ui_t *ui)
+{
+    if (ui == NULL || ui->disp == NULL) {
+        return;
+    }
+    lv_display_enable_invalidation(ui->disp, false);
+}
+
+void blusys_ui_invalidation_end(blusys_ui_t *ui)
+{
+    if (ui == NULL || ui->disp == NULL) {
+        return;
+    }
+    lv_display_enable_invalidation(ui->disp, true);
+    lv_obj_t *scr = lv_display_get_screen_active(ui->disp);
+    if (scr != NULL) {
+        lv_obj_invalidate(scr);
+    }
+}
+
 #else /* !BLUSYS_HAS_LVGL */
 
 blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
@@ -443,6 +459,16 @@ blusys_err_t blusys_ui_unlock(blusys_ui_t *ui)
 {
     (void)ui;
     return BLUSYS_ERR_NOT_SUPPORTED;
+}
+
+void blusys_ui_invalidation_begin(blusys_ui_t *ui)
+{
+    (void)ui;
+}
+
+void blusys_ui_invalidation_end(blusys_ui_t *ui)
+{
+    (void)ui;
 }
 
 #endif /* BLUSYS_HAS_LVGL */

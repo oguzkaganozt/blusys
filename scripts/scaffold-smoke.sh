@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Smoke-test `blusys create` for all canonical archetypes: copy templates, then host-build.
-# Reuses a single FetchContent base dir so interactive projects share one LVGL checkout.
+# Smoke-test `blusys create` for the canonical interface/capability matrix,
+# then host-build each generated project. Reuses a single FetchContent base dir
+# so interactive projects share one LVGL checkout.
 #
 # Usage: from repo root, with cmake + pkg-config + libsdl2-dev:
 #   ./scripts/scaffold-smoke.sh
@@ -33,7 +34,6 @@ run_create() {
     mkdir "$dir"
     local abs
     abs="$(cd "$dir" && pwd)"
-    # `blusys create` uses the path's basename in sed; `.` breaks substitution — use abs path.
     local args=()
     local a
     for a in "$@"; do
@@ -54,14 +54,17 @@ run_host() {
     printf 'scaffold-smoke: host-build ok %s\n' "$name"
 }
 
-# Four archetypes + gateway interactive variant (distinct template path)
-run_create ic --archetype interactive-controller .
-run_create ip --archetype interactive-panel .
-run_create en --archetype edge-node .
-run_create gw --archetype gateway-controller .
-run_create gwi --archetype gateway-controller --starter interactive .
+# Interface/capability/policy matrix
+run_create hh --interface handheld .
+run_create hs --interface handheld --with storage .
+run_create hb --interface handheld --with bluetooth,storage .
+run_create sd --interface surface --with connectivity,diagnostics .
+run_create ht --interface headless --with connectivity,telemetry,ota,diagnostics .
+run_create hl --interface headless --with connectivity,lan_control,ota .
+run_create hu --interface headless --with usb .
+run_create hp --interface headless --with connectivity,telemetry --policy low_power .
 
-for name in ic ip en gw gwi; do
+for name in hh hs hb sd ht hl hu hp; do
     run_host "$name"
 done
 

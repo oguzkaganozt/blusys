@@ -4,7 +4,7 @@
 // kind — not a responsive layout engine. Use with theme tokens and shell
 // config so one product can adjust density when the profile changes.
 // For LVGL flex composition (shell, scroll viewport, row/col primitives), see
-// docs/internals/ui-layout-lvgl.md.
+// docs/internals/architecture.md#ui-layout-lvgl-flex.
 //
 // Rotation and resolution:
 // - Panel rotation (swap_xy, mirror_*) belongs in device_profile / HAL: the
@@ -37,7 +37,7 @@ enum class theme_packaging_hint : std::uint8_t {
 enum class shell_density : std::uint8_t {
     minimal,   // hide or shrink header/tabs on tiny surfaces
     standard,
-    full,      // header + status + tabs where archetype expects it
+    full,      // header + status + tabs where the shell expects them
 };
 
 struct surface_hints {

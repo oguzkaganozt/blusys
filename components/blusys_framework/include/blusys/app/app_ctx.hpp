@@ -22,14 +22,16 @@ struct bluetooth_status;
 struct ota_status;
 struct diagnostics_status;
 struct telemetry_status;
-struct provisioning_status;
+struct lan_control_status;
+struct usb_status;
 class connectivity_capability;
 class storage_capability;
 class bluetooth_capability;
 class ota_capability;
 class diagnostics_capability;
 class telemetry_capability;
-class provisioning_capability;
+class lan_control_capability;
+class usb_capability;
 class mqtt_host_capability;
 
 class app_ctx {
@@ -95,7 +97,8 @@ public:
     [[nodiscard]] const ota_status *ota() const;
     [[nodiscard]] const diagnostics_status *diagnostics() const;
     [[nodiscard]] const telemetry_status *telemetry() const;
-    [[nodiscard]] const provisioning_status *provisioning() const;
+    [[nodiscard]] const lan_control_status *lan_control() const;
+    [[nodiscard]] const usb_status *usb() const;
 
     // Host (SDL) MQTT client — nullptr when capability not registered or on ESP-IDF product builds.
     [[nodiscard]] mqtt_host_capability *mqtt_host();
@@ -126,7 +129,8 @@ private:
     ota_capability            *ota_         = nullptr;
     diagnostics_capability   *diagnostics_  = nullptr;
     telemetry_capability     *telemetry_    = nullptr;
-    provisioning_capability    *provisioning_ = nullptr;
+    lan_control_capability   *lan_control_  = nullptr;
+    usb_capability           *usb_          = nullptr;
     mqtt_host_capability      *mqtt_host_   = nullptr;
 };
 

@@ -14,7 +14,7 @@ LVGL-based UI service. Opens an LCD handle, initialises LVGL, allocates draw buf
 | ESP32-S3 | yes |
 
 !!! note "Requires LVGL"
-    This module compiles only when the `espressif/lvgl` managed component is present in the project. Declare it in your `idf_component.yml`. Without it, all functions return `BLUSYS_ERR_NOT_SUPPORTED`.
+    This module compiles only when the `lvgl/lvgl` managed component is present in the project. Declare it in your `idf_component.yml`. Without it, all functions return `BLUSYS_ERR_NOT_SUPPORTED`.
 
 ## Singleton
 
@@ -96,12 +96,19 @@ typedef struct blusys_ui blusys_ui_t;
 ```
 
 ```c
+typedef enum {
+    BLUSYS_UI_PANEL_KIND_RGB565         = 0, /* Default: byte-swap RGB565 for 16-bit SPI panels (ST7735, ILI9341, …) */
+    BLUSYS_UI_PANEL_KIND_MONO_PAGE      = 1, /* Threshold RGB565 → 1-bpp SSD1306-style page buffer (forces full refresh) */
+    BLUSYS_UI_PANEL_KIND_RGB565_NATIVE  = 2, /* Native LVGL RGB565 order, no byte swap (e.g. esp_lcd_qemu_rgb) */
+} blusys_ui_panel_kind_t;
+
 typedef struct {
-    blusys_lcd_t *lcd;           /* Required: already-opened LCD handle */
-    uint32_t      buf_lines;     /* Draw buffer height in lines (0 = default 20) */
-    bool          full_refresh;  /* Use one full-screen render buffer (experimental on SPI LCDs) */
-    int           task_priority; /* LVGL render task priority (0 = default 5) */
-    int           task_stack;    /* Render task stack in bytes (0 = default 16384) */
+    blusys_lcd_t           *lcd;           /* Required: already-opened LCD handle */
+    uint32_t                buf_lines;     /* Draw buffer height in lines (0 = default 20) */
+    bool                    full_refresh;  /* Use one full-screen render buffer (experimental on SPI LCDs) */
+    int                     task_priority; /* LVGL render task priority (0 = default 5) */
+    int                     task_stack;    /* Render task stack in bytes (0 = default 16384) */
+    blusys_ui_panel_kind_t  panel_kind;    /* Pixel-format family (default 0 = RGB565) */
 } blusys_ui_config_t;
 ```
 
@@ -147,6 +154,15 @@ blusys_err_t blusys_ui_unlock(blusys_ui_t *ui);
 
 Releases the LVGL global mutex. Always pair with `blusys_ui_lock()`.
 
+### `blusys_ui_invalidation_begin` / `blusys_ui_invalidation_end`
+
+```c
+void blusys_ui_invalidation_begin(blusys_ui_t *ui);
+void blusys_ui_invalidation_end(blusys_ui_t *ui);
+```
+
+Batch UI construction when building deep widget trees under the UI lock. LVGL 9 must not queue invalidations while the display is mid-refresh; bracketing theme + first screen assembly with these calls (while holding the lock) prevents assertions and wedged main tasks on slow MCUs. `end()` re-enables invalidation and marks the active screen dirty.
+
 ## Lifecycle
 
 ```text
@@ -164,7 +180,7 @@ The render task calls `lv_timer_handler()` in a loop. All other tasks must brack
 ## Limitations
 
 - Only one UI instance at a time (singleton).
-- Requires `espressif/lvgl` managed component.
+- Requires `lvgl/lvgl` managed component.
 - The flush callback byte-swaps RGB565 pixels in its temporary scratch buffer for SPI LCD compatibility.
 - Draw buffer size is `buf_lines × stride` bytes, allocated twice (double buffering). For a 320-pixel-wide display at 20 lines, each buffer is 320 × 20 × 2 = 12 800 bytes (25 600 bytes total).
 - When `full_refresh` is enabled, `buf_lines` is ignored and the UI allocates one screen-sized render buffer plus the same temporary flush band buffer. This uses more RAM and should be treated as experimental on SPI LCDs until validated on your panel.

@@ -1,6 +1,6 @@
-// operational_phase_smoke — host-only assertions for the edge-node-style
+// operational_phase_smoke — host-only assertions for the headless-telemetry-style
 // operational phase machine. Keeps logic aligned with
-// examples/quickstart/edge_node/main/core/app_logic.cpp compute_phase().
+// examples/quickstart/headless_telemetry/main/core/app_logic.cpp compute_phase().
 
 #include <cstdint>
 #include <cstdlib>
