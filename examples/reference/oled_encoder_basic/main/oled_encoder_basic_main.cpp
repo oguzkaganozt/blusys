@@ -53,7 +53,7 @@ std::atomic<int>   s_set_secs{kDefaultSecs};
 std::atomic<int>   s_remaining{kDefaultSecs};
 
 struct AppCtx {
-    blusys_ui_t *ui;
+    blusys_display_t *ui;
     lv_obj_t    *arc;          /* ring progress — left panel */
     lv_obj_t    *center_dot;   /* 3×3 blink indicator at arc center */
     lv_obj_t    *time_label;   /* MM:SS — right panel */
@@ -177,7 +177,7 @@ void app_task(void *arg)
             int mins = display_secs / 60;
             int secs = display_secs % 60;
 
-            blusys_ui_lock(ctx->ui);
+            blusys_display_lock(ctx->ui);
 
             /* Time label — bracketed, blinking colon while running */
             lv_label_set_text_fmt(ctx->time_label, "[%02d%s%02d]",
@@ -206,7 +206,7 @@ void app_task(void *arg)
                 }
             }
 
-            blusys_ui_unlock(ctx->ui);
+            blusys_display_unlock(ctx->ui);
 
             last_state   = state;
             last_secs    = display_secs;
@@ -244,12 +244,12 @@ extern "C" void app_main(void)
     }
 
     /* 2. UI */
-    blusys_ui_t       *ui     = nullptr;
-    blusys_ui_config_t ui_cfg = {
+    blusys_display_t       *ui     = nullptr;
+    blusys_display_config_t ui_cfg = {
         .lcd        = lcd,
-        .panel_kind = BLUSYS_UI_PANEL_KIND_MONO_PAGE,
+        .panel_kind = BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE,
     };
-    err = blusys_ui_open(&ui_cfg, &ui);
+    err = blusys_display_open(&ui_cfg, &ui);
     if (err != BLUSYS_OK) {
         ESP_LOGE(kTag, "ui_open: %s", blusys_err_string(err));
         blusys_lcd_close(lcd);
@@ -270,14 +270,14 @@ extern "C" void app_main(void)
     err = blusys_encoder_open(&enc_cfg, &enc);
     if (err != BLUSYS_OK) {
         ESP_LOGE(kTag, "encoder_open: %s", blusys_err_string(err));
-        blusys_ui_close(ui);
+        blusys_display_close(ui);
         blusys_lcd_close(lcd);
         return;
     }
     blusys_encoder_set_callback(enc, encoder_cb, nullptr);
 
     /* 4. Build screen --------------------------------------------------- */
-    blusys_ui_lock(ui);
+    blusys_display_lock(ui);
 
     lv_obj_t *screen = lv_obj_create(nullptr);
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
@@ -373,7 +373,7 @@ extern "C" void app_main(void)
     lv_obj_align(time_label, LV_ALIGN_CENTER, 0, 0);
 
     lv_screen_load(screen);
-    blusys_ui_unlock(ui);
+    blusys_display_unlock(ui);
 
     ESP_LOGI(kTag, "pomodoro ready — rotate to set, press to start");
 

@@ -78,14 +78,14 @@ void host_set_theme(const void *tokens);
 // Device platform (ESP-IDF)
 blusys_err_t device_init(blusys::app::device_profile &profile,
                          blusys_lcd_t **lcd_out,
-                         blusys_ui_t **ui_out);
-void device_deinit(blusys_lcd_t *lcd, blusys_ui_t *ui);
+                         blusys_display_t **ui_out);
+void device_deinit(blusys_lcd_t *lcd, blusys_display_t *ui);
 void device_set_default_theme();
 void device_set_theme(const void *tokens);
 std::uint32_t device_get_ticks_ms();
 void device_delay(std::uint32_t ms);
-void device_ui_lock(blusys_ui_t *ui);
-void device_ui_unlock(blusys_ui_t *ui);
+void device_ui_lock(blusys_display_t *ui);
+void device_ui_unlock(blusys_display_t *ui);
 void *device_find_pointer_indev();
 #endif  // ESP_PLATFORM
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
@@ -176,7 +176,7 @@ void run_device(const app_spec<State, Action> &spec,
                 device_profile profile)
 {
     blusys_lcd_t *lcd = nullptr;
-    blusys_ui_t  *ui  = nullptr;
+    blusys_display_t  *ui  = nullptr;
 
     blusys_err_t err = blusys_app_platform::device_init(profile, &lcd, &ui);
     if (err != BLUSYS_OK) {
@@ -188,7 +188,7 @@ void run_device(const app_spec<State, Action> &spec,
     // as lv_timer_handler() in the render task — otherwise concurrent access can
     // trip lv_inv_area assertions and wedge the main task.
     blusys_app_platform::device_ui_lock(ui);
-    blusys_ui_invalidation_begin(ui);
+    blusys_display_invalidation_begin(ui);
 
     const blusys::ui::theme_tokens *resolved_theme = resolve_theme_tokens(spec);
     if (resolved_theme != nullptr) {
@@ -201,7 +201,7 @@ void run_device(const app_spec<State, Action> &spec,
     err = runtime.init();
     if (err != BLUSYS_OK) {
         BLUSYS_LOGE("blusys_app", "app runtime init failed: %d", static_cast<int>(err));
-        blusys_ui_invalidation_end(ui);
+        blusys_display_invalidation_end(ui);
         blusys_app_platform::device_ui_unlock(ui);
         blusys_app_platform::device_deinit(lcd, ui);
         return;
@@ -265,7 +265,7 @@ void run_device(const app_spec<State, Action> &spec,
         }
     }
 
-    blusys_ui_invalidation_end(ui);
+    blusys_display_invalidation_end(ui);
     blusys_app_platform::device_ui_unlock(ui);
 
     // Button array bridge (optional — only if profile declares buttons).

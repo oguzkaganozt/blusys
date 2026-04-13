@@ -21,7 +21,7 @@ Normal product code should not need to touch:
 
 - `runtime.init` or low-level framework boot
 - `route_sink` or `feedback_sink`
-- `blusys_ui_lock` or `lv_screen_load`
+- `blusys_display_lock` or `lv_screen_load`
 - raw LCD bring-up or Wi-Fi lifecycle orchestration
 
 These are handled by the framework runtime, profiles, and capabilities.

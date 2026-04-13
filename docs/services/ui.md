@@ -3,7 +3,7 @@
 !!! note "Internal service"
     This is a low-level service used internally by the framework. Product code should use [`blusys::app` profiles](../app/profiles.md) and the [view layer](../app/views-and-widgets.md) instead of calling these APIs directly.
 
-LVGL-based UI service. Opens an LCD handle, initialises LVGL, allocates draw buffers, and runs a dedicated render task. Widget access from other tasks is serialised through `blusys_ui_lock()` / `blusys_ui_unlock()`.
+LVGL-based UI service. Opens an LCD handle, initialises LVGL, allocates draw buffers, and runs a dedicated render task. Widget access from other tasks is serialised through `blusys_display_lock()` / `blusys_display_unlock()`.
 
 ## Target Support
 
@@ -18,7 +18,7 @@ LVGL-based UI service. Opens an LCD handle, initialises LVGL, allocates draw buf
 
 ## Singleton
 
-Only one UI instance may be open at a time. `blusys_ui_open()` returns `BLUSYS_ERR_INVALID_STATE` if called while an instance already exists.
+Only one UI instance may be open at a time. `blusys_display_open()` returns `BLUSYS_ERR_INVALID_STATE` if called while an instance already exists.
 
 ## Quick Example
 
@@ -55,24 +55,24 @@ void app_main(void)
     blusys_lcd_open(&lcd_cfg, &lcd);
 
     /* 2. Open the UI (starts LVGL render task) */
-    blusys_ui_t *ui = NULL;
-    blusys_ui_config_t ui_cfg = {
+    blusys_display_t *ui = NULL;
+    blusys_display_config_t ui_cfg = {
         .lcd = lcd,
         .full_refresh = false,
     };
-    blusys_ui_open(&ui_cfg, &ui);
+    blusys_display_open(&ui_cfg, &ui);
 
     /* 3. Create widgets — always lock before touching LVGL state */
-    blusys_ui_lock(ui);
+    blusys_display_lock(ui);
 
     lv_obj_t *label = lv_label_create(lv_screen_active());
     lv_label_set_text(label, "Hello");
     lv_obj_center(label);
 
-    blusys_ui_unlock(ui);
+    blusys_display_unlock(ui);
 
     /* 4. Cleanup */
-    blusys_ui_close(ui);
+    blusys_display_close(ui);
     blusys_lcd_close(lcd);
 }
 ```
@@ -83,24 +83,24 @@ For small SPI TFTs such as 128x160 ST7735 panels, keep `full_refresh = false` un
 
 ## Common Mistakes
 
-**Touching LVGL without the lock.** The render task calls LVGL from its own context. Calling any `lv_*` function from another task without holding the lock causes data corruption. Always bracket widget code with `blusys_ui_lock()` / `blusys_ui_unlock()`.
+**Touching LVGL without the lock.** The render task calls LVGL from its own context. Calling any `lv_*` function from another task without holding the lock causes data corruption. Always bracket widget code with `blusys_display_lock()` / `blusys_display_unlock()`.
 
-**Closing the LCD before the UI.** `blusys_ui_close()` must be called before `blusys_lcd_close()` — the render task flushes to the LCD right up until it exits.
+**Closing the LCD before the UI.** `blusys_display_close()` must be called before `blusys_lcd_close()` — the render task flushes to the LCD right up until it exits.
 
-**Opening more than one UI instance.** `blusys_ui_open()` returns `BLUSYS_ERR_INVALID_STATE` if called while a UI is already open. Close the existing instance first.
+**Opening more than one UI instance.** `blusys_display_open()` returns `BLUSYS_ERR_INVALID_STATE` if called while a UI is already open. Close the existing instance first.
 
 ## Types
 
 ```c
-typedef struct blusys_ui blusys_ui_t;
+typedef struct blusys_display blusys_display_t;
 ```
 
 ```c
 typedef enum {
-    BLUSYS_UI_PANEL_KIND_RGB565         = 0, /* Default: byte-swap RGB565 for 16-bit SPI panels (ST7735, ILI9341, …) */
-    BLUSYS_UI_PANEL_KIND_MONO_PAGE      = 1, /* Threshold RGB565 → 1-bpp SSD1306-style page buffer (forces full refresh) */
-    BLUSYS_UI_PANEL_KIND_RGB565_NATIVE  = 2, /* Native LVGL RGB565 order, no byte swap (e.g. esp_lcd_qemu_rgb) */
-} blusys_ui_panel_kind_t;
+    BLUSYS_DISPLAY_PANEL_KIND_RGB565         = 0, /* Default: byte-swap RGB565 for 16-bit SPI panels (ST7735, ILI9341, …) */
+    BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE      = 1, /* Threshold RGB565 → 1-bpp SSD1306-style page buffer (forces full refresh) */
+    BLUSYS_DISPLAY_PANEL_KIND_RGB565_NATIVE  = 2, /* Native LVGL RGB565 order, no byte swap (e.g. esp_lcd_qemu_rgb) */
+} blusys_display_panel_kind_t;
 
 typedef struct {
     blusys_lcd_t           *lcd;           /* Required: already-opened LCD handle */
@@ -108,17 +108,17 @@ typedef struct {
     bool                    full_refresh;  /* Use one full-screen render buffer (experimental on SPI LCDs) */
     int                     task_priority; /* LVGL render task priority (0 = default 5) */
     int                     task_stack;    /* Render task stack in bytes (0 = default 16384) */
-    blusys_ui_panel_kind_t  panel_kind;    /* Pixel-format family (default 0 = RGB565) */
-} blusys_ui_config_t;
+    blusys_display_panel_kind_t  panel_kind;    /* Pixel-format family (default 0 = RGB565) */
+} blusys_display_config_t;
 ```
 
 ## Functions
 
-### `blusys_ui_open`
+### `blusys_display_open`
 
 ```c
-blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
-                             blusys_ui_t **out_ui);
+blusys_err_t blusys_display_open(const blusys_display_config_t *config,
+                             blusys_display_t **out_ui);
 ```
 
 Initialises LVGL, allocates draw buffers, registers the LCD flush callback, and starts the render task. By default the UI uses two partial buffers of `buf_lines` rows each, copies each LVGL flush area into a DMA-safe scratch buffer, and pushes it to the LCD in packed multi-row bands. When `full_refresh = true`, it allocates one full-screen render buffer but still flushes through the same scratch-buffer band path. That full-screen SPI path is still experimental.
@@ -130,35 +130,35 @@ Initialises LVGL, allocates draw buffers, registers the LCD flush callback, and 
 
 Returns `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG`, `BLUSYS_ERR_INVALID_STATE` (already open), or `BLUSYS_ERR_NO_MEM`.
 
-### `blusys_ui_close`
+### `blusys_display_close`
 
 ```c
-blusys_err_t blusys_ui_close(blusys_ui_t *ui);
+blusys_err_t blusys_display_close(blusys_display_t *ui);
 ```
 
 Signals the render task to stop, waits for it to exit, then frees LVGL resources and draw buffers. Call before `blusys_lcd_close()`.
 
-### `blusys_ui_lock`
+### `blusys_display_lock`
 
 ```c
-blusys_err_t blusys_ui_lock(blusys_ui_t *ui);
+blusys_err_t blusys_display_lock(blusys_display_t *ui);
 ```
 
 Acquires the LVGL global mutex. Must be called before any `lv_*` API from a task other than the render task. Blocks until the mutex is available.
 
-### `blusys_ui_unlock`
+### `blusys_display_unlock`
 
 ```c
-blusys_err_t blusys_ui_unlock(blusys_ui_t *ui);
+blusys_err_t blusys_display_unlock(blusys_display_t *ui);
 ```
 
-Releases the LVGL global mutex. Always pair with `blusys_ui_lock()`.
+Releases the LVGL global mutex. Always pair with `blusys_display_lock()`.
 
-### `blusys_ui_invalidation_begin` / `blusys_ui_invalidation_end`
+### `blusys_display_invalidation_begin` / `blusys_display_invalidation_end`
 
 ```c
-void blusys_ui_invalidation_begin(blusys_ui_t *ui);
-void blusys_ui_invalidation_end(blusys_ui_t *ui);
+void blusys_display_invalidation_begin(blusys_display_t *ui);
+void blusys_display_invalidation_end(blusys_display_t *ui);
 ```
 
 Batch UI construction when building deep widget trees under the UI lock. LVGL 9 must not queue invalidations while the display is mid-refresh; bracketing theme + first screen assembly with these calls (while holding the lock) prevents assertions and wedged main tasks on slow MCUs. `end()` re-enables invalidation and marks the active screen dirty.
@@ -166,16 +166,16 @@ Batch UI construction when building deep widget trees under the UI lock. LVGL 9 
 ## Lifecycle
 
 ```text
-blusys_lcd_open()   →   blusys_ui_open()
+blusys_lcd_open()   →   blusys_display_open()
                               ↓
                     [render task running]
                               ↓
-                    blusys_ui_close()   →   blusys_lcd_close()
+                    blusys_display_close()   →   blusys_lcd_close()
 ```
 
 ## Thread Safety
 
-The render task calls `lv_timer_handler()` in a loop. All other tasks must bracket LVGL calls with `blusys_ui_lock()` / `blusys_ui_unlock()`. The `blusys_ui_open()` and `blusys_ui_close()` functions are not themselves thread-safe — call them from a single task (typically `app_main`).
+The render task calls `lv_timer_handler()` in a loop. All other tasks must bracket LVGL calls with `blusys_display_lock()` / `blusys_display_unlock()`. The `blusys_display_open()` and `blusys_display_close()` functions are not themselves thread-safe — call them from a single task (typically `app_main`).
 
 ## Limitations
 

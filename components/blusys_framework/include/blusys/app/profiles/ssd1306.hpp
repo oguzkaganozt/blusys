@@ -1,6 +1,6 @@
 #pragma once
 
-// SSD1306 I2C OLED profiles (monochrome, page format via blusys_ui).
+// SSD1306 I2C OLED profiles (monochrome, page format via blusys_display).
 //
 // Defaults follow common breakout wiring; see examples/validation/lcd_ssd1306_basic
 // Kconfig for the same per-target I2C pin choices. Use 128×64 for full-module

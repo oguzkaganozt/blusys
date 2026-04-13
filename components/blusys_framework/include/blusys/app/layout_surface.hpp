@@ -59,13 +59,13 @@ struct shell_chrome {
 
 // Classify from pixel dimensions and UI panel kind (matches device_profile.ui).
 inline surface_hints classify(std::uint32_t width, std::uint32_t height,
-                              blusys_ui_panel_kind_t panel_kind,
+                              blusys_display_panel_kind_t panel_kind,
                               unsigned bits_per_pixel)
 {
     surface_hints h{};
     h.is_landscape = width >= height;
 
-    if (panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE || bits_per_pixel == 1u) {
+    if (panel_kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE || bits_per_pixel == 1u) {
         h.size_class       = surface_size::tiny_mono;
         h.is_monochrome    = true;
         h.shell            = shell_density::minimal;

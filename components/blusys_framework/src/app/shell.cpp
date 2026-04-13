@@ -18,7 +18,7 @@ namespace blusys::app::view {
 namespace {
 
 // Module-level shell pointer, set during shell_load.
-// Only one shell is active at a time (matches the blusys_ui singleton
+// Only one shell is active at a time (matches the blusys_display singleton
 // rule). Used by callbacks that need a stable reference to the shell.
 static shell *g_active_shell = nullptr;
 

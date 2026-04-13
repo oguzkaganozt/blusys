@@ -33,7 +33,7 @@
 // `lv_indev_create`, and `lv_timer_handler` to work. This keeps the
 // example portable across all three targets and runnable in CI without
 // any display hardware. On real hardware, replace the stub display
-// with a `blusys_lcd_open` + `blusys_ui_open` chain (as in
+// with a `blusys_lcd_open` + `blusys_display_open` chain (as in
 // `examples/ui_basic/`) to see the focus highlight on screen.
 //
 // What you should see in the log when running on hardware with a real

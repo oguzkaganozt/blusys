@@ -15,11 +15,11 @@
 
 #include "blusys/internal/blusys_esp_err.h"
 
-static const char *TAG = "blusys_ui";
+static const char *TAG = "blusys_display";
 
-static bool ui_wants_rgb565_spi_byte_swap(blusys_ui_panel_kind_t kind)
+static bool ui_wants_rgb565_spi_byte_swap(blusys_display_panel_kind_t kind)
 {
-    return kind == BLUSYS_UI_PANEL_KIND_RGB565;
+    return kind == BLUSYS_DISPLAY_PANEL_KIND_RGB565;
 }
 
 #define UI_DEFAULT_TASK_PRIORITY  5
@@ -27,9 +27,9 @@ static bool ui_wants_rgb565_spi_byte_swap(blusys_ui_panel_kind_t kind)
 #define UI_DEFAULT_BUF_LINES      20
 #define UI_FLUSH_BAND_LINES       40
 
-static blusys_ui_t *s_active_handle;
+static blusys_display_t *s_active_handle;
 
-struct blusys_ui {
+struct blusys_display {
     blusys_lcd_t           *lcd;
     lv_display_t           *disp;
     void                   *buf1;
@@ -39,7 +39,7 @@ struct blusys_ui {
     TaskHandle_t            task;
     SemaphoreHandle_t       done_sem;
     volatile bool           running;
-    blusys_ui_panel_kind_t  panel_kind;
+    blusys_display_panel_kind_t  panel_kind;
     uint32_t                panel_width;
     uint32_t                panel_height;
 };
@@ -69,7 +69,7 @@ static uint32_t tick_get_cb(void)
  * This function only builds the page buffer in flush_buf.  The caller
  * (flush_cb) sends it with blusys_lcd_draw_bitmap(), then calls
  * lv_display_flush_ready() after the transfer completes. */
-static void flush_cb_mono_page_build(blusys_ui_t *ui, const lv_area_t *area,
+static void flush_cb_mono_page_build(blusys_display_t *ui, const lv_area_t *area,
                                      const uint8_t *px_map)
 {
     const uint16_t *src = (const uint16_t *)px_map;
@@ -106,9 +106,9 @@ static void flush_cb_mono_page_build(blusys_ui_t *ui, const lv_area_t *area,
 static void flush_cb(lv_display_t *disp, const lv_area_t *area,
                      uint8_t *px_map)
 {
-    blusys_ui_t *ui = lv_display_get_user_data(disp);
+    blusys_display_t *ui = lv_display_get_user_data(disp);
 
-    if (ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE) {
+    if (ui->panel_kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE) {
         /* Build page buffer from px_map, then release the LVGL draw buffer
          * before starting DMA.  flush_buf is a separate DMA-capable allocation
          * so LVGL can render into buf1/buf2 while the transfer is in flight. */
@@ -214,7 +214,7 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area,
 /* ------------------------------------------------------------------ */
 static void render_task(void *arg)
 {
-    blusys_ui_t *ui = arg;
+    blusys_display_t *ui = arg;
 
     while (ui->running) {
         uint32_t ms = lv_timer_handler();
@@ -234,8 +234,8 @@ static void render_task(void *arg)
 /* ------------------------------------------------------------------ */
 /* Public API                                                          */
 /* ------------------------------------------------------------------ */
-blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
-                            blusys_ui_t **out_ui)
+blusys_err_t blusys_display_open(const blusys_display_config_t *config,
+                            blusys_display_t **out_ui)
 {
     if (config == NULL || config->lcd == NULL || out_ui == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -251,7 +251,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
         return err;
     }
 
-    blusys_ui_t *ui = calloc(1, sizeof(*ui));
+    blusys_display_t *ui = calloc(1, sizeof(*ui));
     if (ui == NULL) {
         return BLUSYS_ERR_NO_MEM;
     }
@@ -290,7 +290,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
      * scratch is sized to one full screen of page bytes
      * (width * height / 8), which is the SSD1306 frame buffer size. */
     bool full_refresh = config->full_refresh ||
-                        (ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE);
+                        (ui->panel_kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE);
     uint32_t buf_lines = config->buf_lines > 0
                          ? config->buf_lines
                          : UI_DEFAULT_BUF_LINES;
@@ -304,7 +304,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
         flush_band_lines = height;
     }
     uint32_t flush_buf_bytes;
-    if (ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE) {
+    if (ui->panel_kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE) {
         flush_buf_bytes = width * height / 8u;
     } else {
         flush_buf_bytes = stride * flush_band_lines;
@@ -340,9 +340,9 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
              (unsigned long)buf_bytes,
              (unsigned long)flush_buf_bytes,
              full_refresh ? 1 : 0,
-             ui->panel_kind == BLUSYS_UI_PANEL_KIND_MONO_PAGE
+             ui->panel_kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE
                  ? "mono_page"
-                 : (ui->panel_kind == BLUSYS_UI_PANEL_KIND_RGB565_NATIVE ? "rgb565_native"
+                 : (ui->panel_kind == BLUSYS_DISPLAY_PANEL_KIND_RGB565_NATIVE ? "rgb565_native"
                                                                          : "rgb565"));
 
     /* Start render task */
@@ -352,7 +352,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
                                        : UI_DEFAULT_TASK_STACK;
     ui->running = true;
 
-    BaseType_t ret = xTaskCreate(render_task, "blusys_ui", (uint32_t)stack,
+    BaseType_t ret = xTaskCreate(render_task, "blusys_display", (uint32_t)stack,
                                  ui, (UBaseType_t)prio, &ui->task);
     if (ret != pdPASS) {
         free(ui->buf1);
@@ -370,7 +370,7 @@ blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
     return BLUSYS_OK;
 }
 
-blusys_err_t blusys_ui_close(blusys_ui_t *ui)
+blusys_err_t blusys_display_close(blusys_display_t *ui)
 {
     if (ui == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -395,7 +395,7 @@ blusys_err_t blusys_ui_close(blusys_ui_t *ui)
     return BLUSYS_OK;
 }
 
-blusys_err_t blusys_ui_lock(blusys_ui_t *ui)
+blusys_err_t blusys_display_lock(blusys_display_t *ui)
 {
     if (ui == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -404,7 +404,7 @@ blusys_err_t blusys_ui_lock(blusys_ui_t *ui)
     return BLUSYS_OK;
 }
 
-blusys_err_t blusys_ui_unlock(blusys_ui_t *ui)
+blusys_err_t blusys_display_unlock(blusys_display_t *ui)
 {
     if (ui == NULL) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -413,7 +413,7 @@ blusys_err_t blusys_ui_unlock(blusys_ui_t *ui)
     return BLUSYS_OK;
 }
 
-void blusys_ui_invalidation_begin(blusys_ui_t *ui)
+void blusys_display_invalidation_begin(blusys_display_t *ui)
 {
     if (ui == NULL || ui->disp == NULL) {
         return;
@@ -421,7 +421,7 @@ void blusys_ui_invalidation_begin(blusys_ui_t *ui)
     lv_display_enable_invalidation(ui->disp, false);
 }
 
-void blusys_ui_invalidation_end(blusys_ui_t *ui)
+void blusys_display_invalidation_end(blusys_display_t *ui)
 {
     if (ui == NULL || ui->disp == NULL) {
         return;
@@ -435,38 +435,38 @@ void blusys_ui_invalidation_end(blusys_ui_t *ui)
 
 #else /* !BLUSYS_HAS_LVGL */
 
-blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
-                            blusys_ui_t **out_ui)
+blusys_err_t blusys_display_open(const blusys_display_config_t *config,
+                            blusys_display_t **out_ui)
 {
     (void)config;
     (void)out_ui;
     return BLUSYS_ERR_NOT_SUPPORTED;
 }
 
-blusys_err_t blusys_ui_close(blusys_ui_t *ui)
+blusys_err_t blusys_display_close(blusys_display_t *ui)
 {
     (void)ui;
     return BLUSYS_ERR_NOT_SUPPORTED;
 }
 
-blusys_err_t blusys_ui_lock(blusys_ui_t *ui)
+blusys_err_t blusys_display_lock(blusys_display_t *ui)
 {
     (void)ui;
     return BLUSYS_ERR_NOT_SUPPORTED;
 }
 
-blusys_err_t blusys_ui_unlock(blusys_ui_t *ui)
+blusys_err_t blusys_display_unlock(blusys_display_t *ui)
 {
     (void)ui;
     return BLUSYS_ERR_NOT_SUPPORTED;
 }
 
-void blusys_ui_invalidation_begin(blusys_ui_t *ui)
+void blusys_display_invalidation_begin(blusys_display_t *ui)
 {
     (void)ui;
 }
 
-void blusys_ui_invalidation_end(blusys_ui_t *ui)
+void blusys_display_invalidation_end(blusys_display_t *ui)
 {
     (void)ui;
 }

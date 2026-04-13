@@ -11,9 +11,9 @@
 extern "C" {
 #endif
 
-typedef struct blusys_ui blusys_ui_t;
+typedef struct blusys_display blusys_display_t;
 
-/* Panel pixel-format family. blusys_ui still renders LVGL in RGB565
+/* Panel pixel-format family. blusys_display still renders LVGL in RGB565
  * internally regardless of choice; the difference is what flush_cb
  * sends to the panel:
  *
@@ -36,51 +36,51 @@ typedef struct blusys_ui blusys_ui_t;
  * Default value (zero-init) is RGB565 — preserves backwards
  * compatibility with every existing caller. */
 typedef enum {
-    BLUSYS_UI_PANEL_KIND_RGB565         = 0,
-    BLUSYS_UI_PANEL_KIND_MONO_PAGE      = 1,
-    BLUSYS_UI_PANEL_KIND_RGB565_NATIVE  = 2,
-} blusys_ui_panel_kind_t;
+    BLUSYS_DISPLAY_PANEL_KIND_RGB565         = 0,
+    BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE      = 1,
+    BLUSYS_DISPLAY_PANEL_KIND_RGB565_NATIVE  = 2,
+} blusys_display_panel_kind_t;
 
 typedef struct {
     /* Required: an already-opened LCD handle.
      *
      * The caller must keep the LCD open for the entire lifetime of the
-     * blusys_ui instance.  Calling blusys_lcd_close() while blusys_ui is
+     * blusys_display instance.  Calling blusys_lcd_close() while blusys_display is
      * running leaves the render task with a dangling pointer and will
      * produce undefined behaviour on the next flush.  Always call
-     * blusys_ui_close() before blusys_lcd_close(). */
+     * blusys_display_close() before blusys_lcd_close(). */
     blusys_lcd_t           *lcd;
 
     uint32_t                buf_lines;     /* Draw buffer height in lines (0 = default 20) */
     bool                    full_refresh;  /* Use one full-screen render buffer (experimental on SPI LCDs) */
     int                     task_priority; /* LVGL render task priority (0 = default 5) */
     int                     task_stack;    /* Render task stack in bytes (0 = default 16384) */
-    blusys_ui_panel_kind_t  panel_kind;    /* Pixel-format family (default 0 = RGB565) */
-} blusys_ui_config_t;
+    blusys_display_panel_kind_t  panel_kind;    /* Pixel-format family (default 0 = RGB565) */
+} blusys_display_config_t;
 
-blusys_err_t blusys_ui_open(const blusys_ui_config_t *config,
-                            blusys_ui_t **out_ui);
-blusys_err_t blusys_ui_close(blusys_ui_t *ui);
+blusys_err_t blusys_display_open(const blusys_display_config_t *config,
+                            blusys_display_t **out_ui);
+blusys_err_t blusys_display_close(blusys_display_t *ui);
 
 /* Lock/unlock for thread-safe LVGL widget access from non-render tasks.
  *
  * These wrap LVGL's global lv_lock() / lv_unlock().  Because only one
- * blusys_ui instance may exist at a time (blusys_ui is a singleton) the
+ * blusys_display instance may exist at a time (blusys_display is a singleton) the
  * lock is effectively per-display, but callers from different tasks all
- * contend on the same underlying mutex.  Call blusys_ui_lock() before
+ * contend on the same underlying mutex.  Call blusys_display_lock() before
  * creating, modifying, or deleting any LVGL object from outside the
  * render task, and release it as soon as possible — the lock is held by
  * the render task for the duration of each lv_timer_handler() call. */
-blusys_err_t blusys_ui_lock(blusys_ui_t *ui);
-blusys_err_t blusys_ui_unlock(blusys_ui_t *ui);
+blusys_err_t blusys_display_lock(blusys_display_t *ui);
+blusys_err_t blusys_display_unlock(blusys_display_t *ui);
 
 /* Batch UI construction: LVGL 9 must not queue invalidations while the display
  * is mid-refresh (see lv_refr.c / lv_inv_area). Building a deep dashboard tree
  * under the UI lock can otherwise trip assertions or wedge the main task on
  * slow MCUs. Call begin/end around theme + first screen assembly with the lock
  * held; end() re-enables invalidation and marks the active screen dirty. */
-void blusys_ui_invalidation_begin(blusys_ui_t *ui);
-void blusys_ui_invalidation_end(blusys_ui_t *ui);
+void blusys_display_invalidation_begin(blusys_display_t *ui);
+void blusys_display_invalidation_end(blusys_display_t *ui);
 
 #ifdef __cplusplus
 }

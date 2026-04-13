@@ -97,7 +97,7 @@ static void create_debug_overlay(lv_obj_t *scr)
 void app_main(void)
 {
     blusys_lcd_t *lcd = NULL;
-    blusys_ui_t  *ui  = NULL;
+    blusys_display_t  *ui  = NULL;
     blusys_err_t err;
 
     printf("blusys ui_basic\n");
@@ -137,13 +137,13 @@ void app_main(void)
     printf("lcd_open: ok\n");
 
     /* 2. Open the UI (LVGL init + render task) */
-    blusys_ui_config_t ui_config = {
+    blusys_display_config_t ui_config = {
         .lcd = lcd,
         .buf_lines = CONFIG_BLUSYS_UI_BUF_LINES,
         .full_refresh = CONFIG_BLUSYS_UI_FULL_REFRESH,
     };
 
-    err = blusys_ui_open(&ui_config, &ui);
+    err = blusys_display_open(&ui_config, &ui);
     if (err != BLUSYS_OK) {
         printf("ui_open error: %s\n", blusys_err_string(err));
         blusys_lcd_close(lcd);
@@ -152,7 +152,7 @@ void app_main(void)
     printf("ui_open: ok\n");
 
     /* 3. Create LVGL widgets — lock required for thread safety */
-    blusys_ui_lock(ui);
+    blusys_display_lock(ui);
 
     lv_obj_t *scr = lv_obj_create(NULL);
     lv_obj_remove_style_all(scr);
@@ -180,7 +180,7 @@ void app_main(void)
 
     lv_screen_load(scr);
 
-    blusys_ui_unlock(ui);
+    blusys_display_unlock(ui);
     printf("ui ready\n");
 
     /* Keep running — LVGL render task handles updates in background */

@@ -25,7 +25,7 @@ struct encoder_shared_state {
     blusys::framework::runtime *framework_runtime = nullptr;
 };
 
-// One bridge instance at a time (matches blusys_ui singleton rule).
+// One bridge instance at a time (matches blusys_display singleton rule).
 encoder_shared_state g_encoder_state{};
 
 // ---- encoder hardware callback (ISR-safe: only touches atomics) ----

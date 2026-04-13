@@ -44,7 +44,7 @@ namespace blusys_app_platform {
 
 blusys_err_t device_init(blusys::app::device_profile &profile,
                          blusys_lcd_t **lcd_out,
-                         blusys_ui_t **ui_out)
+                         blusys_display_t **ui_out)
 {
     if (lcd_out == nullptr || ui_out == nullptr) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -61,7 +61,7 @@ blusys_err_t device_init(blusys::app::device_profile &profile,
     profile.ui.lcd = *lcd_out;
 
     // 3. Open UI service (initializes LVGL, creates render task).
-    err = blusys_ui_open(&profile.ui, ui_out);
+    err = blusys_display_open(&profile.ui, ui_out);
     if (err != BLUSYS_OK) {
         BLUSYS_LOGE(kTag, "ui open failed: %d", static_cast<int>(err));
         blusys_lcd_close(*lcd_out);
@@ -80,10 +80,10 @@ blusys_err_t device_init(blusys::app::device_profile &profile,
     return BLUSYS_OK;
 }
 
-void device_deinit(blusys_lcd_t *lcd, blusys_ui_t *ui)
+void device_deinit(blusys_lcd_t *lcd, blusys_display_t *ui)
 {
     if (ui != nullptr) {
-        blusys_ui_close(ui);
+        blusys_display_close(ui);
     }
     if (lcd != nullptr) {
         blusys_lcd_close(lcd);
@@ -113,14 +113,14 @@ void device_delay(std::uint32_t ms)
     vTaskDelay(pdMS_TO_TICKS(ms));
 }
 
-void device_ui_lock(blusys_ui_t *ui)
+void device_ui_lock(blusys_display_t *ui)
 {
-    blusys_ui_lock(ui);
+    blusys_display_lock(ui);
 }
 
-void device_ui_unlock(blusys_ui_t *ui)
+void device_ui_unlock(blusys_display_t *ui)
 {
-    blusys_ui_unlock(ui);
+    blusys_display_unlock(ui);
 }
 
 void *device_find_pointer_indev()

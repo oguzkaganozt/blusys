@@ -34,7 +34,7 @@ struct profile_button_mapping {
 
 struct device_profile {
     blusys_lcd_config_t       lcd;           // LCD hardware config
-    blusys_ui_config_t        ui;            // UI service config (ui.lcd filled at runtime)
+    blusys_display_config_t        ui;            // UI service config (ui.lcd filled at runtime)
     blusys_encoder_config_t   encoder;       // encoder config (ignored if has_encoder == false)
     bool                      has_encoder = false;
     bool                      has_touch   = false;
