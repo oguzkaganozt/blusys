@@ -30,6 +30,11 @@ Single entry point for firmware, PC iteration, and ESP-IDF QEMU. Paths below are
 
 With **`--graphics`** or **`--serial-only`**, the same build uses ESP-IDF’s **`idf.py qemu`** (SDL framebuffer where IDF supports it, or serial-only monitor). Interactive RGB-style demos usually need **`--graphics`** plus a suitable `sdkconfig.qemu` and HAL choice; see the interactive dashboard example.
 
+## Espressif QEMU (authoritative)
+
+- **IDF guide (usage, `idf.py qemu`, graphics, GDB, eFuse, …):** [QEMU Emulator — ESP-IDF v5.5.4](https://docs.espressif.com/projects/esp-idf/en/v5.5.4/esp32/api-guides/tools/qemu.html)
+- **Toolchain docs tree (per-chip READMEs + supported-feature matrix):** [esp-toolchain-docs / qemu](https://github.com/espressif/esp-toolchain-docs/tree/main/qemu) — start from the top-level [README](https://github.com/espressif/esp-toolchain-docs/blob/main/qemu/README.md) for the **Supported features** table (what is actually emulated vs not).
+
 ## Related
 
 - [Validation and host loop](validation-host-loop.md) — host smokes, scaffold, CI
