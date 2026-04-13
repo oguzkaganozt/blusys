@@ -34,7 +34,12 @@ Product / example app
   → Services API            (components/blusys_services/include/blusys/<category>/*.h)
   → HAL + drivers API       (components/blusys_hal/include/blusys/*.h,
                               components/blusys_hal/include/blusys/drivers/<category>/*.h)
-  → HAL + drivers impl      (components/blusys_hal/src/common/*.c,
+  → HAL + drivers impl      (components/blusys_hal/src/soc/*.c,
+                              components/blusys_hal/src/platform/*.c,
+                              components/blusys_hal/src/usb/*.c,
+                              components/blusys_hal/src/wireless/*.c,
+                              components/blusys_hal/src/ulp/*.c,
+                              components/blusys_hal/src/rt/*.c,
                               components/blusys_hal/src/drivers/<category>/*.c)
   → Internal helpers        (components/blusys_hal/include/blusys/internal/)
   → Target capability data  (components/blusys_hal/src/targets/esp32*/target_caps.c)
@@ -71,7 +76,7 @@ This component now contains two internal layers.
 - actuator: `buzzer`
 
 Directory split:
-- HAL implementation: `components/blusys_hal/src/common/`
+- HAL implementation: `components/blusys_hal/src/soc/` (SoC peripherals), `src/platform/` (platform primitives), `src/usb/`, `src/wireless/`, `src/ulp/`, `src/rt/` (RTOS glue)
 - driver implementation: `components/blusys_hal/src/drivers/<category>/`
 - HAL public headers: `components/blusys_hal/include/blusys/*.h`
 - driver public headers: `components/blusys_hal/include/blusys/drivers/<category>/*.h`
@@ -169,12 +174,12 @@ Host iteration: `scripts/host/` builds LVGL against SDL2 on Linux via `blusys ho
 - internal code may depend on ESP-IDF details
 - target-specific behavior stays behind internal boundaries
 - services never depend on framework
-- HAL/common code must not include driver headers
+- HAL code must not include driver headers
 
 The HAL/drivers boundary is enforced by `blusys lint`, backed by `scripts/lint-layering.sh`.
 
 The lint checks exactly two rules:
-- no file under `components/blusys_hal/src/common/` may include `blusys/drivers/**`
+- no file under `components/blusys_hal/src/soc/`, `src/platform/`, `src/usb/`, or `src/wireless/` may include `blusys/drivers/**`
 - files under `components/blusys_hal/src/drivers/` may only include the shared internal allowlist: `blusys_lock.h`, `blusys_esp_err.h`, `blusys_timeout.h`, and (display stack) `lcd_panel_ili.h`
 
 ## Symmetric Pairs
