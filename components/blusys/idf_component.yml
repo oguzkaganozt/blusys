@@ -1,0 +1,18 @@
+## IDF Component Manager manifest for the merged blusys platform component.
+## Version will be bumped to 7.0.0 in Phase 8 (breaking change — major version).
+version: "6.1.1"
+description: "Blusys platform — HAL, drivers, services, and framework in one component"
+url: "https://github.com/blusys/blusys"
+license: "MIT"
+
+## Optional managed-component dependencies.
+## Projects that need these features must declare them in their own
+## idf_component.yml; blusys detects them at build time and enables the
+## corresponding feature macros (BLUSYS_HAS_MDNS, BLUSYS_HAS_TINYUSB, etc.).
+##
+## dependencies:
+##   espressif/mdns: ">=1.2.0"
+##   espressif/esp_tinyusb: ">=0.14.0"
+##   espressif/usb_host_hid: ">=1.0.0"
+##   espressif/esp_lcd_qemu_rgb: ">=0.1.0"
+##   lvgl/lvgl: ">=8.3.0,<9.0.0"

@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "blusys/connectivity/wifi.h"
-#include "blusys/connectivity/protocol/mdns.h"
+#include "blusys/services/connectivity/wifi.h"
+#include "blusys/services/protocol/mdns.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"

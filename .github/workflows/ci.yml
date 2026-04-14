@@ -36,7 +36,34 @@ env:
   IDF_CCACHE_ENABLE: "1"
 
 jobs:
-  # ── Tier 0: Layering Lint ──────────────────────────────────────────────────
+  # ── Tier 0: Layer Invariants ───────────────────────────────────────────────
+  blusys-layer-invariants:
+    name: "Layer invariants"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Rule 1-4 — Layering lint (no cross-layer includes)
+        shell: bash
+        run: bash scripts/lint-layering.sh
+
+      - name: Rule 5 — src/ mirrors include/blusys/
+        run: python3 scripts/check-src-include-mirror.py
+
+      - name: Rule 6 — No blusys_ prefix in file basenames
+        run: python3 scripts/check-no-blusys-prefix.py
+
+      - name: Rule 7 — C++ framework files in namespace blusys
+        run: python3 scripts/check-cpp-namespace.py
+
+  # ── Tier 0: Layering Lint (legacy checks) ─────────────────────────────────
   lint:
     name: "Layering lint"
     runs-on: ubuntu-latest
@@ -45,14 +72,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Run blusys layering lint
-        shell: bash
-        run: bash scripts/lint-layering.sh
-
       - name: Framework UI CMake source lists
         run: python3 scripts/check-framework-ui-sources.py
 
-      - name: Host bridge spine vs framework CMakeLists
+      - name: Host bridge spine vs component CMakeLists
         run: python3 scripts/check-host-bridge-spine.py
 
   # ── Tier 0: Inventory Validation ───────────────────────────────────────────
@@ -81,7 +104,7 @@ jobs:
   # ── Tier 0: Host harness smokes (Linux + SDL2 deps) ───────────────────────
   host-smoke:
     name: "Host harness smoke"
-    needs: [lint]
+    needs: [lint, blusys-layer-invariants]
     runs-on: ubuntu-latest
 
     steps:
@@ -173,7 +196,7 @@ jobs:
   # ── Tier 1: Build Curated Examples ─────────────────────────────────────────
   build:
     name: "Build PR (${{ matrix.target }})"
-    needs: [lint, inventory, host-smoke]
+    needs: [lint, blusys-layer-invariants, inventory, host-smoke]
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4
@@ -216,7 +239,7 @@ jobs:
 
   display-variants:
     name: "Display variants (${{ matrix.target }})"
-    needs: [lint, inventory, host-smoke]
+    needs: [lint, blusys-layer-invariants, inventory, host-smoke]
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4

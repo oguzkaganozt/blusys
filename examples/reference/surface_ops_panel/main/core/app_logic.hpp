@@ -3,11 +3,11 @@
 #include <cstdint>
 #include <array>
 
-#include "blusys/app/app.hpp"
-#include "blusys/app/capability_event.hpp"
-#include "blusys/app/capabilities/diagnostics.hpp"
-#include "blusys/app/capabilities/storage.hpp"
-#include "blusys/app/screens/status_screen.hpp"
+#include "blusys/framework/app/app.hpp"
+#include "blusys/framework/capabilities/event.hpp"
+#include "blusys/framework/capabilities/diagnostics.hpp"
+#include "blusys/framework/capabilities/storage.hpp"
+#include "blusys/framework/ui/screens/status.hpp"
 #include "lvgl.h"
 
 namespace surface_ops_panel {

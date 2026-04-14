@@ -1,6 +1,6 @@
 #include "ui/app_ui.hpp"
 
-#include "blusys/app/view/page.hpp"
+#include "blusys/framework/ui/composition/page.hpp"
 #include "blusys/log.h"
 
 namespace handheld_bluetooth::ui {

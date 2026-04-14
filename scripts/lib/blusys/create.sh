@@ -90,7 +90,7 @@ cmd_create() {
     target_dir="$(cd "$target_dir" && pwd)"
 
     local existing_files=()
-    for f in CMakeLists.txt README.md sdkconfig.defaults sdkconfig.qemu blusys.project.yml main/CMakeLists.txt main/idf_component.yml main/core/app_logic.hpp main/integration/app_main.cpp host/CMakeLists.txt; do
+    for f in CMakeLists.txt README.md sdkconfig.defaults sdkconfig.qemu blusys.project.yml main/CMakeLists.txt main/idf_component.yml main/core/app_logic.hpp main/platform/app_main.cpp host/CMakeLists.txt; do
         [[ -e "$target_dir/$f" ]] && existing_files+=("$f")
     done
     if [[ ${#existing_files[@]} -gt 0 ]]; then

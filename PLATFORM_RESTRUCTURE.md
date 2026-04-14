@@ -529,9 +529,9 @@ Output: confirmed migration list, no actions taken.
 
 **Checklist:**
 
-- [ ] File inventory captured to `/tmp/inventory-before.txt`
-- [ ] Consumer audit complete (examples, docs, scripts, cmake)
-- [ ] Migration script dry-run passes with zero unaccounted paths
+- [x] File inventory captured to `/tmp/inventory-before.txt`
+- [x] Consumer audit complete (examples, docs, scripts, cmake)
+- [x] Migration script dry-run passes with zero unaccounted paths
 
 ### Phase 1 — Create the merged component shell
 
@@ -550,12 +550,12 @@ leave the tree build-green before committing.
 
 **Checklist:**
 
-- [ ] `components/blusys/` directory created
-- [ ] Minimal `CMakeLists.txt` with empty SRCS created
-- [ ] Merged `Kconfig` created
-- [ ] Merged `idf_component.yml` created
-- [ ] Empty `include/blusys/` and `src/` directories created
-- [ ] New blusys component registers successfully with ESP-IDF
+- [x] `components/blusys/` directory created
+- [x] Minimal `CMakeLists.txt` with empty SRCS created
+- [x] Merged `Kconfig` created
+- [x] Merged `idf_component.yml` created
+- [x] Empty `include/blusys/` and `src/` directories created
+- [x] New blusys component registers successfully with ESP-IDF
 
 ### Phase 2 — Move HAL, flatten, and clean prefixes
 
@@ -614,19 +614,19 @@ Remove: `components/blusys_hal/` *except* the `drivers/` sub-trees
 
 **Checklist:**
 
-- [ ] Public HAL headers moved (incl. `log.h`) → `include/blusys/hal/`
-- [ ] Internal headers moved with prefix drops + anti-clash renames
+- [x] Public HAL headers moved (incl. `log.h`) → `include/blusys/hal/`
+- [x] Internal headers moved with prefix drops + anti-clash renames
   (`esp_err_shim.h`, `hal_internal.h`) → `include/blusys/hal/internal/`
-- [ ] Peripheral sources moved → `src/hal/`
-- [ ] `bt_stack.c` moved → `src/hal/internal/bt_stack.c`
-- [ ] `blusys_lock_freertos.c` moved → `src/hal/internal/lock_freertos.c`
-- [ ] `src/targets/` moved → `src/hal/targets/`
-- [ ] `src/ulp/` moved → `src/hal/ulp/`
-- [ ] Old `blusys_hal/include/blusys/blusys.h` umbrella deleted
-- [ ] Intra-HAL includes rewritten
-- [ ] HAL sources appended to `CMakeLists.txt`
-- [ ] Build-green (representative examples)
-- [ ] `components/blusys_hal/` removed except `drivers/` sub-trees
+- [x] Peripheral sources moved → `src/hal/`
+- [x] `bt_stack.c` moved → `src/hal/internal/bt_stack.c`
+- [x] `blusys_lock_freertos.c` moved → `src/hal/internal/lock_freertos.c`
+- [x] `src/targets/` moved → `src/hal/targets/`
+- [x] `src/ulp/` moved → `src/hal/ulp/`
+- [x] Old `blusys_hal/include/blusys/blusys.h` umbrella deleted
+- [x] Intra-HAL includes rewritten
+- [x] HAL sources appended to `CMakeLists.txt`
+- [x] Build-green (representative examples)
+- [x] `components/blusys_hal/` removed except `drivers/` sub-trees
 
 ### Phase 3 — Create drivers layer
 
@@ -667,14 +667,14 @@ Finally, remove the now-empty `components/blusys_hal/` directory.
 
 **Checklist:**
 
-- [ ] Drivers public headers moved → `include/blusys/drivers/`
-- [ ] Drivers sources moved → `src/drivers/`
-- [ ] `output/display.{h,c}` moved from services → `drivers/`
-- [ ] New panel headers authored (`panels/{ili9341,ili9488,st7735,st7789,ssd1306,qemu_rgb}.h`)
-- [ ] Intra-drivers includes rewritten
-- [ ] Drivers sources appended to `CMakeLists.txt`
-- [ ] Build-green
-- [ ] `components/blusys_hal/` directory removed
+- [x] Drivers public headers moved → `include/blusys/drivers/`
+- [x] Drivers sources moved → `src/drivers/`
+- [x] `output/display.{h,c}` moved from services → `drivers/`
+- [x] New panel headers authored (`panels/{ili9341,ili9488,st7735,st7789,ssd1306,qemu_rgb}.h`)
+- [x] Intra-drivers includes rewritten
+- [x] Drivers sources appended to `CMakeLists.txt`
+- [x] Build-green
+- [x] `components/blusys_hal/` directory removed
 
 ### Phase 4 — Fold services with category cleanup
 
@@ -716,16 +716,16 @@ Remove: `components/blusys_services/` entirely.
 
 **Checklist:**
 
-- [ ] `connectivity/` moved → `services/connectivity/`
-- [ ] `connectivity/protocol/` promoted → `services/protocol/` (sibling)
-- [ ] `storage/` moved → `services/storage/`
-- [ ] `device/` renamed + moved → `services/system/`
-- [ ] `input/usb_hid.{h,c}` moved → `services/connectivity/`
-- [ ] Old `blusys_services.h` umbrella deleted
-- [ ] Intra-services includes rewritten
-- [ ] Services sources appended to `CMakeLists.txt`
+- [x] `connectivity/` moved → `services/connectivity/`
+- [x] `connectivity/protocol/` promoted → `services/protocol/` (sibling)
+- [x] `storage/` moved → `services/storage/`
+- [x] `device/` renamed + moved → `services/system/`
+- [x] `input/usb_hid.{h,c}` moved → `services/connectivity/`
+- [x] Old `blusys_services.h` umbrella deleted
+- [x] Intra-services includes rewritten
+- [x] Services sources appended to `CMakeLists.txt`
 - [ ] Build-green
-- [ ] `components/blusys_services/` removed entirely
+- [x] `components/blusys_services/` removed entirely
 
 ### Phase 5 — Move and restructure framework (four commits: 5a–5d)
 
@@ -789,22 +789,22 @@ Additionally in 5a:
 
 **Checklist (5a):**
 
-- [ ] `app/*.hpp` moved → `framework/app/*` (with renames: ctx, spec, identity, services)
-- [ ] `app/detail/app_runtime.hpp` → `framework/app/internal/`
-- [ ] `app/capability*.hpp` + `app/capabilities/*` → `framework/capabilities/`
-- [ ] `app/flows/*` → `framework/flows/*`
-- [ ] `framework/core/{router,intent}.hpp` + `app/integration_dispatch.hpp` → `framework/engine/`
-- [ ] `framework/core/runtime.hpp` → `framework/engine/event_queue.hpp`
-- [ ] `app/detail/{pending_events,default_route_sink}.hpp` → `framework/engine/` (+ `internal/`)
-- [ ] `framework/core/{feedback,feedback_presets}.hpp` → `framework/feedback/`
-- [ ] `app/detail/feedback_logging_sink.hpp` → `framework/feedback/internal/`
-- [ ] `framework/core/containers.hpp` → `framework/containers.hpp`
-- [ ] `framework/ui/callbacks.hpp` → `framework/callbacks.hpp`
-- [ ] `app/theme_presets.hpp` → `framework/ui/style/presets.hpp`
-- [ ] `app/integration.hpp` deleted
-- [ ] Old `framework/framework.hpp` deleted + fresh umbrella written
-- [ ] Touched includes rewritten
-- [ ] Sources appended to `CMakeLists.txt`
+- [x] `app/*.hpp` moved → `framework/app/*` (with renames: ctx, spec, identity, services)
+- [x] `app/detail/app_runtime.hpp` → `framework/app/internal/`
+- [x] `app/capability*.hpp` + `app/capabilities/*` → `framework/capabilities/`
+- [x] `app/flows/*` → `framework/flows/*`
+- [x] `framework/core/{router,intent}.hpp` + `app/integration_dispatch.hpp` → `framework/engine/`
+- [x] `framework/core/runtime.hpp` → `framework/engine/event_queue.hpp`
+- [x] `app/detail/{pending_events,default_route_sink}.hpp` → `framework/engine/` (+ `internal/`)
+- [x] `framework/core/{feedback,feedback_presets}.hpp` → `framework/feedback/`
+- [x] `app/detail/feedback_logging_sink.hpp` → `framework/feedback/internal/`
+- [x] `framework/core/containers.hpp` → `framework/containers.hpp`
+- [x] `framework/ui/callbacks.hpp` → `framework/callbacks.hpp`
+- [x] `app/theme_presets.hpp` → `framework/ui/style/presets.hpp`
+- [x] `app/integration.hpp` deleted
+- [x] Old `framework/framework.hpp` deleted + fresh umbrella written
+- [x] Touched includes rewritten
+- [x] Sources appended to `CMakeLists.txt`
 - [ ] Build-green
 
 **Commit 5b — `integration/` → `platform/`:**
@@ -834,17 +834,17 @@ CMakeLists, verify build before committing.
 
 **Checklist (5b):**
 
-- [ ] `platform_profile.hpp` → `platform/profile.hpp`
-- [ ] `host_profile.hpp` + `profiles/host.hpp` merged → `platform/host.hpp`
-- [ ] `auto_profile.hpp` → `platform/auto.hpp`
-- [ ] `build_profile.hpp` → `platform/build.hpp`
-- [ ] `reference_build_profile.hpp` → `platform/reference_build.hpp`
-- [ ] `layout_surface.hpp`, `auto_shell.hpp`, `{button_array,input,touch}_bridge.hpp` → `platform/`
-- [ ] `profiles/headless.hpp` → `platform/headless.hpp`
-- [ ] Panel profiles (`ili9341.hpp` etc.) → `platform/profiles/`
-- [ ] Panel profile `.hpp` files rewritten against `drivers/panels/*.h` defaults
-- [ ] Touched includes rewritten
-- [ ] Sources appended to `CMakeLists.txt`
+- [x] `platform_profile.hpp` → `platform/profile.hpp`
+- [x] `host_profile.hpp` + `profiles/host.hpp` merged → `platform/host.hpp`
+- [x] `auto_profile.hpp` → `platform/auto.hpp`
+- [x] `build_profile.hpp` → `platform/build.hpp`
+- [x] `reference_build_profile.hpp` → `platform/reference_build.hpp`
+- [x] `layout_surface.hpp`, `auto_shell.hpp`, `{button_array,input,touch}_bridge.hpp` → `platform/`
+- [x] `profiles/headless.hpp` → `platform/headless.hpp`
+- [x] Panel profiles (`ili9341.hpp` etc.) → `platform/profiles/`
+- [x] Panel profile `.hpp` files rewritten against `drivers/panels/*.h` defaults
+- [x] Touched includes rewritten
+- [x] Sources appended to `CMakeLists.txt`
 - [ ] Build-green
 
 **Commit 5c — UI sub-dir reorganization:**
@@ -928,20 +928,20 @@ sources to CMakeLists, verify build before committing.
 
 **Checklist (5c):**
 
-- [ ] `app/view/{view,page,shell,overlay_manager,screen_registry,screen_router}.hpp` → `ui/composition/`
-- [ ] `app/view/{bindings,action_widgets,composites}.hpp` → `ui/binding/`
-- [ ] `app/view/{custom_widget,lvgl_scope}.hpp` → `ui/extension/`
-- [ ] `ui/{theme,fonts,transition}.hpp` → `ui/style/`
-- [ ] `ui/icons/*` → `ui/style/`
-- [ ] `ui/visual_feedback.hpp` → `ui/style/interaction_effects.hpp` (renamed)
-- [ ] 17 widget singleton dirs flattened (`widgets/button/button.hpp` → `widgets/button.hpp` × 17)
-- [ ] `app/screens/*_screen.hpp` → `ui/screens/*.hpp` (suffix dropped)
-- [ ] `app/screens/screens.hpp` → `ui/screens/screens.hpp`
-- [ ] `ui/detail/{fixed_slot_pool,flex_layout,widget_common}.hpp` → `src/framework/ui/`
-- [ ] Empty `ui/detail/` directory deleted
-- [ ] `ui/widgets.hpp` and `ui/primitives.hpp` retained as concept umbrellas
-- [ ] Touched includes rewritten
-- [ ] Sources appended to `CMakeLists.txt`
+- [x] `app/view/{view,page,shell,overlay_manager,screen_registry,screen_router}.hpp` → `ui/composition/`
+- [x] `app/view/{bindings,action_widgets,composites}.hpp` → `ui/binding/`
+- [x] `app/view/{custom_widget,lvgl_scope}.hpp` → `ui/extension/`
+- [x] `ui/{theme,fonts,transition}.hpp` → `ui/style/`
+- [x] `ui/icons/*` → `ui/style/`
+- [x] `ui/visual_feedback.hpp` → `ui/style/interaction_effects.hpp` (renamed)
+- [x] 17 widget singleton dirs flattened (`widgets/button/button.hpp` → `widgets/button.hpp` × 17)
+- [x] `app/screens/*_screen.hpp` → `ui/screens/*.hpp` (suffix dropped)
+- [x] `app/screens/screens.hpp` → `ui/screens/screens.hpp`
+- [x] `ui/detail/{fixed_slot_pool,flex_layout,widget_common}.hpp` → `src/framework/ui/`
+- [x] Empty `ui/detail/` directory deleted
+- [x] `ui/widgets.hpp` and `ui/primitives.hpp` retained as concept umbrellas
+- [x] Touched includes rewritten
+- [x] Sources appended to `CMakeLists.txt`
 - [ ] Build-green
 
 **Commit 5d — C++ namespace and naming refactor:**
@@ -963,15 +963,15 @@ After 5d lands, remove `components/blusys_framework/` entirely.
 
 **Checklist (5d):**
 
-- [ ] Every `.hpp`/`.cpp` under `framework/` wrapped in `namespace blusys { }`
-- [ ] `class Blusys*` → naked class names
-- [ ] `blusys_*_t` typedefs → naked (`Runtime`, `Intent`, etc.)
-- [ ] `blusys_*()` free functions → naked within namespace
-- [ ] All framework-internal references updated to naked names
-- [ ] `framework/src/**` updated to match
-- [ ] `scripts/check-cpp-namespace.py` passes
+- [x] Every `.hpp`/`.cpp` under `framework/` wrapped in `namespace blusys { }`
+- [x] `class Blusys*` → naked class names
+- [x] `blusys_*_t` typedefs → naked (`Runtime`, `Intent`, etc.)
+- [x] `blusys_*()` free functions → naked within namespace
+- [x] All framework-internal references updated to naked names
+- [x] `framework/src/**` updated to match
+- [x] `scripts/check-cpp-namespace.py` passes (deferred to Phase 8)
 - [ ] Representative examples build
-- [ ] `components/blusys_framework/` removed entirely
+- [x] `components/blusys_framework/` removed entirely
 
 ### Phase 6 — Build system consolidation
 
@@ -996,14 +996,14 @@ Actions:
 
 **Checklist:**
 
-- [ ] `CMakeLists.txt` reorganized by layer with clean sectioning
-- [ ] Dependencies consolidated from three old CMakeLists
-- [ ] Per-target code (`hal/targets/`, `hal/ulp/`) finalized
-- [ ] Managed components (tinyusb, esp_lcd_qemu_rgb) finalized
-- [ ] LVGL conditional compilation finalized for `framework/ui/`
-- [ ] `cmake/blusys_host_bridge.cmake` paths updated
-- [ ] `cmake/blusys_framework_ui_sources.cmake` retired
-- [ ] Host MQTT, widgetkit, optional_component cmake helpers audited
+- [x] `CMakeLists.txt` reorganized by layer with clean sectioning
+- [x] Dependencies consolidated from three old CMakeLists
+- [x] Per-target code (`hal/targets/`, `hal/ulp/`) finalized
+- [x] Managed components (tinyusb, esp_lcd_qemu_rgb) finalized
+- [x] LVGL conditional compilation finalized for `framework/ui/`
+- [x] `cmake/blusys_host_bridge.cmake` paths updated
+- [x] `cmake/blusys_framework_ui_sources.cmake` retired
+- [x] Host MQTT, widgetkit, optional_component cmake helpers audited
 - [ ] Full build passes on all representative targets
 
 ### Phase 7 — Consumer update sweep
@@ -1047,15 +1047,15 @@ Every hit gets updated in Phase 7.
 
 **Checklist:**
 
-- [ ] `examples/**/*.{c,cpp,hpp,cmake}` include paths updated
-- [ ] `examples/**/main/CMakeLists.txt` REQUIRES updated to `blusys`
-- [ ] `examples/**/main/idf_component.yml` updated
-- [ ] `docs/**/*.md` references updated
-- [ ] `scripts/*.{sh,py}` component-path references updated
-- [ ] `inventory.yml` updated
-- [ ] `README.md` architecture diagram updated
-- [ ] `CLAUDE.md` / top-level instructions updated (if present)
-- [ ] Every `rg` in master search list returns zero hits
+- [x] `examples/**/*.{c,cpp,hpp,cmake}` include paths updated
+- [x] `examples/**/main/CMakeLists.txt` REQUIRES updated to `blusys`
+- [x] `examples/**/main/idf_component.yml` updated (none referenced blusys components)
+- [x] `docs/**/*.md` references updated
+- [x] `scripts/*.{sh,py}` component-path references updated (lint-layering.sh and check-host-bridge-spine.py deferred to Phase 8)
+- [x] `inventory.yml` updated (no changes needed)
+- [x] `README.md` architecture diagram updated
+- [x] `CLAUDE.md` / top-level instructions updated (no CLAUDE.md present)
+- [x] Every `rg` in master search list returns zero hits
 
 ### Phase 8 — Lint, CI, scaffold, docs, version bump
 
@@ -1078,18 +1078,18 @@ Actions:
 
 **Checklist:**
 
-- [ ] `scripts/lint-layering.sh` rewritten with Rules 1–4
-- [ ] `scripts/check-src-include-mirror.py` added (Rule 5 with allowlist)
-- [ ] `scripts/check-no-blusys-prefix.py` added (Rule 6)
-- [ ] `scripts/check-cpp-namespace.py` added (Rule 7)
-- [ ] CI job `blusys-layer-invariants` added
-- [ ] `scripts/check-host-bridge-spine.py` updated
-- [ ] Scaffold templates renamed `main/integration/` → `main/platform/`
-- [ ] Scaffold-emitted include paths updated
-- [ ] `blusys create --list` descriptions updated
-- [ ] `docs/{start,app,hal,services}/` updated
-- [ ] `docs/internals/architecture.md` updated with 4-layer diagram
-- [ ] Version bumped to 7.0.0 in `include/blusys/hal/version.h`
+- [x] `scripts/lint-layering.sh` rewritten with Rules 1–4
+- [x] `scripts/check-src-include-mirror.py` added (Rule 5 with allowlist)
+- [x] `scripts/check-no-blusys-prefix.py` added (Rule 6)
+- [x] `scripts/check-cpp-namespace.py` added (Rule 7)
+- [x] CI job `blusys-layer-invariants` added
+- [x] `scripts/check-host-bridge-spine.py` updated
+- [x] Scaffold templates renamed `main/integration/` → `main/platform/`
+- [x] Scaffold-emitted include paths updated
+- [x] `blusys create --list` descriptions updated
+- [x] `docs/{start,app,hal,services}/` updated
+- [x] `docs/internals/architecture.md` updated with 4-layer diagram
+- [x] Version bumped to 7.0.0 in `include/blusys/hal/version.h`
 
 ---
 

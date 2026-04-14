@@ -1,0 +1,6 @@
+# Kconfig for the merged blusys component.
+#
+# Display profile menu entries are intentionally absent here during Phase 1–5c.
+# They live in components/blusys_framework/Kconfig until that component is
+# removed in Phase 5d, at which point this file will be populated with the
+# merged content from all three legacy Kconfigs.

@@ -4,7 +4,7 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 
 ## Pick a product shape first
 
-New products are created with **`blusys create`** using an explicit model: **interface** (how the product presents locally), **capabilities** (framework runtime bundles), and **policies** (cross-cutting defaults that are not capabilities). Product-shaped examples in this repo use the same fixed **`core/`** / **`ui/`** / **`integration/`** layout; CI runs `scripts/check-product-layout.py` (HAL `validation/` demos are exempt).
+New products are created with **`blusys create`** using an explicit model: **interface** (how the product presents locally), **capabilities** (framework runtime bundles), and **policies** (cross-cutting defaults that are not capabilities). Product-shaped examples in this repo use the same fixed **`core/`** / **`ui/`** / **`platform/`** layout; CI runs `scripts/check-product-layout.py` (HAL `validation/` demos are exempt).
 
 - [Product shape](product-shape.md) — `handheld` / `surface` / `headless`, `--with`, `--policy`, and how reference examples map to that model
 

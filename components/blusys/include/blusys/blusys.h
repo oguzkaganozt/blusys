@@ -1,0 +1,86 @@
+/* blusys/blusys.h — C umbrella header (HAL + drivers + services)
+ *
+ * Include this from C code to pull in everything.
+ * For finer-grained control, include specific layer headers directly.
+ *
+ * Populated per phase:
+ *   Phase 2: hal/
+ *   Phase 3: drivers/
+ *   Phase 4: services/
+ */
+
+#ifndef BLUSYS_BLUSYS_H
+#define BLUSYS_BLUSYS_H
+
+/* --- HAL layer (Phase 2) --- */
+#include "blusys/hal/adc.h"
+#include "blusys/hal/dac.h"
+#include "blusys/hal/efuse.h"
+#include "blusys/hal/error.h"
+#include "blusys/hal/gpio.h"
+#include "blusys/hal/gpio_expander.h"
+#include "blusys/hal/i2c.h"
+#include "blusys/hal/i2c_slave.h"
+#include "blusys/hal/i2s.h"
+#include "blusys/hal/log.h"
+#include "blusys/hal/mcpwm.h"
+#include "blusys/hal/nvs.h"
+#include "blusys/hal/one_wire.h"
+#include "blusys/hal/pcnt.h"
+#include "blusys/hal/pwm.h"
+#include "blusys/hal/rmt.h"
+#include "blusys/hal/sd_spi.h"
+#include "blusys/hal/sdm.h"
+#include "blusys/hal/sdmmc.h"
+#include "blusys/hal/sleep.h"
+#include "blusys/hal/spi.h"
+#include "blusys/hal/spi_slave.h"
+#include "blusys/hal/system.h"
+#include "blusys/hal/target.h"
+#include "blusys/hal/temp_sensor.h"
+#include "blusys/hal/timer.h"
+#include "blusys/hal/touch.h"
+#include "blusys/hal/twai.h"
+#include "blusys/hal/uart.h"
+#include "blusys/hal/ulp.h"
+#include "blusys/hal/usb_device.h"
+#include "blusys/hal/usb_host.h"
+#include "blusys/hal/version.h"
+#include "blusys/hal/wdt.h"
+
+/* --- Drivers layer (Phase 3) --- */
+#include "blusys/drivers/button.h"
+#include "blusys/drivers/buzzer.h"
+#include "blusys/drivers/dht.h"
+#include "blusys/drivers/display.h"
+#include "blusys/drivers/encoder.h"
+#include "blusys/drivers/lcd.h"
+#include "blusys/drivers/led_strip.h"
+#include "blusys/drivers/seven_seg.h"
+
+/* --- Services layer (Phase 4) --- */
+/* connectivity */
+#include "blusys/services/connectivity/ble_gatt.h"
+#include "blusys/services/connectivity/bluetooth.h"
+#include "blusys/services/connectivity/espnow.h"
+#include "blusys/services/connectivity/wifi.h"
+#include "blusys/services/connectivity/wifi_mesh.h"
+#include "blusys/services/connectivity/wifi_prov.h"
+#include "blusys/services/connectivity/usb_hid.h"
+/* protocol */
+#include "blusys/services/protocol/http_client.h"
+#include "blusys/services/protocol/http_server.h"
+#include "blusys/services/protocol/local_ctrl.h"
+#include "blusys/services/protocol/mdns.h"
+#include "blusys/services/protocol/mqtt.h"
+#include "blusys/services/protocol/sntp.h"
+#include "blusys/services/protocol/ws_client.h"
+/* storage */
+#include "blusys/services/storage/fatfs.h"
+#include "blusys/services/storage/fs.h"
+/* system */
+#include "blusys/services/system/console.h"
+#include "blusys/services/system/ota.h"
+#include "blusys/services/system/power_mgmt.h"
+
+#endif /* BLUSYS_BLUSYS_H */

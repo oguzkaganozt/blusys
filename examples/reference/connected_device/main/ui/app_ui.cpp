@@ -2,9 +2,9 @@
 
 #include "core/app_logic.hpp"
 
-#include "blusys/app/view/action_widgets.hpp"
-#include "blusys/app/view/page.hpp"
-#include "blusys/framework/ui/widgets/slider/slider.hpp"
+#include "blusys/framework/ui/binding/action_widgets.hpp"
+#include "blusys/framework/ui/composition/page.hpp"
+#include "blusys/framework/ui/widgets/slider.hpp"
 #include "blusys/log.h"
 
 namespace connected_device::ui {

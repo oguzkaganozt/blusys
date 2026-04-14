@@ -6,7 +6,7 @@
 #include "sdkconfig.h"
 
 #include "blusys/blusys.h"
-#include "blusys/input/usb_hid.h"
+#include "blusys/services/connectivity/usb_hid.h"
 
 #ifdef CONFIG_BLUSYS_USB_HID_BASIC_TRANSPORT_BLE
 #define HID_TRANSPORT BLUSYS_USB_HID_TRANSPORT_BLE

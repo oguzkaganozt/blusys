@@ -9,7 +9,7 @@ Run proportionate checks for the scope of your change:
 | Change touches… | Run |
 |-----------------|-----|
 | Anything under `components/` | `./blusys lint` (layering + framework UI sources + host-bridge spine) |
-| `cmake/blusys_framework_ui_sources.cmake`, widget paths | `python3 scripts/check-framework-ui-sources.py` |
+| Widget paths, UI sources | `python3 scripts/check-framework-ui-sources.py` |
 | `inventory.yml`, new modules/examples/docs | `python3 scripts/check-inventory.py` |
 | Product-shaped `main/` layouts | `python3 scripts/check-product-layout.py` |
 | Example paths | `python3 scripts/example-health.py` |
@@ -50,7 +50,7 @@ Workflow: `.github/workflows/ci.yml`. Triggered by push/PR to `main` on watched 
 
 | Stage | What it runs |
 |-------|--------------|
-| Lint | `scripts/lint-layering.sh` + `scripts/check-framework-ui-sources.py` |
+| Lint | `scripts/lint-layering.sh` + layer-invariant scripts + `scripts/check-framework-ui-sources.py` |
 | Inventory | `scripts/check-inventory.py` + `scripts/check-product-layout.py` |
 | Host smoke | Configure/build `scripts/host`, run smokes, `ctest`, sanitizer build/run; build `headless_telemetry` + `surface_gateway` + `handheld_bluetooth` (+ `mqtt_dashboard`) host examples; `scaffold-smoke.sh` |
 | Docs | `mkdocs build --strict` |
@@ -77,13 +77,13 @@ PR coverage runs only examples flagged `ci_pr: true` in `inventory.yml`. Nightly
 
 ## Release
 
-Single tag covers all three components. Before tagging:
+Single tag covers the merged `components/blusys/` component. Before tagging:
 
 - `./blusys lint` clean
 - `python3 scripts/check-inventory.py` clean
 - `mkdocs build --strict` clean
 - Representative `blusys build` across `esp32`, `esp32c3`, `esp32s3`
-- `BLUSYS_VERSION_STRING` in `components/blusys_hal/include/blusys/version.h` matches the tag
+- `BLUSYS_VERSION_STRING` in `components/blusys/include/blusys/hal/version.h` matches the tag
 - `blusys version` prints the new string
 
 ## See also

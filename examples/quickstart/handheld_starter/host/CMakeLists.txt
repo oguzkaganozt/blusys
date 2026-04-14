@@ -22,7 +22,7 @@ add_executable(handheld_starter_host
     "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../main/ui/panels.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../main/ui/app_ui.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../main/integration/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/platform/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_host_platform.cpp"
 )
 target_include_directories(handheld_starter_host PRIVATE

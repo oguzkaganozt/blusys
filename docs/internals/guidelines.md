@@ -14,8 +14,8 @@ Start by reading the [Architecture](architecture.md) page.
 
 ### Language Policy
 
-- `components/blusys_hal/` and `components/blusys_services/` expose C headers with `extern "C"` guards
-- `components/blusys_framework/` is the only C++ tier in V1; it exposes C++ headers
+- `components/blusys/` HAL, drivers, and services layers expose C headers with `extern "C"` guards
+- `components/blusys/` framework layer is the only C++ tier; it exposes C++ headers in `include/blusys/framework/`
 - framework C++ uses `-std=c++20 -fno-exceptions -fno-rtti -fno-threadsafe-statics`
 - framework C++ should stay platform-facing and disciplined, not become a second copy of ESP-IDF internals
 - services migration to C++ is out of scope; the services tier stays C
@@ -76,8 +76,8 @@ Breaking changes to `app_spec`, `app_ctx`, `app_services`, and umbrella `blusys/
 
 ### Product application layout (enforced in CI)
 
-- **Canonical `main/` shape:** `core/` (state, actions, `update()`), `ui/` (screens, LVGL, sync — may be empty for headless with a README), `integration/` (`app_spec`, capabilities, `map_event`, entry macro in `integration/app_main.cpp`).
-- **Validation examples** (`examples/validation/`) and other non-`blusys::app` demos are exempt; see `scripts/check-product-layout.py`.
+- **Canonical `main/` shape:** `core/` (state, actions, `update()`), `ui/` (screens, LVGL, sync — may be empty for headless with a README), `platform/` (`app_spec`, capabilities, `map_event`, entry macro in `platform/app_main.cpp`).
+- **Validation examples** (`examples/validation/`) and other non-framework demos are exempt; see `scripts/check-product-layout.py`.
 - Optional inventory flags: `layout_exempt`, `product_layout` (see `inventory.yml` header).
 
 For how the **framework** composes LVGL flex, scroll, and the interaction shell (primitives, shell `content_area`, stock widget sizing), see [Architecture — UI layout](architecture.md#ui-layout-lvgl-flex).
@@ -87,10 +87,10 @@ For how the **framework** composes LVGL flex, scroll, and the interaction shell 
 - **Reducer center:** domain rules live in `update(ctx, state, action)`; keep navigation and capability sync as explicit actions.
 - **Strong ids:** use `enum class` for routes and overlays in product code; `ctx.services().navigate_to` / `show_overlay` accept those enums.
 - **State from factories:** use `ctx.product_state<YourState>()` in screen factories instead of file-scope pointers to `app_state`.
-- **View sync:** prefer `blusys::app::view::` bindings and small composites (for example `sync_percent_output`, `sync_line_chart_series`) over calling `blusys::ui::*` setters directly from product code.
+- **View sync:** prefer `blusys::` bindings and small composites (for example `sync_percent_output`, `sync_line_chart_series`) over calling `blusys::ui::*` setters directly from product code.
 - **Route handles:** group `lv_obj_t*` handles in per-route structs with `clear()` on hide; the screen registry still owns teardown of the widget tree.
 - **Settings:** give interactive `setting_item` rows a non-zero `id` when using `settings_screen_config::on_changed`; the callback receives that stable id (or the row index when `id` is 0).
-- **Integration:** include `blusys/app/integration.hpp` when you need typed capability event IDs (`integration_dispatch.hpp`) or `dispatch_variant`; use `blusys/app/build_profile.hpp` (or `reference_build_profile.hpp`) to avoid duplicated `#ifdef` matrices in `integration/app_main.cpp`.
+- **Platform wiring:** include `blusys/framework/app/` headers when you need typed capability event IDs or `dispatch_variant`; use `blusys/framework/app/build_profile.hpp` (or `reference_build_profile.hpp`) to avoid duplicated `#ifdef` matrices in `platform/app_main.cpp`.
 
 ## Development Workflow
 
@@ -188,15 +188,13 @@ Advanced or validation-only surfaces may require a different mix of examples, do
 
 ## Maintaining
 
-The three components and their `REQUIRES` names:
+The single merged component and its `REQUIRES` name:
 
 | Directory | Component | Role |
 |-----------|-----------|------|
-| `components/blusys_hal/` | `blusys_hal` | HAL + drivers (C); public headers under `include/blusys/` |
-| `components/blusys_services/` | `blusys_services` | Runtime services (C) |
-| `components/blusys_framework/` | `blusys_framework` | Product framework (C++) |
+| `components/blusys/` | `blusys` | All four layers (hal/drivers/services/framework); public headers under `include/blusys/` |
 
-Dependency direction: `blusys_framework` → `blusys_services` → `blusys_hal` → ESP-IDF. The `blusys/` include namespace is shared across tiers; only the on-disk component folder for HAL is `blusys_hal`.
+Dependency direction within the component: framework → services → drivers → hal → ESP-IDF. The `blusys/` include namespace is shared across all layers.
 
 ### Suggested reading order
 
@@ -219,12 +217,12 @@ For broader changes, also run `python3 scripts/check-product-layout.py` and `scr
 
 ## Integration baseline (metrics)
 
-Record before/after snapshots when shrinking `main/integration/` or adding framework-owned flows.
+Record before/after snapshots when shrinking `main/platform/` or adding framework-owned flows.
 
 ```bash
 python3 scripts/measure_integration_baseline.py
 ```
 
-The script prints lines of code in `main/integration/` and counts `map_event` / `map_intent` function bodies (heuristic) for reference examples.
+The script prints lines of code in `main/platform/` and counts `map_event` / `map_intent` function bodies (heuristic) for reference examples.
 
 The default action queue capacity is `app_runtime<State, Action, 16>` unless a project overrides the third template argument. See [App runtime model](../app/app-runtime-model.md) for overflow behavior and `action_queue_drop_count()`.

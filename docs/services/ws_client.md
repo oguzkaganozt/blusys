@@ -16,7 +16,7 @@ Requires WiFi to be connected before calling `blusys_ws_client_connect()`.
 ## Quick Example
 
 ```c
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 static void on_message(blusys_ws_msg_type_t type, const uint8_t *data,
                        size_t len, void *ctx)

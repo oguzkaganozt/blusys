@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "sdkconfig.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {

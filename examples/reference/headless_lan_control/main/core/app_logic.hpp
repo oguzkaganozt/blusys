@@ -1,7 +1,7 @@
 #pragma once
 
-#include "blusys/app/app.hpp"
-#include "blusys/app/capability_event.hpp"
+#include "blusys/framework/app/app.hpp"
+#include "blusys/framework/capabilities/event.hpp"
 
 #include <cstdint>
 

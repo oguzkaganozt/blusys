@@ -1,7 +1,7 @@
 // action_queue_drop_smoke — verifies app_ctx::action_queue_drop_count() tracks full queue.
 // Build: blusys_framework_host + app_headless_platform (SDL timer only).
 
-#include "blusys/app/detail/app_runtime.hpp"
+#include "blusys/framework/app/internal/app_runtime.hpp"
 #include "blusys/error.h"
 
 #include <cstdlib>

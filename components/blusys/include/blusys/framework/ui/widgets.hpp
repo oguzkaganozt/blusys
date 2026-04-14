@@ -1,0 +1,25 @@
+#pragma once
+
+// Umbrella include for the stock widget kit (primitives + interactive + display widgets).
+
+#include "blusys/framework/callbacks.hpp"
+#include "blusys/framework/ui/input/encoder.hpp"
+#include "blusys/framework/ui/primitives.hpp"
+#include "blusys/framework/ui/style/theme.hpp"
+#include "blusys/framework/ui/widgets/button.hpp"
+#include "blusys/framework/ui/widgets/card.hpp"
+#include "blusys/framework/ui/widgets/chart.hpp"
+#include "blusys/framework/ui/widgets/data_table.hpp"
+#include "blusys/framework/ui/widgets/dropdown.hpp"
+#include "blusys/framework/ui/widgets/gauge.hpp"
+#include "blusys/framework/ui/widgets/input_field.hpp"
+#include "blusys/framework/ui/widgets/knob.hpp"
+#include "blusys/framework/ui/widgets/level_bar.hpp"
+#include "blusys/framework/ui/widgets/list.hpp"
+#include "blusys/framework/ui/widgets/modal.hpp"
+#include "blusys/framework/ui/widgets/overlay.hpp"
+#include "blusys/framework/ui/widgets/progress.hpp"
+#include "blusys/framework/ui/widgets/slider.hpp"
+#include "blusys/framework/ui/widgets/tabs.hpp"
+#include "blusys/framework/ui/widgets/toggle.hpp"
+#include "blusys/framework/ui/widgets/vu_strip.hpp"

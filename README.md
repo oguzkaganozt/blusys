@@ -12,7 +12,7 @@ Blusys is not a generic “better ESP-IDF.” It is a shared **operating model**
 
 These are the grounding constraints for the platform.
 
-**Mission.** Blusys is the **internal OS** for recurring product shapes — not a generic ESP32 framework. Optimize for what we ship: shared lifecycle, interaction grammar, and runtime orchestration. HAL, `blusys_services`, `blusys/output/display`, and low-level primitives stay available as **escape hatches**, not the default product path.
+**Mission.** Blusys is the **internal OS** for recurring product shapes — not a generic ESP32 framework. Optimize for what we ship: shared lifecycle, interaction grammar, and runtime orchestration. HAL, services, `blusys/drivers/display`, and low-level primitives stay available as **escape hatches**, not the default product path.
 
 **B2C / B2B north stars.** The platform supports both consumer (B2C) and industrial / business (B2B) products on **one** shared model. For B2C, aim for interaction and character reminiscent of **[Teenage Engineering](https://teenage.engineering/)** — distinctive, tactile, concise, memorable. For B2B, aim for operational clarity reminiscent of **[Samsara](https://www.samsara.com/)** — readable, dependable, fluent, connected. These are design and outcome targets, not separate framework runtimes.
 
@@ -56,7 +56,7 @@ ESP-IDF **v5.5+** is required; the CLI discovers it. For the full walkthrough �
 
 ## Architecture
 
-Three ESP-IDF components, strict one-way dependencies:
+One ESP-IDF component (`components/blusys/`), four one-way layers:
 
 ```
                     ┌─────────────────────────────────────┐
@@ -64,31 +64,37 @@ Three ESP-IDF components, strict one-way dependencies:
                     └──────────────────┬──────────────────┘
                                        │
          ┌─────────────────────────────▼────────────────────────────┐
-         │  Framework    components/blusys_framework/   (C++)       │
-         │               blusys::app, routing, widgets, capabilities  │
+         │  Framework    components/blusys/src/framework/  (C++)    │
+         │               blusys::, routing, widgets, capabilities   │
          └─────────────────────────────┬────────────────────────────┘
                                        │
          ┌─────────────────────────────▼────────────────────────────┐
-         │  Services     components/blusys_services/    (C)         │
-         │               Wi-Fi, UI runtime, protocols, system         │
+         │  Services     components/blusys/src/services/   (C)      │
+         │               Wi-Fi, protocols, storage, system          │
          └─────────────────────────────┬────────────────────────────┘
                                        │
          ┌─────────────────────────────▼────────────────────────────┐
-         │  HAL + drivers  components/blusys_hal/           (C)         │
-         │                 peripherals, displays, sensors, …        │
+         │  Drivers      components/blusys/src/drivers/    (C)      │
+         │               sensors, displays, LED strips, …           │
+         └─────────────────────────────┬────────────────────────────┘
+                                       │
+         ┌─────────────────────────────▼────────────────────────────┐
+         │  HAL          components/blusys/src/hal/         (C)     │
+         │               peripherals, buses, clocks, …              │
          └─────────────────────────────┬────────────────────────────┘
                                        │
                                        ▼
                                   ESP-IDF → hardware
 ```
 
-**Rule:** `blusys_framework` → `blusys_services` → `blusys_hal`. No reverse edges; layering is checked with `blusys lint`.
+**Rule:** `framework` → `services` → `drivers` → `hal`. No reverse edges; layering is checked with `blusys lint`.
 
 | Layer | Role | Doc entry |
 |-------|------|-----------|
 | **Framework** | Product API, views, capabilities, host/device profiles | [App](docs/app/index.md) |
-| **Services** | Runtime modules (connectivity, storage, UI service, …) | [Services](docs/services/index.md) |
-| **HAL + drivers** | Registers, buses, and higher-level driver helpers | [HAL](docs/hal/index.md) |
+| **Services** | Runtime modules (connectivity, storage, system) | [Services](docs/services/index.md) |
+| **Drivers** | Sensors, displays, and higher-level driver helpers | [HAL](docs/hal/index.md) |
+| **HAL** | Registers, buses, and peripheral abstractions | [HAL](docs/hal/index.md) |
 
 Module and example indices live in **`inventory.yml`** (CI and classification source of truth).
 
@@ -99,25 +105,23 @@ Module and example indices live in **`inventory.yml`** (CI and classification so
 **Product code (recommended):**
 
 ```cpp
-#include "blusys/app/app.hpp"
+#include "blusys/framework/app/app.hpp"
 ```
 
 **HAL and services (direct):**
 
 ```c
-#include "blusys/blusys.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"   // umbrella: hal + drivers + services
 ```
 
 **CMake `REQUIRES`:**
 
 ```cmake
-idf_component_register(SRCS "main.c"   REQUIRES blusys_hal)
-idf_component_register(SRCS "main.c"   REQUIRES blusys_services)
-idf_component_register(SRCS "main.cpp" REQUIRES blusys_framework)
+idf_component_register(SRCS "main.c"   REQUIRES blusys)
+idf_component_register(SRCS "main.cpp" REQUIRES blusys)
 ```
 
-Widget authoring: **[widget-author-guide.md](components/blusys_framework/widget-author-guide.md)**.
+Widget authoring: **[widget-author-guide.md](components/blusys/widget-author-guide.md)**.
 
 ---
 
@@ -160,7 +164,7 @@ mkdocs serve
 
 ## Project status
 
-Current **package version** is **6.1.1** (`BLUSYS_VERSION_STRING` in [`components/blusys_hal/include/blusys/version.h`](components/blusys_hal/include/blusys/version.h); also `blusys version`).
+Current **package version** is **7.0.0** (`BLUSYS_VERSION_STRING` in [`components/blusys/include/blusys/hal/version.h`](components/blusys/include/blusys/hal/version.h); also `blusys version`).
 
 ---
 

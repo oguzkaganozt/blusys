@@ -9,7 +9,7 @@ The Blusys app model follows a reducer pattern: all state changes flow through a
 Defines the complete application:
 
 ```cpp
-static const blusys::app::app_spec<State, Action> spec{
+static const blusys::app_spec<State, Action> spec{
     .initial_state = {},      // initial value of State
     .update        = update,  // required: reducer function
     .on_init       = on_init, // optional: void(app_ctx&, app_services&, State&) — UI setup for interactive apps
@@ -59,20 +59,20 @@ ctx.services().navigate_push(RouteId::detail);   // push route
 ctx.services().navigate_back();                  // pop route
 ctx.services().show_overlay(OverlayId::confirm); // show overlay
 ctx.emit_feedback(                        // haptic / audio feedback
-    blusys::framework::feedback_channel::haptic,
-    blusys::framework::feedback_pattern::click);
+    blusys::feedback_channel::haptic,
+    blusys::feedback_pattern::click);
 ```
 
 ## The Update Function
 
 ```cpp
-void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
+void update(blusys::app_ctx &ctx, State &state, const Action &action)
 {
     switch (action) {
     case Action::increment:
         ++state.counter;
-        ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
-                          blusys::framework::feedback_pattern::click);
+        ctx.emit_feedback(blusys::feedback_channel::haptic,
+                          blusys::feedback_pattern::click);
         break;
     case Action::decrement:
         --state.counter;
@@ -98,17 +98,17 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
 For interactive apps, `map_intent` bridges framework intents (from encoder or keyboard) to product actions:
 
 ```cpp
-bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out)
+bool map_intent(blusys::app_services &svc, blusys::intent intent, Action *out)
 {
     (void)svc; // use when navigation or UI from intents is needed
     switch (intent) {
-    case blusys::framework::intent::increment:
+    case blusys::intent::increment:
         *out = Action::increment;
         return true;
-    case blusys::framework::intent::decrement:
+    case blusys::intent::decrement:
         *out = Action::decrement;
         return true;
-    case blusys::framework::intent::confirm:
+    case blusys::intent::confirm:
         *out = Action::reset;
         return true;
     default:
@@ -122,7 +122,7 @@ bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent
 For headless apps that need periodic work, `on_tick` runs at `tick_period_ms` intervals:
 
 ```cpp
-void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
 {
     (void)svc;
     ctx.dispatch(Action::temp_reading);
@@ -136,7 +136,7 @@ void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State & 
 BLUSYS_APP_MAIN_HOST(spec)
 
 // Host with explicit window size and title
-BLUSYS_APP_MAIN_HOST_PROFILE(spec, blusys::app::host_profile{
+BLUSYS_APP_MAIN_HOST_PROFILE(spec, blusys::host_profile{
     .hor_res = 320, .ver_res = 240, .title = "My App"
 })
 

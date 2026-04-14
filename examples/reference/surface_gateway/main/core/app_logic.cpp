@@ -1,8 +1,8 @@
 #include "core/app_logic.hpp"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-#include "blusys/app/view/bindings.hpp"
-#include "blusys/app/view/composites.hpp"
+#include "blusys/framework/ui/binding/bindings.hpp"
+#include "blusys/framework/ui/binding/composites.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #endif
 

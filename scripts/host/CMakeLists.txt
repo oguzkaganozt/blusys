@@ -51,7 +51,7 @@ blusys_host_bridge_setup_lvgl()
 message(STATUS "Found SDL2 ${SDL2_VERSION} via pkg-config")
 blusys_host_bridge_add_library(interactive)
 
-# BLUSYS_COMPONENT_DIR and BLUSYS_FRAMEWORK_DIR are set by the bridge include above;
+# BLUSYS_COMPONENT_DIR (merged component) is set by the bridge include above;
 # referenced by the per-target stanzas below.
 
 # ── hello_lvgl smoke test ───────────────────────────────────────────────────
@@ -131,8 +131,6 @@ target_compile_definitions(connected_headless_host PRIVATE SDL_MAIN_HANDLED)
 add_executable(capability_contract_smoke src/capability_contract_smoke.cpp)
 target_include_directories(capability_contract_smoke PRIVATE
     ${BLUSYS_COMPONENT_DIR}/include
-    ${BLUSYS_FRAMEWORK_DIR}/include
-    ${BLUSYS_SERVICES_DIR}/include
     ${CMAKE_CURRENT_LIST_DIR}/include_host
 )
 blusys_host_bridge_apply_exe_compile_options(capability_contract_smoke)
@@ -159,7 +157,6 @@ add_executable(panel_connectivity_map_smoke src/panel_connectivity_map_smoke.cpp
 target_include_directories(panel_connectivity_map_smoke PRIVATE
     ${BLUSYS_REPO_ROOT}/examples/include
     ${BLUSYS_COMPONENT_DIR}/include
-    ${BLUSYS_FRAMEWORK_DIR}/include
     ${CMAKE_CURRENT_LIST_DIR}/include_host
 )
 blusys_host_bridge_apply_exe_compile_options(panel_connectivity_map_smoke)
@@ -177,7 +174,7 @@ blusys_host_bridge_apply_exe_compile_options(pomodoro_host)
 
 # ── host_spine_test (ring_buffer / containers — no LVGL) ─────────────────────
 add_executable(host_spine_test src/host_spine_test.cpp)
-target_include_directories(host_spine_test PRIVATE ${BLUSYS_FRAMEWORK_DIR}/include)
+target_include_directories(host_spine_test PRIVATE ${BLUSYS_COMPONENT_DIR}/include)
 target_compile_options(host_spine_test PRIVATE -Wall -Wextra)
 add_test(NAME host_spine_test COMMAND host_spine_test)
 

@@ -2,10 +2,10 @@
 
 #include "blusys_examples/clamp_percent.hpp"
 
-#include "blusys/app/view/bindings.hpp"
-#include "blusys/app/view/composites.hpp"
+#include "blusys/framework/ui/binding/bindings.hpp"
+#include "blusys/framework/ui/binding/composites.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
-#include "blusys/framework/ui/widgets/chart/chart.hpp"
+#include "blusys/framework/ui/widgets/chart.hpp"
 
 #include <cstdio>
 

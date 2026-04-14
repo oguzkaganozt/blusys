@@ -3,9 +3,9 @@ idf_component_register(
         "core/app_logic.cpp"
         "ui/panels.cpp"
         "ui/app_ui.cpp"
-        "integration/app_main.cpp"
+        "platform/app_main.cpp"
     INCLUDE_DIRS
         "."
         "../../../include"
-    REQUIRES blusys_framework
+    REQUIRES blusys
 )

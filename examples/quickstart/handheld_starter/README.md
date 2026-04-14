@@ -39,7 +39,7 @@ When forking into a new product:
 
 1. `core/app_logic.{hpp,cpp}` — replace the state/action model and `update()` body; keep the reducer pattern.
 2. `ui/app_ui.{hpp,cpp}` and `ui/panels.{hpp,cpp}` — rename/restyle screens; keep routing through `screen_router` and dispatch via actions.
-3. `integration/app_main.cpp` — swap profile, adjust the `capability_list`, and update `map_event` for any new capability events.
+3. `platform/app_main.cpp` — swap profile, adjust the `capability_list`, and update `map_event` for any new capability events.
 
 When adding a new capability, see [Authoring a capability](../../../docs/app/capability-authoring.md).
 

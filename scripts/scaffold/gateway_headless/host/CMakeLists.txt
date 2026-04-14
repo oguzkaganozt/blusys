@@ -22,7 +22,7 @@ blusys_host_bridge_add_library(headless)
 
 add_executable(BLUSYS_PRODUCT_HOST
     "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../main/integration/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/platform/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_headless_platform.cpp"
 )
 target_include_directories(BLUSYS_PRODUCT_HOST PRIVATE

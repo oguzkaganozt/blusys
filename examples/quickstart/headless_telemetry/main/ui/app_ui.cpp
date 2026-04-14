@@ -5,9 +5,9 @@
 
 #include "ui/app_ui.hpp"
 
-#include "blusys/app/view/action_widgets.hpp"
-#include "blusys/app/view/bindings.hpp"
-#include "blusys/app/view/page.hpp"
+#include "blusys/framework/ui/binding/action_widgets.hpp"
+#include "blusys/framework/ui/binding/bindings.hpp"
+#include "blusys/framework/ui/composition/page.hpp"
 #include "blusys/log.h"
 
 #include "lvgl.h"

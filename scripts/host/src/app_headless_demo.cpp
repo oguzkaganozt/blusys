@@ -9,7 +9,7 @@
 // This file contains ZERO framework plumbing. The BLUSYS_APP_MAIN_HEADLESS
 // macro handles everything.
 
-#include "blusys/app/app.hpp"
+#include "blusys/framework/app/app.hpp"
 #include "blusys/log.h"
 
 #include <cstdint>

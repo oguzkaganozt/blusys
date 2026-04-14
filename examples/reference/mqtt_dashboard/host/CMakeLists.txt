@@ -29,7 +29,7 @@ set(BLUSYS_MQTT_DASH_BROKER "mqtt://test.mosquitto.org" CACHE STRING "MQTT broke
 add_executable(mqtt_dashboard_host
     "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../main/ui/app_ui.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../main/integration/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/platform/app_main.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_host_platform.cpp"
 )
 target_include_directories(mqtt_dashboard_host PRIVATE

@@ -1,10 +1,10 @@
 // Host-only compile check: presets diverge on density/spacing and visual
 // feedback timing resolves against theme tokens.
 
-#include "blusys/app/theme_presets.hpp"
-#include "blusys/framework/core/feedback_presets.hpp"
-#include "blusys/framework/ui/theme.hpp"
-#include "blusys/framework/ui/visual_feedback.hpp"
+#include "blusys/framework/ui/style/presets.hpp"
+#include "blusys/framework/feedback/presets.hpp"
+#include "blusys/framework/ui/style/theme.hpp"
+#include "blusys/framework/ui/style/interaction_effects.hpp"
 
 #include <cstdlib>
 

@@ -19,7 +19,7 @@
 # Repo root: set `BLUSYS_PATH` before include, **or** export `BLUSYS_PATH` in the
 # environment and use `include("$ENV{BLUSYS_PATH}/cmake/blusys_host_bridge.cmake")`.
 #
-# Compile policy mirrors components/blusys_framework/CMakeLists.txt:
+# Compile policy mirrors components/blusys/CMakeLists.txt:
 # -fno-exceptions, -fno-rtti, -fno-threadsafe-statics (C++ only),
 # -Wall, -Wextra.
 
@@ -34,9 +34,8 @@ if(NOT BLUSYS_PATH)
         "(e.g. run via 'blusys host-build').")
 endif()
 
-set(BLUSYS_COMPONENT_DIR  "${BLUSYS_PATH}/components/blusys_hal")
-set(BLUSYS_FRAMEWORK_DIR  "${BLUSYS_PATH}/components/blusys_framework")
-set(BLUSYS_SERVICES_DIR   "${BLUSYS_PATH}/components/blusys_services")
+# Single merged component directory (v0 architecture).
+set(BLUSYS_COMPONENT_DIR "${BLUSYS_PATH}/components/blusys")
 
 # ── LVGL + SDL2 setup (interactive mode only) ───────────────────────────────
 function(blusys_host_bridge_setup_lvgl)
@@ -71,24 +70,93 @@ endfunction()
 
 # ── Common framework sources (mode-independent) ─────────────────────────────
 set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
-    ${BLUSYS_COMPONENT_DIR}/src/error.c
-    ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/core/feedback_presets.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/feedback_logging_sink.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/core/framework.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/core/router.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/core/runtime.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/app_ctx.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/app_services.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capability_event_map.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/connectivity_host.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/storage_host.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/bluetooth_host.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/ota_host.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/diagnostics_host.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/lan_control_host.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/usb_host.cpp
-    ${BLUSYS_FRAMEWORK_DIR}/src/app/capabilities/telemetry.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/hal/error.c
+    ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/feedback.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/presets.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/internal/logging_sink.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/engine/framework_init.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/engine/router.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/engine/event_queue.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/app/ctx.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/app/services.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/capability_event_map.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/connectivity_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/storage_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/bluetooth_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/ota_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/diagnostics_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/lan_control_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/provisioning_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/usb_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/telemetry.cpp
+)
+
+# ── Interactive-mode sources (LVGL UI surface) ───────────────────────────────
+# Flows are included here — they depend on LVGL types only in device builds;
+# the host stubs in scripts/host/include_host provide the missing shims.
+set(_BLUSYS_HOST_BRIDGE_INTERACTIVE_SOURCES
+    # flows
+    ${BLUSYS_COMPONENT_DIR}/src/framework/flows/boot.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/flows/loading.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/flows/error.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/flows/status.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/flows/settings.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/flows/ota_flow.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/flows/provisioning_flow.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/flows/connectivity_flow.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/flows/diagnostics_flow.cpp
+    # platform bridges (touch + input compile on host; button_array + device platform do not)
+    ${BLUSYS_COMPONENT_DIR}/src/framework/platform/touch_bridge.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/platform/input_bridge.cpp
+    # UI — style
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/style/theme.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/style/presets.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/style/transition.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/style/interaction_effects.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/style/icon_set_minimal.cpp
+    # UI — input
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/input/encoder.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/input/focus_scope.cpp
+    # UI — composition
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/composition/overlay_manager.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/composition/page.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/composition/screen_registry.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/composition/screen_router.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/composition/shell.cpp
+    # UI — binding
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/binding/bindings.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/binding/action_widgets.cpp
+    # UI — primitives
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/primitives/col.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/primitives/divider.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/primitives/icon_label.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/primitives/key_value.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/primitives/label.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/primitives/row.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/primitives/screen.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/primitives/status_badge.cpp
+    # UI — widgets (flat)
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/button.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/card.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/chart.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/data_table.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/dropdown.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/gauge.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/input_field.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/knob.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/level_bar.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/list.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/modal.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/overlay.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/progress.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/slider.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/tabs.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/toggle.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/widgets/vu_strip.cpp
+    # UI — screens
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/screens/about.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/screens/diagnostics.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/screens/status.cpp
 )
 
 function(blusys_host_bridge_add_library MODE)
@@ -112,18 +180,13 @@ function(blusys_host_bridge_add_library MODE)
     set(_sources ${_BLUSYS_HOST_BRIDGE_COMMON_SOURCES})
 
     if(MODE STREQUAL "interactive")
-        include("${BLUSYS_PATH}/cmake/blusys_framework_ui_sources.cmake")
-        foreach(_rel IN LISTS BLUSYS_FRAMEWORK_UI_SRC_SHARED)
-            list(APPEND _sources "${BLUSYS_FRAMEWORK_DIR}/${_rel}")
-        endforeach()
+        list(APPEND _sources ${_BLUSYS_HOST_BRIDGE_INTERACTIVE_SOURCES})
     endif()
 
     add_library(${lib_name} STATIC ${_sources})
 
     target_include_directories(${lib_name} PUBLIC
         ${BLUSYS_COMPONENT_DIR}/include
-        ${BLUSYS_FRAMEWORK_DIR}/include
-        ${BLUSYS_SERVICES_DIR}/include
         ${BLUSYS_PATH}/scripts/host/include_host
     )
 

@@ -7,10 +7,10 @@ Capabilities provide higher-level product flows so apps stop assembling low-leve
 Every capability:
 
 1. Is configured with a plain data-only config struct (no hidden side effects in construction).
-2. Is composed in `integration/` and registered on `app_spec.capabilities` — not constructed ad hoc from `core/` or `ui/`.
+2. Is composed in `platform/` and registered on `app_spec.capabilities` — not constructed ad hoc from `core/` or `ui/`.
 3. Owns lifecycle and runtime-service integration on the framework side; product code requests work through reducer-driven actions.
 4. Exposes **status** through the app-facing query path (`app_ctx` accessors) using consistent field naming (`capability_ready` signals that the capability’s default stack is up).
-5. Raises **events** with stable enum codes; `integration/` maps those events to product `action`s via `map_event`, and `core/` reacts in `update`.
+5. Raises **events** with stable enum codes; `platform/` maps those events to product `action`s via `map_event`, and `core/` reacts in `update`.
 6. May expose advanced escape hatches, but the recommended path stays event- and reducer-driven.
 
 Apps bridge capability events to product actions via `map_event`:
@@ -19,8 +19,8 @@ Apps bridge capability events to product actions via `map_event`:
 bool map_event(std::uint32_t source_id, std::uint32_t code,
                const void *payload, Action *out)
 {
-    using E = blusys::app::connectivity_event;
-    if (source_id == blusys::app::connectivity_capability::kSourceId) {
+    using E = blusys::connectivity_event;
+    if (source_id == blusys::connectivity_capability::kSourceId) {
         switch (static_cast<E>(code)) {
         case E::got_ip:       *out = Action::wifi_connected;    return true;
         case E::disconnected: *out = Action::wifi_disconnected; return true;
@@ -38,7 +38,7 @@ Manages WiFi connection and reconnect lifecycle, SNTP, and mDNS.
 ### Config
 
 ```cpp
-blusys::app::connectivity_config conn_cfg{
+blusys::connectivity_config conn_cfg{
     .wifi_ssid      = "MyNetwork",
     .wifi_password  = "password",
     .sntp_server    = "pool.ntp.org",   // optional
@@ -46,16 +46,16 @@ blusys::app::connectivity_config conn_cfg{
 };
 ```
 
-### Wiring (in `integration/app_main.cpp`)
+### Wiring (in `main/platform/app_main.cpp`)
 
 ```cpp
-#include "blusys/app/capabilities/connectivity.hpp"
-#include "blusys/app/capability_list.hpp"
+#include "blusys/framework/capabilities/connectivity.hpp"
+#include "blusys/framework/capabilities/capability_list.hpp"
 
-static blusys::app::connectivity_capability conn{conn_cfg};
-static blusys::app::capability_list capabilities{&conn};
+static blusys::connectivity_capability conn{conn_cfg};
+static blusys::capability_list capabilities{&conn};
 
-static const blusys::app::app_spec<State, Action> spec{
+static const blusys::app_spec<State, Action> spec{
     .initial_state = {},
     .update        = update,
     .map_event     = map_event,
@@ -88,7 +88,7 @@ Manages SPIFFS and FAT filesystem mounting.
 ### Config
 
 ```cpp
-blusys::app::storage_config stor_cfg{
+blusys::storage_config stor_cfg{
     .spiffs_base_path = "/fs",    // nullptr to skip SPIFFS
     .fatfs_base_path  = "/sd",    // nullptr to skip FAT
 };
@@ -97,10 +97,10 @@ blusys::app::storage_config stor_cfg{
 ### Wiring
 
 ```cpp
-#include "blusys/app/capabilities/storage.hpp"
+#include "blusys/framework/capabilities/storage.hpp"
 
-static blusys::app::storage_capability stor{stor_cfg};
-static blusys::app::capability_list capabilities{&conn, &stor};
+static blusys::storage_capability stor{stor_cfg};
+static blusys::capability_list capabilities{&conn, &stor};
 ```
 
 ### File access (ESP-IDF target only)

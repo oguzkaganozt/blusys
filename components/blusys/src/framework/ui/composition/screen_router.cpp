@@ -1,0 +1,80 @@
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+
+#include "blusys/framework/ui/composition/screen_router.hpp"
+#include "blusys/framework/ui/composition/shell.hpp"
+#include "blusys/framework/app/ctx.hpp"
+#include "blusys/hal/log.h"
+
+static const char *TAG = "screen_router";
+
+namespace blusys {
+
+void screen_router::submit(const blusys::route_command &command)
+{
+    using T = blusys::route_command_type;
+
+    if (command.type == T::show_overlay || command.type == T::hide_overlay) {
+        overlays_.submit(command);
+        return;
+    }
+
+    if (ctx_ == nullptr) {
+        BLUSYS_LOGW(TAG, "route command received before ctx was bound, ignored");
+        return;
+    }
+
+    if (!screens_.navigate(command, *ctx_)) {
+        BLUSYS_LOGW(TAG, "navigation failed for route op=%s id=%lu",
+                    blusys::route_command_type_name(command.type),
+                    static_cast<unsigned long>(command.id));
+    }
+}
+
+void screen_router::sync_shell_chrome(shell &s)
+{
+    shell_sync_tabs_for_nav_stack(s, screens_);
+}
+
+bool screen_router::register_screen(std::uint32_t    route_id,
+                                     screen_create_fn  create_fn,
+                                     screen_destroy_fn destroy_fn)
+{
+    return screens_.register_screen(route_id, create_fn, destroy_fn);
+}
+
+bool screen_router::register_screen(std::uint32_t         route_id,
+                                     screen_create_fn       create_fn,
+                                     screen_destroy_fn      destroy_fn,
+                                     const screen_lifecycle &lifecycle)
+{
+    return screens_.register_screen(route_id, create_fn, destroy_fn, lifecycle);
+}
+
+bool screen_router::register_screens(app_ctx *ctx, const screen_registration *rows, std::size_t count)
+{
+    if (rows == nullptr || count == 0) {
+        return true;
+    }
+    bool ok = true;
+    for (std::size_t i = 0; i < count; ++i) {
+        const screen_lifecycle life{
+            .on_show = rows[i].on_show,
+            .on_hide = rows[i].on_hide,
+            .user_data = ctx,
+        };
+        if (!screens_.register_screen(rows[i].route_id, rows[i].create, rows[i].destroy, life)) {
+            ok = false;
+        }
+    }
+    return ok;
+}
+
+void screen_router::set_screen_changed_callback(void (*fn)(lv_obj_t *screen, void *user_ctx),
+                                                 void *user_ctx)
+{
+    screens_.set_screen_changed_callback(fn, user_ctx);
+}
+
+}  // namespace blusys
+
+#endif  // BLUSYS_FRAMEWORK_HAS_UI

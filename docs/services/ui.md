@@ -24,7 +24,7 @@ Only one UI instance may be open at a time. `blusys_display_open()` returns `BLU
 
 ```c
 #include "blusys/blusys.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 #include "lvgl.h"
 
 void app_main(void)

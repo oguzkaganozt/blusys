@@ -41,7 +41,7 @@
 #include "blusys/framework/framework.hpp"
 #include "blusys/framework/ui/input/encoder.hpp"
 #include "blusys/framework/ui/widgets.hpp"
-#include "blusys/app/theme_presets.hpp"
+#include "blusys/framework/ui/style/presets.hpp"
 #include "blusys/log.h"
 
 namespace {

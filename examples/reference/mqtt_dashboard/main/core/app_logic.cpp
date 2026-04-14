@@ -1,6 +1,6 @@
 #include "core/app_logic.hpp"
-#include "blusys/app/capabilities/mqtt_host.hpp"
-#include "blusys/app/view/bindings.hpp"
+#include "blusys/framework/capabilities/mqtt_host.hpp"
+#include "blusys/framework/ui/binding/bindings.hpp"
 #include "blusys/log.h"
 
 #ifdef ESP_PLATFORM
