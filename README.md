@@ -60,21 +60,25 @@ One ESP-IDF component (`components/blusys/`). Pure concept code on the left, esc
 
 ```mermaid
 flowchart TB
-    prod["<b>Your product</b> — main/<br/><sub>core/ · ui/ · platform/</sub>"]
-    fw["<b>Framework</b> — C++, pure<br/><sub>app · capabilities · flows · engine · feedback · ui</sub><br/><sub><i>framework/platform/ is the only seam to hardware</i></sub>"]
-    rt["<b>Runtime</b> — C<br/><sub>services ➜ drivers ➜ hal</sub>"]
-    idf([ESP-IDF · silicon])
+    prod["<b>Your product</b><br/>main/<br/>core · ui · platform"]
+    fw["<b>Framework</b><br/>pure C++<br/>app · capabilities · flows<br/>engine · feedback · ui"]
+    hatch["main/platform/<br/>product escape hatch"]
+    rt["<b>Runtime</b><br/>C<br/>services ➜ drivers ➜ HAL"]
+    idf([ESP-IDF<br/>silicon])
 
     prod ==> fw ==> rt ==> idf
-    prod -. "main/platform/ · escape hatch" .-> rt
+    prod -.-> hatch
+    hatch -.-> rt
 
     classDef a fill:#dbeafe,stroke:#1e3a8a,stroke-width:2px,color:#1e3a8a
     classDef b fill:#e0e7ff,stroke:#3730a3,stroke-width:2px,color:#312e81
     classDef c fill:#d1fae5,stroke:#065f46,stroke-width:2px,color:#064e3b
     classDef d fill:#f3f4f6,stroke:#4b5563,color:#111827
+    classDef note fill:#f3f4f6,stroke:#6b7280,stroke-width:1.5px,color:#111827
 
     class prod a
     class fw b
+    class hatch note
     class rt c
     class idf d
 ```
