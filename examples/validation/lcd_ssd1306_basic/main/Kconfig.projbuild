@@ -8,13 +8,13 @@ config BLUSYS_LCD_SSD1306_I2C_PORT
 config BLUSYS_LCD_SSD1306_SDA_PIN
     int "SDA GPIO pin"
     default 21 if IDF_TARGET_ESP32
-    default 5 if IDF_TARGET_ESP32C3
+    default 8 if IDF_TARGET_ESP32C3
     default 1 if IDF_TARGET_ESP32S3
 
 config BLUSYS_LCD_SSD1306_SCL_PIN
     int "SCL GPIO pin"
     default 22 if IDF_TARGET_ESP32
-    default 6 if IDF_TARGET_ESP32C3
+    default 9 if IDF_TARGET_ESP32C3
     default 2 if IDF_TARGET_ESP32S3
 
 config BLUSYS_LCD_SSD1306_DEV_ADDR
