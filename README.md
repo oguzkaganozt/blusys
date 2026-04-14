@@ -56,38 +56,64 @@ ESP-IDF **v5.5+** is required; the CLI discovers it. For the full walkthrough �
 
 ## Architecture
 
-One ESP-IDF component (`components/blusys/`), four one-way layers:
+One ESP-IDF component (`components/blusys/`). Pure concept code on the left, escape hatches on the right, C runtime at the bottom:
 
-```
-                    ┌─────────────────────────────────────┐
-                    │  Application (your product code)    │
-                    └──────────────────┬──────────────────┘
-                                       │
-         ┌─────────────────────────────▼────────────────────────────┐
-         │  Framework    components/blusys/src/framework/  (C++)    │
-         │               blusys::, routing, widgets, capabilities   │
-         └─────────────────────────────┬────────────────────────────┘
-                                       │
-         ┌─────────────────────────────▼────────────────────────────┐
-         │  Services     components/blusys/src/services/   (C)      │
-         │               Wi-Fi, protocols, storage, system          │
-         └─────────────────────────────┬────────────────────────────┘
-                                       │
-         ┌─────────────────────────────▼────────────────────────────┐
-         │  Drivers      components/blusys/src/drivers/    (C)      │
-         │               sensors, displays, LED strips, …           │
-         └─────────────────────────────┬────────────────────────────┘
-                                       │
-         ┌─────────────────────────────▼────────────────────────────┐
-         │  HAL          components/blusys/src/hal/         (C)     │
-         │               peripherals, buses, clocks, …              │
-         └─────────────────────────────┬────────────────────────────┘
-                                       │
-                                       ▼
-                                  ESP-IDF → hardware
+```mermaid
+flowchart TB
+    subgraph prod["Product · main/"]
+        direction LR
+        core["core/<br/><small>state · actions · reducer</small>"]
+        pui["ui/<br/><small>screens · widgets</small>"]
+        mplat["platform/<br/><small>wiring · profile · capabilities</small>"]
+    end
+
+    subgraph fw["Framework · C++  (pure)"]
+        direction LR
+        pure["app · capabilities · flows<br/>engine · feedback · ui"]
+        fplat["framework/platform/"]
+    end
+
+    subgraph runtime["Platform runtime · C"]
+        direction LR
+        svc["Services<br/><small>wifi · mqtt · storage · ota</small>"]
+        drv["Drivers<br/><small>button · lcd · dht · panels</small>"]
+        hal["HAL<br/><small>gpio · spi · i2c · adc · timer</small>"]
+    end
+
+    idf([ESP-IDF · silicon])
+
+    core   --> pure
+    pui    --> pure
+    mplat  --> pure
+    mplat  -. direct .-> svc
+    mplat  -. direct .-> drv
+    mplat  -. direct .-> hal
+
+    pure   --> fplat
+    fplat  --> svc
+    fplat  --> drv
+    fplat  --> hal
+
+    svc    --> drv
+    svc    --> hal
+    drv    --> hal
+    hal    --> idf
+
+    classDef pure    fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
+    classDef escape  fill:#fef3c7,stroke:#b45309,color:#78350f
+    classDef cc      fill:#d1fae5,stroke:#065f46,color:#064e3b
+    classDef idf     fill:#e5e7eb,stroke:#4b5563,color:#111827
+
+    class core,pui,pure pure
+    class mplat,fplat escape
+    class svc,drv,hal cc
+    class idf idf
 ```
 
-**Rule:** `framework` → `services` → `drivers` → `hal`. No reverse edges; layering is checked with `blusys lint`.
+**Rules** (enforced by `blusys lint`):
+- `hal` depends on nothing above it. `drivers` → `hal`. `services` → `hal` + `drivers`.
+- Pure framework (`app`, `capabilities`, `flows`, `engine`, `feedback`, `ui`) cannot include any lower layer. Only `framework/platform/` may bridge downward.
+- Product `core/` and `ui/` are framework-only (pure). `main/platform/` is the product-level escape hatch and may include any layer directly.
 
 | Layer | Role | Doc entry |
 |-------|------|-----------|
