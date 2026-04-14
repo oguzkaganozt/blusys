@@ -10,24 +10,30 @@ reference for this restructure.
 
 The platform currently ships as three separate ESP-IDF components:
 
-- `components/blusys_hal/` — C HAL + drivers
+- `components/blusys_hal/` — C HAL with drivers mixed in (`drivers/` sub-dir)
 - `components/blusys_services/` — C stateful runtime (Wi-Fi, storage, MQTT, …)
 - `components/blusys_framework/` — C++ app framework
 
-This split was historical. In practice:
+Problems with the current split:
 
 - Products always require all three (transitive deps force it)
-- Services are 95% ESP-IDF wrappers — as device-coupled as HAL
-- The `framework/` internal layout (`app/`, `core/`, `ui/`, `integration/`) does
-  not mirror the product scaffold cleanly
-- Several singleton directories exist (`drivers/actuator/`, `drivers/sensor/`,
-  `widgets/button/button.hpp`, `ui/input/`, `ui/icons/`, …)
-- Panel-specific knowledge (ILI9341 is 240×320) lives in `framework/`,
-  violating the "device-agnostic framework" principle
+- Drivers for external components (buttons, LCDs, DHTs) live inside HAL,
+  blurring the distinction between silicon wrappers and component interfaces
+- Services are 95% ESP-IDF wrappers — as device-coupled as HAL, yet live
+  in their own component
+- The `framework/` internal layout splits a single concept (e.g. feedback)
+  across `app/` and `core/` with no consistent axis
+- Many singleton directories exist (`drivers/actuator/`, `widgets/button/button.hpp`,
+  `ui/input/`, `ui/icons/`, `services/output/`, `services/input/`, …)
+- Panel-specific data (ILI9341 is 240×320) lives in `framework/`, violating
+  the "device-agnostic framework" principle
+- Redundant `blusys_` prefixes everywhere (`blusys_global_lock.h` inside
+  `blusys/internal/`, `blusys_wifi.c` inside `blusys/connectivity/`, …)
 
-**Goal:** a single coherent platform, two clean layers, minimal ceremony,
-architecturally honest, lint-enforced, and structured so it stays
-maintainable as the codebase grows.
+**Goal:** a single coherent platform, four clean layers with one-way
+dependencies, concept-based internal organization, minimal naming noise,
+architecturally honest, lint-enforced, and structured to stay maintainable
+as the codebase grows.
 
 ---
 
@@ -35,81 +41,110 @@ maintainable as the codebase grows.
 
 These are the non-negotiable invariants of the v0 architecture.
 
-### 1. One merged component
+### 1. One merged component, four sibling layers
 
 All platform code lives in a single ESP-IDF component: `components/blusys/`.
-Products depend on it with `REQUIRES blusys`. Internal layering is a
-directory-and-lint concern, not a component-boundary concern.
+Products depend on it with `REQUIRES blusys`. Internally, four sibling
+layers with a strict one-way dependency flow:
 
-### 2. Two build layers
+```
+hal/       → (nothing)
+drivers/   → hal/
+services/  → hal/ + drivers/
+framework/ → (pure; only framework/platform/ may bridge to layers below)
+```
 
-- **`hal/`** — device-coupled C code (everything tied to ESP-IDF APIs)
-- **`framework/`** — device-agnostic C++ app runtime
+- **`hal/`** — silicon peripheral wrappers (C). Thin ESP-IDF wrappers:
+  GPIO, SPI, I2C, timers, ADC, etc.
+- **`drivers/`** — external hardware component interfaces (C). Buttons,
+  LCDs, encoders, DHT sensors, LED strips, panel data. Programs against
+  HAL's C API.
+- **`services/`** — stateful runtime modules (C). Wi-Fi, MQTT, OTA, FATFS,
+  USB HID host, console. Built on ESP-IDF stacks.
+- **`framework/`** — device-agnostic C++ app runtime. The only layer
+  allowed to be product-facing beyond raw HAL.
 
-Services collapse into `hal/services/` because they are fundamentally
-ESP-IDF-coupled. The tiny amount of truly portable logic scattered inside
-them (HID parsing, pixel conversion) is not worth a third layer.
+This is architecturally honest: HAL is thin silicon, drivers compose HAL
+for external components, services are ESP-IDF-bound runtime, framework is
+portable C++.
 
-### 3. `src/` mirrors `include/blusys/` exactly
+### 2. `src/` mirrors `include/blusys/` exactly
 
 For every public header at `include/blusys/X/Y/Z.h`, the corresponding source
-lives at `src/X/Y/Z.c` (or `.cpp`). No exceptions. Enforceable by lint.
+lives at `src/X/Y/Z.c` (or `.cpp`). Enforceable by lint. Exceptions:
 
-### 4. One-way layering
+- Private headers colocated with their single consumer in `src/`
+- Internal-only sources that have no public header (e.g., `src/hal/targets/`)
 
-- `hal/**` must NOT include `blusys/framework/*`
-- `framework/{app,core,ui}/**` must NOT include `blusys/hal/*`
-- Only `framework/platform/**` may bridge the two
+### 3. Concept-based internal organization
 
-The HAL public API IS the contract. Framework pure zones program against it
-through `framework/platform/`. This is lint-enforced from day one.
+Within each layer, directories group by *concept*, not by implementation
+axis. Every file has one answer to the question *"which concept does this
+belong to?"*. No two-axis classification (API vs engine, declarative vs
+imperative). Each concept owns its full stack: public types, specific
+implementations, and internal helpers.
 
-### 5. `platform/` is the escape-hatch zone (both in framework AND product)
+### 4. No singleton directories, but category slots are allowed
 
-Framework's `framework/platform/` is the only place framework code may
-include HAL headers. Product's `main/platform/` is the only place product
-code *should* (by convention) include HAL headers.
+Flat wins over sub-dirs containing 1 file. Widgets, drivers, primitives —
+all flat. Sub-directories are permitted at 2+ files when they represent a
+real conceptual bucket that will grow (e.g., `ui/input/`, `ui/extension/`).
+Speculative empty categories are forbidden.
 
-Same word, same role, mirrored at two levels.
+### 5. `framework/platform/` is the sole escape hatch
 
-### 6. No singleton directories
+Framework's `framework/platform/` is the ONLY zone allowed to `#include`
+HAL / drivers / services. Pure framework (`app/`, `capabilities/`,
+`flows/`, `engine/`, `feedback/`, `ui/`) must compile
+without any lower-layer headers.
 
-Flat wins over sub-dirs that contain 1-2 files. Widgets, drivers,
-primitives — all flat. Sub-dirs only when a group has a real common category
-and enough files to justify the ceremony.
+Product's `main/platform/` mirrors this role at product level.
 
-### 7. Layered umbrella headers
+### 6. Framework is truly device-agnostic
 
-Instead of one giant umbrella:
+No panel dimensions, panel protocols, or silicon specifics hardcoded
+under `framework/`. Panel hardware data (width, height, protocol defaults)
+lives in `drivers/panels/`. Framework's platform profiles compose panel
+data from drivers, not from hardcoded constants.
 
-- `blusys/hal.h` — HAL only (C)
-- `blusys/framework.hpp` — framework only (C++)
-- `blusys/blusys.hpp` — full platform (convenience)
+### 7. Minimal `blusys_` naming noise
 
-Products that only need HAL pay zero framework compile cost.
+- **Paths** carry the namespace: one `blusys/` at the top of every include
+  path. File names inside never repeat the prefix.
+- **C public symbols** (in `hal/`, `drivers/`, `services/`) keep the
+  `blusys_` prefix because C has no namespaces.
+- **C++ public symbols** (in `framework/`) live inside `namespace blusys { }`.
+  Identifiers are naked — no `Blusys` prefix on classes, no `blusys_`
+  prefix on functions.
+- **Macros** keep `BLUSYS_*` (global scope).
+- **Kconfig** keeps `CONFIG_BLUSYS_*` (flat namespace).
 
-### 8. Private headers stay local
+### 8. Layered umbrella headers, minimal set
+
+Two umbrella headers, no per-layer ones:
+
+- `blusys/blusys.h` — C consumers (hal + drivers + services)
+- `blusys/blusys.hpp` — C++ consumers (everything)
+
+Consumers who want finer granularity include specific headers.
+
+### 9. Private headers stay local
 
 A header included by exactly one `.cpp` lives next to that `.cpp` under
-`src/`, not in `include/**/internal/`. Only cross-file internals go in
-`internal/` dirs.
-
-### 9. Framework is truly device-agnostic
-
-No panel dimensions hardcoded under `framework/`. Panel hardware data
-(width, height, protocol defaults) lives in `hal/drivers/panels/`. Framework
-composes via panel defaults exposed from HAL.
+`src/`, not in a public `internal/`. Only cross-file internals live in
+public `internal/` dirs — and those internal dirs live *inside their
+owning concept* (`engine/internal/`, `feedback/internal/`, `hal/internal/`),
+never as a top-level grab bag.
 
 ### 10. Product scaffold mirrors the framework
 
 ```
-Product main/           Framework layers:
-  core/          ↔       framework/core/
+Product main/           Framework:
+  core/          ↔       framework/app/, capabilities/, flows/, ...
   ui/            ↔       framework/ui/
   platform/      ↔       framework/platform/
 ```
 
-Plus `framework/app/` for the API contract (no product-side equivalent).
 Same word, same meaning, consistent mental model at every level.
 
 ---
@@ -125,231 +160,368 @@ components/blusys/
 ├── README.md
 ├── idf_component.yml
 ├── include/blusys/
-│   ├── blusys.h              ← C-level full umbrella (HAL only, for C code)
-│   ├── blusys.hpp            ← C++-level full umbrella (HAL + framework)
-│   ├── hal.h                 ← HAL-only umbrella (C)
-│   ├── framework.hpp         ← framework-only umbrella (C++)
+│   ├── blusys.h                  ← C umbrella (hal + drivers + services)
+│   ├── blusys.hpp                ← C++ umbrella (everything)
 │   ├── hal/
-│   │   └── (see below)
+│   ├── drivers/
+│   ├── services/
 │   └── framework/
-│       └── (see below)
 └── src/
-    ├── hal/
-    │   └── (mirrors include/blusys/hal/)
-    └── framework/
-        └── (mirrors include/blusys/framework/)
+    ├── hal/        (mirrors include/blusys/hal/)
+    ├── drivers/    (mirrors include/blusys/drivers/)
+    ├── services/   (mirrors include/blusys/services/)
+    └── framework/  (mirrors include/blusys/framework/)
 ```
 
 ### HAL layer
 
+Silicon peripheral wrappers. Flat — no `peripheral/` sub-dir (HAL already
+means "peripheral wrappers"; the nesting was pure noise).
+
 ```
 include/blusys/hal/
-├── peripheral/                ← silicon wrappers (24 files flat, all C)
-│   ├── adc.h  dac.h  efuse.h  gpio.h  gpio_expander.h
-│   ├── i2c.h  i2c_slave.h  i2s.h  mcpwm.h  nvs.h
-│   ├── one_wire.h  pcnt.h  pwm.h  rmt.h  sd_spi.h
-│   ├── sdm.h  sdmmc.h  sleep.h  spi.h  spi_slave.h
-│   ├── system.h  target.h  temp_sensor.h  timer.h
-│   ├── touch.h  twai.h  uart.h  ulp.h  usb_device.h
-│   ├── usb_host.h  version.h  wdt.h  error.h
-│
-├── drivers/                   ← composite hardware drivers (flat, C)
-│   ├── button.h  buzzer.h  dht.h  encoder.h
-│   ├── lcd.h  led_strip.h  seven_seg.h
-│   └── panels/                ← panel HAL defaults (NEW: moved from framework)
-│       ├── ili9341.h  ili9488.h  st7735.h  st7789.h
-│       └── ssd1306.h  qemu_rgb.h
-│
-├── services/                  ← stateful runtime modules (C)
-│   ├── connectivity/
-│   │   ├── wifi.h  wifi_prov.h  wifi_mesh.h
-│   │   ├── bluetooth.h  ble_gatt.h  espnow.h
-│   │   └── protocol/
-│   │       ├── http_client.h  http_server.h  mqtt.h
-│   │       ├── ws_client.h  mdns.h
-│   │       └── sntp.h  local_ctrl.h
-│   ├── storage/
-│   │   ├── fatfs.h  fs.h
-│   ├── system/                ← renamed from device/
-│   │   ├── console.h  ota.h  power_mgmt.h
-│   ├── input/
-│   │   └── usb_hid.h
-│   └── output/
-│       └── display.h
-│
-├── internal/                  ← cross-file HAL internals
-│   ├── blusys_bt_stack.h  blusys_esp_err.h
-│   ├── blusys_global_lock.h  blusys_internal.h
-│   ├── blusys_lock.h  blusys_nvs_init.h
-│   ├── blusys_target_caps.h  blusys_timeout.h
-│   └── lcd_panel_ili.h
-│
-└── targets/                   ← per-MCU capability tables
-    ├── esp32/
-    ├── esp32c3/
-    └── esp32s3/
+├── adc.h  dac.h  efuse.h  error.h
+├── gpio.h  gpio_expander.h
+├── i2c.h  i2c_slave.h  i2s.h
+├── log.h
+├── mcpwm.h  nvs.h  one_wire.h
+├── pcnt.h  pwm.h  rmt.h
+├── sd_spi.h  sdm.h  sdmmc.h  sleep.h
+├── spi.h  spi_slave.h
+├── system.h  target.h  temp_sensor.h  timer.h
+├── touch.h  twai.h  uart.h  ulp.h
+├── usb_device.h  usb_host.h
+├── version.h  wdt.h
+└── internal/                     ← cross-file HAL internals (prefix dropped)
+    ├── bt_stack.h                (was blusys_bt_stack.h)
+    ├── esp_err_shim.h            (was blusys_esp_err.h — shim suffix avoids clash with ESP-IDF's esp_err.h)
+    ├── global_lock.h             (was blusys_global_lock.h)
+    ├── hal_internal.h            (was blusys_internal.h — avoids tautological internal/internal.h)
+    ├── lock.h                    (was blusys_lock.h)
+    ├── nvs_init.h                (was blusys_nvs_init.h)
+    ├── panel_ili.h               (was lcd_panel_ili.h)
+    ├── target_caps.h             (was blusys_target_caps.h)
+    └── timeout.h                 (was blusys_timeout.h)
 ```
+
+```
+src/hal/
+├── (peripheral .c files, mirroring include/)
+├── internal/                     (cross-file internal sources)
+│   ├── bt_stack.c                (was src/bt_stack.c)
+│   └── lock_freertos.c           (was src/blusys_lock_freertos.c)
+├── targets/                      ← per-MCU capability tables (SRC-ONLY)
+│   ├── esp32/target_caps.c
+│   ├── esp32s3/target_caps.c
+│   └── esp32c3/target_caps.c
+└── ulp/                          (ULP sources, SRC-ONLY)
+```
+
+`targets/` and `ulp/` have no public headers — internal capability tables
+consumed only by other HAL sources.
+
+### Drivers layer
+
+External component interfaces. Flat except for `panels/` (a cohesive
+family consumed by `lcd.h`).
+
+```
+include/blusys/drivers/
+├── button.h  buzzer.h  dht.h  display.h
+├── encoder.h  lcd.h  led_strip.h  seven_seg.h
+└── panels/                       ← LCD panel HAL defaults family
+    ├── ili9341.h  ili9488.h  st7735.h  st7789.h
+    ├── ssd1306.h  qemu_rgb.h
+```
+
+**Notable placement decisions:**
+- `display.h` moved from services — it's 90% render-path (framebuffer,
+  pixel format, LVGL flush), not lifecycle.
+- `panels/` is new — panel hardware data previously hardcoded in
+  framework profiles.
+
+### Services layer
+
+Stateful runtime. Four sibling categories (no more nested
+`connectivity/protocol/`, no more singleton `input/` or `output/`).
+
+```
+include/blusys/services/
+├── connectivity/                 ← network/wireless transports + HID host
+│   ├── wifi.h  wifi_prov.h  wifi_mesh.h
+│   ├── bluetooth.h  ble_gatt.h  espnow.h
+│   └── usb_hid.h                 ← multi-transport HID (USB + BLE)
+│
+├── protocol/                     ← application-layer protocols (sibling of connectivity)
+│   ├── http_client.h  http_server.h  mqtt.h
+│   ├── ws_client.h  mdns.h  sntp.h  local_ctrl.h
+│
+├── storage/
+│   ├── fatfs.h  fs.h
+│
+└── system/                       ← renamed from device/
+    ├── console.h  ota.h  power_mgmt.h
+```
+
+**Notable placement decisions:**
+- `usb_hid` placed in `connectivity/` — it's a stateful multi-transport
+  (USB + BLE) HID host, semantically a connectivity concern.
+- `protocol/` promoted to sibling of `connectivity/` — MQTT runs over any
+  transport; nesting it inside connectivity was conceptually wrong.
+- `device/` → `system/` — files are `console`, `ota`, `power_mgmt`, all
+  system lifecycle.
+- Singleton `services/input/` and `services/output/` eliminated.
 
 ### Framework layer
 
+Device-agnostic C++ app runtime. Concept-based internal organization.
+
 ```
 include/blusys/framework/
-├── app/                       ← the API contract
-│   ├── app.hpp  app_ctx.hpp  app_spec.hpp
-│   ├── app_services.hpp  app_identity.hpp
+├── framework.hpp                 ← framework-layer umbrella
+├── callbacks.hpp                 ← generic callback type aliases (used framework-wide)
+├── containers.hpp                ← static_vector, ring_buffer, string<N>
+│
+├── app/                          ← App type + immediate collaborators only
+│   ├── app.hpp
+│   ├── ctx.hpp                   (was app_ctx.hpp)
+│   ├── spec.hpp                  (was app_spec.hpp)
+│   ├── identity.hpp              (was app_identity.hpp)
+│   ├── services.hpp              (was app_services.hpp)
 │   ├── entry.hpp
-│   ├── integration_dispatch.hpp  variant_dispatch.hpp
-│   ├── theme_presets.hpp
-│   ├── capabilities/          ← capability system (everything consolidated here)
-│   │   ├── capability.hpp     ← base type (was flat in app/)
-│   │   ├── event.hpp          ← was flat in app/ as capability_event.hpp
-│   │   ├── list.hpp           ← was flat in app/ as capability_list.hpp
-│   │   ├── capabilities.hpp   ← umbrella
-│   │   ├── bluetooth.hpp  connectivity.hpp  diagnostics.hpp
-│   │   ├── lan_control.hpp  mqtt_host.hpp  ota.hpp
-│   │   ├── provisioning.hpp  storage.hpp
-│   │   └── telemetry.hpp  usb.hpp
-│   ├── flows/                 ← lifecycle orchestration
-│   │   ├── flows.hpp
-│   │   ├── boot.hpp  loading.hpp  error.hpp
-│   │   ├── status.hpp  settings.hpp
-│   │   ├── connectivity_flow.hpp  provisioning_flow.hpp
-│   │   ├── diagnostics_flow.hpp  ota_flow.hpp
-│   └── internal/              ← framework-internal (was detail/)
-│       ├── app_runtime.hpp  default_route_sink.hpp
-│       └── feedback_logging_sink.hpp  pending_events.hpp
+│   ├── variant_dispatch.hpp      (reducer helper — stays with App)
+│   └── internal/
+│       └── app_runtime.hpp       (was app/detail/app_runtime.hpp)
 │
-├── core/                      ← runtime engine (PURE — no HAL includes)
-│   ├── runtime.hpp  intent.hpp  router.hpp
-│   ├── feedback.hpp  feedback_presets.hpp
-│   └── containers.hpp
+├── capabilities/                 ← full capability system
+│   ├── capabilities.hpp          ← umbrella
+│   ├── capability.hpp            (was app/capability.hpp)
+│   ├── event.hpp                 (was app/capability_event.hpp)
+│   ├── list.hpp                  (was app/capability_list.hpp)
+│   ├── inline.hpp                (was app/capabilities_inline.hpp)
+│   ├── bluetooth.hpp  connectivity.hpp  diagnostics.hpp
+│   ├── lan_control.hpp  mqtt_host.hpp  ota.hpp
+│   ├── provisioning.hpp  storage.hpp
+│   └── telemetry.hpp  usb.hpp
 │
-├── ui/                        ← UI toolkit (PURE — no HAL includes)
-│   ├── theme.hpp  fonts.hpp  callbacks.hpp
-│   ├── transition.hpp  visual_feedback.hpp
-│   ├── encoder.hpp  focus_scope.hpp           ← flat (was ui/input/)
-│   ├── icon_set.hpp  icon_set_minimal.hpp     ← flat (was ui/icons/)
-│   ├── view.hpp  page.hpp  shell.hpp  overlay_manager.hpp  ← moved from app/view/
-│   ├── screen_registry.hpp  screen_router.hpp
-│   ├── bindings.hpp  action_widgets.hpp  composites.hpp
-│   ├── custom_widget.hpp  lvgl_scope.hpp
-│   ├── primitives/
+├── flows/                        ← lifecycle orchestration
+│   ├── flows.hpp                 ← umbrella
+│   ├── boot.hpp  loading.hpp  error.hpp
+│   ├── status.hpp  settings.hpp
+│   ├── connectivity_flow.hpp  provisioning_flow.hpp
+│   ├── diagnostics_flow.hpp  ota_flow.hpp
+│
+├── engine/                       ← event queue, intent routing, dispatch (merged from routing + runtime)
+│   ├── router.hpp                (was core/router.hpp)
+│   ├── intent.hpp                (was core/intent.hpp)
+│   ├── integration_dispatch.hpp  (was app/integration_dispatch.hpp)
+│   ├── event_queue.hpp           (was core/runtime.hpp — renamed to avoid dir/file collision)
+│   ├── pending_events.hpp        (was app/detail/pending_events.hpp)
+│   └── internal/
+│       └── default_route_sink.hpp (was app/detail/default_route_sink.hpp)
+│
+├── feedback/                     ← feedback system
+│   ├── feedback.hpp              (was core/feedback.hpp)
+│   ├── presets.hpp               (was core/feedback_presets.hpp)
+│   └── internal/
+│       └── logging_sink.hpp      (was app/detail/feedback_logging_sink.hpp)
+│
+├── ui/                           ← UI toolkit (PURE — no layer-below includes)
+│   ├── style/                    ← design tokens: theme, fonts, icons, motion (merged from theme+icons+effects)
+│   │   ├── theme.hpp             ← theme_tokens struct (colors, spacing, typography, motion, elevation)
+│   │   ├── presets.hpp           (was app/theme_presets.hpp)
+│   │   ├── fonts.hpp
+│   │   ├── icon_set.hpp
+│   │   ├── icon_set_minimal.hpp
+│   │   ├── transition.hpp
+│   │   └── interaction_effects.hpp  (was ui/visual_feedback.hpp — renamed to disambiguate from framework/feedback/)
+│   ├── input/                    ← input abstractions (NOT widgets)
+│   │   ├── encoder.hpp
+│   │   └── focus_scope.hpp
+│   ├── composition/              ← view structure + screen navigation
+│   │   ├── view.hpp              (was app/view/view.hpp)
+│   │   ├── page.hpp              (was app/view/page.hpp)
+│   │   ├── shell.hpp             (was app/view/shell.hpp)
+│   │   ├── overlay_manager.hpp   (was app/view/overlay_manager.hpp)
+│   │   ├── screen_registry.hpp   (was app/view/screen_registry.hpp)
+│   │   └── screen_router.hpp     (was app/view/screen_router.hpp; implements engine/route_sink)
+│   ├── binding/                  ← widget ↔ state/event wiring
+│   │   ├── bindings.hpp          (was app/view/bindings.hpp)
+│   │   ├── action_widgets.hpp    (was app/view/action_widgets.hpp)
+│   │   └── composites.hpp        (was app/view/composites.hpp)
+│   ├── extension/                ← LVGL escape hatches
+│   │   ├── custom_widget.hpp     (was app/view/custom_widget.hpp)
+│   │   └── lvgl_scope.hpp        (was app/view/lvgl_scope.hpp)
+│   ├── primitives/               ← layout + typography (unchanged internally)
 │   │   ├── col.hpp  row.hpp  screen.hpp  label.hpp
-│   │   └── divider.hpp  icon_label.hpp  key_value.hpp  status_badge.hpp
-│   ├── widgets/               ← FLAT (was 17 singleton sub-dirs)
+│   │   ├── divider.hpp  icon_label.hpp  key_value.hpp  status_badge.hpp
+│   ├── widgets/                  ← FLAT (was 17 singleton sub-dirs)
 │   │   ├── button.hpp  card.hpp  chart.hpp  data_table.hpp
 │   │   ├── dropdown.hpp  gauge.hpp  input_field.hpp  knob.hpp
 │   │   ├── level_bar.hpp  list.hpp  modal.hpp  overlay.hpp
 │   │   └── progress.hpp  slider.hpp  tabs.hpp  toggle.hpp  vu_strip.hpp
-│   └── screens/               ← moved from app/screens/
-│       ├── about.hpp  diagnostics.hpp  status.hpp
+│   └── screens/                  ← stock screens (moved from app/screens/)
+│       ├── about.hpp             (was about_screen.hpp — suffix dropped inside screens/)
+│       ├── diagnostics.hpp
+│       └── status.hpp
 │
-└── platform/                  ← framework ↔ HAL bridge (ONLY zone allowed to #include hal/*)
-    ├── profile.hpp            ← was platform_profile.hpp
-    ├── host.hpp               ← was host_profile.hpp
-    ├── headless.hpp           ← was profiles/headless.hpp
-    ├── auto.hpp               ← was auto_profile.hpp
+└── platform/                     ← framework ↔ HAL/drivers/services bridge (sole escape hatch)
+    ├── profile.hpp               (was app/platform_profile.hpp)
+    ├── host.hpp                  (was app/host_profile.hpp; absorbs profiles/host.hpp)
+    ├── headless.hpp              (was app/profiles/headless.hpp)
+    ├── auto.hpp                  (was app/auto_profile.hpp)
+    ├── build.hpp                 (was app/build_profile.hpp)
+    ├── reference_build.hpp       (was app/reference_build_profile.hpp)
     ├── layout_surface.hpp
     ├── auto_shell.hpp
-    ├── build.hpp              ← was build_profile.hpp
-    ├── reference_build.hpp    ← was reference_build_profile.hpp
     ├── button_array_bridge.hpp
     ├── input_bridge.hpp
     ├── touch_bridge.hpp
-    └── profiles/              ← OPTIONAL convenience bundles (can grow)
+    └── profiles/                 ← optional convenience bundles (composes drivers/panels + layout)
         ├── ili9341_with_encoder.hpp
         ├── ssd1306_i2c.hpp
         └── ... (future)
 ```
 
-### Umbrella headers
+### Umbrella headers (final list, two total)
 
-- **`include/blusys/hal.h`** — C-only. Includes all of `blusys/hal/peripheral/`,
-  `blusys/hal/drivers/`, `blusys/hal/services/`. Consumers who only need HAL
-  use this.
+- **`include/blusys/blusys.h`** — C umbrella. Includes all of `hal/`,
+  `drivers/`, and `services/`. Use from C code.
+- **`include/blusys/blusys.hpp`** — C++ umbrella. Includes everything.
+  Use from C++ products.
 
-- **`include/blusys/framework.hpp`** — C++-only. Includes framework public API
-  (app, core, ui, platform). No HAL transitively.
-
-- **`include/blusys/blusys.h`** — C alias for `hal.h` (for compatibility with
-  product code that only uses HAL from C).
-
-- **`include/blusys/blusys.hpp`** — Full platform umbrella (HAL + framework).
-  Convenience for product C++ code.
+No per-layer umbrellas (`hal.h`, `drivers.h`, `services.h`,
+`framework.hpp`) beyond `framework/framework.hpp` which is kept as an
+*internal* convenience for framework self-composition and is not a
+product-facing contract. Products include specific headers or
+`blusys.h` / `blusys.hpp`.
 
 ### Product scaffold
 
-Unchanged in concept, renamed directory:
-
 ```
 your_product/main/
-├── core/         ← state + actions + reducer  (PURE: framework only)
-├── ui/           ← screens                    (PURE: framework only)
-├── platform/     ← hardware + app_main        (escape hatch: may include hal/)
+├── core/         ← state + actions + reducer  (pure: framework only)
+├── ui/           ← screens                    (pure: framework only)
+├── platform/     ← hardware + app_main        (escape hatch: may include any layer)
 ├── CMakeLists.txt
 └── idf_component.yml
 ```
 
-The `main/integration/` → `main/platform/` rename aligns with the framework's
-platform naming. Everything follows the same vocabulary.
+The `main/integration/` → `main/platform/` rename aligns with the
+framework's platform naming. Same word, same meaning, at every level.
+
+---
+
+## Naming policy
+
+| Location | Naming | Rationale |
+|---|---|---|
+| Include paths | `blusys/...` (top-level only) | Namespace marker |
+| File names | naked (no `blusys_` prefix) | Path provides context |
+| C public symbols (hal, drivers, services) | `blusys_foo_init()`, `blusys_error_t` | C has no namespaces |
+| C macros | `BLUSYS_OK`, `BLUSYS_LOG_I` | Global scope |
+| C++ namespace | `namespace blusys { ... }` | C++ namespace marker |
+| C++ identifiers (inside namespace) | naked (`App`, `Router`, `Ctx`) | Reached via `blusys::App` |
+| Component target | `blusys` | CMake target |
+| Kconfig | `CONFIG_BLUSYS_*` | Flat Kconfig namespace |
+
+**Renames driven by policy (applied in Phase 5):**
+
+- Every C++ class `Blusys*` → naked within `namespace blusys { }`.
+- Every C++ typedef / function with `blusys_` prefix → naked within namespace.
+- Every `hal/internal/blusys_*.h` → `hal/internal/*.h`.
+- Every file reference inside `src/` updated to match.
 
 ---
 
 ## Lint-enforced invariants
 
-Updated `scripts/lint-layering.sh` enforces:
+`scripts/lint-layering.sh` enforces:
 
-### Rule 1 — HAL cannot depend on framework
+### Rule 1 — HAL cannot depend on layers above
+
+```bash
+grep -rEn --include='*.c' --include='*.h' \
+    '#include[[:space:]]*[<"]blusys/(drivers|services|framework)/' \
+    components/blusys/src/hal \
+    components/blusys/include/blusys/hal \
+    && exit 1
+```
+
+### Rule 2 — Drivers cannot depend on services or framework
+
+```bash
+grep -rEn --include='*.c' --include='*.h' \
+    '#include[[:space:]]*[<"]blusys/(services|framework)/' \
+    components/blusys/src/drivers \
+    components/blusys/include/blusys/drivers \
+    && exit 1
+```
+
+### Rule 3 — Services cannot depend on framework
 
 ```bash
 grep -rEn --include='*.c' --include='*.h' \
     '#include[[:space:]]*[<"]blusys/framework/' \
-    "$repo_root/components/blusys/src/hal" \
-    "$repo_root/components/blusys/include/blusys/hal" \
-    || true
+    components/blusys/src/services \
+    components/blusys/include/blusys/services \
+    && exit 1
 ```
 
-Any hit fails CI.
-
-### Rule 2 — Pure framework cannot depend on HAL
+### Rule 4 — Pure framework cannot depend on lower layers
 
 ```bash
 grep -rEn --include='*.hpp' --include='*.cpp' \
     --exclude-dir=platform \
-    '#include[[:space:]]*[<"]blusys/hal/' \
-    "$repo_root/components/blusys/src/framework" \
-    "$repo_root/components/blusys/include/blusys/framework" \
-    || true
+    '#include[[:space:]]*[<"]blusys/(hal|drivers|services)/' \
+    components/blusys/src/framework \
+    components/blusys/include/blusys/framework \
+    && exit 1
 ```
 
-`framework/app/`, `framework/core/`, `framework/ui/` must be clean.
-`framework/platform/` is the allowed exception.
+`framework/platform/` is the sole allowed exception.
 
-### Rule 3 — Drivers cannot include peripherals directly from internal layer
+### Rule 5 — `src/` must mirror `include/blusys/`
 
-Existing driver-internal rule carried over.
-
-### Rule 4 — `src/` must mirror `include/blusys/`
-
-For every `src/X/Y/Z.cpp`, there must be a corresponding
-`include/blusys/X/Y/Z.hpp` (or `Z.h`), and vice versa, except:
+Python script (`scripts/check-src-include-mirror.py`) verifies for every
+`src/X/Y/Z.{c,cpp}` there is a corresponding `include/blusys/X/Y/Z.{h,hpp}`,
+and vice versa. Exceptions:
 - Private headers colocated in `src/`
-- Internal-only sources not exposed publicly
+- `src/hal/targets/**`
+- `src/hal/ulp/**`
+- Concept umbrella headers (no `src/` counterpart expected):
+  - `include/blusys/blusys.h`, `include/blusys/blusys.hpp`
+  - `include/blusys/framework/framework.hpp`
+  - `include/blusys/framework/capabilities/capabilities.hpp`
+  - `include/blusys/framework/flows/flows.hpp`
+  - `include/blusys/framework/ui/widgets.hpp`
+  - `include/blusys/framework/ui/primitives.hpp`
+  - `include/blusys/framework/ui/screens/screens.hpp`
 
-A Python script verifies this in CI.
+### Rule 6 — No `blusys_` prefix inside file names under `blusys/`
+
+Python script scans `include/blusys/**/*.{h,hpp}` and flags any file whose
+basename starts with `blusys_`. (The path already carries the namespace.)
+
+### Rule 7 — C++ identifiers live inside `namespace blusys`
+
+Python script (`scripts/check-cpp-namespace.py`) verifies every `.hpp` /
+`.cpp` under `src/framework` and `include/blusys/framework` contains
+`namespace blusys {` exactly once at top level (or explicit
+`namespace blusys::sub {`).
 
 ---
 
 ## Implementation plan
 
-The restructure touches the entire codebase. It is broken into **8 phases**,
-each landing as a single atomic commit. Phases must land in order.
+The restructure is broken into **8 phases**, each landing as a single
+atomic commit. Phases must land in order.
 
 ### Phase 0 — Preparation
 
 **Goal:** baseline snapshot and tooling.
 
-- Capture current file inventory: `find components/ -type f | sort > /tmp/inventory-before.txt`
+- Capture file inventory: `find components/ -type f | sort > /tmp/inventory-before.txt`
 - Identify all consumers of current paths (examples, docs, scripts, cmake)
 - Dry-run the path migration script to validate all paths are accounted for
 
@@ -361,104 +533,207 @@ Output: confirmed migration list, no actions taken.
 
 Actions:
 - Create `components/blusys/` directory
-- Create minimal `CMakeLists.txt` (empty SRCS list initially, will be populated in phase 4)
+- Create minimal `CMakeLists.txt` with empty SRCS list — **populated incrementally across Phases 2–5** as each layer's sources land (not deferred to Phase 6)
 - Create `Kconfig` merging the three existing Kconfigs
 - Create `idf_component.yml` merging existing ones
 - Create empty `include/blusys/` and `src/` directories
 
-Deliverable: new component exists but compiles nothing.
+Deliverable: new component exists but compiles nothing. Each subsequent
+phase (2, 3, 4, 5a–5d) appends its sources to `CMakeLists.txt` and must
+leave the tree build-green before committing.
 
-### Phase 2 — Move HAL under `blusys/hal/`
+### Phase 2 — Move HAL, flatten, and clean prefixes
 
-**Goal:** relocate HAL sources + headers under the new layout, including panel
-defaults extraction.
+**Goal:** relocate HAL under `blusys/hal/`, flatten `peripheral/`, drop
+`blusys_` prefix from internal headers.
 
 Git moves (preserve history):
 
 ```
-components/blusys_hal/include/blusys/*.h              → components/blusys/include/blusys/hal/peripheral/*.h
-components/blusys_hal/include/blusys/drivers/*.h      → components/blusys/include/blusys/hal/drivers/*.h
-components/blusys_hal/include/blusys/internal/*.h     → components/blusys/include/blusys/hal/internal/*.h
-components/blusys_hal/src/*.c                         → components/blusys/src/hal/peripheral/*.c
-components/blusys_hal/src/drivers/*.c                 → components/blusys/src/hal/drivers/*.c
-components/blusys_hal/src/targets/                    → components/blusys/src/hal/targets/
-components/blusys_hal/src/ulp/                        → components/blusys/src/hal/ulp/
+components/blusys_hal/include/blusys/*.h           → components/blusys/include/blusys/hal/*.h
+    (includes log.h)
+components/blusys_hal/include/blusys/internal/*.h  → components/blusys/include/blusys/hal/internal/*.h  (renamed)
+components/blusys_hal/src/*.c                      → components/blusys/src/hal/*.c
+    (except blusys_lock_freertos.c and bt_stack.c — see below)
+components/blusys_hal/src/blusys_lock_freertos.c   → components/blusys/src/hal/internal/lock_freertos.c
+components/blusys_hal/src/bt_stack.c               → components/blusys/src/hal/internal/bt_stack.c
+components/blusys_hal/src/targets/                 → components/blusys/src/hal/targets/
+components/blusys_hal/src/ulp/                     → components/blusys/src/hal/ulp/
 ```
 
-Then **NEW FILES** (panel defaults extracted from framework):
+Additionally, **delete** the old C umbrella:
+`components/blusys_hal/include/blusys/blusys.h` — superseded by the new
+merged `include/blusys/blusys.h` created in Phase 1 (repopulated with
+hal-only content now; extended per layer in later phases).
+
+**Leave drivers in place for Phase 3** — they stay in
+`components/blusys_hal/src/drivers/` and `include/blusys/drivers/` until
+Phase 3 promotes them to a sibling layer.
+
+Prefix drops and anti-clash renames in `hal/internal/`:
 
 ```
-components/blusys/include/blusys/hal/drivers/panels/ili9341.h
-components/blusys/include/blusys/hal/drivers/panels/ili9488.h
-components/blusys/include/blusys/hal/drivers/panels/st7735.h
-components/blusys/include/blusys/hal/drivers/panels/st7789.h
-components/blusys/include/blusys/hal/drivers/panels/ssd1306.h
-components/blusys/include/blusys/hal/drivers/panels/qemu_rgb.h
+blusys_bt_stack.h     → bt_stack.h
+blusys_esp_err.h      → esp_err_shim.h      (shim suffix — avoids clash with ESP-IDF's esp_err.h)
+blusys_global_lock.h  → global_lock.h
+blusys_internal.h     → hal_internal.h      (avoids tautological internal/internal.h)
+blusys_lock.h         → lock.h
+blusys_nvs_init.h     → nvs_init.h
+blusys_target_caps.h  → target_caps.h
+blusys_timeout.h      → timeout.h
+lcd_panel_ili.h       → panel_ili.h
+```
+
+Intra-HAL include updates:
+- `#include "blusys/gpio.h"` → `#include "blusys/hal/gpio.h"`
+- `#include "blusys/internal/blusys_global_lock.h"` → `#include "blusys/hal/internal/global_lock.h"`
+- `#include "blusys/internal/blusys_esp_err.h"` → `#include "blusys/hal/internal/esp_err_shim.h"`
+- `#include "blusys/internal/blusys_internal.h"` → `#include "blusys/hal/internal/hal_internal.h"`
+- etc.
+
+Append hal sources to `components/blusys/CMakeLists.txt` and verify
+`blusys_hal`-equivalent build succeeds before committing.
+
+Remove: `components/blusys_hal/` *except* the `drivers/` sub-trees
+(handled in Phase 3).
+
+### Phase 3 — Create drivers layer
+
+**Goal:** promote drivers to a sibling layer, extract panel data, move
+display driver from services.
+
+Git moves:
+
+```
+components/blusys_hal/include/blusys/drivers/*.h  → components/blusys/include/blusys/drivers/*.h
+components/blusys_hal/src/drivers/*.c             → components/blusys/src/drivers/*.c
+components/blusys_services/include/blusys/output/display.h → components/blusys/include/blusys/drivers/display.h
+components/blusys_services/src/output/display.c            → components/blusys/src/drivers/display.c
+```
+
+**NEW FILES** (panel hardware data extracted from framework):
+
+```
+components/blusys/include/blusys/drivers/panels/ili9341.h
+components/blusys/include/blusys/drivers/panels/ili9488.h
+components/blusys/include/blusys/drivers/panels/st7735.h
+components/blusys/include/blusys/drivers/panels/st7789.h
+components/blusys/include/blusys/drivers/panels/ssd1306.h
+components/blusys/include/blusys/drivers/panels/qemu_rgb.h
 ```
 
 Each contains panel HAL defaults only — dimensions, driver enum, protocol
 config. No framework types.
 
-Intra-HAL include paths update:
-- Every `#include "blusys/gpio.h"` → `#include "blusys/hal/peripheral/gpio.h"`
-- Every `#include "blusys/drivers/lcd.h"` → `#include "blusys/hal/drivers/lcd.h"`
-- Every `#include "blusys/internal/..."` → `#include "blusys/hal/internal/..."`
+Intra-drivers include path updates:
+- `#include "blusys/drivers/lcd.h"` stays (path now includes drivers/ as its own layer)
+- `#include "blusys/output/display.h"` → `#include "blusys/drivers/display.h"`
 
-Also create:
-- `include/blusys/hal.h` — HAL umbrella
+Append drivers sources to `components/blusys/CMakeLists.txt` and verify
+hal + drivers build succeeds before committing.
 
-Remove: `components/blusys_hal/` entirely.
+Finally, remove the now-empty `components/blusys_hal/` directory.
 
-### Phase 3 — Move Services under `blusys/hal/services/`
+### Phase 4 — Fold services with category cleanup
 
-**Goal:** fold services into HAL (device-coupled layer).
+**Goal:** relocate services under `blusys/services/`, restructure
+categories.
 
 Git moves:
 
 ```
-components/blusys_services/include/blusys/connectivity/       → components/blusys/include/blusys/hal/services/connectivity/
-components/blusys_services/include/blusys/storage/            → components/blusys/include/blusys/hal/services/storage/
-components/blusys_services/include/blusys/device/             → components/blusys/include/blusys/hal/services/system/
-components/blusys_services/include/blusys/input/              → components/blusys/include/blusys/hal/services/input/
-components/blusys_services/include/blusys/output/             → components/blusys/include/blusys/hal/services/output/
-components/blusys_services/src/connectivity/                  → components/blusys/src/hal/services/connectivity/
-components/blusys_services/src/storage/                       → components/blusys/src/hal/services/storage/
-components/blusys_services/src/device/                        → components/blusys/src/hal/services/system/
-components/blusys_services/src/input/                         → components/blusys/src/hal/services/input/
-components/blusys_services/src/output/                        → components/blusys/src/hal/services/output/
+components/blusys_services/include/blusys/connectivity/       → components/blusys/include/blusys/services/connectivity/
+components/blusys_services/include/blusys/connectivity/protocol/ → components/blusys/include/blusys/services/protocol/  (promoted to sibling)
+components/blusys_services/include/blusys/storage/            → components/blusys/include/blusys/services/storage/
+components/blusys_services/include/blusys/device/             → components/blusys/include/blusys/services/system/       (renamed)
+components/blusys_services/include/blusys/input/usb_hid.h     → components/blusys/include/blusys/services/connectivity/usb_hid.h  (moved into connectivity)
+components/blusys_services/src/connectivity/                  → components/blusys/src/services/connectivity/
+components/blusys_services/src/connectivity/protocol/         → components/blusys/src/services/protocol/
+components/blusys_services/src/storage/                       → components/blusys/src/services/storage/
+components/blusys_services/src/device/                        → components/blusys/src/services/system/
+components/blusys_services/src/input/usb_hid.c                → components/blusys/src/services/connectivity/usb_hid.c
 ```
 
-Note the rename: `device/` → `system/` (the old category name was confusing;
-the files are `console`, `ota`, `power_mgmt` — all system lifecycle).
+(`components/blusys_services/{include,src}/output/display.*` already
+moved to drivers in Phase 3.)
 
 Intra-services include updates:
-- `#include "blusys/connectivity/wifi.h"` → `#include "blusys/hal/services/connectivity/wifi.h"`
-- `#include "blusys/output/display.h"` → `#include "blusys/hal/services/output/display.h"`
-- `#include "blusys/device/ota.h"` → `#include "blusys/hal/services/system/ota.h"`
-- etc.
+- `blusys/connectivity/wifi.h` → `blusys/services/connectivity/wifi.h`
+- `blusys/connectivity/protocol/mqtt.h` → `blusys/services/protocol/mqtt.h`
+- `blusys/device/ota.h` → `blusys/services/system/ota.h`
+- `blusys/input/usb_hid.h` → `blusys/services/connectivity/usb_hid.h`
 
-Update `hal.h` umbrella to include services.
+Delete old services umbrella `components/blusys_services/include/blusys/blusys_services.h`
+— superseded by the merged `include/blusys/blusys.h` (extended here to
+include services).
+
+Append services sources to `components/blusys/CMakeLists.txt` and verify
+hal + drivers + services build succeeds before committing.
 
 Remove: `components/blusys_services/` entirely.
 
-### Phase 4 — Move Framework under `blusys/framework/`
+### Phase 5 — Move and restructure framework (four commits: 5a–5d)
 
-**Goal:** relocate framework with full internal restructure.
+**Goal:** relocate framework, restructure into concept-based layout,
+wrap in `namespace blusys { }`, drop `blusys_` prefixes from C++
+identifiers.
 
-This is the largest phase. Includes multiple structural changes simultaneously
-because they're all coupled:
+**Split into four independent commits.** Each commit fixes its own
+`#include` paths and appends its touched sources to
+`components/blusys/CMakeLists.txt`. Commits 5a, 5b, 5c must land
+build-green. Commit 5d is the one step where intermediate states may not
+build; land it as a single atomic sweep.
 
-**4a — Path relocations:**
+---
+
+**Commit 5a — Concept restructure (path relocations, non-UI):**
+
 ```
-components/blusys_framework/include/blusys/app/              → components/blusys/include/blusys/framework/app/
-components/blusys_framework/include/blusys/framework/core/   → components/blusys/include/blusys/framework/core/
-components/blusys_framework/include/blusys/framework/ui/     → components/blusys/include/blusys/framework/ui/
-components/blusys_framework/src/app/                         → components/blusys/src/framework/app/
-components/blusys_framework/src/core/                        → components/blusys/src/framework/core/
-components/blusys_framework/src/ui/                          → components/blusys/src/framework/ui/
+components/blusys_framework/include/blusys/app/app.hpp              → framework/app/app.hpp
+components/blusys_framework/include/blusys/app/app_ctx.hpp          → framework/app/ctx.hpp
+components/blusys_framework/include/blusys/app/app_spec.hpp         → framework/app/spec.hpp
+components/blusys_framework/include/blusys/app/app_identity.hpp     → framework/app/identity.hpp
+components/blusys_framework/include/blusys/app/app_services.hpp     → framework/app/services.hpp
+components/blusys_framework/include/blusys/app/entry.hpp            → framework/app/entry.hpp
+components/blusys_framework/include/blusys/app/variant_dispatch.hpp → framework/app/variant_dispatch.hpp
+components/blusys_framework/include/blusys/app/detail/app_runtime.hpp → framework/app/internal/app_runtime.hpp
+
+components/blusys_framework/include/blusys/app/capability*.hpp      → framework/capabilities/{capability,event,list,inline}.hpp
+components/blusys_framework/include/blusys/app/capabilities/*.hpp   → framework/capabilities/*.hpp
+components/blusys_framework/include/blusys/app/flows/*.hpp          → framework/flows/*.hpp
+
+components/blusys_framework/include/blusys/framework/core/router.hpp   → framework/engine/router.hpp
+components/blusys_framework/include/blusys/framework/core/intent.hpp   → framework/engine/intent.hpp
+components/blusys_framework/include/blusys/app/integration_dispatch.hpp → framework/engine/integration_dispatch.hpp
+components/blusys_framework/include/blusys/framework/core/runtime.hpp  → framework/engine/event_queue.hpp
+components/blusys_framework/include/blusys/app/detail/pending_events.hpp → framework/engine/pending_events.hpp
+components/blusys_framework/include/blusys/app/detail/default_route_sink.hpp → framework/engine/internal/default_route_sink.hpp
+
+components/blusys_framework/include/blusys/framework/core/feedback.hpp         → framework/feedback/feedback.hpp
+components/blusys_framework/include/blusys/framework/core/feedback_presets.hpp → framework/feedback/presets.hpp
+components/blusys_framework/include/blusys/app/detail/feedback_logging_sink.hpp → framework/feedback/internal/logging_sink.hpp
+
+components/blusys_framework/include/blusys/framework/core/containers.hpp → framework/containers.hpp
+components/blusys_framework/include/blusys/framework/ui/callbacks.hpp    → framework/callbacks.hpp
+
+components/blusys_framework/include/blusys/app/theme_presets.hpp      → framework/ui/style/presets.hpp
 ```
 
-**4b — Rename `integration/` → `platform/`:**
+Additionally in 5a:
+- **Delete** `components/blusys_framework/include/blusys/app/integration.hpp`
+  (its contents are an umbrella over files moving to `framework/platform/` in
+  5b; the new `framework/framework.hpp` replaces it.)
+- **Delete** the old `components/blusys_framework/include/blusys/framework/framework.hpp`
+  and write a fresh `include/blusys/framework/framework.hpp` that includes
+  the new concept dirs (`app/`, `capabilities/`, `flows/`, `engine/`,
+  `feedback/`, `ui/`, `platform/`).
+- Rewrite every `#include "blusys/app/..."` / `"blusys/framework/core/..."`
+  touched by this commit to the new paths (scripted find+replace per
+  migration tables).
+- Append touched sources to `components/blusys/CMakeLists.txt`; verify build.
+
+**Commit 5b — `integration/` → `platform/`:**
+
 ```
 framework/app/platform_profile.hpp         → framework/platform/profile.hpp
 framework/app/host_profile.hpp             → framework/platform/host.hpp
@@ -472,36 +747,69 @@ framework/app/input_bridge.hpp             → framework/platform/input_bridge.h
 framework/app/touch_bridge.hpp             → framework/platform/touch_bridge.hpp
 framework/app/profiles/headless.hpp        → framework/platform/headless.hpp
 framework/app/profiles/host.hpp            ← merged into framework/platform/host.hpp
-framework/app/profiles/ili9341.hpp         → framework/platform/profiles/ili9341.hpp
-framework/app/profiles/ili9488.hpp         → framework/platform/profiles/ili9488.hpp
-framework/app/profiles/st7735.hpp          → framework/platform/profiles/st7735.hpp
-framework/app/profiles/st7789.hpp          → framework/platform/profiles/st7789.hpp
-framework/app/profiles/ssd1306.hpp         → framework/platform/profiles/ssd1306.hpp
-framework/app/profiles/qemu_rgb.hpp        → framework/platform/profiles/qemu_rgb.hpp
+framework/app/profiles/{ili9341,ili9488,st7735,st7789,ssd1306,qemu_rgb}.hpp → framework/platform/profiles/*.hpp
 ```
 
-Panel profile .hpp files are REWRITTEN to use `blusys/hal/drivers/panels/*.h`
+Panel profile `.hpp` files are REWRITTEN to use `blusys/drivers/panels/*.h`
 defaults rather than hardcoding dimensions.
 
-**4c — Move view files from `app/view/` to `ui/`:**
+Rewrite includes (`blusys/app/platform_profile.hpp` →
+`blusys/framework/platform/profile.hpp`, etc.), append touched sources to
+CMakeLists, verify build before committing.
+
+**Commit 5c — UI sub-dir reorganization:**
+
+Move view/composition files (was `app/view/`) into `ui/composition/`:
+
 ```
-framework/app/view/view.hpp              → framework/ui/view.hpp
-framework/app/view/page.hpp              → framework/ui/page.hpp
-framework/app/view/shell.hpp             → framework/ui/shell.hpp
-framework/app/view/overlay_manager.hpp   → framework/ui/overlay_manager.hpp
-framework/app/view/screen_registry.hpp   → framework/ui/screen_registry.hpp
-framework/app/view/screen_router.hpp     → framework/ui/screen_router.hpp
-framework/app/view/bindings.hpp          → framework/ui/bindings.hpp
-framework/app/view/action_widgets.hpp    → framework/ui/action_widgets.hpp
-framework/app/view/composites.hpp        → framework/ui/composites.hpp
-framework/app/view/custom_widget.hpp     → framework/ui/custom_widget.hpp
-framework/app/view/lvgl_scope.hpp        → framework/ui/lvgl_scope.hpp
+framework/app/view/view.hpp             → framework/ui/composition/view.hpp
+framework/app/view/page.hpp             → framework/ui/composition/page.hpp
+framework/app/view/shell.hpp            → framework/ui/composition/shell.hpp
+framework/app/view/overlay_manager.hpp  → framework/ui/composition/overlay_manager.hpp
+framework/app/view/screen_registry.hpp  → framework/ui/composition/screen_registry.hpp
+framework/app/view/screen_router.hpp    → framework/ui/composition/screen_router.hpp
 ```
 
-Same for corresponding `src/` files (which were all flat in `src/app/`
-historically, so they move to `src/framework/ui/`).
+Move binding files into `ui/binding/`:
 
-**4d — Move screens to UI layer:**
+```
+framework/app/view/bindings.hpp        → framework/ui/binding/bindings.hpp
+framework/app/view/action_widgets.hpp  → framework/ui/binding/action_widgets.hpp
+framework/app/view/composites.hpp      → framework/ui/binding/composites.hpp
+```
+
+Move extension files into `ui/extension/`:
+
+```
+framework/app/view/custom_widget.hpp   → framework/ui/extension/custom_widget.hpp
+framework/app/view/lvgl_scope.hpp      → framework/ui/extension/lvgl_scope.hpp
+```
+
+Regroup into `style/` (merges theme + icons + effects, with rename to disambiguate feedback):
+
+```
+framework/ui/theme.hpp                  → framework/ui/style/theme.hpp
+framework/ui/fonts.hpp                  → framework/ui/style/fonts.hpp
+framework/ui/icons/icon_set.hpp         → framework/ui/style/icon_set.hpp
+framework/ui/icons/icon_set_minimal.hpp → framework/ui/style/icon_set_minimal.hpp
+framework/ui/transition.hpp             → framework/ui/style/transition.hpp
+framework/ui/visual_feedback.hpp        → framework/ui/style/interaction_effects.hpp   (RENAMED)
+framework/ui/input/*                    → framework/ui/input/*   (path stable; dir name kept)
+```
+
+The `visual_feedback.hpp` → `interaction_effects.hpp` rename disambiguates
+from `framework/feedback/` (the app feedback bus). `interaction_effects.hpp`
+now clearly names press/focus/hover visual effects.
+
+Flatten widget singleton dirs:
+
+```
+framework/ui/widgets/button/button.hpp  → framework/ui/widgets/button.hpp
+... (17 widgets total)
+```
+
+Move stock screens to `ui/screens/` with `_screen` suffix dropped:
+
 ```
 framework/app/screens/about_screen.hpp       → framework/ui/screens/about.hpp
 framework/app/screens/diagnostics_screen.hpp → framework/ui/screens/diagnostics.hpp
@@ -509,190 +817,237 @@ framework/app/screens/status_screen.hpp      → framework/ui/screens/status.hpp
 framework/app/screens/screens.hpp            → framework/ui/screens/screens.hpp (umbrella)
 ```
 
-Drop the `_screen` suffix (redundant inside `screens/`).
+Move private UI headers out of the public surface (per principle 9 —
+private headers stay local to their consumer):
 
-**4e — Consolidate capabilities:**
 ```
-framework/app/capability.hpp           → framework/app/capabilities/capability.hpp
-framework/app/capability_event.hpp     → framework/app/capabilities/event.hpp
-framework/app/capability_list.hpp      → framework/app/capabilities/list.hpp
-framework/app/capabilities_inline.hpp  → framework/app/capabilities/inline.hpp
-```
-
-All capability-related files live inside `capabilities/`. No more floaters.
-
-**4f — Rename `detail/` to `internal/`:**
-```
-framework/app/detail/ → framework/app/internal/
+framework/ui/detail/fixed_slot_pool.hpp → src/framework/ui/fixed_slot_pool.hpp
+framework/ui/detail/flex_layout.hpp     → src/framework/ui/flex_layout.hpp
+framework/ui/detail/widget_common.hpp   → src/framework/ui/widget_common.hpp
 ```
 
-**4g — Flatten UI sub-directories:**
+Delete the now-empty `framework/ui/detail/` directory.
 
-Widget singleton dirs:
-```
-framework/ui/widgets/button/button.hpp         → framework/ui/widgets/button.hpp
-framework/ui/widgets/card/card.hpp             → framework/ui/widgets/card.hpp
-framework/ui/widgets/chart/chart.hpp           → framework/ui/widgets/chart.hpp
-... (17 widgets)
-```
+**Umbrella retention:** `framework/ui/widgets.hpp` and
+`framework/ui/primitives.hpp` are **kept** as concept-level umbrellas
+(same category as `capabilities/capabilities.hpp`, `flows/flows.hpp`).
+They are whitelisted in lint Rule 5.
 
-UI input/icon dirs:
-```
-framework/ui/input/encoder.hpp        → framework/ui/encoder.hpp
-framework/ui/input/focus_scope.hpp    → framework/ui/focus_scope.hpp
-framework/ui/icons/icon_set.hpp       → framework/ui/icon_set.hpp
-framework/ui/icons/icon_set_minimal.hpp → framework/ui/icon_set_minimal.hpp
-```
+Rewrite includes for everything moved in this commit, append touched
+sources to CMakeLists, verify build before committing.
 
-Same for corresponding `src/framework/ui/widgets/*/*.cpp` → `src/framework/ui/widgets/*.cpp`.
+**Commit 5d — C++ namespace and naming refactor:**
 
-**4h — Drop `ui/primitives.hpp` + `ui/widgets.hpp` umbrellas or update them:**
+Single atomic sweep — intermediate states may not compile.
 
-Review and update umbrella headers to reflect new paths.
+- Wrap every `.hpp` / `.cpp` under `framework/` in `namespace blusys { }`
+- Rename identifiers dropping prefixes:
+  - `class BlusysApp` → `class App` (inside `namespace blusys`)
+  - `blusys_runtime_t` → `Runtime`
+  - `blusys_intent_*` → `intent::*` or `Intent`
+  - etc.
+- Update all internal framework references to the new naked names
+- Update all `framework/src/**` files to match
+- Run the lint Rule 7 check (`scripts/check-cpp-namespace.py`) before committing.
+- Verify representative examples build.
 
-**4i — Intra-framework include path updates:**
+After 5d lands, remove `components/blusys_framework/` entirely.
 
-Every `#include "blusys/app/..."` → `#include "blusys/framework/app/..."`
-Every `#include "blusys/framework/core/..."` → `#include "blusys/framework/core/..."` (path stays the same, just relocated)
-Every `#include "blusys/framework/ui/..."` → `#include "blusys/framework/ui/..."`
+### Phase 6 — Build system consolidation
 
-Plus all the internal moves from 4b-4g.
-
-**4j — Create `framework.hpp` umbrella.**
-
-Remove: `components/blusys_framework/` entirely.
-
-### Phase 5 — Build system
-
-**Goal:** single merged CMakeLists.txt.
+**Goal:** consolidate the incrementally-populated `CMakeLists.txt` and
+update auxiliary cmake helpers. (Main SRCS list has been appended to
+across Phases 2–5d; this phase cleans up and finalizes.)
 
 Actions:
-- Write `components/blusys/CMakeLists.txt` with all sources listed by layer
-- Merge dependencies from old three CMakeLists
-- Handle conditional per-target code (targets/, ULP)
-- Handle optional managed components (tinyusb, esp_lcd_qemu_rgb)
-- Handle LVGL conditional compilation
-- Update `cmake/blusys_host_bridge.cmake` paths
-- Update `cmake/blusys_framework_ui_sources.cmake` or remove
+- Reorganize `components/blusys/CMakeLists.txt` by layer with clean
+  sectioning; verify it still builds
+- Consolidate dependencies from the three old CMakeLists (any leftover
+  REQUIRES merging)
+- Finalize conditional per-target code (`src/hal/targets/`, `src/hal/ulp/`)
+- Finalize conditional managed components (tinyusb, esp_lcd_qemu_rgb)
+- Finalize LVGL conditional compilation for `framework/ui/`
+- Update `cmake/blusys_host_bridge.cmake` paths to new layout
+- Retire `cmake/blusys_framework_ui_sources.cmake` (the flat widget
+  layout makes fine-grained listing unnecessary)
+- Audit `cmake/blusys_framework_host_mqtt.cmake`,
+  `cmake/blusys_framework_host_widgetkit.cmake`, and
+  `cmake/blusys_optional_component.cmake` for stale paths
 
-### Phase 6 — Consumer update sweep
+### Phase 7 — Consumer update sweep
 
 **Goal:** update every reference outside `components/blusys/`.
 
 Files to audit and update:
-- All `examples/**/*.{c,cpp,cmake}` include paths
-- All `examples/**/main/CMakeLists.txt` (REQUIRES changes from `blusys_hal blusys_services blusys_framework` → `blusys`)
+- All `examples/**/*.{c,cpp,hpp,cmake}` include paths
+- All `examples/**/main/CMakeLists.txt` (REQUIRES changes from
+  `blusys_hal blusys_services blusys_framework` → `blusys`)
 - All `examples/**/main/idf_component.yml`
-- All `docs/**/*.md` references to old paths
+- All `docs/**/*.md` references
 - All `scripts/*.sh` and `scripts/*.py` that reference component paths
 - `inventory.yml` if it references old paths
 - `README.md` architecture diagram
 - `CLAUDE.md` or other top-level instructions
 
 Master search list:
+
 ```bash
 rg 'blusys_hal'
 rg 'blusys_services'
 rg 'blusys_framework'
-rg 'blusys/app/'                # old framework app path
-rg 'blusys/framework/core'      # verify still correct (just relocated)
-rg 'blusys/drivers/'            # old HAL drivers path
-rg 'blusys/connectivity/'       # old services path
-rg 'blusys/storage/'            # old services path
-rg 'blusys/device/'             # old services path (now system)
-rg 'blusys/input/'              # old services path
-rg 'blusys/output/'             # old services path
-rg 'blusys/internal/'           # old HAL internal path
+rg 'blusys/app/'
+rg 'blusys/framework/core'
+rg 'blusys/framework/ui/input/'
+rg 'blusys/framework/ui/icons/'
+rg 'blusys/framework/ui/widgets/[a-z_]+/[a-z_]+\.hpp'
+rg 'blusys/drivers/'                # old HAL drivers path (now at blusys/drivers/, not under hal/)
+rg 'blusys/connectivity/'           # old services path
+rg 'blusys/connectivity/protocol/'  # old nested path
+rg 'blusys/storage/'                # old services path
+rg 'blusys/device/'                 # old services path (now system)
+rg 'blusys/input/'                  # old services path
+rg 'blusys/output/'                 # old services path (display → drivers, usb_hid → connectivity)
+rg 'blusys/internal/'               # old HAL internal path
+rg 'blusys_[a-z_]+\.h'              # old prefixed filenames
 ```
 
-Every hit gets updated in Phase 6.
+Every hit gets updated in Phase 7.
 
-### Phase 7 — Lint and CI updates
+### Phase 8 — Lint, CI, scaffold, docs, version bump
 
-**Goal:** machine-enforce the new invariants.
-
-Actions:
-- Rewrite `scripts/lint-layering.sh` with Rules 1-3 above
-- Add new lint check: `src/` vs `include/blusys/` mirror validator (Python script)
-- Update `scripts/check-host-bridge-spine.py` with new `blusys_host_bridge.cmake` path
-- Add new CI job: `blusys-layer-invariants` that runs all layering checks
-- Verify existing CI workflows still work against merged component
-
-### Phase 8 — Product scaffold update
-
-**Goal:** update `blusys create` scaffolding and docs.
+**Goal:** machine-enforce invariants, ship the breaking change.
 
 Actions:
+- Rewrite `scripts/lint-layering.sh` with Rules 1–4 above
+- Add `scripts/check-src-include-mirror.py` (Rule 5)
+- Add `scripts/check-no-blusys-prefix.py` (Rule 6)
+- Add `scripts/check-cpp-namespace.py` (Rule 7)
+- Add CI job `blusys-layer-invariants` that runs all layering checks
+- Update `scripts/check-host-bridge-spine.py` with new paths
 - Rename `main/integration/` → `main/platform/` in scaffold templates
-- Update scaffold-emitted include paths
+- Update scaffold-emitted include paths to new layout
 - Update `blusys create --list` descriptions if needed
-- Update `docs/start/` and `docs/app/` to reflect new paths
-- Update `docs/internals/architecture.md` with new diagram
-- Update `docs/hal/` to reflect unified layer
-- Update `docs/services/` — services are now `hal/services/`
-- Bump version in `components/blusys/include/blusys/hal/peripheral/version.h` to 7.0.0
-  (breaking change — major version bump)
+- Update `docs/start/`, `docs/app/`, `docs/hal/`, `docs/services/`
+- Update `docs/internals/architecture.md` with new 4-layer diagram
+- Bump version in `include/blusys/hal/version.h` to 7.0.0 (breaking
+  change — major version bump)
 
 ---
 
 ## Migration reference tables
 
-### HAL peripherals (flat)
-
-All `include/blusys/<name>.h` → `include/blusys/hal/peripheral/<name>.h`.
-All `src/<name>.c` → `src/hal/peripheral/<name>.c`.
-
-### HAL drivers
-
-All `include/blusys/drivers/<name>.h` → `include/blusys/hal/drivers/<name>.h`.
-All `src/drivers/<name>.c` → `src/hal/drivers/<name>.c`.
-
-**New directory:** `include/blusys/hal/drivers/panels/` (NEW panel hardware defaults).
-
-### HAL services
+### HAL (peripherals flat, prefix dropped)
 
 | Old | New |
 |---|---|
-| `blusys/connectivity/wifi.h` | `blusys/hal/services/connectivity/wifi.h` |
-| `blusys/connectivity/protocol/mqtt.h` | `blusys/hal/services/connectivity/protocol/mqtt.h` |
-| `blusys/storage/fatfs.h` | `blusys/hal/services/storage/fatfs.h` |
-| `blusys/device/console.h` | `blusys/hal/services/system/console.h` |
-| `blusys/device/ota.h` | `blusys/hal/services/system/ota.h` |
-| `blusys/device/power_mgmt.h` | `blusys/hal/services/system/power_mgmt.h` |
-| `blusys/input/usb_hid.h` | `blusys/hal/services/input/usb_hid.h` |
-| `blusys/output/display.h` | `blusys/hal/services/output/display.h` |
+| `blusys/gpio.h` | `blusys/hal/gpio.h` |
+| `blusys/spi.h` | `blusys/hal/spi.h` |
+| `blusys/log.h` | `blusys/hal/log.h` |
+| `blusys/internal/blusys_global_lock.h` | `blusys/hal/internal/global_lock.h` |
+| `blusys/internal/blusys_esp_err.h` | `blusys/hal/internal/esp_err_shim.h` (avoids clash with ESP-IDF `esp_err.h`) |
+| `blusys/internal/blusys_internal.h` | `blusys/hal/internal/hal_internal.h` (avoids tautological `internal/internal.h`) |
+| `blusys/internal/blusys_target_caps.h` | `blusys/hal/internal/target_caps.h` |
+| `blusys/internal/lcd_panel_ili.h` | `blusys/hal/internal/panel_ili.h` |
+
+### Drivers (promoted to sibling, display imported)
+
+| Old | New |
+|---|---|
+| `blusys/drivers/lcd.h` | `blusys/drivers/lcd.h` (same path, different component — now under `blusys/drivers/` directly) |
+| `blusys/output/display.h` | `blusys/drivers/display.h` |
+| *(new)* | `blusys/drivers/panels/ili9341.h` |
+| *(new)* | `blusys/drivers/panels/ili9488.h` |
+| *(new)* | `blusys/drivers/panels/st7735.h` |
+| *(new)* | `blusys/drivers/panels/st7789.h` |
+| *(new)* | `blusys/drivers/panels/ssd1306.h` |
+| *(new)* | `blusys/drivers/panels/qemu_rgb.h` |
+
+### Services
+
+| Old | New |
+|---|---|
+| `blusys/connectivity/wifi.h` | `blusys/services/connectivity/wifi.h` |
+| `blusys/connectivity/protocol/mqtt.h` | `blusys/services/protocol/mqtt.h` |
+| `blusys/storage/fatfs.h` | `blusys/services/storage/fatfs.h` |
+| `blusys/device/console.h` | `blusys/services/system/console.h` |
+| `blusys/device/ota.h` | `blusys/services/system/ota.h` |
+| `blusys/device/power_mgmt.h` | `blusys/services/system/power_mgmt.h` |
+| `blusys/input/usb_hid.h` | `blusys/services/connectivity/usb_hid.h` |
+| `blusys/output/display.h` | (moved to drivers — see above) |
 
 ### Framework app
 
 | Old | New |
 |---|---|
 | `blusys/app/app.hpp` | `blusys/framework/app/app.hpp` |
-| `blusys/app/app_ctx.hpp` | `blusys/framework/app/app_ctx.hpp` |
-| `blusys/app/capability.hpp` | `blusys/framework/app/capabilities/capability.hpp` |
-| `blusys/app/capability_event.hpp` | `blusys/framework/app/capabilities/event.hpp` |
-| `blusys/app/capability_list.hpp` | `blusys/framework/app/capabilities/list.hpp` |
-| `blusys/app/capabilities_inline.hpp` | `blusys/framework/app/capabilities/inline.hpp` |
-| `blusys/app/capabilities/connectivity.hpp` | `blusys/framework/app/capabilities/connectivity.hpp` |
-| `blusys/app/flows/boot.hpp` | `blusys/framework/app/flows/boot.hpp` |
+| `blusys/app/app_ctx.hpp` | `blusys/framework/app/ctx.hpp` |
+| `blusys/app/app_spec.hpp` | `blusys/framework/app/spec.hpp` |
+| `blusys/app/app_services.hpp` | `blusys/framework/app/services.hpp` |
+| `blusys/app/app_identity.hpp` | `blusys/framework/app/identity.hpp` |
+| `blusys/app/entry.hpp` | `blusys/framework/app/entry.hpp` |
+| `blusys/app/variant_dispatch.hpp` | `blusys/framework/app/variant_dispatch.hpp` |
 | `blusys/app/detail/app_runtime.hpp` | `blusys/framework/app/internal/app_runtime.hpp` |
 
-### Framework core
+### Framework capabilities
 
 | Old | New |
 |---|---|
-| `blusys/framework/core/runtime.hpp` | `blusys/framework/core/runtime.hpp` (path identical, relocated) |
-| (all other core files same pattern) | |
+| `blusys/app/capability.hpp` | `blusys/framework/capabilities/capability.hpp` |
+| `blusys/app/capability_event.hpp` | `blusys/framework/capabilities/event.hpp` |
+| `blusys/app/capability_list.hpp` | `blusys/framework/capabilities/list.hpp` |
+| `blusys/app/capabilities_inline.hpp` | `blusys/framework/capabilities/inline.hpp` |
+| `blusys/app/capabilities/connectivity.hpp` | `blusys/framework/capabilities/connectivity.hpp` |
+| `blusys/app/capabilities/mqtt_host.hpp` | `blusys/framework/capabilities/mqtt_host.hpp` |
+| (etc. for all 11 capabilities) | |
 
-### Framework ui
+### Framework flows
 
 | Old | New |
 |---|---|
+| `blusys/app/flows/boot.hpp` | `blusys/framework/flows/boot.hpp` |
+| (etc. for all flows) | |
+
+### Framework engine / feedback
+
+| Old | New |
+|---|---|
+| `blusys/framework/core/router.hpp` | `blusys/framework/engine/router.hpp` |
+| `blusys/framework/core/intent.hpp` | `blusys/framework/engine/intent.hpp` |
+| `blusys/app/integration_dispatch.hpp` | `blusys/framework/engine/integration_dispatch.hpp` |
+| `blusys/framework/core/runtime.hpp` | `blusys/framework/engine/event_queue.hpp` |
+| `blusys/app/detail/pending_events.hpp` | `blusys/framework/engine/pending_events.hpp` |
+| `blusys/app/detail/default_route_sink.hpp` | `blusys/framework/engine/internal/default_route_sink.hpp` |
+| `blusys/framework/core/feedback.hpp` | `blusys/framework/feedback/feedback.hpp` |
+| `blusys/framework/core/feedback_presets.hpp` | `blusys/framework/feedback/presets.hpp` |
+| `blusys/app/detail/feedback_logging_sink.hpp` | `blusys/framework/feedback/internal/logging_sink.hpp` |
+| `blusys/framework/core/containers.hpp` | `blusys/framework/containers.hpp` |
+| `blusys/framework/ui/callbacks.hpp` | `blusys/framework/callbacks.hpp` |
+
+### Framework UI
+
+| Old | New |
+|---|---|
+| `blusys/framework/ui/theme.hpp` | `blusys/framework/ui/style/theme.hpp` |
+| `blusys/framework/ui/fonts.hpp` | `blusys/framework/ui/style/fonts.hpp` |
+| `blusys/app/theme_presets.hpp` | `blusys/framework/ui/style/presets.hpp` |
+| `blusys/framework/ui/icons/icon_set.hpp` | `blusys/framework/ui/style/icon_set.hpp` |
+| `blusys/framework/ui/icons/icon_set_minimal.hpp` | `blusys/framework/ui/style/icon_set_minimal.hpp` |
+| `blusys/framework/ui/transition.hpp` | `blusys/framework/ui/style/transition.hpp` |
+| `blusys/framework/ui/visual_feedback.hpp` | `blusys/framework/ui/style/interaction_effects.hpp` (renamed) |
+| `blusys/framework/ui/input/encoder.hpp` | `blusys/framework/ui/input/encoder.hpp` (unchanged) |
 | `blusys/framework/ui/widgets/button/button.hpp` | `blusys/framework/ui/widgets/button.hpp` |
-| `blusys/framework/ui/input/encoder.hpp` | `blusys/framework/ui/encoder.hpp` |
-| `blusys/framework/ui/icons/icon_set.hpp` | `blusys/framework/ui/icon_set.hpp` |
-| `blusys/app/view/page.hpp` | `blusys/framework/ui/page.hpp` |
-| `blusys/app/view/shell.hpp` | `blusys/framework/ui/shell.hpp` |
-| `blusys/app/view/*.hpp` (11 files) | `blusys/framework/ui/*.hpp` |
+| (etc. for all 17 widgets) | |
+| `blusys/app/view/view.hpp` | `blusys/framework/ui/composition/view.hpp` |
+| `blusys/app/view/page.hpp` | `blusys/framework/ui/composition/page.hpp` |
+| `blusys/app/view/shell.hpp` | `blusys/framework/ui/composition/shell.hpp` |
+| `blusys/app/view/overlay_manager.hpp` | `blusys/framework/ui/composition/overlay_manager.hpp` |
+| `blusys/app/view/screen_registry.hpp` | `blusys/framework/ui/composition/screen_registry.hpp` |
+| `blusys/app/view/screen_router.hpp` | `blusys/framework/ui/composition/screen_router.hpp` |
+| `blusys/app/view/bindings.hpp` | `blusys/framework/ui/binding/bindings.hpp` |
+| `blusys/app/view/action_widgets.hpp` | `blusys/framework/ui/binding/action_widgets.hpp` |
+| `blusys/app/view/composites.hpp` | `blusys/framework/ui/binding/composites.hpp` |
+| `blusys/app/view/custom_widget.hpp` | `blusys/framework/ui/extension/custom_widget.hpp` |
+| `blusys/app/view/lvgl_scope.hpp` | `blusys/framework/ui/extension/lvgl_scope.hpp` |
 | `blusys/app/screens/about_screen.hpp` | `blusys/framework/ui/screens/about.hpp` |
 | `blusys/app/screens/diagnostics_screen.hpp` | `blusys/framework/ui/screens/diagnostics.hpp` |
 | `blusys/app/screens/status_screen.hpp` | `blusys/framework/ui/screens/status.hpp` |
@@ -711,8 +1066,9 @@ All `src/drivers/<name>.c` → `src/hal/drivers/<name>.c`.
 | `blusys/app/button_array_bridge.hpp` | `blusys/framework/platform/button_array_bridge.hpp` |
 | `blusys/app/input_bridge.hpp` | `blusys/framework/platform/input_bridge.hpp` |
 | `blusys/app/touch_bridge.hpp` | `blusys/framework/platform/touch_bridge.hpp` |
-| `blusys/app/profiles/ili9341.hpp` | `blusys/framework/platform/profiles/ili9341.hpp` |
 | `blusys/app/profiles/headless.hpp` | `blusys/framework/platform/headless.hpp` |
+| `blusys/app/profiles/ili9341.hpp` | `blusys/framework/platform/profiles/ili9341.hpp` |
+| (etc. for all panel profiles) | |
 
 ### Product scaffold
 
@@ -731,34 +1087,38 @@ After each phase, run:
 # 1. Layer invariants
 bash scripts/lint-layering.sh
 
-# 2. Src/include mirror check
+# 2. src/include mirror check
 python3 scripts/check-src-include-mirror.py
 
-# 3. Stale-path audit
-rg 'blusys_hal' --glob '*.{c,h,hpp,cpp,cmake,txt,md,yml}'
-rg 'blusys_services' --glob '*.{c,h,hpp,cpp,cmake,txt,md,yml}'
-rg 'blusys_framework' --glob '*.{c,h,hpp,cpp,cmake,txt,md,yml}'
-rg 'blusys/app/view/' --glob '*.{c,h,hpp,cpp}'
-rg 'blusys/app/capability\.' --glob '*.{c,h,hpp,cpp}'
-rg 'blusys/app/platform_profile' --glob '*.{c,h,hpp,cpp}'
-rg 'blusys/connectivity/' --glob '*.{c,h,hpp,cpp}'
-rg 'blusys/drivers/input/' --glob '*.{c,h,hpp,cpp}'
-rg 'blusys/drivers/display/' --glob '*.{c,h,hpp,cpp}'
-rg 'widgets/[a-z_]*/[a-z_]*\.hpp' --glob '*.{c,h,hpp,cpp}'
-rg 'framework/ui/input/' --glob '*.{c,h,hpp,cpp}'
-rg 'framework/ui/icons/' --glob '*.{c,h,hpp,cpp}'
+# 3. Filename prefix check
+python3 scripts/check-no-blusys-prefix.py
 
-# 4. Full builds (representative examples)
+# 4. C++ namespace check
+python3 scripts/check-cpp-namespace.py
+
+# 5. Stale-path audit
+rg 'blusys_hal'             --glob '*.{c,h,hpp,cpp,cmake,txt,md,yml}'
+rg 'blusys_services'        --glob '*.{c,h,hpp,cpp,cmake,txt,md,yml}'
+rg 'blusys_framework'       --glob '*.{c,h,hpp,cpp,cmake,txt,md,yml}'
+rg 'blusys/app/'            --glob '*.{c,h,hpp,cpp}'
+rg 'blusys/framework/core'  --glob '*.{c,h,hpp,cpp}'
+rg 'blusys/connectivity/'   --glob '*.{c,h,hpp,cpp}'
+rg 'blusys/output/'         --glob '*.{c,h,hpp,cpp}'
+rg 'blusys/input/'          --glob '*.{c,h,hpp,cpp}'
+rg 'blusys/device/'         --glob '*.{c,h,hpp,cpp}'
+rg 'widgets/[a-z_]+/[a-z_]+\.hpp' --glob '*.{c,h,hpp,cpp}'
+
+# 6. Full builds (representative examples)
 blusys build examples/quickstart/hello_blusys esp32s3
 blusys build examples/quickstart/hello_blusys esp32c3
 blusys build examples/quickstart/hello_blusys esp32
 blusys build examples/reference/interactive_dashboard esp32s3
 blusys host-build examples/quickstart/hello_blusys
 
-# 5. Host-bridge spine
+# 7. Host-bridge spine
 python3 scripts/check-host-bridge-spine.py
 
-# 6. Scaffold sanity
+# 8. Scaffold sanity
 blusys create --dry-run my_test_product
 ```
 
@@ -768,26 +1128,21 @@ All must pass before committing each phase.
 
 ## Non-goals / explicit deferrals
 
-The following are **intentionally not done** in this restructure:
-
-- **Pulling "device-agnostic business logic" out of services.** The 4 files
-  with portable code (`ble_gatt.c`, `local_ctrl.c`, `usb_hid.c`, `display.c`)
-  are 95% ESP-IDF-glued. Extracting them is not worth the complexity for v0.
-
+- **Pulling "device-agnostic business logic" out of services.** The few
+  files with portable code (`ble_gatt.c`, `local_ctrl.c`, `usb_hid.c`)
+  are 95% ESP-IDF-glued. Extracting them is not worth the complexity
+  for v0.
 - **Test directory structure.** When tests are added, they go in
   `components/blusys/tests/` mirroring `src/`. No convention is codified
   until the first test lands.
-
-- **Splitting `services/` by "input/output".** The current 5 sub-categories
-  cover all files. If a future service doesn't fit (audio, crypto), add a
-  top-level service category then. No imagined slots.
-
+- **Splitting `services/` into further categories.** The current four
+  (`connectivity/`, `protocol/`, `storage/`, `system/`) cover all files.
+  Future categories land when a real file doesn't fit.
 - **Extension mechanism for external capabilities.** Products can already
   create capabilities in `main/` or in private components. No framework
   change needed.
-
-- **C++ concepts / traits / virtual interfaces for HAL abstraction.** The
-  HAL's C API surface IS the interface. Adding a C++ trait layer gains
+- **C++ concepts / traits / virtual interfaces for HAL abstraction.**
+  The HAL's C API surface IS the interface. A C++ trait layer gains
   nothing and costs clarity.
 
 ---
@@ -796,12 +1151,13 @@ The following are **intentionally not done** in this restructure:
 
 | Risk | Mitigation |
 |---|---|
-| Massive single commit for Phase 4 is hard to review | Phase 4 is one atomic commit because intermediate states don't build. Document the structural changes clearly in the commit message. |
-| Examples and docs drift while restructure is in progress | Phase 6 is a single sweep; nothing lands until all consumers are green. |
-| Breaking change for downstream teams | v0 → v1.0 means breaking changes are acceptable; document migration in CHANGELOG and README. |
+| Phase 5 is very large | Intentional — intermediate states don't build. Document thoroughly in commit message. |
+| Examples and docs drift while restructure is in progress | Phase 7 is a single sweep; nothing lands until all consumers are green. |
+| Breaking change for downstream teams | v6 → v7.0 means breaking changes are acceptable; document migration in CHANGELOG and README. |
 | Lost git history on renames | Use `git mv` for every rename. `git log --follow` still works. |
-| Panel profile rewrite breaks product assumptions | Panel .hpp files in `framework/platform/profiles/` produce the same `device_profile` output; only the internals change. Product API unchanged. |
-| Someone depends on old include paths via non-tracked code (private forks) | Out of scope. v0 breaking change is the contract. |
+| Panel profile rewrite breaks product assumptions | Panel `.hpp` files in `framework/platform/profiles/` produce the same `device_profile` output; only internals change. Product API unchanged. |
+| C++ namespace refactor introduces subtle link-time issues | Lint rule 7 verifies every framework TU is wrapped. Build-test on all representative examples before commit. |
+| Old include paths referenced in private forks | Out of scope. v7.0 breaking change is the contract. |
 
 ---
 
@@ -809,9 +1165,10 @@ The following are **intentionally not done** in this restructure:
 
 Current version: **6.1.1**.
 
-After this restructure: **7.0.0** (major version bump for breaking API paths).
+After this restructure: **7.0.0** (major version bump for breaking API
+paths, naming policy, and layer model).
 
-Update `components/blusys/include/blusys/hal/peripheral/version.h`:
+Update `components/blusys/include/blusys/hal/version.h`:
 
 ```c
 #define BLUSYS_VERSION_MAJOR  7
@@ -824,20 +1181,25 @@ Update `components/blusys/include/blusys/hal/peripheral/version.h`:
 
 ## Commit strategy summary
 
-One commit per phase. Commits in order:
+One commit per phase. Phase 5 is split into four commits (5a–5d) for
+reviewability and bisection. Commits in order:
 
 1. `feat: create components/blusys/ shell (merged platform component)`
-2. `refactor: relocate HAL under blusys/hal/ with panels/ extraction`
-3. `refactor: fold services under blusys/hal/services/ (device→system rename)`
-4. `refactor: relocate and restructure framework under blusys/framework/`
-5. `build: merge CMakeLists into single blusys component`
-6. `refactor: update all consumers to new blusys paths`
-7. `ci: update lint rules for merged component layering`
-8. `feat: rename main/integration/→main/platform/ in scaffold + docs + version bump to 7.0.0`
+2. `refactor: relocate HAL flat under blusys/hal/ with prefix/clash-avoidance renames`
+3. `refactor: promote drivers to blusys/drivers/, extract panels family, move display from services`
+4. `refactor: fold services under blusys/services/ with category cleanup (protocol sibling, usb_hid→connectivity, device→system)`
+5. 5a. `refactor(framework): concept restructure — app/capabilities/flows/engine/feedback paths`
+6. 5b. `refactor(framework): integration/ → platform/ with panel profile rewrite against drivers/panels/`
+7. 5c. `refactor(framework): UI regroup — style/, flat widgets, screens move, visual_feedback→interaction_effects, detail→src`
+8. 5d. `refactor(framework): wrap in namespace blusys{} and drop C++ blusys_/Blusys prefixes`
+9. `build: consolidate merged blusys CMakeLists and update cmake helpers`
+10. `refactor: update all consumers to new blusys paths`
+11. `ci: enforce layering/mirror/prefix/namespace invariants; rename main/integration→main/platform; bump to 7.0.0`
 
-Each phase lands green (lint passes, representative examples build). If a
-phase breaks something, fix-forward in the same phase's work before
-committing.
+Each commit lands green (lint passes, representative examples build) —
+**except 5d**, which is a single atomic namespace/naming sweep where
+intermediate states may not compile. If any other commit breaks
+something, fix-forward within that commit's work before landing.
 
 ---
 
@@ -847,4 +1209,6 @@ This document reflects the architecture agreed upon through iterative design
 discussion. Any deviation during implementation must update this document
 first.
 
-**Architecture locked: 2026-04-14.**
+**Architecture locked: 2026-04-14** (amended same day with file-mapping
+gaps, anti-clash renames, incremental CMake, Phase 5 four-way split, and
+lint Rule 5 umbrella allowlist).
