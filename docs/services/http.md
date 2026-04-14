@@ -20,7 +20,7 @@ Blocking HTTP/HTTPS client for fetching and posting data over a WiFi connection.
 
 ```c
 #include <stdlib.h>
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 blusys_http_client_t *http;
 blusys_http_client_config_t http_cfg = {
@@ -109,7 +109,7 @@ Embedded HTTP server for handling incoming requests over WiFi.
 ### Server Quick Example
 
 ```c
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 static blusys_err_t handle_root(blusys_http_server_req_t *req, void *ctx) {
     return blusys_http_server_resp_send(req, 200, "text/plain", "Hello", -1);

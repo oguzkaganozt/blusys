@@ -27,7 +27,7 @@
 #include <cstdint>
 
 #include "blusys/blusys.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 #include "blusys/drivers/encoder.h"
 #include "lvgl.h"
 

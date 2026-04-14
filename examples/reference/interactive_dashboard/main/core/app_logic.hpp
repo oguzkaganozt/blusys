@@ -3,9 +3,9 @@
 #include <array>
 #include <cstdint>
 
-#include "blusys/app/app.hpp"
-#include "blusys/app/capability_event.hpp"
-#include "blusys/app/capabilities/diagnostics.hpp"
+#include "blusys/framework/app/app.hpp"
+#include "blusys/framework/capabilities/event.hpp"
+#include "blusys/framework/capabilities/diagnostics.hpp"
 #include "lvgl.h"
 
 namespace interactive_dashboard {

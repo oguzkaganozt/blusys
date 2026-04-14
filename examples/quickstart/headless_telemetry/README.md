@@ -5,7 +5,7 @@ Primary **headless connected** reference (`interface: headless` in `inventory.ym
 ## Layout
 
 - `main/core/` — state, actions, `update`, phase computation  
-- `main/integration/` — capability config, event bridge, `on_tick`, entry macro  
+- `main/platform/` — capability config, event bridge, `on_tick`, entry macro  
 - `main/ui/` — optional SSD1306 mono status (Kconfig); empty compile when headless-only  
 
 ## Build (device)

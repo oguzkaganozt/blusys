@@ -1,7 +1,7 @@
 // Minimal host-side tests for framework header-only / core primitives (no LVGL).
 // Run: ctest -R host_spine_test (after building scripts/host).
 
-#include "blusys/framework/core/containers.hpp"
+#include "blusys/framework/containers.hpp"
 
 #include <cstdio>
 

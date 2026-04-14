@@ -17,7 +17,7 @@ Requires WiFi to be connected before calling `blusys_mqtt_connect()`.
 ## Quick Example
 
 ```c
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 static void on_message(const char *topic, const uint8_t *payload,
                        size_t len, void *ctx)

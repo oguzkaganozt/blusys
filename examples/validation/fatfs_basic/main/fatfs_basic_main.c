@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "blusys/blusys.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 #define MOUNT_POINT  "/ffat"
 #define FILE_NAME    "hello.txt"

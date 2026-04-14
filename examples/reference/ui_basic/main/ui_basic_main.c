@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "blusys/blusys.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 #include "lvgl.h"
 
 #include "freertos/FreeRTOS.h"

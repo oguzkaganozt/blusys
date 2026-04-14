@@ -5,7 +5,7 @@
 #include "freertos/task.h"
 
 #include "sdkconfig.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 #define PROV_DONE_BIT BIT0
 #define PROV_FAIL_BIT BIT1

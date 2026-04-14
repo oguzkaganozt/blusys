@@ -35,7 +35,7 @@ The scaffold generates a minimal headless app with:
 
 - a `State` with a tick counter, periodic heartbeat log
 - `on_tick` dispatching `Action::periodic_tick` every 100 ms
-- `main/idf_component.yml` with managed git pins for all three platform tiers (plus managed deps when you select connected capabilities); set `BLUSYS_SCAFFOLD_PLATFORM_VERSION` to change the tag
+- `main/idf_component.yml` with managed git pins for the platform component (plus managed deps when you select connected capabilities); set `BLUSYS_SCAFFOLD_PLATFORM_VERSION` to change the tag
 - no UI or LVGL dependencies unless you add capabilities or code that pull them in
 
 ## Project structure
@@ -51,7 +51,7 @@ my_sensor/
     core/
       app_logic.hpp    — State, Action, update(), on_tick() declarations
       app_logic.cpp    — reducer and tick hook implementation
-    integration/
+    platform/
       app_main.cpp     — app_spec wiring + BLUSYS_APP_MAIN_HEADLESS(spec) macro
   host/
     CMakeLists.txt     — standalone PC build

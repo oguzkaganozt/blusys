@@ -22,7 +22,7 @@ Public test brokers are for demos only—do not send secrets.
 1. Set **Wi‑Fi** and optional **broker** in `menuconfig` → **MQTT dashboard (device)** (`main/Kconfig.projbuild` defaults: `mqtt://test.mosquitto.org`).
 2. **Display:** `menuconfig` → **Blusys framework → Display profiles → Dashboard-class display (device)** — or use chip defaults:
    - **`sdkconfig.defaults.esp32`** — SSD1306 128×64, I2C **SDA=21 / SCL=22** (classic ESP32).
-   - **`sdkconfig.defaults.esp32c3`** — SSD1306; firmware sets **SDA=GPIO8 / SCL=GPIO9** in `main/integration/app_main.cpp` (`dashboard_device_profile`).
+   - **`sdkconfig.defaults.esp32c3`** — SSD1306; firmware sets **SDA=GPIO8 / SCL=GPIO9** in `main/platform/app_main.cpp` (`dashboard_device_profile`).
    - **`sdkconfig.defaults.esp32s3`** — SSD1306; **SDA=GPIO1 / SCL=GPIO2** (matches `profiles/ssd1306.hpp` and `dashboard_device_profile`).
 
 ```bash

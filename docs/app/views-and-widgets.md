@@ -7,22 +7,20 @@ The Blusys view layer provides stock widgets and a custom widget contract that k
 Use `page_create()` and `page_load()` to build and activate a screen:
 
 ```cpp
-namespace view = blusys::app::view;
-
-void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state)
 {
     (void)svc;
-    auto p = view::page_create();  // creates screen + content col + focus group
+    auto p = blusys::page_create();  // creates screen + content col + focus group
 
     // Populate p.content with widgets ...
 
-    view::page_load(p);            // activates screen and wires encoder focus
+    blusys::page_load(p);            // activates screen and wires encoder focus
 }
 ```
 
 `page_create()` accepts an optional `page_config` to set padding, gap, and scrollability.
 
-Inside the interaction shell, `page_create_in(shell.content_area, …)` produces a bounded scroll column (`flex_grow`, optional scroll) so chrome (tabs, header) stays on screen. For LVGL flex conventions, primitives (`view::row`, `view::col`), and sizing helpers used by stock widgets, see [Architecture — UI layout](../internals/architecture.md#ui-layout-lvgl-flex).
+Inside the interaction shell, `page_create_in(shell.content_area, …)` produces a bounded scroll column (`flex_grow`, optional scroll) so chrome (tabs, header) stays on screen. For LVGL flex conventions, primitives (`blusys::row`, `blusys::col`), and sizing helpers used by stock widgets, see [Architecture — UI layout](../internals/architecture.md#ui-layout-lvgl-flex).
 
 ## Navigation
 
@@ -35,9 +33,9 @@ All widget helpers take the parent container as the first argument.
 ### Umbrella includes
 
 - `blusys/framework/ui/primitives.hpp` — layout primitives only (`screen`, `row`, `col`, `label`, `divider`, `icon_label`, `status_badge`, `key_value`).
-- `blusys/framework/ui/widgets.hpp` — primitives plus the full stock widget set (buttons through `vu_strip`). Prefer this or `blusys::app::view::action_widgets.hpp` in product code rather than deep one-off includes.
+- `blusys/framework/ui/widgets.hpp` — primitives plus the full stock widget set (buttons through `vu_strip`). Prefer this in product code rather than deep one-off includes.
 
-`blusys::app::view::action_widgets.hpp` exposes ergonomic `view::*` factories (e.g. `view::button`, `view::progress`) that wrap the underlying `blusys::ui::*_create` APIs.
+`blusys/framework/ui/binding/action_widgets.hpp` exposes ergonomic factories (e.g. `blusys::button`, `blusys::progress`) that wrap the underlying `blusys::*_create` APIs.
 
 ### Inventory (by category)
 
@@ -47,18 +45,18 @@ All widget helpers take the parent container as the first argument.
 | Interactive | `button`, `toggle`, `slider`, `modal`, `overlay`, `list`, `tabs`, `dropdown`, `input_field`, `knob` |
 | Display | `progress`, `card`, `gauge`, `chart`, `data_table`, `level_bar`, `vu_strip` |
 
-Authoring rules for contributors live in `components/blusys_framework/widget-author-guide.md`.
+Authoring rules for contributors live in `components/blusys/widget-author-guide.md`.
 
 ### Labels and headings
 
 ```cpp
-view::title(p.content, "Settings");      // large heading label
-view::label(p.content, "WiFi: off");     // body label — returns lv_obj_t*
+blusys::title(p.content, "Settings");      // large heading label
+blusys::label(p.content, "WiFi: off");     // body label — returns lv_obj_t*
 
 // Update text from the reducer:
-lv_obj_t *lbl = view::label(p.content, "0");
+lv_obj_t *lbl = blusys::label(p.content, "0");
 // ... later in update():
-view::set_text(lbl, "42");
+blusys::set_text(lbl, "42");
 ```
 
 ### Buttons
@@ -66,11 +64,11 @@ view::set_text(lbl, "42");
 Buttons dispatch a product action when pressed:
 
 ```cpp
-view::button(p.content, "Increment",
+blusys::button(p.content, "Increment",
              Action{.tag = Tag::increment}, &ctx);
 
 // Secondary style variant:
-view::button(p.content, "Reset",
+blusys::button(p.content, "Reset",
              Action{.tag = Tag::reset}, &ctx,
              blusys::ui::button_variant::secondary);
 ```
@@ -78,9 +76,9 @@ view::button(p.content, "Reset",
 ### Slider
 
 ```cpp
-view::slider(p.content, 0, 100, state.brightness,
+blusys::slider(p.content, 0, 100, state.brightness,
              [](int32_t v, void *user) {
-                 auto *ctx = static_cast<blusys::app::app_ctx *>(user);
+                 auto *ctx = static_cast<blusys::app_ctx *>(user);
                  ctx->dispatch(Action{.tag = Tag::set_brightness, .value = v});
              },
              &ctx);
@@ -89,9 +87,9 @@ view::slider(p.content, 0, 100, state.brightness,
 ### Toggle
 
 ```cpp
-view::toggle(p.content, state.enabled,
+blusys::toggle(p.content, state.enabled,
              [](bool v, void *user) {
-                 auto *ctx = static_cast<blusys::app::app_ctx *>(user);
+                 auto *ctx = static_cast<blusys::app_ctx *>(user);
                  ctx->dispatch(Action{.tag = Tag::set_enabled, .value = v});
              },
              &ctx);
@@ -100,19 +98,19 @@ view::toggle(p.content, state.enabled,
 ### Divider and Row
 
 ```cpp
-view::divider(p.content);              // horizontal separator
-auto *row = view::row(p.content);      // horizontal flex container
-view::button(row, "-", ...);
-view::button(row, "+", ...);
+blusys::divider(p.content);              // horizontal separator
+auto *row = blusys::row(p.content);      // horizontal flex container
+blusys::button(row, "-", ...);
+blusys::button(row, "+", ...);
 ```
 
 ### Level bar and VU strip (audio-style displays)
 
-Display-only helpers for compact level feedback. Update values from the reducer with `blusys::ui::level_bar_set_value` / `blusys::ui::vu_strip_set_value`, or keep handles and use `view::set_*` bindings where applicable.
+Display-only helpers for compact level feedback. Update values from the reducer with `blusys::ui::level_bar_set_value` / `blusys::ui::vu_strip_set_value`, or keep handles and use `blusys::set_*` bindings where applicable.
 
 ```cpp
-lv_obj_t *lvl = view::level_bar(p.content, 0, 100, state.level, "Output");
-lv_obj_t *vu  = view::vu_strip(p.content, 12, 0, blusys::ui::vu_orientation::vertical);
+lv_obj_t *lvl = blusys::level_bar(p.content, 0, 100, state.level, "Output");
+lv_obj_t *vu  = blusys::vu_strip(p.content, 12, 0, blusys::ui::vu_orientation::vertical);
 // ... in update(), after state changes:
 blusys::ui::level_bar_set_value(lvl, state.level);
 blusys::ui::vu_strip_set_value(vu, static_cast<std::uint8_t>((state.level * 12) / 100));
@@ -123,16 +121,16 @@ blusys::ui::vu_strip_set_value(vu, static_cast<std::uint8_t>((state.level * 12) 
 Register screens with `ctx.services().screen_router()` in `on_init`, then navigate:
 
 ```cpp
-void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state)
 {
     (void)svc;
     // Register screens by route ID.
     ctx.services().screen_router()->register_screen(RouteId::home,
-        [](blusys::app::app_ctx &ctx, const void *, lv_group_t **g) -> lv_obj_t * {
-            auto p = blusys::app::view::page_create();
+        [](blusys::app_ctx &ctx, const void *, lv_group_t **g) -> lv_obj_t * {
+            auto p = blusys::blusys::page_create();
             // ... build home screen ...
             if (g) *g = p.group;
-            blusys::app::view::page_load(p);
+            blusys::blusys::page_load(p);
             return p.screen;
         });
 
@@ -183,7 +181,7 @@ lv_canvas_set_buffer(canvas, buf, w, h, LV_COLOR_FORMAT_RGB565);
 
 Raw LVGL must not:
 
-- call `lv_screen_load()` directly (use `view::page_load()` or `ctx.services().navigate_to()`)
+- call `lv_screen_load()` directly (use `blusys::page_load()` or `ctx.services().navigate_to()`)
 - manage UI locks directly (the framework runtime owns the lock)
 - call runtime services directly from widget code
 - manipulate routing or runtime internals

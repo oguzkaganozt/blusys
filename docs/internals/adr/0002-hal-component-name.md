@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded — v0 platform restructure merged all components back into a single `components/blusys/`. The `blusys_hal`, `blusys_services`, and `blusys_framework` component names no longer exist; use `REQUIRES blusys` for all platform dependencies.
 
 ## Context
 

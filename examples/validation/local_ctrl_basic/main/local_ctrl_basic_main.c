@@ -7,7 +7,7 @@
 
 #include "sdkconfig.h"
 
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 typedef struct {
     bool output_enabled;

@@ -1,15 +1,15 @@
 // Compile-time and light runtime checks for capability event ranges and
 // telemetry readiness sequencing (host stubs).
 
-#include "blusys/app/capabilities/bluetooth.hpp"
-#include "blusys/app/capabilities/connectivity.hpp"
-#include "blusys/app/capabilities/diagnostics.hpp"
-#include "blusys/app/capabilities/lan_control.hpp"
-#include "blusys/app/capabilities/ota.hpp"
-#include "blusys/app/capabilities/storage.hpp"
-#include "blusys/app/capabilities/telemetry.hpp"
-#include "blusys/app/capabilities/usb.hpp"
-#include "blusys/app/capability.hpp"
+#include "blusys/framework/capabilities/bluetooth.hpp"
+#include "blusys/framework/capabilities/connectivity.hpp"
+#include "blusys/framework/capabilities/diagnostics.hpp"
+#include "blusys/framework/capabilities/lan_control.hpp"
+#include "blusys/framework/capabilities/ota.hpp"
+#include "blusys/framework/capabilities/storage.hpp"
+#include "blusys/framework/capabilities/telemetry.hpp"
+#include "blusys/framework/capabilities/usb.hpp"
+#include "blusys/framework/capabilities/capability.hpp"
 
 #include <cstdint>
 #include <cstdlib>

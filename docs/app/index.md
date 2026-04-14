@@ -36,9 +36,9 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 2. **Direct connectivity orchestration** in `main/ui/` or scattered across product files — use capabilities composed in `integration/`.
 3. **Large domain logic in `integration/`** — that folder is wiring (profile, capability list, `map_event`, bridges). Heavy state machines belong in `core/`.
 
-**Layout:** prefer `view::row`, `view::col`, and `page_create_in` inside the shell so LVGL flex and scroll stay consistent. Details in [Architecture — UI layout](../internals/architecture.md#ui-layout-lvgl-flex).
+**Layout:** prefer `blusys::row`, `blusys::col`, and `blusys::page_create_in` inside the shell so LVGL flex and scroll stay consistent. Details in [Architecture — UI layout](../internals/architecture.md#ui-layout-lvgl-flex).
 
-**Escape hatches:** HAL and `blusys_services` remain supported for advanced cases the canonical path cannot yet express — isolate that code behind clear boundaries. See [Architecture](../internals/architecture.md) and [Guidelines](../internals/guidelines.md).
+**Escape hatches:** HAL and services layers remain supported for advanced cases the canonical path cannot yet express — isolate that code behind clear boundaries. See [Architecture](../internals/architecture.md) and [Guidelines](../internals/guidelines.md).
 
 ## Sections
 

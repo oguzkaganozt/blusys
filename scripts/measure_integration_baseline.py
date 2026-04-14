@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print integration thickness metrics for V2 roadmap baselines."""
+"""Print platform thickness metrics for V2 roadmap baselines."""
 
 from __future__ import annotations
 
@@ -11,9 +11,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 EXAMPLES = [
-    "examples/reference/connected_headless/main/integration",
-    "examples/reference/connected_device/main/integration",
-    "examples/reference/surface_gateway/main/integration",
+    "examples/reference/connected_headless/main/platform",
+    "examples/reference/connected_device/main/platform",
+    "examples/reference/surface_gateway/main/platform",
 ]
 
 
@@ -47,19 +47,19 @@ def count_map_branches(text: str) -> tuple[int, int]:
     return cases + ifs, mi + me
 
 
-def analyze_integration_dir(integration_dir: Path) -> None:
-    rel = integration_dir.relative_to(REPO_ROOT)
-    loc = count_loc_py(integration_dir)
+def analyze_platform_dir(platform_dir: Path) -> None:
+    rel = platform_dir.relative_to(REPO_ROOT)
+    loc = count_loc_py(platform_dir)
     chunks: list[str] = []
-    if integration_dir.exists():
-        for p in sorted(integration_dir.rglob("*")):
+    if platform_dir.exists():
+        for p in sorted(platform_dir.rglob("*")):
             if p.suffix in {".cpp", ".hpp"} and p.is_file():
                 chunks.append(p.read_text(encoding="utf-8", errors="replace"))
     combined = "\n".join(chunks)
     branches, map_refs = count_map_branches(combined)
 
     print(f"## {rel}")
-    print(f"  integration LOC (.c/.cpp/.h/.hpp): {loc if loc >= 0 else 'missing'}")
+    print(f"  platform LOC (.c/.cpp/.h/.hpp): {loc if loc >= 0 else 'missing'}")
     print(f"  heuristic branch weight (case+if): {branches}")
     print(f"  map_intent/map_event references: {map_refs}")
     print()
@@ -69,7 +69,7 @@ def main() -> int:
     print(f"git HEAD: {git_short_hash()}")
     print()
     for ex in EXAMPLES:
-        analyze_integration_dir(REPO_ROOT / ex)
+        analyze_platform_dir(REPO_ROOT / ex)
     return 0
 
 

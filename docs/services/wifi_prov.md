@@ -17,7 +17,7 @@ BLE transport requires `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CON
 ```c
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 #define PROV_DONE_BIT BIT0
 

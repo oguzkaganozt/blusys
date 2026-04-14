@@ -5,10 +5,10 @@
 
 #include "ui/app_ui.hpp"
 
-#include "blusys/app/flows/settings.hpp"
-#include "blusys/app/screens/about_screen.hpp"
-#include "blusys/app/screens/status_screen.hpp"
-#include "blusys/app/view/action_widgets.hpp"
+#include "blusys/framework/flows/settings.hpp"
+#include "blusys/framework/ui/screens/about.hpp"
+#include "blusys/framework/ui/screens/status.hpp"
+#include "blusys/framework/ui/binding/action_widgets.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #include "blusys/version.h"
 

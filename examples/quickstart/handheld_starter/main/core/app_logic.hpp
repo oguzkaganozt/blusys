@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-#include "blusys/app/app.hpp"
-#include "blusys/app/capability_event.hpp"
-#include "blusys/app/flows/provisioning_flow.hpp"
+#include "blusys/framework/app/app.hpp"
+#include "blusys/framework/capabilities/event.hpp"
+#include "blusys/framework/flows/provisioning_flow.hpp"
 
 #include "ui/panels.hpp"
 

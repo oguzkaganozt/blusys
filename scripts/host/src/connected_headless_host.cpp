@@ -5,9 +5,9 @@
 // integration events on the first poll so the reducer exercises the same
 // bridge as on-device.
 
-#include "blusys/app/app.hpp"
-#include "blusys/app/capabilities/connectivity.hpp"
-#include "blusys/app/capabilities/storage.hpp"
+#include "blusys/framework/app/app.hpp"
+#include "blusys/framework/capabilities/connectivity.hpp"
+#include "blusys/framework/capabilities/storage.hpp"
 #include "blusys/log.h"
 
 #include <cstdint>

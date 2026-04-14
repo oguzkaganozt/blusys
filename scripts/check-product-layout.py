@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Validate canonical main/core, main/ui, main/integration layout for product-shaped examples.
+"""Validate canonical main/core, main/ui, main/platform layout for product-shaped examples.
+
+Formerly checked for main/integration/; now checks main/platform/ following v0 rename.
 
 Product-shaped: under main/, at least one source file references blusys::app entry (detected via
-``blusys/app/app.hpp`` include or BLUSYS_APP_MAIN*), unless the example opts in with
+``blusys/framework/app/app.hpp`` include or BLUSYS_APP_MAIN*), unless the example opts in with
 ``product_layout: true`` in inventory.yml.
 
 Skipped:
@@ -22,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
 from blusys.inventory_lib import find_example_dir, load_inventory  # noqa: E402
 
-PRODUCT_INCLUDE = re.compile(r'#\s*include\s*[<"]blusys/app/app\.hpp[>"]')
+PRODUCT_INCLUDE = re.compile(r'#\s*include\s*[<"]blusys/framework/app/app\.hpp[>"]')
 PRODUCT_ENTRY = re.compile(r"\bBLUSYS_APP_MAIN_")
 MAIN_ROOT_SOURCES = re.compile(r"\.(c|cpp|cc|cxx)$", re.IGNORECASE)
 
@@ -70,19 +72,19 @@ def check_layout(main_dir: Path) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
 
-    for sub in ("core", "ui", "integration"):
+    for sub in ("core", "ui", "platform"):
         p = main_dir / sub
         if not p.is_dir():
             errors.append(f"missing directory main/{sub}/")
 
-    entry = main_dir / "integration" / "app_main.cpp"
+    entry = main_dir / "platform" / "app_main.cpp"
     if not entry.is_file():
-        errors.append("missing main/integration/app_main.cpp")
+        errors.append("missing main/platform/app_main.cpp")
 
     root_src = main_has_root_sources(main_dir)
     if root_src:
         names = ", ".join(x.name for x in root_src)
-        warnings.append(f"sources directly under main/ (move into core/ui/integration): {names}")
+        warnings.append(f"sources directly under main/ (move into core/ui/platform): {names}")
 
     return errors, warnings
 

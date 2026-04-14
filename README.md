@@ -6,13 +6,13 @@
 
 ## Why this repo exists
 
-Blusys is not a generic “better ESP-IDF.” It is a shared **operating model** for recurring product families: same app shape (`core/` · `ui/` · `integration/`), same `update(ctx, state, action)` loop, host-first iteration where it helps, and escape hatches to HAL and services when you need them.
+Blusys is not a generic “better ESP-IDF.” It is a shared **operating model** for recurring product families: same app shape (`core/` · `ui/` · `platform/`), same `update(ctx, state, action)` loop, host-first iteration where it helps, and escape hatches to HAL and services when you need them.
 
 ### Product foundations
 
 These are the grounding constraints for the platform.
 
-**Mission.** Blusys is the **internal OS** for recurring product shapes — not a generic ESP32 framework. Optimize for what we ship: shared lifecycle, interaction grammar, and runtime orchestration. HAL, `blusys_services`, `blusys/output/display`, and low-level primitives stay available as **escape hatches**, not the default product path.
+**Mission.** Blusys is the **internal OS** for recurring product shapes — not a generic ESP32 framework. Optimize for what we ship: shared lifecycle, interaction grammar, and runtime orchestration. HAL, services, `blusys/drivers/display`, and low-level primitives stay available as **escape hatches**, not the default product path.
 
 **B2C / B2B north stars.** The platform supports both consumer (B2C) and industrial / business (B2B) products on **one** shared model. For B2C, aim for interaction and character reminiscent of **[Teenage Engineering](https://teenage.engineering/)** — distinctive, tactile, concise, memorable. For B2B, aim for operational clarity reminiscent of **[Samsara](https://www.samsara.com/)** — readable, dependable, fluent, connected. These are design and outcome targets, not separate framework runtimes.
 
@@ -20,7 +20,7 @@ These are the grounding constraints for the platform.
 
 **Product shape** (scaffold axes): **`--interface`** (`handheld` | `surface` | `headless`), **`--with`** (framework capabilities), **`--policy`** (non-capability overlays such as `low_power`). Generated projects record the same shape in **`blusys.project.yml`**. Run **`blusys create --list`** for descriptions and dependency rules.
 
-**Default layout** (single local **`main/`** component): **`core/`** — state, actions, reducer, product behavior; **`ui/`** — screens and widgets from state, dispatch actions (**no direct runtime-service calls**); **`integration/`** — wiring, profile, capabilities, bridges (**thin assembly**, not business logic).
+**Default layout** (single local **`main/`** component): **`core/`** — state, actions, reducer, product behavior; **`ui/`** — screens and widgets from state, dispatch actions (**no direct runtime-service calls**); **`platform/`** — wiring, profile, capabilities, bridges (**thin assembly**, not business logic). Mirrors the framework: `core/` ↔ `framework/app/`+`capabilities/`+`flows/`, `ui/` ↔ `framework/ui/`, `platform/` ↔ `framework/platform/` (the sole escape hatch to HAL/drivers/services).
 
 **Split.** The **app** owns state, actions, `update`, screens/views, optional profiles and capabilities. The **framework** owns boot/shutdown, loop/tick, routing, feedback, LVGL lifecycle and locks, overlays, host/device/headless adapters, input bridges, default service orchestration, and reusable flows. Use `ctx.services()` for navigation, overlays, and filesystem handles exposed there — do not use `route_sink` directly from product code. Normal product code should not depend on `runtime.init`, `feedback_sink`, `blusys_display_lock`, `lv_screen_load`, raw LCD bring-up on the canonical path, or raw Wi-Fi orchestration on the canonical path.
 
@@ -56,39 +56,44 @@ ESP-IDF **v5.5+** is required; the CLI discovers it. For the full walkthrough �
 
 ## Architecture
 
-Three ESP-IDF components, strict one-way dependencies:
+One ESP-IDF component (`components/blusys/`). Pure concept code on the left, escape hatches on the right, C runtime at the bottom:
 
-```
-                    ┌─────────────────────────────────────┐
-                    │  Application (your product code)    │
-                    └──────────────────┬──────────────────┘
-                                       │
-         ┌─────────────────────────────▼────────────────────────────┐
-         │  Framework    components/blusys_framework/   (C++)       │
-         │               blusys::app, routing, widgets, capabilities  │
-         └─────────────────────────────┬────────────────────────────┘
-                                       │
-         ┌─────────────────────────────▼────────────────────────────┐
-         │  Services     components/blusys_services/    (C)         │
-         │               Wi-Fi, UI runtime, protocols, system         │
-         └─────────────────────────────┬────────────────────────────┘
-                                       │
-         ┌─────────────────────────────▼────────────────────────────┐
-         │  HAL + drivers  components/blusys_hal/           (C)         │
-         │                 peripherals, displays, sensors, …        │
-         └─────────────────────────────┬────────────────────────────┘
-                                       │
-                                       ▼
-                                  ESP-IDF → hardware
+```mermaid
+flowchart TB
+    prod["<b>Your product</b><br/>main/<br/>core · ui · platform"]
+    fw["<b>Framework</b><br/>pure C++<br/>app · capabilities · flows<br/>engine · feedback · ui"]
+    hatch["main/platform/<br/>product escape hatch"]
+    rt["<b>Runtime</b><br/>C<br/>services ➜ drivers ➜ HAL"]
+    idf([ESP-IDF<br/>silicon])
+
+    prod ==> fw ==> rt ==> idf
+    prod -.-> hatch
+    hatch -.-> rt
+
+    classDef a fill:#dbeafe,stroke:#1e3a8a,stroke-width:2px,color:#1e3a8a
+    classDef b fill:#e0e7ff,stroke:#3730a3,stroke-width:2px,color:#312e81
+    classDef c fill:#d1fae5,stroke:#065f46,stroke-width:2px,color:#064e3b
+    classDef d fill:#f3f4f6,stroke:#4b5563,color:#111827
+    classDef note fill:#f3f4f6,stroke:#6b7280,stroke-width:1.5px,color:#111827
+
+    class prod a
+    class fw b
+    class hatch note
+    class rt c
+    class idf d
 ```
 
-**Rule:** `blusys_framework` → `blusys_services` → `blusys_hal`. No reverse edges; layering is checked with `blusys lint`.
+**Rules** (enforced by `blusys lint`):
+- `hal` depends on nothing above it. `drivers` → `hal`. `services` → `hal` + `drivers`.
+- Pure framework (`app`, `capabilities`, `flows`, `engine`, `feedback`, `ui`) cannot include any lower layer. Only `framework/platform/` may bridge downward.
+- Product `core/` and `ui/` are framework-only (pure). `main/platform/` is the product-level escape hatch and may include any layer directly.
 
 | Layer | Role | Doc entry |
 |-------|------|-----------|
 | **Framework** | Product API, views, capabilities, host/device profiles | [App](docs/app/index.md) |
-| **Services** | Runtime modules (connectivity, storage, UI service, …) | [Services](docs/services/index.md) |
-| **HAL + drivers** | Registers, buses, and higher-level driver helpers | [HAL](docs/hal/index.md) |
+| **Services** | Runtime modules (connectivity, storage, system) | [Services](docs/services/index.md) |
+| **Drivers** | Sensors, displays, and higher-level driver helpers | [HAL](docs/hal/index.md) |
+| **HAL** | Registers, buses, and peripheral abstractions | [HAL](docs/hal/index.md) |
 
 Module and example indices live in **`inventory.yml`** (CI and classification source of truth).
 
@@ -99,25 +104,23 @@ Module and example indices live in **`inventory.yml`** (CI and classification so
 **Product code (recommended):**
 
 ```cpp
-#include "blusys/app/app.hpp"
+#include "blusys/framework/app/app.hpp"
 ```
 
 **HAL and services (direct):**
 
 ```c
-#include "blusys/blusys.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"   // umbrella: hal + drivers + services
 ```
 
 **CMake `REQUIRES`:**
 
 ```cmake
-idf_component_register(SRCS "main.c"   REQUIRES blusys_hal)
-idf_component_register(SRCS "main.c"   REQUIRES blusys_services)
-idf_component_register(SRCS "main.cpp" REQUIRES blusys_framework)
+idf_component_register(SRCS "main.c"   REQUIRES blusys)
+idf_component_register(SRCS "main.cpp" REQUIRES blusys)
 ```
 
-Widget authoring: **[widget-author-guide.md](components/blusys_framework/widget-author-guide.md)**.
+Widget authoring: **[widget-author-guide.md](components/blusys/widget-author-guide.md)**.
 
 ---
 
@@ -160,7 +163,7 @@ mkdocs serve
 
 ## Project status
 
-Current **package version** is **6.1.1** (`BLUSYS_VERSION_STRING` in [`components/blusys_hal/include/blusys/version.h`](components/blusys_hal/include/blusys/version.h); also `blusys version`).
+Current **package version** is **7.0.0** (`BLUSYS_VERSION_STRING` in [`components/blusys/include/blusys/hal/version.h`](components/blusys/include/blusys/hal/version.h); also `blusys version`).
 
 ---
 

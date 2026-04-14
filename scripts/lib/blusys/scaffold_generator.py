@@ -52,7 +52,7 @@ def _headless_update_switch_body(capabilities: list[str]) -> str:
     for cap, (field, tag) in _HEADLESS_READY.items():
         if cap in cap_set:
             cases.append(
-                f"    case blusys::app::capability_event_tag::{tag}:\n"
+                f"    case blusys::capability_event_tag::{tag}:\n"
                 f"        state.{field} = true;\n"
                 f"        break;"
             )
@@ -130,7 +130,7 @@ def render_top_cmakelists(project_name: str, build_ui: bool, repo_root: Path) ->
     build_ui_str = "ON" if build_ui else "OFF"
     return f"""cmake_minimum_required(VERSION 3.16)
 
-set(BLUSYS_BUILD_UI {build_ui_str} CACHE BOOL \"Build blusys_framework/ui\")
+set(BLUSYS_BUILD_UI {build_ui_str} CACHE BOOL \"Build blusys/framework/ui\")
 set(EXTRA_COMPONENT_DIRS \"{repo_root / "components"}\")
 
 include($ENV{{IDF_PATH}}/tools/cmake/project.cmake)
@@ -144,17 +144,17 @@ def render_main_cmakelists(build_ui: bool) -> str:
     SRCS
         \"core/app_logic.cpp\"
         \"ui/app_ui.cpp\"
-        \"integration/app_main.cpp\"
+        \"platform/app_main.cpp\"
     INCLUDE_DIRS "."
-    REQUIRES blusys_framework
+    REQUIRES blusys
 )
 """
     return """idf_component_register(
     SRCS
         \"core/app_logic.cpp\"
-        \"integration/app_main.cpp\"
+        \"platform/app_main.cpp\"
     INCLUDE_DIRS "."
-    REQUIRES blusys_framework
+    REQUIRES blusys
 )
 """
 
@@ -204,8 +204,8 @@ def render_headless_logic_hpp(namespace_name: str, capabilities: list[str]) -> s
     fields = _headless_app_state_fields(capabilities)
     return f"""#pragma once
 
-#include \"blusys/app/app.hpp\"
-#include \"blusys/app/capability_event.hpp\"
+#include \"blusys/framework/app/app.hpp\"
+#include \"blusys/framework/capabilities/event.hpp\"
 
 #include <cstdint>
 
@@ -217,15 +217,15 @@ enum class action_tag : std::uint8_t {{
 
 struct action {{
     action_tag tag = action_tag::capability_event;
-    blusys::app::capability_event cap_event{{}};
+    blusys::capability_event cap_event{{}};
 }};
 
 struct app_state {{
 {fields}
 }};
 
-void update(blusys::app::app_ctx &ctx, app_state &state, const action &event);
-void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms);
+void update(blusys::app_ctx &ctx, app_state &state, const action &event);
+void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state, std::uint32_t now_ms);
 
 }}  // namespace {namespace_name}
 """
@@ -237,7 +237,7 @@ def render_headless_logic_cpp(namespace_name: str, capabilities: list[str]) -> s
 
 namespace {namespace_name} {{
 
-void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
+void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {{
     (void)ctx;
     if (event.tag != action_tag::capability_event) {{
@@ -248,7 +248,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
 {switch_body}    }}
 }}
 
-void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state, std::uint32_t now_ms)
 {{
     (void)ctx;
     (void)svc;
@@ -263,7 +263,7 @@ void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_stat
 def render_ui_logic_hpp(namespace_name: str) -> str:
     return f"""#pragma once
 
-#include \"blusys/app/app.hpp\"
+#include \"blusys/framework/app/app.hpp\"
 
 #include <cstdint>
 
@@ -283,8 +283,8 @@ struct action {{
     action_tag tag = action_tag::increment;
 }};
 
-void update(blusys::app::app_ctx &ctx, app_state &state, const action &action);
-bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out);
+void update(blusys::app_ctx &ctx, app_state &state, const action &action);
+bool map_intent(blusys::app_services &svc, blusys::intent intent, action *out);
 
 }}  // namespace {namespace_name}
 """
@@ -293,15 +293,13 @@ bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent
 def render_ui_logic_cpp(namespace_name: str) -> str:
     return f"""#include \"core/app_logic.hpp\"
 
-#include \"blusys/app/view/action_widgets.hpp\"
+#include \"blusys/framework/ui/binding/action_widgets.hpp\"
 
 #include <cstdio>
 
 namespace {namespace_name} {{
 
-namespace view = blusys::app::view;
-
-void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
+void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {{
     (void)ctx;
     switch (event.tag) {{
@@ -316,18 +314,18 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
     if (state.label != nullptr) {{
         char buf[48];
         std::snprintf(buf, sizeof(buf), \"%ld\", static_cast<long>(state.counter));
-        view::set_text(static_cast<lv_obj_t *>(state.label), buf);
+        blusys::set_text(static_cast<lv_obj_t *>(state.label), buf);
     }}
 }}
 
-bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out)
+bool map_intent(blusys::app_services &svc, blusys::intent intent, action *out)
 {{
     (void)svc;
     switch (intent) {{
-    case blusys::framework::intent::increment:
+    case blusys::intent::increment:
         *out = action{{.tag = action_tag::increment}};
         return true;
-    case blusys::framework::intent::decrement:
+    case blusys::intent::decrement:
         *out = action{{.tag = action_tag::decrement}};
         return true;
     default:
@@ -346,7 +344,7 @@ def render_ui_hpp(namespace_name: str) -> str:
 
 namespace {namespace_name}::ui {{
 
-void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state &state);
+void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state);
 
 }}  // namespace {namespace_name}::ui
 """
@@ -355,30 +353,28 @@ void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_stat
 def render_ui_cpp(namespace_name: str, title: str) -> str:
     return f"""#include \"ui/app_ui.hpp\"
 
-#include \"blusys/app/view/action_widgets.hpp\"
-#include \"blusys/app/view/page.hpp\"
+#include \"blusys/framework/ui/binding/action_widgets.hpp\"
+#include \"blusys/framework/ui/composition/page.hpp\"
 
 namespace {namespace_name}::ui {{
 
-namespace view = blusys::app::view;
-
-void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state)
 {{
     (void)svc;
 
-    auto page = view::page_create();
-    view::title(page.content, \"{title}\");
-    view::divider(page.content);
+    auto page = blusys::page_create();
+    blusys::title(page.content, \"{title}\");
+    blusys::divider(page.content);
 
-    state.label = view::label(page.content, \"0\");
+    state.label = blusys::label(page.content, \"0\");
 
-    auto *row = view::row(page.content);
-    view::button(row, \"-\", action{{.tag = action_tag::decrement}}, &ctx,
-                 blusys::ui::button_variant::secondary);
-    view::button(row, \"+\", action{{.tag = action_tag::increment}}, &ctx,
-                 blusys::ui::button_variant::secondary);
+    auto *row = blusys::row(page.content);
+    blusys::button(row, \"-\", action{{.tag = action_tag::decrement}}, &ctx,
+                   blusys::button_variant::secondary);
+    blusys::button(row, \"+\", action{{.tag = action_tag::increment}}, &ctx,
+                   blusys::button_variant::secondary);
 
-    view::page_load(page);
+    blusys::page_load(page);
 }}
 
 }}  // namespace {namespace_name}::ui
@@ -410,7 +406,7 @@ blusys_host_bridge_resolve_build_version(BLUSYS_GIT_VERSION)
 add_executable({project_name}_host
     "${{CMAKE_CURRENT_LIST_DIR}}/../main/core/app_logic.cpp"
     "${{CMAKE_CURRENT_LIST_DIR}}/../main/ui/app_ui.cpp"
-    "${{CMAKE_CURRENT_LIST_DIR}}/../main/integration/app_main.cpp"
+    "${{CMAKE_CURRENT_LIST_DIR}}/../main/platform/app_main.cpp"
     "$ENV{{BLUSYS_PATH}}/scripts/host/src/app_host_platform.cpp"
 )
 target_include_directories({project_name}_host PRIVATE
@@ -445,7 +441,7 @@ blusys_host_bridge_add_library(headless)
 
 add_executable({project_name}_host
     "${{CMAKE_CURRENT_LIST_DIR}}/../main/core/app_logic.cpp"
-    "${{CMAKE_CURRENT_LIST_DIR}}/../main/integration/app_main.cpp"
+    "${{CMAKE_CURRENT_LIST_DIR}}/../main/platform/app_main.cpp"
     "$ENV{{BLUSYS_PATH}}/scripts/host/src/app_headless_platform.cpp"
 )
 target_include_directories({project_name}_host PRIVATE
@@ -459,7 +455,7 @@ blusys_host_bridge_apply_exe_compile_options({project_name}_host)
 
 
 def capability_include(cap: str) -> str:
-    return f'#include "blusys/app/capabilities/{cap}.hpp"'
+    return f'#include "blusys/framework/capabilities/{cap}.hpp"'
 
 
 def render_integration_cpp(
@@ -475,7 +471,7 @@ def render_integration_cpp(
             helper_blocks.append(
                 """
 namespace {
-bool deliver_telemetry(const blusys::app::telemetry_metric *metrics, std::size_t count, void *user_ctx)
+bool deliver_telemetry(const blusys::telemetry_metric *metrics, std::size_t count, void *user_ctx)
 {
     (void)metrics;
     (void)count;
@@ -513,7 +509,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
     for cap in capabilities:
         if cap == "connectivity":
             instances.append(
-                """blusys::app::connectivity_capability connectivity{{
+                """blusys::connectivity_capability connectivity{{
     .wifi_ssid = nullptr,
     .prov_service_name = \"%s\",
     .prov_pop = \"123456\",
@@ -523,7 +519,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
             capability_refs.append("&connectivity")
         elif cap == "storage":
             instances.append(
-                """blusys::app::storage_capability storage{{
+                """blusys::storage_capability storage{{
     .init_nvs = true,
     .spiffs_base_path = \"/app\",
 }};"""
@@ -531,14 +527,14 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
             capability_refs.append("&storage")
         elif cap == "diagnostics":
             instances.append(
-                """blusys::app::diagnostics_capability diagnostics{{
+                """blusys::diagnostics_capability diagnostics{{
     .snapshot_interval_ms = 5000,
 }};"""
             )
             capability_refs.append("&diagnostics")
         elif cap == "telemetry":
             instances.append(
-                """blusys::app::telemetry_capability telemetry{{
+                """blusys::telemetry_capability telemetry{{
     .deliver = deliver_telemetry,
     .flush_threshold = 4,
     .flush_interval_ms = 1000,
@@ -547,7 +543,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
             capability_refs.append("&telemetry")
         elif cap == "ota":
             instances.append(
-                """blusys::app::ota_capability ota{{
+                """blusys::ota_capability ota{{
     .firmware_url = \"https://example.com/firmware.bin\",
     .auto_mark_valid = true,
 }};"""
@@ -555,7 +551,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
             capability_refs.append("&ota")
         elif cap == "bluetooth":
             instances.append(
-                """blusys::app::bluetooth_capability bluetooth{{
+                """blusys::bluetooth_capability bluetooth{{
     .device_name = \"%s\",
     .auto_advertise = true,
 }};"""
@@ -564,7 +560,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
             capability_refs.append("&bluetooth")
         elif cap == "lan_control":
             instances.append(
-                """blusys::app::lan_control_capability lan_control{{
+                """blusys::lan_control_capability lan_control{{
     .device_name = \"%s\",
     .status_cb = local_ctrl_status,
     .service_name = \"%s\",
@@ -579,9 +575,9 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
             capability_refs.append("&lan_control")
         elif cap == "usb":
             instances.append(
-                """blusys::app::usb_capability usb{{
-    .role = blusys::app::usb_role::host,
-    .class_mask = static_cast<std::uint8_t>(blusys::app::usb_class::cdc),
+                """blusys::usb_capability usb{{
+    .role = blusys::usb_role::host,
+    .class_mask = static_cast<std::uint8_t>(blusys::usb_class::cdc),
     .manufacturer = \"Blusys\",
     .product = \"%s\",
 }};"""
@@ -605,7 +601,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
     return f"""#include \"core/app_logic.hpp\"
 {ui_include}
 
-#include \"blusys/app/app.hpp\"
+#include \"blusys/framework/app/app.hpp\"
 {os.linesep.join(includes)}
 
 #include <cstddef>
@@ -618,9 +614,9 @@ namespace {namespace_name}::system {{
 
 {os.linesep.join(instances)}
 
-blusys::app::capability_list capabilities{{{cap_list}}};
+blusys::capability_list capabilities{{{cap_list}}};
 
-const blusys::app::app_spec<app_state, action> spec{{
+const blusys::app_spec<app_state, action> spec{{
     .initial_state = {{}},
     .update = update,
 {ui_fields}    .tick_period_ms = 100,
@@ -658,14 +654,14 @@ blusys create --interface {interface}{with_arg}{pol_arg} .
 
 - `main/core/` product behavior
 - `main/ui/` local UI for interactive interfaces
-- `main/integration/` app spec and capability wiring
+- `main/platform/` app spec and capability wiring
 
 ## Building with platform components
 
 The generated top-level `CMakeLists.txt` sets `EXTRA_COMPONENT_DIRS` to the
 `components/` directory of the Blusys tree used when `blusys create` ran (embedded
 absolute path). Adjust it if you move the project, use another checkout, or vendor
-`blusys_framework` / `blusys_services` / `blusys_hal` for a standalone tree.
+`blusys` for a standalone tree.
 
 ## Commands
 
@@ -754,7 +750,7 @@ def generate_project(
         )
 
     write_file(
-        out_dir / "main" / "integration" / "app_main.cpp",
+        out_dir / "main" / "platform" / "app_main.cpp",
         render_integration_cpp(
             namespace_name, interface_meta["title"], interface, capabilities
         ),

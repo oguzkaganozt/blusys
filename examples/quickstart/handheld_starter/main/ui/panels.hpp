@@ -2,7 +2,7 @@
 
 // Product UI components: LVGL handles + sync from app_state. Defined only under ui/.
 
-#include "blusys/app/view/bindings.hpp"
+#include "blusys/framework/ui/binding/bindings.hpp"
 
 #include <cstdint>
 

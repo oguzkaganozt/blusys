@@ -4,7 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 /* GET / — returns a plain-text greeting */
 static blusys_err_t handle_root(blusys_http_server_req_t *req, void *user_ctx)

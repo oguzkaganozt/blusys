@@ -23,7 +23,7 @@ Defaults: **`handheld`**, empty capabilities, empty policies. Interactive onboar
 | **surface** | Denser operator shell, dashboard-style | Larger panels, status at a glance |
 | **headless** | No local UI by default; headless entry | Telemetry, gateways, invisible-when-healthy devices |
 
-All use the same **`core/`** · **`ui/`** (if interactive) · **`integration/`** layout and **`update(ctx, state, action)`**.
+All use the same **`core/`** · **`ui/`** (if interactive) · **`platform/`** layout and **`update(ctx, state, action)`**.
 
 ## Reference examples in this repo
 
@@ -42,7 +42,7 @@ For historical minimal connectivity demos, see `examples/reference/connected_dev
 
 ## Capabilities and policies
 
-- **Capabilities** are composed in **`integration/`**; the reducer receives work via **actions**; capability events map to actions in **`integration/`** (see [Capability composition](../app/capability-composition.md)).
+- **Capabilities** are composed in **`platform/`**; the reducer receives work via **actions**; capability events map to actions in **`platform/`** (see [Capability composition](../app/capability-composition.md)).
 - **Policies** adjust defaults and integration overlays (e.g. power-related `sdkconfig` fragments) without adding a new capability kind.
 
 Dependency and target rules (e.g. `telemetry` requires `connectivity`, `usb` targets ESP32-S3) are enforced by the generator and listed under **`blusys create --list`**.
@@ -58,8 +58,8 @@ update `EXTRA_COMPONENT_DIRS` or vendor the platform components — see
 
 ## Rules
 
-- No raw LVGL in normal product screens — use `blusys::app::view`, stock widgets, and the custom widget contract.
-- Keep **`integration/`** thin: profiles, capability list, `map_event`, bridges; heavy logic stays in **`core/`**.
+- No raw LVGL in normal product screens — use `blusys::` UI helpers, stock widgets, and the custom widget contract.
+- Keep **`platform/`** thin: profiles, capability list, `map_event`, bridges; heavy logic stays in **`core/`**.
 
 ## Next pages
 

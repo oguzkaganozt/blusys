@@ -1,7 +1,7 @@
 #include "ui/app_ui.hpp"
 
-#include "blusys/app/screens/about_screen.hpp"
-#include "blusys/app/view/action_widgets.hpp"
+#include "blusys/framework/ui/screens/about.hpp"
+#include "blusys/framework/ui/binding/action_widgets.hpp"
 
 #include "lvgl.h"
 

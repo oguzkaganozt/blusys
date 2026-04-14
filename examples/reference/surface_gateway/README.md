@@ -6,7 +6,7 @@ Secondary **connected reference** (`interface: surface` in `inventory.yml`, coor
 
 - `main/core/` — reducer, orchestration-oriented state (simulated downstream counts / throughput)  
 - `main/ui/` — dashboard, status, settings routes  
-- `main/integration/` — capabilities, event bridge, `on_tick`, platform entry  
+- `main/platform/` — capabilities, event bridge, `on_tick`, platform entry  
 
 ## Build (device)
 

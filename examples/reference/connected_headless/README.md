@@ -1,6 +1,6 @@
 # Connected headless (minimal reference)
 
-Headless `blusys::app` example with connectivity + storage capabilities. Layout matches the canonical product scaffold: `main/core/` (reducer), `main/ui/` (empty for headless), `main/integration/` (`app_spec`, capabilities, entry).
+Headless `blusys::app` example with connectivity + storage capabilities. Layout matches the canonical product scaffold: `main/core/` (reducer), `main/ui/` (empty for headless), `main/platform/` (`app_spec`, capabilities, entry).
 
 **For new connected products**, prefer the **[headless telemetry quickstart](../../quickstart/headless_telemetry/README.md)** reference: full capability set, operational phases, and telemetry/OTA/diagnostics wiring aligned with the platform model in **[README.md](../../../README.md)** (**Product foundations**).
 

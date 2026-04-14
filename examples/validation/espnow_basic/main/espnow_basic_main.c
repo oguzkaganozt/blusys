@@ -5,7 +5,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "blusys/connectivity/espnow.h"
+#include "blusys/services/connectivity/espnow.h"
 
 /* Broadcast address — every ESP-NOW node accepts frames sent here */
 static const uint8_t BROADCAST_ADDR[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};

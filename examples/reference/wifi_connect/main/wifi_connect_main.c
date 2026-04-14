@@ -4,7 +4,7 @@
 #include "freertos/task.h"
 
 #include "sdkconfig.h"
-#include "blusys/blusys_services.h"
+#include "blusys/blusys.h"
 
 static const char *wifi_event_name(blusys_wifi_event_t event)
 {

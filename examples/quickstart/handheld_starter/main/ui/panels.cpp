@@ -2,7 +2,7 @@
 
 #include "core/app_logic.hpp"
 
-#include "blusys/app/flows/provisioning_flow.hpp"
+#include "blusys/framework/flows/provisioning_flow.hpp"
 
 #include <cstdio>
 

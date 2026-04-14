@@ -10,7 +10,7 @@
 // Compare with scripts/host/src/widget_kit_demo.cpp (~400 lines) to
 // see the improvement.
 
-#include "blusys/app/app.hpp"
+#include "blusys/framework/app/app.hpp"
 #include "blusys/log.h"
 
 #include <cstdint>

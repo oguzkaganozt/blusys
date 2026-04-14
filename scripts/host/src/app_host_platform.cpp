@@ -13,10 +13,10 @@
 #include "src/drivers/sdl/lv_sdl_mouse.h"
 #include "src/drivers/sdl/lv_sdl_keyboard.h"
 
-#include "blusys/app/theme_presets.hpp"
-#include "blusys/framework/core/intent.hpp"
-#include "blusys/framework/core/runtime.hpp"
-#include "blusys/framework/ui/theme.hpp"
+#include "blusys/framework/ui/style/presets.hpp"
+#include "blusys/framework/engine/intent.hpp"
+#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/ui/style/theme.hpp"
 
 namespace blusys_app_platform {
 

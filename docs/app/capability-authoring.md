@@ -73,7 +73,7 @@ Typed event helpers live in `blusys/app/integration_dispatch.hpp` (`dispatch_var
 ## See also
 
 - [Capabilities](capabilities.md) — usage of the shipped capabilities
-- [Capability composition](capability-composition.md) — wiring in `integration/`
+- [Capability composition](capability-composition.md) — wiring in `platform/`
 - [App runtime model](app-runtime-model.md) — event queue, threading, drops
-- `components/blusys_framework/include/blusys/app/capability.hpp` — the base contract
-- `components/blusys_framework/include/blusys/app/capabilities/storage.hpp` — smallest reference capability
+- `components/blusys/include/blusys/framework/capabilities/` — the base contract and reference capabilities
+- `components/blusys/include/blusys/framework/capabilities/storage.hpp` — smallest reference capability
