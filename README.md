@@ -62,47 +62,41 @@ One ESP-IDF component (`components/blusys/`). Pure concept code on the left, esc
 flowchart TB
     subgraph prod["Product · main/"]
         direction LR
-        core["core/<br/><small>state · actions · reducer</small>"]
-        pui["ui/<br/><small>screens · widgets</small>"]
-        mplat["platform/<br/><small>wiring · profile · capabilities</small>"]
+        core["<b>core/</b><br/><sub>state · actions · reducer</sub>"]
+        pui["<b>ui/</b><br/><sub>screens · widgets</sub>"]
+        mplat["<b>platform/</b><br/><sub>wiring · capabilities</sub>"]
     end
 
-    subgraph fw["Framework · C++  (pure)"]
-        direction LR
-        pure["app · capabilities · flows<br/>engine · feedback · ui"]
-        fplat["framework/platform/"]
+    subgraph fw["Framework · C++ (pure)"]
+        direction TB
+        pure["<b>app · capabilities · flows</b><br/><b>engine · feedback · ui</b>"]
+        fplat["<b>framework/platform/</b><br/><sub>escape hatch</sub>"]
+        pure --> fplat
     end
 
-    subgraph runtime["Platform runtime · C"]
+    subgraph rt["Runtime · C"]
         direction LR
-        svc["Services<br/><small>wifi · mqtt · storage · ota</small>"]
-        drv["Drivers<br/><small>button · lcd · dht · panels</small>"]
-        hal["HAL<br/><small>gpio · spi · i2c · adc · timer</small>"]
+        svc["<b>Services</b><br/><sub>wifi · mqtt · storage · ota</sub>"]
+        drv["<b>Drivers</b><br/><sub>button · lcd · dht · panels</sub>"]
+        hal["<b>HAL</b><br/><sub>gpio · spi · i2c · adc · timer</sub>"]
+        svc --> drv
+        drv --> hal
+        svc --> hal
     end
 
     idf([ESP-IDF · silicon])
 
-    core   --> pure
-    pui    --> pure
-    mplat  --> pure
-    mplat  -. direct .-> svc
-    mplat  -. direct .-> drv
-    mplat  -. direct .-> hal
+    core  --> pure
+    pui   --> pure
+    mplat --> pure
+    fplat --> rt
+    mplat -. escape .-> rt
+    hal   --> idf
 
-    pure   --> fplat
-    fplat  --> svc
-    fplat  --> drv
-    fplat  --> hal
-
-    svc    --> drv
-    svc    --> hal
-    drv    --> hal
-    hal    --> idf
-
-    classDef pure    fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef escape  fill:#fef3c7,stroke:#b45309,color:#78350f
-    classDef cc      fill:#d1fae5,stroke:#065f46,color:#064e3b
-    classDef idf     fill:#e5e7eb,stroke:#4b5563,color:#111827
+    classDef pure   fill:#dbeafe,stroke:#1e3a8a,color:#1e3a8a,stroke-width:2px
+    classDef escape fill:#fde68a,stroke:#92400e,color:#78350f,stroke-width:2px
+    classDef cc     fill:#a7f3d0,stroke:#065f46,color:#064e3b,stroke-width:2px
+    classDef idf    fill:#e5e7eb,stroke:#374151,color:#111827
 
     class core,pui,pure pure
     class mplat,fplat escape
