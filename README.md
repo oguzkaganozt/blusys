@@ -6,7 +6,7 @@
 
 ## Why this repo exists
 
-Blusys is not a generic “better ESP-IDF.” It is a shared **operating model** for recurring product families: same app shape (`core/` · `ui/` · `integration/`), same `update(ctx, state, action)` loop, host-first iteration where it helps, and escape hatches to HAL and services when you need them.
+Blusys is not a generic “better ESP-IDF.” It is a shared **operating model** for recurring product families: same app shape (`core/` · `ui/` · `platform/`), same `update(ctx, state, action)` loop, host-first iteration where it helps, and escape hatches to HAL and services when you need them.
 
 ### Product foundations
 
@@ -20,7 +20,7 @@ These are the grounding constraints for the platform.
 
 **Product shape** (scaffold axes): **`--interface`** (`handheld` | `surface` | `headless`), **`--with`** (framework capabilities), **`--policy`** (non-capability overlays such as `low_power`). Generated projects record the same shape in **`blusys.project.yml`**. Run **`blusys create --list`** for descriptions and dependency rules.
 
-**Default layout** (single local **`main/`** component): **`core/`** — state, actions, reducer, product behavior; **`ui/`** — screens and widgets from state, dispatch actions (**no direct runtime-service calls**); **`integration/`** — wiring, profile, capabilities, bridges (**thin assembly**, not business logic).
+**Default layout** (single local **`main/`** component): **`core/`** — state, actions, reducer, product behavior; **`ui/`** — screens and widgets from state, dispatch actions (**no direct runtime-service calls**); **`platform/`** — wiring, profile, capabilities, bridges (**thin assembly**, not business logic). Mirrors the framework: `core/` ↔ `framework/app/`+`capabilities/`+`flows/`, `ui/` ↔ `framework/ui/`, `platform/` ↔ `framework/platform/` (the sole escape hatch to HAL/drivers/services).
 
 **Split.** The **app** owns state, actions, `update`, screens/views, optional profiles and capabilities. The **framework** owns boot/shutdown, loop/tick, routing, feedback, LVGL lifecycle and locks, overlays, host/device/headless adapters, input bridges, default service orchestration, and reusable flows. Use `ctx.services()` for navigation, overlays, and filesystem handles exposed there — do not use `route_sink` directly from product code. Normal product code should not depend on `runtime.init`, `feedback_sink`, `blusys_display_lock`, `lv_screen_load`, raw LCD bring-up on the canonical path, or raw Wi-Fi orchestration on the canonical path.
 

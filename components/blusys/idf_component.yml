@@ -1,6 +1,5 @@
-## IDF Component Manager manifest for the merged blusys platform component.
-## Version will be bumped to 7.0.0 in Phase 8 (breaking change — major version).
-version: "6.1.1"
+## IDF Component Manager manifest for the blusys platform component.
+version: "7.0.0"
 description: "Blusys platform — HAL, drivers, services, and framework in one component"
 url: "https://github.com/blusys/blusys"
 license: "MIT"

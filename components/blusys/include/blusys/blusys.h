@@ -2,17 +2,12 @@
  *
  * Include this from C code to pull in everything.
  * For finer-grained control, include specific layer headers directly.
- *
- * Populated per phase:
- *   Phase 2: hal/
- *   Phase 3: drivers/
- *   Phase 4: services/
  */
 
 #ifndef BLUSYS_BLUSYS_H
 #define BLUSYS_BLUSYS_H
 
-/* --- HAL layer (Phase 2) --- */
+/* --- HAL layer --- */
 #include "blusys/hal/adc.h"
 #include "blusys/hal/dac.h"
 #include "blusys/hal/efuse.h"
@@ -48,7 +43,7 @@
 #include "blusys/hal/version.h"
 #include "blusys/hal/wdt.h"
 
-/* --- Drivers layer (Phase 3) --- */
+/* --- Drivers layer --- */
 #include "blusys/drivers/button.h"
 #include "blusys/drivers/buzzer.h"
 #include "blusys/drivers/dht.h"
@@ -58,7 +53,7 @@
 #include "blusys/drivers/led_strip.h"
 #include "blusys/drivers/seven_seg.h"
 
-/* --- Services layer (Phase 4) --- */
+/* --- Services layer --- */
 /* connectivity */
 #include "blusys/services/connectivity/ble_gatt.h"
 #include "blusys/services/connectivity/bluetooth.h"
