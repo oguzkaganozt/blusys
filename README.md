@@ -60,48 +60,23 @@ One ESP-IDF component (`components/blusys/`). Pure concept code on the left, esc
 
 ```mermaid
 flowchart TB
-    subgraph prod["Product · main/"]
-        direction LR
-        core["<b>core/</b><br/><sub>state · actions · reducer</sub>"]
-        pui["<b>ui/</b><br/><sub>screens · widgets</sub>"]
-        mplat["<b>platform/</b><br/><sub>wiring · capabilities</sub>"]
-    end
-
-    subgraph fw["Framework · C++ (pure)"]
-        direction TB
-        pure["<b>app · capabilities · flows</b><br/><b>engine · feedback · ui</b>"]
-        fplat["<b>framework/platform/</b><br/><sub>escape hatch</sub>"]
-        pure --> fplat
-    end
-
-    subgraph rt["Runtime · C"]
-        direction LR
-        svc["<b>Services</b><br/><sub>wifi · mqtt · storage · ota</sub>"]
-        drv["<b>Drivers</b><br/><sub>button · lcd · dht · panels</sub>"]
-        hal["<b>HAL</b><br/><sub>gpio · spi · i2c · adc · timer</sub>"]
-        svc --> drv
-        drv --> hal
-        svc --> hal
-    end
-
+    prod["<b>Your product</b> — main/<br/><sub>core/ · ui/ · platform/</sub>"]
+    fw["<b>Framework</b> — C++, pure<br/><sub>app · capabilities · flows · engine · feedback · ui</sub><br/><sub><i>framework/platform/ is the only seam to hardware</i></sub>"]
+    rt["<b>Runtime</b> — C<br/><sub>services ➜ drivers ➜ hal</sub>"]
     idf([ESP-IDF · silicon])
 
-    core  --> pure
-    pui   --> pure
-    mplat --> pure
-    fplat --> rt
-    mplat -. escape .-> rt
-    hal   --> idf
+    prod ==> fw ==> rt ==> idf
+    prod -. "main/platform/ · escape hatch" .-> rt
 
-    classDef pure   fill:#dbeafe,stroke:#1e3a8a,color:#1e3a8a,stroke-width:2px
-    classDef escape fill:#fde68a,stroke:#92400e,color:#78350f,stroke-width:2px
-    classDef cc     fill:#a7f3d0,stroke:#065f46,color:#064e3b,stroke-width:2px
-    classDef idf    fill:#e5e7eb,stroke:#374151,color:#111827
+    classDef a fill:#dbeafe,stroke:#1e3a8a,stroke-width:2px,color:#1e3a8a
+    classDef b fill:#e0e7ff,stroke:#3730a3,stroke-width:2px,color:#312e81
+    classDef c fill:#d1fae5,stroke:#065f46,stroke-width:2px,color:#064e3b
+    classDef d fill:#f3f4f6,stroke:#4b5563,color:#111827
 
-    class core,pui,pure pure
-    class mplat,fplat escape
-    class svc,drv,hal cc
-    class idf idf
+    class prod a
+    class fw b
+    class rt c
+    class idf d
 ```
 
 **Rules** (enforced by `blusys lint`):
