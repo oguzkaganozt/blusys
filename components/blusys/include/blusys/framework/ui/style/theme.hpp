@@ -2,6 +2,8 @@
 
 #include "lvgl.h"
 
+#include "blusys/framework/ui/style/display_types.hpp"
+
 #include <cstdint>
 
 namespace blusys {
@@ -11,8 +13,8 @@ struct icon_set;
 
 // Density presets for spacing, touch targets, and information density.
 enum class density : std::uint8_t {
+    normal,       // default — balanced for most products (zero-init value)
     compact,      // industrial panels, small displays, dense status surfaces
-    normal,       // default — balanced for most products
     comfortable,  // consumer controllers, touch-first surfaces
 };
 
@@ -48,12 +50,28 @@ struct theme_tokens {
     lv_color_t color_outline;
     lv_color_t color_outline_variant;
 
-    // ---- density ----
-    density density_mode;
+    // ---- display context (both fields computed by presets::for_display()) ----
+    // Preset initializers do not set these; direct callers that bypass
+    // for_display() receive the zero-init values (density::normal,
+    // display_orientation::landscape). See ADR 0003.
+    density            density_mode;
+    display_orientation orientation;
 
     // Default feedback voice when identity.feedback is nullptr (custom themes
     // should set this to match their tactile intent).
     theme_feedback_voice feedback_voice;
+
+    // ---- design resolution ----
+    // The pixel dimensions this theme was authored for.
+    // for_display() normalises both sides to (short_edge, long_edge) and
+    // computes scale = min(short_actual/short_design, long_actual/long_design),
+    // so a 320×240 preset produces ratio 1.0 on a 240×320 portrait display.
+    // Must be set explicitly in every preset — designated initializer
+    // aggregate-init zero-initialises fields not listed, so there is no
+    // safe default. A zero value disables scaling (for_display() returns
+    // the theme unchanged when design_w == 0 || design_h == 0).
+    std::uint32_t design_w = 0;
+    std::uint32_t design_h = 0;
 
     // ---- spacing ----
     int spacing_xs;

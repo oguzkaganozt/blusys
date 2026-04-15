@@ -58,4 +58,17 @@ inline device_profile st7735_160x128()
     return p;
 }
 
+// Native portrait — 128×160.  swap_xy and mirror_x disabled.
+// x_offset/y_offset are inherited from the landscape config; many 1.8"
+// modules need these even in portrait — override if your module differs.
+inline device_profile st7735_128x160()
+{
+    device_profile p = st7735_160x128();
+    p.lcd.width    = BLUSYS_ST7735_NATIVE_WIDTH;
+    p.lcd.height   = BLUSYS_ST7735_NATIVE_HEIGHT;
+    p.lcd.swap_xy  = false;
+    p.lcd.mirror_x = false;
+    return p;
+}
+
 }  // namespace blusys::platform

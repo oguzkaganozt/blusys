@@ -35,10 +35,11 @@ const blusys::theme_tokens &expressive_dark()
         .color_outline          = lv_color_hex(0x2D3240),
         .color_outline_variant  = lv_color_hex(0x1E222E),
 
-        // density — comfortable for consumer / controller
-        .density_mode = blusys::density::comfortable,
-
         .feedback_voice = blusys::theme_feedback_voice::expressive,
+
+        // design resolution — ILI9341 320×240 reference
+        .design_w = 320,
+        .design_h = 240,
 
         // spacing
         .spacing_xs  = 4,
@@ -124,10 +125,11 @@ const blusys::theme_tokens &operational_light()
         .color_outline          = lv_color_hex(0xD1D5DB),
         .color_outline_variant  = lv_color_hex(0xE5E7EB),
 
-        // density — compact for industrial
-        .density_mode = blusys::density::compact,
-
         .feedback_voice = blusys::theme_feedback_voice::operational,
+
+        // design resolution — ST7735 160×128 reference
+        .design_w = 160,
+        .design_h = 128,
 
         // spacing — tighter
         .spacing_xs  = 2,
@@ -213,10 +215,13 @@ const blusys::theme_tokens &oled()
         .color_outline          = lv_color_hex(0x444444),
         .color_outline_variant  = lv_color_hex(0x333333),
 
-        // density — ultra compact
-        .density_mode = blusys::density::compact,
-
         .feedback_voice = blusys::theme_feedback_voice::operational,
+
+        // design resolution — SSD1306 128×64 reference; OLED bypasses scaling
+        // but dimensions must be set to prevent division-by-zero if for_display()
+        // is ever called with MONO_PAGE kind.
+        .design_w = 128,
+        .design_h = 64,
 
         // spacing — minimal
         .spacing_xs  = 1,
@@ -274,6 +279,144 @@ const blusys::theme_tokens &oled()
         .icons = &blusys::icon_set_minimal(),
     };
     return tokens;
+}
+
+// ---- display-aware scaling ----
+
+namespace {
+
+// Scale a non-negative pixel token by ratio, floor at 1px.
+// Preserves zero and negative values (e.g. radius_button = 999 is a
+// sentinel meaning "pill" — scaling it preserves that intent).
+inline int scale_px(int token, float ratio) noexcept
+{
+    if (token <= 0) {
+        return token;
+    }
+    const int v = static_cast<int>(static_cast<float>(token) * ratio + 0.5f);
+    return v < 1 ? 1 : v;
+}
+
+// Step fonts between the two available sizes.
+// Below 0.75: use the smaller font.  At or above 0.75: keep the larger font.
+// Non-Montserrat fonts (custom themes) are passed through unchanged.
+inline const lv_font_t *scale_font(const lv_font_t *f, float ratio) noexcept
+{
+    const lv_font_t *sm = blusys::fonts::montserrat_14();
+    const lv_font_t *lg = blusys::fonts::montserrat_20();
+    if (f == sm || f == lg) {
+        return (ratio < 0.75f) ? sm : lg;
+    }
+    return f;  // custom font — leave unchanged
+}
+
+// Auto-select the closest built-in base preset for a color display.
+// The short-edge threshold (200 px) intentionally matches
+// blusys::kTierBreakpointPx in display_constants.hpp — keep in sync.
+// Not #included here: presets.cpp is UI layer, that header is platform layer.
+const blusys::theme_tokens &auto_base(std::uint32_t w, std::uint32_t h,
+                                       blusys_display_panel_kind_t kind) noexcept
+{
+    if (kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE) {
+        return oled();
+    }
+    const std::uint32_t short_edge = (w < h) ? w : h;
+    return (short_edge <= 200) ? operational_light() : expressive_dark();
+}
+
+}  // namespace
+
+blusys::theme_tokens for_display(const blusys::theme_tokens &base,
+                                  std::uint32_t actual_w,
+                                  std::uint32_t actual_h,
+                                  blusys_display_panel_kind_t kind)
+{
+    // MONO_PAGE: return unchanged except for orientation — oled preset is pixel-perfect.
+    if (kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE) {
+        blusys::theme_tokens t = base;
+        t.orientation = blusys::orientation_for(actual_w, actual_h);
+        return t;
+    }
+
+    // Guard against uninitialised design dimensions.
+    // Still set orientation so callers get a meaningful value.
+    if (base.design_w == 0 || base.design_h == 0) {
+        blusys::theme_tokens t = base;
+        t.orientation = blusys::orientation_for(actual_w, actual_h);
+        return t;
+    }
+
+    // Normalise both sides to (short_edge, long_edge) so that a 320×240 preset
+    // produces ratio 1.0 on a 240×320 portrait display instead of 0.75.
+    const std::uint32_t short_actual  = (actual_w  < actual_h)  ? actual_w  : actual_h;
+    const std::uint32_t long_actual   = (actual_w  < actual_h)  ? actual_h  : actual_w;
+    const std::uint32_t short_design  = (base.design_w < base.design_h) ? base.design_w : base.design_h;
+    const std::uint32_t long_design   = (base.design_w < base.design_h) ? base.design_h : base.design_w;
+    const float sx    = static_cast<float>(short_actual) / static_cast<float>(short_design);
+    const float sy    = static_cast<float>(long_actual)  / static_cast<float>(long_design);
+    const float ratio = (sx < sy) ? sx : sy;
+
+    blusys::theme_tokens t = base;  // copy — preserves colours and all non-pixel fields
+
+    // --- pixel-unit tokens ---
+    t.spacing_xs       = scale_px(base.spacing_xs,       ratio);
+    t.spacing_sm       = scale_px(base.spacing_sm,       ratio);
+    t.spacing_md       = scale_px(base.spacing_md,       ratio);
+    t.spacing_lg       = scale_px(base.spacing_lg,       ratio);
+    t.spacing_xl       = scale_px(base.spacing_xl,       ratio);
+    t.spacing_2xl      = scale_px(base.spacing_2xl,      ratio);
+    t.touch_target_min = scale_px(base.touch_target_min, ratio);
+    t.radius_card      = scale_px(base.radius_card,      ratio);
+    t.radius_button    = scale_px(base.radius_button,    ratio);
+
+    t.shadow_card_width    = static_cast<std::uint8_t>(scale_px(
+                                 static_cast<int>(base.shadow_card_width),    ratio));
+    t.shadow_card_ofs_y    = static_cast<std::int16_t>(
+                                 static_cast<float>(base.shadow_card_ofs_y)   * ratio);
+    t.shadow_card_spread   = static_cast<std::uint8_t>(scale_px(
+                                 static_cast<int>(base.shadow_card_spread),   ratio));
+    t.shadow_overlay_width = static_cast<std::uint8_t>(scale_px(
+                                 static_cast<int>(base.shadow_overlay_width), ratio));
+    t.shadow_overlay_ofs_y = static_cast<std::int16_t>(
+                                 static_cast<float>(base.shadow_overlay_ofs_y) * ratio);
+    t.focus_ring_width     = scale_px(base.focus_ring_width, ratio);
+
+    // --- font stepping ---
+    t.font_body    = scale_font(base.font_body,    ratio);
+    t.font_body_sm = scale_font(base.font_body_sm, ratio);
+    t.font_title   = scale_font(base.font_title,   ratio);
+    t.font_display = scale_font(base.font_display, ratio);
+    t.font_label   = scale_font(base.font_label,   ratio);
+    t.font_mono    = scale_font(base.font_mono,    ratio);
+
+    // --- density_mode and orientation from scale ---
+    // This is the sole production writer of both fields. Presets intentionally
+    // do not set them (see Step 2a); they are authored here from actual dims.
+    // compact:     scale < 0.6  (drives shell chrome collapse in shell_create)
+    // normal:      0.6 ≤ scale ≤ 1.2
+    // comfortable: scale > 1.2  (theme designed for a smaller display, shown on a larger one)
+    if (ratio < 0.6f) {
+        t.density_mode = blusys::density::compact;
+    } else if (ratio > 1.2f) {
+        t.density_mode = blusys::density::comfortable;
+    } else {
+        t.density_mode = blusys::density::normal;
+    }
+    t.orientation = blusys::orientation_for(actual_w, actual_h);
+
+    // Update design dims so the returned token reflects the actual display.
+    // Makes double-scaling idempotent (for_display applied twice gives the same result).
+    t.design_w = actual_w;
+    t.design_h = actual_h;
+
+    return t;
+}
+
+blusys::theme_tokens for_display(std::uint32_t actual_w,
+                                  std::uint32_t actual_h,
+                                  blusys_display_panel_kind_t kind)
+{
+    return for_display(auto_base(actual_w, actual_h, kind), actual_w, actual_h, kind);
 }
 
 }  // namespace blusys::presets

@@ -49,4 +49,16 @@ inline device_profile ili9341_320x240()
     return p;
 }
 
+// Native portrait — 240×320.  swap_xy and mirror_x disabled.
+// Typical use: handheld products where the longer edge is vertical.
+inline device_profile ili9341_240x320()
+{
+    device_profile p = ili9341_320x240();
+    p.lcd.width    = BLUSYS_ILI9341_NATIVE_WIDTH;
+    p.lcd.height   = BLUSYS_ILI9341_NATIVE_HEIGHT;
+    p.lcd.swap_xy  = false;
+    p.lcd.mirror_x = false;
+    return p;
+}
+
 }  // namespace blusys::platform

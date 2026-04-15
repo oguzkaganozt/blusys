@@ -91,11 +91,6 @@ void device_deinit(blusys_lcd_t *lcd, blusys_display_t *ui)
     BLUSYS_LOGI(kTag, "device deinitialized");
 }
 
-void device_set_default_theme()
-{
-    blusys::set_theme(blusys::presets::expressive_dark());
-}
-
 void device_set_theme(const void *tokens)
 {
     if (tokens != nullptr) {

@@ -64,8 +64,14 @@ shell shell_create(const shell_config &config)
     lv_obj_set_style_pad_all(s.root, 0, 0);
     lv_obj_set_style_pad_gap(s.root, 0, 0);
 
+    // Suppress header, status bar, and tab bar on compact-density themes.
+    // for_display() sets density_mode = compact when scale < 0.6.
+    // The content area uses flex_grow=1 and fills the full screen automatically
+    // when chrome is absent — no app-side adjustment required.
+    const bool full_chrome = (t.density_mode != blusys::density::compact);
+
     // Header bar.
-    if (config.header.enabled) {
+    if (full_chrome && config.header.enabled) {
         const int h = (config.header.height >= 0) ? config.header.height
                                                    : (t.spacing_xl + t.spacing_sm);
         s.header = lv_obj_create(s.root);
@@ -100,7 +106,7 @@ shell shell_create(const shell_config &config)
     }
 
     // Status bar.
-    if (config.status.enabled) {
+    if (full_chrome && config.status.enabled) {
         const int h = (config.status.height >= 0) ? config.status.height
                                                    : t.spacing_lg;
         s.status = lv_obj_create(s.root);
@@ -132,7 +138,7 @@ shell shell_create(const shell_config &config)
     lv_obj_remove_flag(s.content_area, LV_OBJ_FLAG_SCROLLABLE);
 
     // Tab bar (items added via shell_set_tabs).
-    if (config.tabs.enabled) {
+    if (full_chrome && config.tabs.enabled) {
         const int h = (config.tabs.height >= 0) ? config.tabs.height
                                                  : (t.spacing_xl + t.spacing_sm);
         s.tab_bar = lv_obj_create(s.root);

@@ -49,6 +49,7 @@
 
 #if defined(BLUSYS_FRAMEWORK_HAS_UI)
 #include "blusys/framework/platform/auto.hpp"
+#include "blusys/framework/ui/style/presets.hpp"
 #endif
 
 #include <cstdint>
@@ -71,7 +72,6 @@ std::uint32_t host_get_ticks_ms();
 void host_tick_inc(std::uint32_t ms);
 std::uint32_t host_frame_step();
 void host_frame_delay(std::uint32_t ms);
-void host_set_default_theme();
 void host_set_theme(const void *tokens);
 
 #ifdef ESP_PLATFORM
@@ -80,7 +80,6 @@ blusys_err_t device_init(blusys::device_profile &profile,
                          blusys_lcd_t **lcd_out,
                          blusys_display_t **ui_out);
 void device_deinit(blusys_lcd_t *lcd, blusys_display_t *ui);
-void device_set_default_theme();
 void device_set_theme(const void *tokens);
 std::uint32_t device_get_ticks_ms();
 void device_delay(std::uint32_t ms);
@@ -120,11 +119,17 @@ void run_host(const app_spec<State, Action> &spec,
     platform::host_init(hor_res, ver_res, title);
 
     const blusys::theme_tokens *resolved_theme = resolve_theme_tokens(spec);
-    if (resolved_theme != nullptr) {
-        platform::host_set_theme(static_cast<const void *>(resolved_theme));
-    } else {
-        platform::host_set_default_theme();
-    }
+    const blusys::theme_tokens scaled_theme =
+        (resolved_theme != nullptr)
+            ? blusys::presets::for_display(*resolved_theme,
+                  static_cast<std::uint32_t>(hor_res),
+                  static_cast<std::uint32_t>(ver_res),
+                  BLUSYS_DISPLAY_PANEL_KIND_RGB565)
+            : blusys::presets::for_display(
+                  static_cast<std::uint32_t>(hor_res),
+                  static_cast<std::uint32_t>(ver_res),
+                  BLUSYS_DISPLAY_PANEL_KIND_RGB565);
+    platform::host_set_theme(static_cast<const void *>(&scaled_theme));
 
     app_runtime<State, Action> runtime(spec);
     blusys_err_t err = runtime.init();
@@ -191,11 +196,17 @@ void run_device(const app_spec<State, Action> &spec,
     blusys_display_invalidation_begin(ui);
 
     const blusys::theme_tokens *resolved_theme = resolve_theme_tokens(spec);
-    if (resolved_theme != nullptr) {
-        platform::device_set_theme(static_cast<const void *>(resolved_theme));
-    } else {
-        platform::device_set_default_theme();
-    }
+    const blusys::theme_tokens scaled_theme =
+        (resolved_theme != nullptr)
+            ? blusys::presets::for_display(*resolved_theme,
+                  static_cast<std::uint32_t>(profile.lcd.width),
+                  static_cast<std::uint32_t>(profile.lcd.height),
+                  profile.ui.panel_kind)
+            : blusys::presets::for_display(
+                  static_cast<std::uint32_t>(profile.lcd.width),
+                  static_cast<std::uint32_t>(profile.lcd.height),
+                  profile.ui.panel_kind);
+    platform::device_set_theme(static_cast<const void *>(&scaled_theme));
 
     app_runtime<State, Action> runtime(spec);
     err = runtime.init();

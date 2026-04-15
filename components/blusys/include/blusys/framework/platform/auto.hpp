@@ -8,6 +8,7 @@
 #include "blusys/framework/platform/host.hpp"
 #include "blusys/framework/platform/profile.hpp"
 #include "blusys/framework/platform/reference_build.hpp"
+#include "blusys/framework/platform/dashboard_display_dims.hpp"
 
 #if defined(ESP_PLATFORM)
 #include "sdkconfig.h"
@@ -68,16 +69,8 @@ namespace blusys {
     return profiles::ili9341_320x240();
 #else
     device_profile p{};
-#if defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 1)
-    p.lcd.width  = 480;
-    p.lcd.height = 320;
-#elif defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 2)
-    p.lcd.width  = 160;
-    p.lcd.height = 128;
-#else
-    p.lcd.width  = 320;
-    p.lcd.height = 240;
-#endif
+    p.lcd.width          = BLUSYS_DASHBOARD_DISPLAY_W;
+    p.lcd.height         = BLUSYS_DASHBOARD_DISPLAY_H;
     p.lcd.bits_per_pixel = 16;
     p.ui.panel_kind      = BLUSYS_UI_PANEL_KIND_RGB565;
     return p;
@@ -89,17 +82,9 @@ namespace blusys {
 [[nodiscard]] inline host_profile auto_host_profile_dashboard(const char *title)
 {
     host_profile hp{};
-#if defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 1)
-    hp.hor_res = 480;
-    hp.ver_res = 320;
-#elif defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 2)
-    hp.hor_res = 160;
-    hp.ver_res = 128;
-#else
-    hp.hor_res = 320;
-    hp.ver_res = 240;
-#endif
-    hp.title = title;
+    hp.hor_res = BLUSYS_DASHBOARD_DISPLAY_W;
+    hp.ver_res = BLUSYS_DASHBOARD_DISPLAY_H;
+    hp.title   = title;
     return hp;
 }
 

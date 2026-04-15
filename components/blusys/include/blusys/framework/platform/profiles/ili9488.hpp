@@ -49,4 +49,17 @@ inline device_profile ili9488_480x320()
     return p;
 }
 
+// Native portrait — 320×480.  swap_xy and mirror_x disabled.
+// Note: large portrait panels are very bandwidth-heavy on SPI; validate
+// DMA sizing and flicker-free operation before shipping.
+inline device_profile ili9488_320x480()
+{
+    device_profile p = ili9488_480x320();
+    p.lcd.width    = BLUSYS_ILI9488_NATIVE_WIDTH;
+    p.lcd.height   = BLUSYS_ILI9488_NATIVE_HEIGHT;
+    p.lcd.swap_xy  = false;
+    p.lcd.mirror_x = false;
+    return p;
+}
+
 }  // namespace blusys::platform
