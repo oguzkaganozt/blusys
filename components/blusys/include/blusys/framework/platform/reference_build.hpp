@@ -32,7 +32,7 @@ namespace blusys::platform {
     CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789
 inline device_profile interactive_device_profile()
 {
-    return profiles::st7789_320x240();
+    return st7789_320x240();
 }
 
 inline const char *interactive_display_label() { return "ST7789 320x240"; }
@@ -42,7 +42,7 @@ inline const char *interactive_hardware_label() { return "ST7789 reference"; }
 
 inline device_profile interactive_device_profile()
 {
-    return profiles::st7735_160x128();
+    return st7735_160x128();
 }
 
 inline const char *interactive_display_label() { return "ST7735 160x128"; }

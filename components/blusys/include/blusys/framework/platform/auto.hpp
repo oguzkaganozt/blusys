@@ -55,18 +55,18 @@ namespace blusys {
 {
 #if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
     CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB
-    return profiles::qemu_rgb_dashboard_320x240();
+    return blusys::platform::qemu_rgb_dashboard_320x240();
 #elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
-    return profiles::ili9488_480x320();
+    return blusys::platform::ili9488_480x320();
 #elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
-    return profiles::st7735_160x128();
+    return blusys::platform::st7735_160x128();
 #elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306
-    return profiles::ssd1306_128x64();
+    return blusys::platform::ssd1306_128x64();
 #elif defined(ESP_PLATFORM)
-    return profiles::ili9341_320x240();
+    return blusys::platform::ili9341_320x240();
 #else
     device_profile p{};
     p.lcd.width          = BLUSYS_DASHBOARD_DISPLAY_W;

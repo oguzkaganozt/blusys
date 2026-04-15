@@ -2,21 +2,21 @@
 
 // Generic SPI ST7789 240×320 → 320×240 landscape device profile.
 //
-// Pre-fills a device_profile for a common 2.0” ST7789 SPI module in
+// Pre-fills a device_profile for a common 2.0" ST7789 SPI module in
 // landscape (320 wide × 240 tall after swap_xy). Pin defaults follow the
 // same target-gated pattern as st7735.hpp for consistency across dev kits.
 //
 // Override any field after construction (offsets, mirrors, pins, backlight).
 //
-// Hardware validation (before treating defaults as board-specific “recommended”):
+// Hardware validation (before treating defaults as board-specific "recommended"):
 // - Image offset: set lcd.spi.x_offset / y_offset if the panel shows a colored
 //   bar or shifted viewport (common on bare modules).
 // - Inversion / color: toggle lcd.invert_color or adjust BGR if red/blue swap.
 // - Backlight: set lcd.spi.bl_pin and drive brightness if your PCB wires BL.
 // - SPI clock: lower pclk_hz if you see tearing or bus errors on long wires.
 
-#include “blusys/framework/platform/profile.hpp”
-#include “blusys/drivers/panels/st7789.h”
+#include "blusys/framework/platform/profile.hpp"
+#include "blusys/drivers/panels/st7789.h"
 
 namespace blusys::platform {
 
