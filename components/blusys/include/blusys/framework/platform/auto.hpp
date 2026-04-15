@@ -27,14 +27,14 @@ namespace blusys {
 
 [[nodiscard]] inline device_profile auto_profile_interactive()
 {
-    return reference_build::interactive_device_profile();
+    return blusys::platform::interactive_device_profile();
 }
 
 #else
 
 [[nodiscard]] inline device_profile auto_profile_interactive()
 {
-    return reference_build::interactive_host_logical_profile();
+    return blusys::platform::interactive_host_logical_profile();
 }
 
 #endif
@@ -43,7 +43,7 @@ namespace blusys {
 
 [[nodiscard]] inline host_profile auto_host_profile_interactive(const char *window_title = nullptr)
 {
-    return reference_build::interactive_host_window_profile(
+    return blusys::platform::interactive_host_window_profile(
         window_title != nullptr ? window_title : "Pulse Controller");
 }
 
@@ -72,7 +72,7 @@ namespace blusys {
     p.lcd.width          = BLUSYS_DASHBOARD_DISPLAY_W;
     p.lcd.height         = BLUSYS_DASHBOARD_DISPLAY_H;
     p.lcd.bits_per_pixel = 16;
-    p.ui.panel_kind      = BLUSYS_UI_PANEL_KIND_RGB565;
+    p.ui.panel_kind      = BLUSYS_DISPLAY_PANEL_KIND_RGB565;
     return p;
 #endif
 }

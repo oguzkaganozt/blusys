@@ -9,9 +9,9 @@ namespace blusys_examples {
 
 /// True when a canonical connectivity tag should trigger a panel connectivity resync
 /// (status screen refresh).
-inline bool panel_connectivity_event_triggers_sync(blusys::app::capability_event_tag tag)
+inline bool panel_connectivity_event_triggers_sync(blusys::capability_event_tag tag)
 {
-    using CET = blusys::app::capability_event_tag;
+    using CET = blusys::capability_event_tag;
     switch (tag) {
     case CET::wifi_started:
     case CET::wifi_connecting:
@@ -38,7 +38,7 @@ inline bool panel_connectivity_event_triggers_sync(std::uint32_t id)
     if (id < 0x0100U || id > 0x01FFU) {
         return false;
     }
-    using CE = blusys::app::connectivity_event;
+    using CE = blusys::connectivity_event;
     switch (static_cast<CE>(id)) {
     case CE::wifi_started:
     case CE::wifi_connecting:

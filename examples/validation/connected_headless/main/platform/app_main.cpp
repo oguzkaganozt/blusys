@@ -4,7 +4,7 @@
 
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/capabilities/storage.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 #include <cstdio>
 
@@ -22,7 +22,7 @@ blusys_err_t status_cb(char *json_buf, size_t buf_len,
     return BLUSYS_OK;
 }
 
-static blusys::app::connectivity_capability conn{{
+static blusys::connectivity_capability conn{{
     .wifi_ssid     = CONFIG_WIFI_SSID,
     .wifi_password = CONFIG_WIFI_PASSWORD,
 
@@ -35,13 +35,13 @@ static blusys::app::connectivity_capability conn{{
     .local_ctrl_status_cb   = status_cb,
 }};
 
-static blusys::app::storage_capability stor{{
+static blusys::storage_capability stor{{
     .spiffs_base_path = "/fs",
 }};
 
-static blusys::app::capability_list capabilities{&conn, &stor};
+static blusys::capability_list capabilities{&conn, &stor};
 
-static const blusys::app::app_spec<connected_headless::State, connected_headless::Action> spec{
+static const blusys::app_spec<connected_headless::State, connected_headless::Action> spec{
     .initial_state  = {},
     .update         = connected_headless::update,
     .on_tick        = connected_headless::on_tick,

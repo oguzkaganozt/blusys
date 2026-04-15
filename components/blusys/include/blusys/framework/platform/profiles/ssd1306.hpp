@@ -41,7 +41,7 @@ inline device_profile ssd1306_128x64()
     p.ui.lcd          = nullptr;
     p.ui.buf_lines    = 8;
     p.ui.full_refresh = false;
-    p.ui.panel_kind   = BLUSYS_UI_PANEL_KIND_MONO_PAGE;
+    p.ui.panel_kind   = BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE;
 
     p.has_encoder = false;
     p.brightness  = 100;
@@ -69,7 +69,7 @@ inline device_profile ssd1306_128x32()
     p.ui.lcd          = nullptr;
     p.ui.buf_lines    = 8;
     p.ui.full_refresh = false;
-    p.ui.panel_kind   = BLUSYS_UI_PANEL_KIND_MONO_PAGE;
+    p.ui.panel_kind   = BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE;
 
     p.has_encoder = false;
     p.brightness  = 100;

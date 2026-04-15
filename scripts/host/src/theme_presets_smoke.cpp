@@ -10,8 +10,8 @@
 
 int main()
 {
-    const auto &expressive = blusys::app::presets::expressive_dark();
-    const auto &operational = blusys::app::presets::operational_light();
+    const auto &expressive = blusys::presets::expressive_dark();
+    const auto &operational = blusys::presets::operational_light();
 
     if (expressive.design_w == 0 || operational.design_w == 0 ||
         expressive.design_w == operational.design_w) {

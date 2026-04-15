@@ -5,15 +5,15 @@
 #include "blusys/framework/ui/binding/action_widgets.hpp"
 #include "blusys/framework/ui/composition/page.hpp"
 #include "blusys/framework/ui/widgets/slider.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 namespace connected_device::ui {
 
-void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state)
 {
     (void)svc;
     using Tag = connected_device::Tag;
-    namespace view = blusys::app::view;
+    namespace view = blusys;
 
     auto p = view::page_create();
 

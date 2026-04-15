@@ -6,15 +6,15 @@
 #include "blusys/framework/ui/composition/overlay_manager.hpp"
 #include "blusys/framework/ui/composition/page.hpp"
 #include "blusys/framework/ui/widgets/slider.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 namespace framework_device_basic::ui {
 
-void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, AppState &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, AppState &state)
 {
     (void)svc;
     using Tag = framework_device_basic::Tag;
-    namespace view = blusys::app::view;
+    namespace view = blusys;
 
     auto p = view::page_create();
 

@@ -15,7 +15,7 @@ inline device_profile qemu_rgb_dashboard_320x240()
     p.ui.lcd          = nullptr;
     p.ui.buf_lines    = 24;
     p.ui.full_refresh = false;
-    p.ui.panel_kind   = BLUSYS_UI_PANEL_KIND_RGB565_NATIVE;
+    p.ui.panel_kind   = BLUSYS_DISPLAY_PANEL_KIND_RGB565_NATIVE;
 
     p.has_encoder = false;
     p.brightness  = -1;

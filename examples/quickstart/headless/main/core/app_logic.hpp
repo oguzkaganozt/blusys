@@ -33,7 +33,7 @@ enum class action_tag : std::uint8_t {
 struct action {
     action_tag                      tag = action_tag::sample_tick;
     std::int32_t                    value = 0;
-    blusys::app::capability_event   cap_event{};
+    blusys::capability_event   cap_event{};
 };
 
 // ---- app state ----
@@ -79,7 +79,7 @@ struct app_state {
 
 // ---- public functions ----
 
-void update(blusys::app::app_ctx &ctx, app_state &state, const action &event);
+void update(blusys::app_ctx &ctx, app_state &state, const action &event);
 
 const char *op_state_name(op_state s);
 

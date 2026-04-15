@@ -28,7 +28,7 @@ struct ShellChrome {
 };
 
 struct HomePanel {
-    blusys::app::view::percent_output_cluster output{};
+    blusys::percent_output_cluster output{};
     lv_obj_t *preset_kv  = nullptr;
     lv_obj_t *hold_badge = nullptr;
 

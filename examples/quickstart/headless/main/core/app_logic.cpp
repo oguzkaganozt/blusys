@@ -1,6 +1,6 @@
 #include "core/app_logic.hpp"
 
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 #include <cstdio>
 
@@ -56,9 +56,9 @@ const char *op_state_name(op_state s)
     return "unknown";
 }
 
-void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
+void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {
-    using CET = blusys::app::capability_event_tag;
+    using CET = blusys::capability_event_tag;
 
     switch (event.tag) {
     case action_tag::capability_event:

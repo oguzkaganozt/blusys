@@ -8,7 +8,7 @@
 #include "blusys/framework/app/app.hpp"
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/capabilities/storage.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 #include <cstdint>
 
@@ -39,14 +39,14 @@ enum class action_tag : std::uint8_t {
 
 struct Action {
     action_tag                      tag = action_tag::periodic_tick;
-    blusys::app::capability_event   cap_event{};
+    blusys::capability_event   cap_event{};
 };
 
 // ---- reducer ----
 
-void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
+void update(blusys::app_ctx &ctx, State &state, const Action &action)
 {
-    using CET = blusys::app::capability_event_tag;
+    using CET = blusys::capability_event_tag;
 
     switch (action.tag) {
     case action_tag::capability_event:
@@ -107,7 +107,7 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
 
 // ---- on_tick ----
 
-void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
 {
     (void)svc;
     ctx.dispatch(Action{.tag = action_tag::periodic_tick});
@@ -115,24 +115,24 @@ void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State & 
 
 // ---- capability configuration ----
 
-blusys::app::connectivity_capability conn{{
+blusys::connectivity_capability conn{{
     .wifi_ssid     = "demo-network",
     .wifi_password = "demo-password",
     .sntp_server   = "pool.ntp.org",
     .mdns_hostname = "blusys-headless",
 }};
 
-blusys::app::storage_capability stor{{
+blusys::storage_capability stor{{
     .spiffs_base_path = "/fs",
 }};
 
-blusys::app::capability_list capabilities{&conn, &stor};
+blusys::capability_list capabilities{&conn, &stor};
 
 }  // namespace
 
 // ---- app definition ----
 
-static auto spec = blusys::app::app_spec<State, Action>{
+static auto spec = blusys::app_spec<State, Action>{
     .initial_state  = {},
     .update         = update,
     .on_tick        = on_tick,

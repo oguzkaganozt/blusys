@@ -5,7 +5,7 @@
 
 namespace {
 
-static const blusys::app::app_spec<framework_device_basic::AppState, framework_device_basic::Action> spec{
+static const blusys::app_spec<framework_device_basic::AppState, framework_device_basic::Action> spec{
     .initial_state  = {.volume = 50, .muted = false},
     .update         = framework_device_basic::update,
     .on_init        = framework_device_basic::ui::on_init,
@@ -16,4 +16,4 @@ static const blusys::app::app_spec<framework_device_basic::AppState, framework_d
 
 }  // namespace
 
-BLUSYS_APP_MAIN_DEVICE(spec, blusys::app::profiles::st7735_160x128())
+BLUSYS_APP_MAIN_DEVICE(spec, blusys::platform::st7735_160x128())

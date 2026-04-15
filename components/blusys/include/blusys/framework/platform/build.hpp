@@ -11,7 +11,7 @@ namespace blusys::platform {
 
 [[nodiscard]] inline const char *version_string()
 {
-    return reference_build::build_version_string();
+    return build_version_string();
 }
 
 #if defined(ESP_PLATFORM)
@@ -32,19 +32,19 @@ namespace blusys::platform {
 
 [[nodiscard]] inline const char *panel_label()
 {
-    return reference_build::interactive_display_label();
+    return interactive_display_label();
 }
 
 [[nodiscard]] inline const char *hardware_label()
 {
-    return reference_build::interactive_hardware_label();
+    return interactive_hardware_label();
 }
 
 #if defined(BLUSYS_FRAMEWORK_HAS_UI)
 
 [[nodiscard]] inline shell_config shell_config_for_device_profile(const device_profile &prof)
 {
-    return reference_build::interactive_shell_config_for_profile(prof);
+    return interactive_shell_config_for_profile(prof);
 }
 
 #if !defined(ESP_PLATFORM)

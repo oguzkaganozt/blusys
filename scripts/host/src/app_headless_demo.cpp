@@ -10,7 +10,7 @@
 // macro handles everything.
 
 #include "blusys/framework/app/app.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 #include <cstdint>
 
@@ -47,7 +47,7 @@ struct Action {
 
 // ---- reducer ----
 
-void update(blusys::app::app_ctx &ctx, SensorState &state, const Action &action)
+void update(blusys::app_ctx &ctx, SensorState &state, const Action &action)
 {
     switch (action.tag) {
     case ActionTag::sensor_reading:
@@ -88,7 +88,7 @@ void update(blusys::app::app_ctx &ctx, SensorState &state, const Action &action)
 
 // ---- on_tick: simulate sensor readings ----
 
-void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, SensorState &state, std::uint32_t now_ms)
+void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, SensorState &state, std::uint32_t now_ms)
 {
     (void)svc;
     (void)state;
@@ -114,7 +114,7 @@ void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, SensorSt
 
 // ---- app definition ----
 
-static const blusys::app::app_spec<SensorState, Action> spec{
+static const blusys::app_spec<SensorState, Action> spec{
     .initial_state  = {},
     .update         = update,
     .on_init        = nullptr,

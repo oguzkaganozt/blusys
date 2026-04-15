@@ -13,7 +13,7 @@ enum class action_tag : std::uint8_t {
 
 struct action {
     action_tag tag = action_tag::capability_event;
-    blusys::app::capability_event cap_event{};
+    blusys::capability_event cap_event{};
 };
 
 struct app_state {
@@ -21,6 +21,6 @@ struct app_state {
     bool telemetry_ready    = false;
 };
 
-void update(blusys::app::app_ctx &ctx, app_state &state, const action &event);
+void update(blusys::app_ctx &ctx, app_state &state, const action &event);
 
 }  // namespace telemetry_lp

@@ -11,8 +11,8 @@ namespace connected_device {
 
 constexpr const char *kTag = "conn_dev";
 
-namespace view_ns = blusys::app::view;
-using blusys::app::app_ctx;
+namespace view_ns = blusys;
+using blusys::app_ctx;
 
 struct State {
     bool         connected  = false;
@@ -32,11 +32,11 @@ enum class Tag : std::uint8_t {
 
 struct Action {
     Tag                             tag{};
-    blusys::app::capability_event   cap_event{};
+    blusys::capability_event   cap_event{};
 };
 
 void update(app_ctx &ctx, State &state, const Action &action);
 
-bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out);
+bool map_intent(blusys::app_services &svc, blusys::framework::intent intent, Action *out);
 
 }  // namespace connected_device

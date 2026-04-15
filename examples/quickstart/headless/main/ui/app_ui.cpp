@@ -8,7 +8,7 @@
 #include "blusys/framework/ui/binding/action_widgets.hpp"
 #include "blusys/framework/ui/binding/bindings.hpp"
 #include "blusys/framework/ui/composition/page.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 #include "lvgl.h"
 
@@ -20,7 +20,7 @@
 
 namespace headless_telemetry::ui {
 
-namespace view = blusys::app::view;
+namespace view = blusys;
 
 namespace {
 
@@ -64,7 +64,7 @@ void refresh_timer_cb(lv_timer_t *timer)
     }
 }
 
-lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/,
+lv_obj_t *create_status(blusys::app_ctx &ctx, const void * /*params*/,
                         lv_group_t **group_out)
 {
     auto *st = ctx.product_state<app_state>();
@@ -90,7 +90,7 @@ lv_obj_t *create_status(blusys::app::app_ctx &ctx, const void * /*params*/,
 
 }  // namespace
 
-void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, app_state &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state)
 {
     (void)svc;
     BLUSYS_LOGI("headless_telemetry",

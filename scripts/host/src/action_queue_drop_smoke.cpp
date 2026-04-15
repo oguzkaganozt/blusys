@@ -2,7 +2,7 @@
 // Build: blusys_framework_host + app_headless_platform (SDL timer only).
 
 #include "blusys/framework/app/internal/app_runtime.hpp"
-#include "blusys/error.h"
+#include "blusys/hal/error.h"
 
 #include <cstdlib>
 
@@ -12,18 +12,18 @@ struct State {};
 
 enum class Action { X };
 
-void update(blusys::app::app_ctx &, State &, const Action &) {}
+void update(blusys::app_ctx &, State &, const Action &) {}
 
 }  // namespace
 
 int main()
 {
-    blusys::app::app_spec<State, Action> spec{
+    blusys::app_spec<State, Action> spec{
         .initial_state = {},
         .update        = update,
     };
 
-    blusys::app::app_runtime<State, Action, 2> runtime(spec);
+    blusys::app_runtime<State, Action, 2> runtime(spec);
     if (runtime.init() != BLUSYS_OK) {
         return 1;
     }

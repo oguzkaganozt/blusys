@@ -13,7 +13,7 @@
 #include "blusys/framework/capabilities/storage.hpp"
 #include "blusys/framework/capabilities/telemetry.hpp"
 #include "blusys/framework/platform/build.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 #include <cstdio>
 #include <cstdint>
@@ -48,7 +48,7 @@ const char *headless_telemetry_surface_label()
 #endif
 
 #ifndef BLUSYS_FRAMEWORK_HAS_UI
-void on_init_host(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc,
+void on_init_host(blusys::app_ctx & /*ctx*/, blusys::app_services &svc,
                   app_state & /*state*/)
 {
     (void)svc;
@@ -59,7 +59,7 @@ void on_init_host(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc
 
 // ---- telemetry delivery callback ----
 
-bool deliver_telemetry(const blusys::app::telemetry_metric *metrics,
+bool deliver_telemetry(const blusys::telemetry_metric *metrics,
                        std::size_t count, void * /*user_ctx*/)
 {
     // In a real product this would send metrics over MQTT, HTTP, or a
@@ -87,7 +87,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len,
         "\"interface\":\"headless\","
         "\"firmware\":\"%s\","
         "\"surface\":\"%s\"}",
-        blusys::app::build_profile::version_string(),
+        blusys::platform::version_string(),
         headless_telemetry_surface_label());
     if (written < 0 || static_cast<size_t>(written) >= buf_len) {
         return BLUSYS_ERR_NO_MEM;
@@ -99,7 +99,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len,
 
 // ---- capability instances ----
 
-blusys::app::connectivity_config conn_cfg{
+blusys::connectivity_config conn_cfg{
 #ifdef ESP_PLATFORM
     .wifi_ssid     = CONFIG_WIFI_SSID,
     .wifi_password = CONFIG_WIFI_PASSWORD,
@@ -115,9 +115,9 @@ blusys::app::connectivity_config conn_cfg{
     .prov_skip_if_provisioned = true,
 };
 
-blusys::app::connectivity_capability connectivity{conn_cfg};
+blusys::connectivity_capability connectivity{conn_cfg};
 
-blusys::app::lan_control_capability lan_control{{
+blusys::lan_control_capability lan_control{{
     .device_name = "Headless Telemetry",
 #ifdef ESP_PLATFORM
     .status_cb   = local_ctrl_status,
@@ -126,27 +126,27 @@ blusys::app::lan_control_capability lan_control{{
     .instance_name = "Blusys Headless Telemetry",
 }};
 
-blusys::app::telemetry_capability telemetry{{
+blusys::telemetry_capability telemetry{{
     .deliver           = deliver_telemetry,
     .flush_threshold   = 8,
     .flush_interval_ms = 15000,
 }};
 
-blusys::app::diagnostics_capability diagnostics{{
+blusys::diagnostics_capability diagnostics{{
     .enable_console       = true,
     .snapshot_interval_ms = 5000,
 }};
 
-blusys::app::ota_capability ota{{
+blusys::ota_capability ota{{
     .firmware_url    = "https://ota.example.com/headless-telemetry.bin",
     .auto_mark_valid = true,
 }};
 
-blusys::app::storage_capability storage{{
+blusys::storage_capability storage{{
     .spiffs_base_path = "/app",
 }};
 
-blusys::app::capability_list capabilities{
+blusys::capability_list capabilities{
     &connectivity, &lan_control, &telemetry, &diagnostics, &ota, &storage};
 
 // ---- sensor helpers ----
@@ -162,7 +162,7 @@ float drift_sensor(float base, float range, std::uint32_t tick)
 // Lives in integration/ because it needs direct access to the telemetry
 // capability instance for record().
 
-void on_tick(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_services &svc, app_state &state, std::uint32_t now_ms)
 {
     (void)svc;
     ++state.sample_count;
@@ -192,7 +192,7 @@ void on_tick(blusys::app::app_ctx & /*ctx*/, blusys::app::app_services &svc, app
 
 // ---- app spec ----
 
-const blusys::app::app_spec<app_state, action> spec{
+const blusys::app_spec<app_state, action> spec{
     .initial_state  = {},
     .update         = update,
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
@@ -208,7 +208,7 @@ const blusys::app::app_spec<app_state, action> spec{
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI) && \
     CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI
-    .theme          = &blusys::app::presets::oled(),
+    .theme          = &blusys::presets::oled(),
 #endif
 #endif
 };
@@ -221,7 +221,7 @@ const blusys::app::app_spec<app_state, action> spec{
     CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI && defined(BLUSYS_FRAMEWORK_HAS_UI)
 #include "blusys/framework/platform/profiles/ssd1306.hpp"
 BLUSYS_APP_MAIN_DEVICE(headless_telemetry::system::spec,
-                       blusys::app::profiles::ssd1306_128x64())
+                       blusys::platform::ssd1306_128x64())
 #else
 BLUSYS_APP_MAIN_HEADLESS(headless_telemetry::system::spec)
 #endif

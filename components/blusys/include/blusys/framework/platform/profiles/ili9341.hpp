@@ -41,7 +41,7 @@ inline device_profile ili9341_320x240()
     p.ui.lcd          = nullptr;
     p.ui.buf_lines    = 24;
     p.ui.full_refresh = false;
-    p.ui.panel_kind   = BLUSYS_UI_PANEL_KIND_RGB565;
+    p.ui.panel_kind   = BLUSYS_DISPLAY_PANEL_KIND_RGB565;
 
     p.has_encoder = false;
     p.brightness  = 100;

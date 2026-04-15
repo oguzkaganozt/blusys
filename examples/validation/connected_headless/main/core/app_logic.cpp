@@ -1,6 +1,6 @@
 #include "core/app_logic.hpp"
 
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 #include <cstdio>
 #include <ctime>
@@ -14,9 +14,9 @@ constexpr const char *TAG = "app";
 
 }  // namespace
 
-void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
+void update(blusys::app_ctx &ctx, State &state, const Action &action)
 {
-    using CET = blusys::app::capability_event_tag;
+    using CET = blusys::capability_event_tag;
 
     switch (action.tag) {
     case action_tag::capability_event:
@@ -62,7 +62,7 @@ void update(blusys::app::app_ctx &ctx, State &state, const Action &action)
     }
 }
 
-void on_tick(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
 {
     (void)svc;
     ctx.dispatch(Action{.tag = action_tag::periodic_tick});

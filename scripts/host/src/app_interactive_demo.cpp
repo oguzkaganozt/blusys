@@ -11,7 +11,7 @@
 // see the improvement.
 
 #include "blusys/framework/app/app.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 #include <cstdint>
 
@@ -19,9 +19,9 @@ namespace {
 
 constexpr const char *kTag = "volume_app";
 
-namespace view = blusys::app::view;
-using blusys::app::app_ctx;
-using blusys::app::app_services;
+namespace view = blusys;
+using blusys::app_ctx;
+using blusys::app_services;
 
 // ---- state ----
 
@@ -86,7 +86,7 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
 
 // ---- intent-to-action map ----
 
-bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out)
+bool map_intent(blusys::app_services &svc, blusys::framework::intent intent, Action *out)
 {
     (void)svc;
     switch (intent) {
@@ -149,7 +149,7 @@ void on_init(app_ctx &ctx, app_services &svc, AppState &state)
 
 // ---- app definition ----
 
-static const blusys::app::app_spec<AppState, Action> spec{
+static const blusys::app_spec<AppState, Action> spec{
     .initial_state  = {.volume = 50, .muted = false},
     .update         = update,
     .on_init        = on_init,

@@ -6,7 +6,7 @@
 #include <SDL2/SDL.h>
 #include <cstdint>
 
-namespace blusys_app_platform {
+namespace {
 
 static bool s_sdl_inited = false;
 
@@ -17,6 +17,10 @@ static void ensure_sdl_init()
         s_sdl_inited = true;
     }
 }
+
+}  // namespace
+
+namespace blusys::platform {
 
 std::uint32_t headless_get_ticks_ms()
 {
@@ -29,4 +33,4 @@ void headless_delay(std::uint32_t ms)
     SDL_Delay(ms);
 }
 
-}  // namespace blusys_app_platform
+}  // namespace blusys::platform

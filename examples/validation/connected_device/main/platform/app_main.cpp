@@ -6,16 +6,16 @@
 
 namespace {
 
-static blusys::app::connectivity_capability conn{{
+static blusys::connectivity_capability conn{{
     .wifi_ssid     = CONFIG_WIFI_SSID,
     .wifi_password = CONFIG_WIFI_PASSWORD,
     .sntp_server   = "pool.ntp.org",
     .mdns_hostname = "blusys-device",
 }};
 
-static blusys::app::capability_list capabilities{&conn};
+static blusys::capability_list capabilities{&conn};
 
-static const blusys::app::app_spec<connected_device::State, connected_device::Action> spec{
+static const blusys::app_spec<connected_device::State, connected_device::Action> spec{
     .initial_state = {},
     .update        = connected_device::update,
     .on_init       = connected_device::ui::on_init,
@@ -27,4 +27,4 @@ static const blusys::app::app_spec<connected_device::State, connected_device::Ac
 
 }  // namespace
 
-BLUSYS_APP_MAIN_DEVICE(spec, blusys::app::profiles::st7735_160x128())
+BLUSYS_APP_MAIN_DEVICE(spec, blusys::platform::st7735_160x128())

@@ -4,6 +4,6 @@
 
 namespace connected_device::ui {
 
-void on_init(blusys::app::app_ctx &ctx, blusys::app::app_services &svc, State &state);
+void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state);
 
 }

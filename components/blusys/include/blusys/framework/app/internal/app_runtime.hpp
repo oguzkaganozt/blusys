@@ -239,7 +239,7 @@ public:
     [[nodiscard]] app_ctx &ctx() { return ctx_; }
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    [[nodiscard]] screen_router &screen_router() { return screen_router_; }
+    [[nodiscard]] class screen_router &screen_router() { return screen_router_; }
 #endif
 
 private:
@@ -407,8 +407,8 @@ private:
     blusys::ring_buffer<Action, ActionQueueCap>          action_queue_{};
     detail::feedback_logging_sink                        feedback_logging_sink_{};
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    screen_router                                  screen_router_{};
-    shell                                          shell_{};
+    class screen_router                            screen_router_{};
+    struct shell                                   shell_{};
 #else
     detail::default_route_sink                           default_route_sink_{};
 #endif

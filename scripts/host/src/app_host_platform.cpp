@@ -18,7 +18,7 @@
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/framework/ui/style/theme.hpp"
 
-namespace blusys_app_platform {
+namespace blusys::platform {
 
 namespace {
 
@@ -229,4 +229,4 @@ void host_set_theme(const void *tokens)
     }
 }
 
-}  // namespace blusys_app_platform
+}  // namespace blusys::platform

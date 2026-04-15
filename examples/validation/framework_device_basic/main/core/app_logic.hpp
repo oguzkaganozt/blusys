@@ -10,8 +10,8 @@ namespace framework_device_basic {
 
 constexpr const char *kTag = "volume_app";
 
-namespace view_ns = blusys::app::view;
-using blusys::app::app_ctx;
+namespace view_ns = blusys;
+using blusys::app_ctx;
 
 struct AppState {
     std::int32_t volume = 50;
@@ -33,6 +33,6 @@ struct Action {
 
 void update(app_ctx &ctx, AppState &state, const Action &action);
 
-bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out);
+bool map_intent(blusys::app_services &svc, blusys::framework::intent intent, Action *out);
 
 }  // namespace framework_device_basic

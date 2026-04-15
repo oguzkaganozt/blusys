@@ -21,11 +21,11 @@ enum class action_tag : std::uint8_t {
 
 struct Action {
     action_tag                      tag = action_tag::periodic_tick;
-    blusys::app::capability_event   cap_event{};
+    blusys::capability_event   cap_event{};
 };
 
-void update(blusys::app::app_ctx &ctx, State &state, const Action &action);
+void update(blusys::app_ctx &ctx, State &state, const Action &action);
 
-void on_tick(blusys::app::app_ctx &ctx,  blusys::app::app_services &svc, State &state, std::uint32_t now_ms);
+void on_tick(blusys::app_ctx &ctx,  blusys::app_services &svc, State &state, std::uint32_t now_ms);
 
 }  // namespace connected_headless

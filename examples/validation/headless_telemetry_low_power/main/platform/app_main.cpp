@@ -4,13 +4,13 @@
 
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/capabilities/telemetry.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 namespace telemetry_lp::system {
 
 namespace {
 
-bool deliver_metrics(const blusys::app::telemetry_metric *metrics, std::size_t count,
+bool deliver_metrics(const blusys::telemetry_metric *metrics, std::size_t count,
                      void * /*user_ctx*/)
 {
     BLUSYS_LOGI("htlm_lp", "telemetry deliver: %u metrics", static_cast<unsigned>(count));
@@ -23,7 +23,7 @@ bool deliver_metrics(const blusys::app::telemetry_metric *metrics, std::size_t c
     return true;
 }
 
-blusys::app::connectivity_config conn_cfg{
+blusys::connectivity_config conn_cfg{
 #ifdef ESP_PLATFORM
     .wifi_ssid     = CONFIG_WIFI_SSID,
     .wifi_password = CONFIG_WIFI_PASSWORD,
@@ -39,17 +39,17 @@ blusys::app::connectivity_config conn_cfg{
     .prov_skip_if_provisioned = true,
 };
 
-blusys::app::connectivity_capability connectivity{conn_cfg};
+blusys::connectivity_capability connectivity{conn_cfg};
 
-blusys::app::telemetry_capability telemetry{{
+blusys::telemetry_capability telemetry{{
     .deliver         = deliver_metrics,
     .flush_threshold = 4,
     .flush_interval_ms = 60000,
 }};
 
-blusys::app::capability_list capabilities{&connectivity, &telemetry};
+blusys::capability_list capabilities{&connectivity, &telemetry};
 
-const blusys::app::app_spec<app_state, action> spec{
+const blusys::app_spec<app_state, action> spec{
     .initial_state = {},
     .update        = update,
     .capability_event_discriminant =

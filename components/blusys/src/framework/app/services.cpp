@@ -65,7 +65,7 @@ bool app_services::can_navigate_back() const
     return navigation_stack_depth() > 1;
 }
 
-overlay_manager *app_services::overlay_manager() const
+class overlay_manager *app_services::overlay_manager() const
 {
     if (screen_router_ != nullptr) {
         return &screen_router_->overlays();

@@ -1,7 +1,7 @@
 #if CONFIG_PLATFORM_LAB_SCENARIO_FRAMEWORK_CORE
 #include "blusys/framework/framework.hpp"
 
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 namespace {
 

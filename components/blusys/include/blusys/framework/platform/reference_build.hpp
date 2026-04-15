@@ -63,7 +63,7 @@ inline device_profile interactive_host_logical_profile()
     p.lcd.height         = 240;
 #endif
     p.lcd.bits_per_pixel = 16;
-    p.ui.panel_kind      = BLUSYS_UI_PANEL_KIND_RGB565;
+    p.ui.panel_kind      = BLUSYS_DISPLAY_PANEL_KIND_RGB565;
     return p;
 }
 

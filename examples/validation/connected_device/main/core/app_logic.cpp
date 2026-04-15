@@ -1,12 +1,12 @@
 #include "core/app_logic.hpp"
 
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 namespace connected_device {
 
 void update(app_ctx &ctx, State &state, const Action &action)
 {
-    using CET = blusys::app::capability_event_tag;
+    using CET = blusys::capability_event_tag;
 
     switch (action.tag) {
     case Tag::capability_event:
@@ -59,7 +59,7 @@ void update(app_ctx &ctx, State &state, const Action &action)
     }
 }
 
-bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, Action *out)
+bool map_intent(blusys::app_services &svc, blusys::framework::intent intent, Action *out)
 {
     (void)svc;
     switch (intent) {

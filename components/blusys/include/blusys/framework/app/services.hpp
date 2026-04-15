@@ -72,11 +72,11 @@ public:
     [[nodiscard]] std::size_t navigation_stack_depth() const;
     [[nodiscard]] bool        can_navigate_back() const;
 
-    [[nodiscard]] screen_router *screen_router() const { return screen_router_; }
+    [[nodiscard]] class screen_router *screen_router() const { return screen_router_; }
 
-    [[nodiscard]] overlay_manager *overlay_manager() const;
+    [[nodiscard]] class overlay_manager *overlay_manager() const;
 
-    [[nodiscard]] shell *shell() const { return shell_; }
+    [[nodiscard]] struct shell *shell() const { return shell_; }
 #endif
 
 #ifdef ESP_PLATFORM
@@ -91,8 +91,8 @@ private:
 
     blusys::route_sink *route_sink_ = nullptr;
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    screen_router *screen_router_ = nullptr;
-    shell         *shell_        = nullptr;
+    class screen_router *screen_router_ = nullptr;
+    struct shell        *shell_        = nullptr;
 #endif
     storage_capability *storage_for_fs_ = nullptr;
 };

@@ -9,37 +9,37 @@ namespace handheld_starter::system {
 
 const char *controller_profile_label_for_build()
 {
-    return blusys::app::build_profile::panel_label();
+    return blusys::platform::panel_label();
 }
 
 const char *controller_hardware_label_for_build()
 {
-    return blusys::app::build_profile::hardware_label();
+    return blusys::platform::hardware_label();
 }
 
 const char *controller_build_version_for_build()
 {
-    return blusys::app::build_profile::version_string();
+    return blusys::platform::version_string();
 }
 
 namespace {
 
-static const blusys::app::view::shell_config kShellConfig =
-    blusys::app::auto_shell(blusys::app::auto_profile_interactive(), "Controller");
+static const blusys::shell_config kShellConfig =
+    blusys::auto_shell(blusys::auto_profile_interactive(), "Controller");
 
-static blusys::app::storage_capability storage{{
+static blusys::storage_capability storage{{
     .init_nvs        = true,
     .spiffs_base_path = "/controller",
 }};
 
-static blusys::app::connectivity_capability connectivity{{
+static blusys::connectivity_capability connectivity{{
     .prov_service_name = "pulse-ctrl",
     .prov_pop = "123456",
 }};
 
-static blusys::app::capability_list capabilities{&storage, &connectivity};
+static blusys::capability_list capabilities{&storage, &connectivity};
 
-static const blusys::app::app_spec<app_state, action> spec{
+static const blusys::app_spec<app_state, action> spec{
     .initial_state = {},
     .update = update,
     .on_init = ui::on_init,
@@ -47,7 +47,7 @@ static const blusys::app::app_spec<app_state, action> spec{
     .capability_event_discriminant =
         static_cast<std::uint32_t>(action_tag::capability_event),
     .capabilities = &capabilities,
-    .theme = &blusys::app::presets::expressive_dark(),
+    .theme = &blusys::presets::expressive_dark(),
     .shell = &kShellConfig,
 };
 

@@ -42,7 +42,7 @@
 #include "blusys/framework/ui/input/encoder.hpp"
 #include "blusys/framework/ui/widgets.hpp"
 #include "blusys/framework/ui/style/presets.hpp"
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 namespace {
 
@@ -259,7 +259,7 @@ blusys::framework::runtime *g_runtime_ptr = &g_runtime;
 
 void build_demo_screen()
 {
-    blusys::ui::set_theme(blusys::app::presets::expressive_dark());
+    blusys::ui::set_theme(blusys::presets::expressive_dark());
 
     lv_obj_t *screen = blusys::ui::screen_create({});
     g_state.screen = screen;

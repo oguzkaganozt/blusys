@@ -2,7 +2,7 @@
 
 #include "blusys_examples/clamp_percent.hpp"
 
-#include "blusys/log.h"
+#include "blusys/hal/log.h"
 
 #include <cstdint>
 
@@ -28,9 +28,9 @@ const char *accent_name(std::int32_t index)
     }
 }
 
-void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
+void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {
-    using CET = blusys::app::capability_event_tag;
+    using CET = blusys::capability_event_tag;
 
     switch (event.tag) {
     case action_tag::capability_event:
@@ -112,7 +112,7 @@ void update(blusys::app::app_ctx &ctx, app_state &state, const action &event)
     ui::sync_all_panels(state);
 }
 
-bool map_intent(blusys::app::app_services &svc, blusys::framework::intent intent, action *out)
+bool map_intent(blusys::app_services &svc, blusys::framework::intent intent, action *out)
 {
     (void)svc;
     switch (intent) {
