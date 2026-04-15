@@ -52,7 +52,7 @@ Workflow: `.github/workflows/ci.yml`. Triggered by push/PR to `main` on watched 
 |-------|--------------|
 | Lint | `scripts/lint-layering.sh` + layer-invariant scripts + `scripts/check-framework-ui-sources.py` |
 | Inventory | `scripts/check-inventory.py` + `scripts/check-product-layout.py` |
-| Host smoke | Configure/build `scripts/host`, run smokes, `ctest`, sanitizer build/run; build `headless_telemetry` + `surface_gateway` + `handheld_bluetooth` (+ `mqtt_dashboard`) host examples; `scaffold-smoke.sh` |
+| Host smoke | Configure/build `scripts/host`, run smokes, `ctest`, sanitizer build/run; build `headless` host example; `scaffold-smoke.sh` |
 | Docs | `mkdocs build --strict` |
 | Device builds | `scripts/build-from-inventory.sh` with `ci_pr=true` across the target matrix |
 | Display variants | `scripts/build-display-variants.sh` |

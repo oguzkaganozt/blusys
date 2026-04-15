@@ -131,14 +131,8 @@ jobs:
                      action_queue_drop_smoke \
                      snapshot_buffer_smoke
           export BLUSYS_PATH="${GITHUB_WORKSPACE}"
-          cmake -S examples/quickstart/headless_telemetry/host -B examples/quickstart/headless_telemetry/build-host-ci
-          cmake --build examples/quickstart/headless_telemetry/build-host-ci -j
-          cmake -S examples/reference/surface_gateway/host -B examples/reference/surface_gateway/build-host-ci
-          cmake --build examples/reference/surface_gateway/build-host-ci -j
-          cmake -S examples/reference/handheld_bluetooth/host -B examples/reference/handheld_bluetooth/build-host-ci
-          cmake --build examples/reference/handheld_bluetooth/build-host-ci -j
-          cmake -S examples/reference/mqtt_dashboard/host -B examples/reference/mqtt_dashboard/build-host-ci
-          cmake --build examples/reference/mqtt_dashboard/build-host-ci -j
+          cmake -S examples/quickstart/headless/host -B examples/quickstart/headless/build-host-ci
+          cmake --build examples/quickstart/headless/build-host-ci -j
 
       - name: Run host smoke binaries
         shell: bash
@@ -349,9 +343,8 @@ jobs:
               printf '::endgroup::\n'
           }
 
-          run_test validation/smoke              15 "status_ok_string: OK"
-          run_test validation/system_info        15 "free_heap_bytes:"
-          run_test validation/concurrency_timer  30 "concurrent_result: ok"
+          run_test validation/platform_lab       15 "status_ok_string: OK"
+          run_test validation/hal_io_lab         15 "free_heap_bytes:"
 
           printf '\n=== QEMU Results for %s ===\n' "$TARGET"
           printf 'Pass: %d  Fail: %d  Total: %d\n' "$pass" "$fail" "$((pass + fail))"

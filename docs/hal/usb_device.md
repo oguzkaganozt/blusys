@@ -47,7 +47,7 @@ blusys_usb_device_close(dev);
 On unsupported targets, or when `espressif/esp_tinyusb` is not present in the project's `idf_component.yml`, all functions return `BLUSYS_ERR_NOT_SUPPORTED`.
 
 !!! note "Managed component dependency"
-    Add `espressif/esp_tinyusb: "~0.14.0"` to your project's `main/idf_component.yml`. See `examples/validation/usb_device_basic/main/idf_component.yml` as a reference.
+    Add `espressif/esp_tinyusb: "~0.14.0"` to your project's `main/idf_component.yml`. See `examples/validation/usb_peripheral_lab/main/idf_component.yml` as a reference.
 
 !!! note "Mutual exclusion"
     The ESP32-S3 USB OTG port operates in either host **or** device mode. `blusys_usb_device` and `blusys_usb_host` cannot be open simultaneously.
@@ -180,4 +180,4 @@ Sends a HID input report to the host. Only valid when `device_class` is `BLUSYS_
 
 ## Example App
 
-See `examples/validation/usb_device_basic/`.
+See `examples/validation/usb_peripheral_lab` (USB device scenario).

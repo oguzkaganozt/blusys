@@ -173,4 +173,4 @@ All operations on a handle are serialised with an internal mutex. Concurrent cal
 
 ## Example App
 
-See `examples/validation/fs_basic/`.
+See `examples/validation/storage_basic/` (menuconfig: SPIFFS).

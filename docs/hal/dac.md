@@ -109,4 +109,4 @@ Sets the DAC output to `value`. The output voltage is approximately `value / 255
 
 ## Example App
 
-See `examples/validation/dac_basic/`.
+See `examples/validation/hal_io_lab` (DAC scenario).

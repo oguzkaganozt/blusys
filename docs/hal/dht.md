@@ -202,7 +202,7 @@ All functions are serialised by an internal mutex. The mutex is released before 
 
 ## Example App
 
-See `examples/validation/dht_basic/` — reads temperature and humidity 10 times at 3-second intervals.
+See `examples/validation/hal_io_lab` (DHT scenario) — reads temperature and humidity 10 times at 3-second intervals.
 
 ```bash
 blusys build dht_basic

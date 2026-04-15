@@ -1,0 +1,171 @@
+choice PLATFORM_LAB_SCENARIO
+    prompt "Platform validation scenario"
+    default PLATFORM_LAB_SCENARIO_SMOKE
+config PLATFORM_LAB_SCENARIO_SMOKE
+    bool "smoke"
+config PLATFORM_LAB_SCENARIO_STORAGE
+    bool "storage_basic"
+config PLATFORM_LAB_SCENARIO_POWER_MGMT
+    bool "power_mgmt_basic"
+config PLATFORM_LAB_SCENARIO_CONSOLE
+    bool "console_basic"
+config PLATFORM_LAB_SCENARIO_FRAMEWORK_CORE
+    bool "framework_core_basic"
+config PLATFORM_LAB_SCENARIO_CONCURRENCY
+    bool "concurrency_suite"
+endchoice
+
+menu "smoke options"
+    depends on CONFIG_PLATFORM_LAB_SCENARIO_SMOKE
+    menu "Blusys Smoke Test Example"
+    endmenu
+endmenu
+
+menu "storage_basic options"
+    depends on CONFIG_PLATFORM_LAB_SCENARIO_STORAGE
+    choice BLUSYS_STORAGE_BASIC_BACKEND
+        prompt "Storage backend to exercise"
+        default BLUSYS_STORAGE_BASIC_BACKEND_SPIFFS
+        help
+            SPIFFS uses the "storage" partition; FAT uses the "ffat" partition (both are present in partitions.csv).
+    
+    config BLUSYS_STORAGE_BASIC_BACKEND_SPIFFS
+        bool "SPIFFS (blusys_fs)"
+    
+    config BLUSYS_STORAGE_BASIC_BACKEND_FATFS
+        bool "FAT (blusys_fatfs)"
+    
+    endchoice
+endmenu
+
+menu "power_mgmt_basic options"
+    depends on CONFIG_PLATFORM_LAB_SCENARIO_POWER_MGMT
+    menu "Blusys Power Management Basic Example"
+    endmenu
+endmenu
+
+menu "console_basic options"
+    depends on CONFIG_PLATFORM_LAB_SCENARIO_CONSOLE
+    menu "Blusys Console Basic Example"
+    
+    config BLUSYS_CONSOLE_UART_NUM
+        int "UART port number for console"
+        range 0 2
+        default 0
+        help
+            UART peripheral used for the interactive console.
+            UART0 is the default debug/flash port on most devkits.
+    
+    endmenu
+endmenu
+
+menu "concurrency_suite options"
+    depends on CONFIG_PLATFORM_LAB_SCENARIO_CONCURRENCY
+    choice BLUSYS_CONCURRENCY_SUITE_SCENARIO
+        prompt "Concurrency test scenario"
+        default BLUSYS_CONCURRENCY_SUITE_TIMER
+        help
+            Select which HAL concurrency stress test to run (timer needs no wiring;
+            SPI/UART need loopback; I2C probes an address with or without a device).
+    
+    config BLUSYS_CONCURRENCY_SUITE_TIMER
+        bool "Timer (start/stop vs ISR)"
+    
+    config BLUSYS_CONCURRENCY_SUITE_I2C
+        bool "I2C master probe"
+    
+    config BLUSYS_CONCURRENCY_SUITE_SPI
+        bool "SPI loopback transfer"
+    
+    config BLUSYS_CONCURRENCY_SUITE_UART
+        bool "UART TX/RX loopback"
+    
+    endchoice
+    
+    menu "Concurrency I2C pins"
+        depends on BLUSYS_CONCURRENCY_SUITE_I2C
+    
+    config BLUSYS_CONCURRENCY_I2C_PORT
+        int "I2C port"
+        range 0 1
+        default 0
+    
+    config BLUSYS_CONCURRENCY_I2C_SDA_PIN
+        int "SDA GPIO pin"
+        range 0 48
+        default 21 if IDF_TARGET_ESP32
+        default 8 if IDF_TARGET_ESP32C3
+        default 8 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_CONCURRENCY_I2C_SCL_PIN
+        int "SCL GPIO pin"
+        range 0 48
+        default 22 if IDF_TARGET_ESP32
+        default 9 if IDF_TARGET_ESP32C3
+        default 9 if IDF_TARGET_ESP32S3
+    
+    endmenu
+    
+    menu "Concurrency SPI pins"
+        depends on BLUSYS_CONCURRENCY_SUITE_SPI
+    
+    config BLUSYS_CONCURRENCY_SPI_BUS
+        int "SPI bus"
+        range 0 1
+        default 0
+    
+    config BLUSYS_CONCURRENCY_SPI_SCLK_PIN
+        int "SCLK GPIO pin"
+        range 0 48
+        default 18 if IDF_TARGET_ESP32
+        default 4 if IDF_TARGET_ESP32C3
+        default 12 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_CONCURRENCY_SPI_MOSI_PIN
+        int "MOSI GPIO pin"
+        range 0 48
+        default 23 if IDF_TARGET_ESP32
+        default 6 if IDF_TARGET_ESP32C3
+        default 1 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_CONCURRENCY_SPI_MISO_PIN
+        int "MISO GPIO pin"
+        range 0 48
+        default 19 if IDF_TARGET_ESP32
+        default 5 if IDF_TARGET_ESP32C3
+        default 2 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_CONCURRENCY_SPI_CS_PIN
+        int "CS GPIO pin"
+        range 0 48
+        default 25 if IDF_TARGET_ESP32
+        default 7 if IDF_TARGET_ESP32C3
+        default 10 if IDF_TARGET_ESP32S3
+    
+    endmenu
+    
+    menu "Concurrency UART pins"
+        depends on BLUSYS_CONCURRENCY_SUITE_UART
+    
+    config BLUSYS_CONCURRENCY_UART_PORT
+        int "UART port"
+        range 0 2
+        default 1
+    
+    config BLUSYS_CONCURRENCY_UART_TX_PIN
+        int "TX GPIO pin"
+        range 0 48
+        default 17 if IDF_TARGET_ESP32
+        default 21 if IDF_TARGET_ESP32C3
+        default 1 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_CONCURRENCY_UART_RX_PIN
+        int "RX GPIO pin"
+        range 0 48
+        default 16 if IDF_TARGET_ESP32
+        default 20 if IDF_TARGET_ESP32C3
+        default 2 if IDF_TARGET_ESP32S3
+    
+    endmenu
+endmenu
+

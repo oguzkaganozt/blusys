@@ -307,7 +307,7 @@ CONFIG_BT_NIMBLE_ENABLED=y
 CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
 ```
 
-The `examples/validation/ble_gatt_basic/` example provides `sdkconfig.defaults` with these values preset, and `sdkconfig.esp32` also selects BLE-only controller mode on ESP32.
+The `examples/validation/wireless_bt_lab` example (BLE GATT scenario) provides `sdkconfig.defaults` with these values preset, and `sdkconfig.esp32` also selects BLE-only controller mode on ESP32.
 
 ## Limitations
 
@@ -319,4 +319,4 @@ The `examples/validation/ble_gatt_basic/` example provides `sdkconfig.defaults` 
 
 ## Example App
 
-See `examples/validation/ble_gatt_basic/`.
+See `examples/validation/wireless_bt_lab` (BLE GATT scenario).

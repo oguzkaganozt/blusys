@@ -59,20 +59,6 @@ controller_fragment="$(make_fragment \
     'CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789=y' \
     '# CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7735 is not set')"
 
-panel_fragment="$(make_fragment \
-    'CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488=y' \
-    '# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341 is not set' \
-    '# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735 is not set' \
-    '# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306 is not set' \
-    '# CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB is not set')"
-
-surface_gateway_fragment="$(make_fragment \
-    'CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488=y' \
-    '# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341 is not set' \
-    '# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735 is not set' \
-    '# CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306 is not set' \
-    '# CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB is not set')"
-
 edge_fragment="$(make_fragment \
     'CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI=y')"
 
@@ -81,18 +67,6 @@ build_variant \
     "build-$TARGET-display-st7789" \
     "$controller_fragment" \
     "handheld_starter $TARGET ST7789"
-
-build_variant \
-    "$REPO_ROOT/examples/reference/surface_ops_panel" \
-    "build-$TARGET-display-ili9488" \
-    "$panel_fragment" \
-    "surface_ops_panel $TARGET ILI9488"
-
-build_variant \
-    "$REPO_ROOT/examples/reference/surface_gateway" \
-    "build-$TARGET-display-ili9488" \
-    "$surface_gateway_fragment" \
-    "surface_gateway $TARGET ILI9488"
 
 build_variant \
     "$REPO_ROOT/examples/quickstart/headless_telemetry" \

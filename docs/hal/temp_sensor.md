@@ -102,4 +102,4 @@ No ISR-safe calls are defined for the temperature sensor module.
 
 ## Example App
 
-See `examples/validation/temp_sensor_basic/`.
+See `examples/validation/hal_io_lab` (temp sensor scenario).

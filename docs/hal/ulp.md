@@ -188,4 +188,4 @@ No ISR-safe calls are defined for this module.
 
 ## Example App
 
-See `examples/validation/ulp_gpio_watch/`.
+See `examples/validation/hal_io_lab` (ULP GPIO scenario).

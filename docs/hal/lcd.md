@@ -304,4 +304,4 @@ All functions are thread-safe via an internal mutex. Note that `blusys_lcd_draw_
 
 ## Example App
 
-See `examples/reference/lcd_basic/` (ST7789), `examples/reference/lcd_st7735_basic/` (ST7735R 128x160), and `examples/validation/lcd_ssd1306_basic/` (SSD1306 128x32 I2C OLED).
+See `examples/reference/display_basics/` (menuconfig: ST7789 or ST7735), and `examples/validation/lcd_ssd1306_basic/` (SSD1306 128x32 I2C OLED).

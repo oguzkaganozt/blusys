@@ -15,7 +15,7 @@ Best for **handheld** / compact interactive surfaces and dense control strips.
 | `slider` | Ranged numeric control | Brightness, thresholds |
 | `gauge` | Compact numeric feedback | Status strips, monitoring |
 
-Reference starter: `examples/quickstart/handheld_starter/` (host + ST7735 path; see [Product shape](../start/product-shape.md)).
+Reference starter: `examples/quickstart/handheld/` (host + ST7735 path; see [Product shape](../start/product-shape.md)).
 
 ## Operational Surface
 
@@ -28,7 +28,7 @@ Best for **surface** interactive and gateway local UI: dashboards and multi-sect
 | `tabs` | Screen partitioning | Multi-section flows |
 | `status_badge` | Short operational state | Shell chrome, headers |
 
-Reference starter: `examples/reference/surface_ops_panel/`.
+Reference starter: `examples/reference/display/`.
 
 ## Data And Diagnostics
 
@@ -41,7 +41,7 @@ Shared by surface interactive and connected products when showing health and met
 | `progress` | Long-running work | OTA, loading flows |
 | `dropdown` | Compact single choice | Filters, mode picks |
 
-Reference starters: `examples/quickstart/headless_telemetry/`, `examples/reference/surface_gateway/`.
+Reference starters: `examples/quickstart/headless/`, `examples/quickstart/handheld/`.
 
 ## Notes
 

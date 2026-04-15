@@ -2,7 +2,7 @@
 
 Build a headless-first connected product using the same `blusys::app` reducer model.
 
-The canonical headless reference in-tree is **`examples/quickstart/headless_telemetry/`** (inventory: `interface: headless` with a full connected capability stack).
+The canonical headless reference in-tree is **`examples/quickstart/headless/`** (inventory: `interface: headless` with a full connected capability stack).
 
 ## Create the project
 

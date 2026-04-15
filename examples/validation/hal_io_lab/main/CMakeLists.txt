@@ -1,0 +1,22 @@
+idf_component_register(
+    SRCS
+        "hal_io_lab_main.c"
+        "hal_io_gpio_interrupt.c"
+        "hal_io_pcnt_basic.c"
+        "hal_io_mcpwm_basic.c"
+        "hal_io_sdm_basic.c"
+        "hal_io_dac_basic.c"
+        "hal_io_led_strip_basic.c"
+        "hal_io_seven_seg_basic.c"
+        "hal_io_buzzer_basic.c"
+        "hal_io_dht_basic.c"
+        "hal_io_temp_sensor_basic.c"
+        "hal_io_one_wire_basic.c"
+        "hal_io_touch_basic.c"
+        "hal_io_ulp_gpio_watch.c"
+        "hal_io_efuse_info.c"
+        "hal_io_wdt_basic.c"
+        "hal_io_sleep_basic.c"
+        "hal_io_system_info.c"
+    REQUIRES blusys
+)

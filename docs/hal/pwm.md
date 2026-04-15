@@ -142,4 +142,4 @@ Disables PWM output without releasing the handle. The pin goes idle. Call `blusy
 
 ## Example App
 
-See `examples/reference/pwm_basic/`.
+See `examples/reference/hal` (PWM scenario).

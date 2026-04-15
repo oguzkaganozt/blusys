@@ -331,4 +331,4 @@ blusys_seven_seg_open()
 
 ## Example App
 
-See `examples/validation/seven_seg_basic/`.
+See `examples/validation/hal_io_lab` (seven-segment scenario).

@@ -118,7 +118,7 @@ Performs a full-duplex transfer. `tx_data` and `rx_data` may point to the same b
 
 ## Example App
 
-See `examples/reference/spi_loopback/`.
+See `examples/reference/hal` (SPI loopback scenario).
 
 ## Slave Mode
 

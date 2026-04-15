@@ -1,0 +1,254 @@
+choice REF_HAL_REFERENCE_SCENARIO
+    prompt "Reference HAL scenario"
+    default REF_HAL_REFERENCE_SCENARIO_TIMER_BASIC
+    help
+        Former standalone reference HAL demos in one project.
+
+config REF_HAL_REFERENCE_SCENARIO_GPIO_BASIC
+    bool "gpio_basic"
+config REF_HAL_REFERENCE_SCENARIO_PWM_BASIC
+    bool "pwm_basic"
+config REF_HAL_REFERENCE_SCENARIO_BUTTON_BASIC
+    bool "button_basic"
+config REF_HAL_REFERENCE_SCENARIO_TIMER_BASIC
+    bool "timer_basic"
+config REF_HAL_REFERENCE_SCENARIO_NVS_BASIC
+    bool "nvs_basic"
+config REF_HAL_REFERENCE_SCENARIO_ADC_BASIC
+    bool "adc_basic"
+config REF_HAL_REFERENCE_SCENARIO_SPI_LOOPBACK
+    bool "spi_loopback"
+config REF_HAL_REFERENCE_SCENARIO_I2C_SCAN
+    bool "i2c_scan"
+config REF_HAL_REFERENCE_SCENARIO_UART_BASIC
+    bool "uart_basic"
+endchoice
+
+menu "gpio_basic options"
+    depends on CONFIG_REF_HAL_REFERENCE_SCENARIO_GPIO_BASIC
+    menu "Blusys GPIO Basic Example"
+
+    config BLUSYS_GPIO_BASIC_OUTPUT_PIN
+        int "Output GPIO pin"
+        range 0 48
+        default 4 if IDF_TARGET_ESP32
+        default 3 if IDF_TARGET_ESP32C3
+        default 4 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe output-capable GPIO for this example.
+
+    config BLUSYS_GPIO_BASIC_INPUT_PIN
+        int "Input GPIO pin"
+        range 0 48
+        default 16 if IDF_TARGET_ESP32
+        default 2 if IDF_TARGET_ESP32C3
+        default 5 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe input-capable GPIO for this example.
+
+    endmenu
+endmenu
+
+menu "pwm_basic options"
+    depends on CONFIG_REF_HAL_REFERENCE_SCENARIO_PWM_BASIC
+    menu "Blusys PWM Basic Example"
+
+    config BLUSYS_PWM_BASIC_PIN
+        int "PWM GPIO pin"
+        range 0 48
+        default 4 if IDF_TARGET_ESP32
+        default 3 if IDF_TARGET_ESP32C3
+        default 4 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe PWM-capable output GPIO for this example.
+
+    endmenu
+endmenu
+
+menu "button_basic options"
+    depends on CONFIG_REF_HAL_REFERENCE_SCENARIO_BUTTON_BASIC
+    menu "Blusys Button Basic Example"
+
+    config BLUSYS_BUTTON_PIN
+        int "Button GPIO pin"
+        range 0 48
+        default 19 if IDF_TARGET_ESP32
+        default 2 if IDF_TARGET_ESP32C3
+        default 5 if IDF_TARGET_ESP32S3
+        help
+            GPIO pin connected to the button. Wire the other side to GND and rely
+            on the internal pull-up (active_low = true).
+
+    config BLUSYS_BUTTON_LONG_PRESS_MS
+        int "Long-press threshold (ms)"
+        range 200 5000
+        default 1000
+        help
+            Duration in milliseconds after which a held button fires a LONG_PRESS
+            event. Set to 0 in code to disable long-press detection.
+
+    endmenu
+endmenu
+
+menu "timer_basic options"
+    depends on CONFIG_REF_HAL_REFERENCE_SCENARIO_TIMER_BASIC
+    menu "Blusys Timer Basic Example"
+    endmenu
+endmenu
+
+menu "nvs_basic options"
+    depends on CONFIG_REF_HAL_REFERENCE_SCENARIO_NVS_BASIC
+    menu "Blusys NVS Basic Example"
+    endmenu
+endmenu
+
+menu "adc_basic options"
+    depends on CONFIG_REF_HAL_REFERENCE_SCENARIO_ADC_BASIC
+    menu "Blusys ADC Basic Example"
+
+    config BLUSYS_ADC_BASIC_PIN
+        int "ADC GPIO pin"
+        range 0 48
+        default 34 if IDF_TARGET_ESP32
+        default 4 if IDF_TARGET_ESP32C3
+        default 1 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe ADC1 GPIO for this example.
+
+    config BLUSYS_ADC_BASIC_ATTEN_DB_12
+        bool "Use 12 dB attenuation"
+        default y
+        help
+            Disable this only if you specifically want 0 dB mode for lower input voltages.
+
+    endmenu
+endmenu
+
+menu "spi_loopback options"
+    depends on CONFIG_REF_HAL_REFERENCE_SCENARIO_SPI_LOOPBACK
+    menu "Blusys SPI Loopback Example"
+
+    config BLUSYS_SPI_LOOPBACK_BUS
+        int "SPI bus"
+        range 0 1
+        default 0
+        help
+            Select the SPI bus used by this loopback example.
+
+    config BLUSYS_SPI_LOOPBACK_SCLK_PIN
+        int "SCLK GPIO pin"
+        range 0 48
+        default 18 if IDF_TARGET_ESP32
+        default 4 if IDF_TARGET_ESP32C3
+        default 12 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe SPI clock GPIO for this example.
+
+    config BLUSYS_SPI_LOOPBACK_MOSI_PIN
+        int "MOSI GPIO pin"
+        range 0 48
+        default 23 if IDF_TARGET_ESP32
+        default 6 if IDF_TARGET_ESP32C3
+        default 1 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe SPI MOSI GPIO for this example.
+
+    config BLUSYS_SPI_LOOPBACK_MISO_PIN
+        int "MISO GPIO pin"
+        range 0 48
+        default 19 if IDF_TARGET_ESP32
+        default 5 if IDF_TARGET_ESP32C3
+        default 2 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe SPI MISO GPIO for this example.
+
+    config BLUSYS_SPI_LOOPBACK_CS_PIN
+        int "CS GPIO pin"
+        range 0 48
+        default 5 if IDF_TARGET_ESP32
+        default 7 if IDF_TARGET_ESP32C3
+        default 10 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe SPI chip-select GPIO for this example.
+
+    endmenu
+endmenu
+
+menu "i2c_scan options"
+    depends on CONFIG_REF_HAL_REFERENCE_SCENARIO_I2C_SCAN
+    menu "Blusys I2C Scan Example"
+
+    config BLUSYS_I2C_SCAN_PORT
+        int "I2C port"
+        range 0 1
+        default 0
+        help
+            Select the I2C controller used by this scan example.
+
+    config BLUSYS_I2C_SCAN_SDA_PIN
+        int "SDA GPIO pin"
+        range 0 48
+        default 21 if IDF_TARGET_ESP32
+        default 8 if IDF_TARGET_ESP32C3
+        default 8 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe SDA GPIO for this example.
+
+    config BLUSYS_I2C_SCAN_SCL_PIN
+        int "SCL GPIO pin"
+        range 0 48
+        default 22 if IDF_TARGET_ESP32
+        default 9 if IDF_TARGET_ESP32C3
+        default 9 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe SCL GPIO for this example.
+
+    endmenu
+endmenu
+
+menu "uart_basic options"
+    depends on CONFIG_REF_HAL_REFERENCE_SCENARIO_UART_BASIC
+    choice BLUSYS_UART_BASIC_MODE
+        prompt "UART example mode"
+        default BLUSYS_UART_BASIC_MODE_LOOPBACK
+        help
+            Loopback: blocking write then read. Async: callback-driven TX/RX with two phases.
+
+        config BLUSYS_UART_BASIC_MODE_LOOPBACK
+            bool "Blocking loopback"
+
+        config BLUSYS_UART_BASIC_MODE_ASYNC
+            bool "Async callbacks (callback_swap_result)"
+
+    endchoice
+
+    menu "UART pins"
+
+        config BLUSYS_UART_BASIC_PORT
+            int "UART port"
+            range 0 2
+            default 1
+            help
+                UART controller index for this example.
+
+        config BLUSYS_UART_BASIC_TX_PIN
+            int "TX GPIO pin"
+            range 0 48
+            default 17 if IDF_TARGET_ESP32
+            default 21 if IDF_TARGET_ESP32C3
+            default 1 if IDF_TARGET_ESP32S3
+            help
+                Board-safe TX GPIO (wire to RX for loopback).
+
+        config BLUSYS_UART_BASIC_RX_PIN
+            int "RX GPIO pin"
+            range 0 48
+            default 16 if IDF_TARGET_ESP32
+            default 20 if IDF_TARGET_ESP32C3
+            default 2 if IDF_TARGET_ESP32S3
+            help
+                Board-safe RX GPIO (wire to TX for loopback).
+
+    endmenu
+endmenu
+

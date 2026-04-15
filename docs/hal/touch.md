@@ -114,4 +114,4 @@ Returns the current filtered touch reading. A higher value typically indicates s
 
 ## Example App
 
-See `examples/validation/touch_basic/`.
+See `examples/validation/hal_io_lab` (touch scenario).

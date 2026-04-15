@@ -152,4 +152,4 @@ Stops the daemon and client tasks, deregisters the enumeration client, and unins
 
 ## Example App
 
-See `examples/validation/usb_host_basic/`.
+See `examples/validation/usb_peripheral_lab` (USB host scenario).

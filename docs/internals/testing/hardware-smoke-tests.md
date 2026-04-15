@@ -12,26 +12,26 @@ Use this guide for a compact manual validation pass on real hardware after the b
 
 Minimum async validation set:
 
-1. `examples/gpio_interrupt`
-2. `examples/uart_async`
-3. `examples/timer_basic`
+1. `examples/validation/hal_io_lab` (GPIO interrupt scenario)
+2. `examples/reference/uart_basic` (async mode)
+3. `examples/reference/hal` (timer scenario)
 
 Recommended full smoke pass:
 
-1. `examples/smoke`
-2. `examples/system_info`
-3. `examples/gpio_basic`
-4. `examples/gpio_interrupt`
-5. `examples/uart_loopback`
-6. `examples/uart_async`
-7. `examples/i2c_scan`
-8. `examples/i2s_basic`
-9. `examples/spi_loopback`
-10. `examples/pwm_basic`
-11. `examples/adc_basic`
-12. `examples/dac_basic`
-13. `examples/timer_basic`
-14. `examples/touch_basic`
+1. `examples/validation/smoke`
+2. `examples/validation/hal_io_lab` (system_info scenario)
+3. `examples/reference/hal` (GPIO scenario)
+4. `examples/validation/hal_io_lab` (GPIO interrupt scenario)
+5. `examples/reference/uart_basic` (loopback mode)
+6. `examples/reference/uart_basic` (async mode)
+7. `examples/reference/hal` (I2C scan scenario)
+8. `examples/validation/i2s_basic`
+9. `examples/reference/hal` (SPI loopback scenario)
+10. `examples/reference/hal` (PWM scenario)
+11. `examples/reference/hal` (ADC scenario)
+12. `examples/validation/hal_io_lab` (DAC scenario)
+13. `examples/reference/hal` (timer scenario)
+14. `examples/validation/hal_io_lab` (touch scenario)
 
 ## Basic Workflow
 
@@ -76,16 +76,16 @@ Before testing:
 - reported target is correct
 - capability lines look correct
 
-### `system_info`
+### `hal_io_lab` (system_info)
 
 - uptime, reset reason, and heap values print normally
 
-### `gpio_basic`
+### `hal` (GPIO)
 
 - output changes state correctly
 - input sampling matches the wiring used
 
-### `gpio_interrupt`
+### `hal_io_lab` (GPIO interrupt)
 
 Setup:
 
@@ -98,7 +98,7 @@ Pass conditions:
 - final result shows `callback_swap_result: ok`
 - no reboot, lockup, or watchdog reset occurs
 
-### `uart_loopback`
+### `uart_basic` (loopback mode)
 
 Setup:
 
@@ -108,7 +108,7 @@ Pass conditions:
 
 - transmitted bytes are read back correctly
 
-### `uart_async`
+### `uart_basic` (async mode)
 
 Setup:
 
@@ -121,7 +121,7 @@ Pass conditions:
 - final result shows `callback_swap_result: ok`
 - close/shutdown completes cleanly
 
-### `i2c_scan`
+### `hal` (I2C scan)
 
 - expected devices appear at the expected addresses
 - timeout behavior does not indicate bad wiring or missing pull-ups
@@ -139,7 +139,7 @@ Pass conditions:
 - the external I2S device receives stable clocking
 - the generated tone is audible or otherwise measurable at the external device output
 
-### `spi_loopback`
+### `hal` (SPI loopback)
 
 Setup:
 
@@ -149,17 +149,17 @@ Pass conditions:
 
 - transmitted bytes are received back correctly
 
-### `pwm_basic`
+### `hal` (PWM)
 
 - output is measurable and stable
 - duty and frequency changes behave as expected
 
-### `adc_basic`
+### `hal` (ADC)
 
 - raw values change with input voltage
 - millivolt readings are plausible when calibration is available
 
-### `dac_basic`
+### `hal_io_lab` (DAC)
 
 Setup:
 
@@ -172,13 +172,13 @@ Pass conditions:
 - the printed DAC value ramps up and down repeatedly
 - the measured analog voltage changes with the ramp pattern
 
-### `timer_basic`
+### `hal` (timer)
 
 - tick count increments at the expected interval
 - final result shows `callback_swap_result: ok`
 - no extra callbacks appear after stop
 
-### `touch_basic`
+### `hal_io_lab` (touch)
 
 Setup:
 

@@ -242,12 +242,9 @@ jobs:
               printf '::endgroup::\n'
           }
 
-          run_test validation/smoke              15 "status_ok_string: OK"
-          run_test validation/system_info        15 "free_heap_bytes:"
-          run_test reference/timer_basic         30 "callback_swap_result: ok"
-          run_test reference/nvs_basic           20 "Done\\."
-          run_test validation/wdt_basic          30 "wdt_deinit: ok"
-          run_test validation/concurrency_timer  30 "concurrent_result: ok"
+          run_test validation/platform_lab       15 "status_ok_string: OK"
+          run_test validation/hal_io_lab         15 "free_heap_bytes:"
+          run_test reference/hal         30 "callback_swap_result: ok"
 
           printf '\n=== QEMU Results for %s ===\n' "$TARGET"
           printf 'Pass: %d  Fail: %d  Total: %d\n' "$pass" "$fail" "$((pass + fail))"

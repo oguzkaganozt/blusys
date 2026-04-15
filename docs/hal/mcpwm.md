@@ -118,4 +118,4 @@ No ISR-safe calls are defined for the MCPWM module.
 
 ## Example App
 
-See `examples/validation/mcpwm_basic/`.
+See `examples/validation/hal_io_lab` (MCPWM scenario).

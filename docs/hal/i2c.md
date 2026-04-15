@@ -192,7 +192,7 @@ Device selection is per-transfer through the `device_address` argument; no per-d
 
 ## Example App
 
-See `examples/reference/i2c_scan/`.
+See `examples/reference/hal` (I2C scan scenario).
 
 ## Slave Mode
 

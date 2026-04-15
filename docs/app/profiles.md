@@ -130,7 +130,7 @@ Many small OLED modules use an SSD1306-compatible controller; some use **SH1106*
 
 The **blusys** component defines shared **menuconfig** choices for SPI display profiles (dashboard-class ILI9341, ILI9488, or ST7735, plus optional QEMU RGB; handheld quickstart ST7735 vs ST7789). Individual examples add only product-specific options (e.g. Wi-Fi strings on coordinator references).
 
-- **Headless telemetry** (`quickstart/headless_telemetry`): optional **local SSD1306** status UI vs default headless (device only) — see the example’s `main/Kconfig.projbuild`.
+- **Headless** (`quickstart/headless`): optional **local SSD1306** status UI vs default headless (device only) — see the example’s `main/Kconfig.projbuild`.
 
 Host SDL builds for dashboard-class examples use `BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE` in `host/CMakeLists.txt` (0 = 320×240 logical, 1 = 480×320, 2 = 160×128 ST7735-class). The handheld starter quickstart uses `BLUSYS_IC_HOST_DISPLAY_PROFILE` for its ST7735/ST7789 host window matrix.
 

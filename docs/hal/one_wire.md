@@ -266,4 +266,4 @@ Computes Dallas/Maxim CRC-8 (polynomial 0x31, reflected as 0x8C) over `len` byte
 
 ## Example App
 
-See `examples/validation/one_wire_basic/`.
+See `examples/validation/hal_io_lab` (1-Wire scenario).

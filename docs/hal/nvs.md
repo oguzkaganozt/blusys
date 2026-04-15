@@ -207,4 +207,4 @@ Concurrent calls on the same handle are serialized internally. Do not call `blus
 
 ## Example App
 
-See `examples/reference/nvs_basic/`.
+See `examples/reference/hal` (NVS scenario).

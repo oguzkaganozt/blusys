@@ -146,4 +146,4 @@ No ISR-safe calls are defined for this module.
 
 ## Example App
 
-See `examples/validation/efuse_info/`.
+See `examples/validation/hal_io_lab` (eFuse scenario).

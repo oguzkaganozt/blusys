@@ -146,4 +146,4 @@ No ISR-safe calls are defined for the sleep module.
 
 ## Example App
 
-See `examples/validation/sleep_basic/`.
+See `examples/validation/hal_io_lab` (sleep scenario).

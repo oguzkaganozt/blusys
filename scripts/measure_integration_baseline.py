@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES = [
     "examples/reference/connected_headless/main/platform",
     "examples/reference/connected_device/main/platform",
-    "examples/reference/surface_gateway/main/platform",
+    "examples/quickstart/handheld_starter/main/platform",
 ]
 
 

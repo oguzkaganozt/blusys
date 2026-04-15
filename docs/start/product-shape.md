@@ -31,14 +31,14 @@ Examples keep the fixed `main/` layout; **`inventory.yml`** records each example
 
 | Direction | Example path | Notes |
 |-----------|--------------|--------|
-| Handheld interactive | `examples/quickstart/handheld_starter/` | PR quickstart; compact ST7735-class path |
-| Surface interactive | `examples/reference/surface_ops_panel/` | Operational / dashboard density (larger display profiles) |
-| Headless connected | `examples/quickstart/headless_telemetry/` | Connected stack without a local UI by default |
-| Surface + connected | `examples/reference/surface_gateway/` | Coordinator / operator device; optional local UI |
-| Headless LAN control | `examples/reference/headless_lan_control/` | Minimal connectivity + `lan_control` (reference; see also `validation/lan_control_basic`) |
-| Handheld Bluetooth | `examples/reference/handheld_bluetooth/` | `storage` + `bluetooth` on the interactive ST7735 path |
+| Handheld interactive | `examples/quickstart/handheld/` | PR quickstart; compact ST7735-class path |
+| Display + LVGL | `examples/reference/display/` | LCD / UI / encoder / OLED scenarios (menuconfig) |
+| Headless connected | `examples/quickstart/headless/` | Connected stack without a local UI by default |
+| Network clients | `examples/reference/connectivity/` | Wi-Fi / HTTP / MQTT scenarios (menuconfig) |
+| HAL demos | `examples/reference/hal/` | GPIO, PWM, button, timer, NVS, ADC, SPI, I2C, UART |
+| Low-power telemetry | `examples/validation/headless_telemetry_low_power/` | Internal validation build |
 
-For historical minimal connectivity demos, see `examples/reference/connected_device/` and `examples/reference/connected_headless/`.
+For historical minimal connectivity demos (kept for regression), see `examples/validation/connected_device/` and `examples/validation/connected_headless/`. New projects should start from `examples/quickstart/handheld/` or `examples/quickstart/headless/` instead.
 
 ## Capabilities and policies
 

@@ -1,0 +1,520 @@
+choice PERIPHERAL_LAB_SCENARIO
+    prompt "Peripheral validation scenario"
+    default PERIPHERAL_LAB_SCENARIO_I2C_SLAVE
+config PERIPHERAL_LAB_SCENARIO_I2C_SLAVE
+    bool "i2c_slave_basic"
+config PERIPHERAL_LAB_SCENARIO_SPI_SLAVE
+    bool "spi_slave_basic"
+config PERIPHERAL_LAB_SCENARIO_TWAI
+    bool "twai_basic"
+config PERIPHERAL_LAB_SCENARIO_RMT
+    bool "rmt_basic"
+config PERIPHERAL_LAB_SCENARIO_I2S
+    bool "i2s_basic"
+config PERIPHERAL_LAB_SCENARIO_SDMMC
+    bool "sdmmc_basic"
+config PERIPHERAL_LAB_SCENARIO_SD_SPI
+    bool "sd_spi_basic"
+config PERIPHERAL_LAB_SCENARIO_GPIO_EXPANDER
+    bool "gpio_expander_basic"
+config PERIPHERAL_LAB_SCENARIO_LCD_SSD1306
+    bool "lcd_ssd1306_basic"
+endchoice
+
+menu "i2c_slave_basic options"
+    depends on CONFIG_PERIPHERAL_LAB_SCENARIO_I2C_SLAVE
+    menu "Blusys I2C Slave Basic Example"
+    
+    config BLUSYS_I2C_SLAVE_BASIC_SDA_PIN
+        int "I2C SDA pin"
+        range 0 48
+        default 8
+        help
+            GPIO pin for the I2C data line. Requires an external pull-up resistor (e.g. 4.7 kOhm to 3.3V).
+    
+    config BLUSYS_I2C_SLAVE_BASIC_SCL_PIN
+        int "I2C SCL pin"
+        range 0 48
+        default 9
+        help
+            GPIO pin for the I2C clock line. Requires an external pull-up resistor (e.g. 4.7 kOhm to 3.3V).
+    
+    config BLUSYS_I2C_SLAVE_BASIC_ADDR
+        hex "I2C slave address (7-bit)"
+        default 0x55
+        help
+            7-bit I2C address this device will respond to.
+    
+    endmenu
+endmenu
+
+menu "spi_slave_basic options"
+    depends on CONFIG_PERIPHERAL_LAB_SCENARIO_SPI_SLAVE
+    menu "Blusys SPI Slave Basic Example"
+    
+    config BLUSYS_SPI_SLAVE_BASIC_MOSI_PIN
+        int "SPI MOSI pin (slave input)"
+        range 0 48
+        default 11
+        help
+            GPIO pin for MOSI (Master Out Slave In). This is an input on the slave.
+    
+    config BLUSYS_SPI_SLAVE_BASIC_MISO_PIN
+        int "SPI MISO pin (slave output)"
+        range 0 48
+        default 13
+        help
+            GPIO pin for MISO (Master In Slave Out). This is an output on the slave.
+    
+    config BLUSYS_SPI_SLAVE_BASIC_CLK_PIN
+        int "SPI clock pin"
+        range 0 48
+        default 12
+        help
+            GPIO pin for the SPI clock signal driven by the master.
+    
+    config BLUSYS_SPI_SLAVE_BASIC_CS_PIN
+        int "SPI chip select pin"
+        range 0 48
+        default 10
+        help
+            GPIO pin for chip select (active low), driven by the master.
+    
+    endmenu
+endmenu
+
+menu "twai_basic options"
+    depends on CONFIG_PERIPHERAL_LAB_SCENARIO_TWAI
+    menu "Blusys TWAI Basic Example"
+    
+    config BLUSYS_TWAI_BASIC_TX_PIN
+        int "TWAI TX GPIO pin"
+        range 0 48
+        default 4 if IDF_TARGET_ESP32
+        default 4 if IDF_TARGET_ESP32C3
+        default 4 if IDF_TARGET_ESP32S3
+        help
+            Select the GPIO connected to the external TWAI transceiver TX input.
+    
+    config BLUSYS_TWAI_BASIC_RX_PIN
+        int "TWAI RX GPIO pin"
+        range 0 48
+        default 5 if IDF_TARGET_ESP32
+        default 5 if IDF_TARGET_ESP32C3
+        default 5 if IDF_TARGET_ESP32S3
+        help
+            Select the GPIO connected to the external TWAI transceiver RX output.
+    
+    config BLUSYS_TWAI_BASIC_BITRATE
+        int "TWAI bitrate"
+        range 10000 1000000
+        default 125000
+        help
+            Classic TWAI/CAN bitrate in bits per second.
+    
+    endmenu
+endmenu
+
+menu "rmt_basic options"
+    depends on CONFIG_PERIPHERAL_LAB_SCENARIO_RMT
+    choice BLUSYS_RMT_BASIC_MODE
+        prompt "RMT mode"
+        default BLUSYS_RMT_BASIC_MODE_TX
+        help
+            TX sends a repeating pulse train; RX waits for incoming pulses (requires RMT RX support).
+    
+    config BLUSYS_RMT_BASIC_MODE_TX
+        bool "TX (waveform output)"
+    
+    config BLUSYS_RMT_BASIC_MODE_RX
+        bool "RX (pulse capture)"
+    
+    endchoice
+    
+    menu "Blusys RMT TX"
+        depends on BLUSYS_RMT_BASIC_MODE_TX
+    
+    config BLUSYS_RMT_BASIC_PIN
+        int "RMT output GPIO pin"
+        range 0 48
+        default 4 if IDF_TARGET_ESP32
+        default 3 if IDF_TARGET_ESP32C3
+        default 4 if IDF_TARGET_ESP32S3
+        help
+            Select a board-safe output GPIO for the RMT waveform.
+    
+    endmenu
+    
+    menu "Blusys RMT RX"
+        depends on BLUSYS_RMT_BASIC_MODE_RX
+    
+    config BLUSYS_RMT_RX_BASIC_PIN
+        int "RMT RX input pin"
+        range 0 48
+        default 4
+        help
+            GPIO pin for the RMT receiver input. Connect an IR receiver module
+            (e.g. VS1838B) or any pulse-coded signal source to this pin.
+    
+    endmenu
+endmenu
+
+menu "i2s_basic options"
+    depends on CONFIG_PERIPHERAL_LAB_SCENARIO_I2S
+    choice BLUSYS_I2S_BASIC_MODE
+        prompt "I2S mode"
+        default BLUSYS_I2S_BASIC_MODE_TX
+        help
+            TX plays a square-wave tone; RX reads a few stereo buffers (requires I2S RX support on target).
+    
+    config BLUSYS_I2S_BASIC_MODE_TX
+        bool "TX (tone generator)"
+    
+    config BLUSYS_I2S_BASIC_MODE_RX
+        bool "RX (microphone read)"
+    
+    endchoice
+    
+    menu "Blusys I2S TX pins"
+        depends on BLUSYS_I2S_BASIC_MODE_TX
+    
+    config BLUSYS_I2S_BASIC_PORT
+        int "I2S port"
+        range 0 1
+        default 0
+        help
+            Select the I2S controller port to use.
+    
+    config BLUSYS_I2S_BASIC_BCLK_PIN
+        int "I2S BCLK GPIO pin"
+        range 0 48
+        default 26 if IDF_TARGET_ESP32
+        default 4 if IDF_TARGET_ESP32C3
+        default 4 if IDF_TARGET_ESP32S3
+        help
+            Select the GPIO connected to the external I2S codec or DAC bit clock input.
+    
+    config BLUSYS_I2S_BASIC_WS_PIN
+        int "I2S WS GPIO pin"
+        range 0 48
+        default 25 if IDF_TARGET_ESP32
+        default 5 if IDF_TARGET_ESP32C3
+        default 5 if IDF_TARGET_ESP32S3
+        help
+            Select the GPIO connected to the external I2S codec or DAC word select input.
+    
+    config BLUSYS_I2S_BASIC_DOUT_PIN
+        int "I2S data output GPIO pin"
+        range 0 48
+        default 22 if IDF_TARGET_ESP32
+        default 6 if IDF_TARGET_ESP32C3
+        default 6 if IDF_TARGET_ESP32S3
+        help
+            Select the GPIO connected to the external I2S codec or DAC data input.
+    
+    config BLUSYS_I2S_BASIC_MCLK_PIN
+        int "I2S MCLK GPIO pin (-1 to disable)"
+        range -1 48
+        default -1
+        help
+            Set to -1 when the external device does not require MCLK.
+    
+    config BLUSYS_I2S_BASIC_SAMPLE_RATE_HZ
+        int "I2S sample rate"
+        range 8000 96000
+        default 16000
+        help
+            Select the sample rate used for the generated stereo square wave.
+    
+    endmenu
+    
+    menu "Blusys I2S RX pins"
+        depends on BLUSYS_I2S_BASIC_MODE_RX
+    
+    config BLUSYS_I2S_RX_BASIC_BCLK_PIN
+        int "I2S bit clock pin (BCLK)"
+        range 0 48
+        default 4
+        help
+            GPIO pin for the I2S bit clock output (master drives this).
+    
+    config BLUSYS_I2S_RX_BASIC_WS_PIN
+        int "I2S word select pin (WS / LRCLK)"
+        range 0 48
+        default 5
+        help
+            GPIO pin for the I2S word select output (master drives this).
+    
+    config BLUSYS_I2S_RX_BASIC_DIN_PIN
+        int "I2S data input pin (DIN)"
+        range 0 48
+        default 6
+        help
+            GPIO pin for the I2S serial data input (microphone or ADC drives this).
+    
+    config BLUSYS_I2S_RX_BASIC_SAMPLE_RATE_HZ
+        int "Sample rate (Hz)"
+        default 16000
+        help
+            Audio sample rate in Hz. Common values: 8000, 16000, 44100, 48000.
+    
+    endmenu
+endmenu
+
+menu "sdmmc_basic options"
+    depends on CONFIG_PERIPHERAL_LAB_SCENARIO_SDMMC
+    menu "Blusys SDMMC Basic Example"
+    
+    config BLUSYS_SDMMC_BASIC_SLOT
+        int "SDMMC host slot"
+        range 0 1
+        default 0
+        help
+            SDMMC host slot index (0 is the only slot on ESP32-S3).
+    
+    config BLUSYS_SDMMC_BASIC_CLK_PIN
+        int "SDMMC CLK GPIO pin"
+        range 0 48
+        default 14 if IDF_TARGET_ESP32
+        default 36 if IDF_TARGET_ESP32S3
+        default 14
+        help
+            GPIO pin for SDMMC clock signal.
+    
+    config BLUSYS_SDMMC_BASIC_CMD_PIN
+        int "SDMMC CMD GPIO pin"
+        range 0 48
+        default 15 if IDF_TARGET_ESP32
+        default 35 if IDF_TARGET_ESP32S3
+        default 15
+        help
+            GPIO pin for SDMMC command signal.
+    
+    config BLUSYS_SDMMC_BASIC_D0_PIN
+        int "SDMMC D0 GPIO pin"
+        range 0 48
+        default 2 if IDF_TARGET_ESP32
+        default 37 if IDF_TARGET_ESP32S3
+        default 2
+        help
+            GPIO pin for SDMMC data line 0.
+    
+    config BLUSYS_SDMMC_BASIC_BUS_WIDTH
+        int "SDMMC bus width (1 or 4)"
+        range 1 4
+        default 1
+        help
+            Set to 1 for 1-bit mode or 4 for 4-bit mode. In 1-bit mode D1, D2, D3 pins are unused.
+    
+    config BLUSYS_SDMMC_BASIC_D1_PIN
+        int "SDMMC D1 GPIO pin (4-bit mode only)"
+        range 0 48
+        default 4 if IDF_TARGET_ESP32
+        default 38 if IDF_TARGET_ESP32S3
+        default 4
+        help
+            GPIO pin for SDMMC data line 1. Only used when bus width is 4.
+    
+    config BLUSYS_SDMMC_BASIC_D2_PIN
+        int "SDMMC D2 GPIO pin (4-bit mode only)"
+        range 0 48
+        default 12 if IDF_TARGET_ESP32
+        default 39 if IDF_TARGET_ESP32S3
+        default 12
+        help
+            GPIO pin for SDMMC data line 2. Only used when bus width is 4.
+    
+    config BLUSYS_SDMMC_BASIC_D3_PIN
+        int "SDMMC D3 GPIO pin (4-bit mode only)"
+        range 0 48
+        default 13 if IDF_TARGET_ESP32
+        default 40 if IDF_TARGET_ESP32S3
+        default 13
+        help
+            GPIO pin for SDMMC data line 3. Only used when bus width is 4.
+    
+    config BLUSYS_SDMMC_BASIC_FREQ_HZ
+        int "SDMMC clock frequency (Hz)"
+        range 400000 40000000
+        default 20000000
+        help
+            SDMMC clock frequency in Hz. 400000 for identification, up to 40000000 for data transfer.
+    
+    endmenu
+endmenu
+
+menu "sd_spi_basic options"
+    depends on CONFIG_PERIPHERAL_LAB_SCENARIO_SD_SPI
+    menu "Blusys SD SPI Basic Example"
+    
+        config SD_SPI_HOST
+            int "SPI host number (1=SPI2, 2=SPI3)"
+            range 1 2
+            default 1
+            help
+                SPI peripheral to use. SPI2_HOST=1 is available on all targets.
+                SPI3_HOST=2 is only available on ESP32 and ESP32-S3.
+    
+        config SD_SPI_MOSI_PIN
+            int "MOSI GPIO pin"
+            range 0 48
+            default 11
+            help
+                GPIO connected to SD card MOSI (DI) pin.
+    
+        config SD_SPI_MISO_PIN
+            int "MISO GPIO pin"
+            range 0 48
+            default 13
+            help
+                GPIO connected to SD card MISO (DO) pin.
+    
+        config SD_SPI_SCLK_PIN
+            int "SCLK GPIO pin"
+            range 0 48
+            default 12
+            help
+                GPIO connected to SD card CLK pin.
+    
+        config SD_SPI_CS_PIN
+            int "CS GPIO pin"
+            range 0 48
+            default 10
+            help
+                GPIO connected to SD card CS (chip-select) pin.
+    
+    endmenu
+endmenu
+
+menu "gpio_expander_basic options"
+    depends on CONFIG_PERIPHERAL_LAB_SCENARIO_GPIO_EXPANDER
+    menu "Blusys GPIO Expander Basic Example"
+    
+    choice BLUSYS_GPIO_EXPANDER_BASIC_IC
+        prompt "GPIO expander IC"
+        default BLUSYS_GPIO_EXPANDER_BASIC_IC_PCF8574
+        help
+            Select the GPIO expander IC connected to the board.
+    
+    config BLUSYS_GPIO_EXPANDER_BASIC_IC_PCF8574
+        bool "PCF8574 (8-bit I2C, address 0x20–0x27)"
+    config BLUSYS_GPIO_EXPANDER_BASIC_IC_PCF8574A
+        bool "PCF8574A (8-bit I2C, address 0x38–0x3F)"
+    config BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23017
+        bool "MCP23017 (16-bit I2C, address 0x20–0x27)"
+    config BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23S17
+        bool "MCP23S17 (16-bit SPI, hw_addr 0–7)"
+    endchoice
+    
+    # ── I2C settings (PCF8574/A, MCP23017) ──────────────────────────────────────
+    
+    config BLUSYS_GPIO_EXPANDER_BASIC_I2C_SDA
+        int "I2C SDA GPIO"
+        depends on !BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23S17
+        range 0 48
+        default 21 if IDF_TARGET_ESP32
+        default 8  if IDF_TARGET_ESP32C3
+        default 8  if IDF_TARGET_ESP32S3
+        help
+            GPIO connected to the I2C SDA line.
+    
+    config BLUSYS_GPIO_EXPANDER_BASIC_I2C_SCL
+        int "I2C SCL GPIO"
+        depends on !BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23S17
+        range 0 48
+        default 22 if IDF_TARGET_ESP32
+        default 9  if IDF_TARGET_ESP32C3
+        default 9  if IDF_TARGET_ESP32S3
+        help
+            GPIO connected to the I2C SCL line.
+    
+    config BLUSYS_GPIO_EXPANDER_BASIC_I2C_ADDR
+        hex "I2C device address (7-bit)"
+        depends on !BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23S17
+        default 0x20
+        help
+            7-bit I2C address of the expander. PCF8574: 0x20–0x27 (A2:A0 pins).
+            PCF8574A: 0x38–0x3F. MCP23017: 0x20–0x27.
+    
+    # ── SPI settings (MCP23S17) ──────────────────────────────────────────────────
+    
+    config BLUSYS_GPIO_EXPANDER_BASIC_SPI_SCLK
+        int "SPI SCLK GPIO"
+        depends on BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23S17
+        range 0 48
+        default 18 if IDF_TARGET_ESP32
+        default 6  if IDF_TARGET_ESP32C3
+        default 12 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_GPIO_EXPANDER_BASIC_SPI_MOSI
+        int "SPI MOSI GPIO"
+        depends on BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23S17
+        range 0 48
+        default 23 if IDF_TARGET_ESP32
+        default 7  if IDF_TARGET_ESP32C3
+        default 11 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_GPIO_EXPANDER_BASIC_SPI_MISO
+        int "SPI MISO GPIO"
+        depends on BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23S17
+        range 0 48
+        default 19 if IDF_TARGET_ESP32
+        default 2  if IDF_TARGET_ESP32C3
+        default 13 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_GPIO_EXPANDER_BASIC_SPI_CS
+        int "SPI CS GPIO"
+        depends on BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23S17
+        range 0 48
+        default 5  if IDF_TARGET_ESP32
+        default 10 if IDF_TARGET_ESP32C3
+        default 10 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_GPIO_EXPANDER_BASIC_SPI_HW_ADDR
+        int "MCP23S17 hardware address (A2:A0 pins, 0–7)"
+        depends on BLUSYS_GPIO_EXPANDER_BASIC_IC_MCP23S17
+        range 0 7
+        default 0
+        help
+            Hardware address set by the A0/A1/A2 pins on the MCP23S17.
+            Ties to GND = 0, ties to VCC = 1. Default (all GND) = 0.
+    
+    endmenu
+endmenu
+
+menu "lcd_ssd1306_basic options"
+    depends on CONFIG_PERIPHERAL_LAB_SCENARIO_LCD_SSD1306
+    menu "Blusys LCD SSD1306 Basic Example"
+    
+    config BLUSYS_LCD_SSD1306_I2C_PORT
+        int "I2C port"
+        range 0 1
+        default 0
+    
+    config BLUSYS_LCD_SSD1306_SDA_PIN
+        int "SDA GPIO pin"
+        default 21 if IDF_TARGET_ESP32
+        default 8 if IDF_TARGET_ESP32C3
+        default 1 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_LCD_SSD1306_SCL_PIN
+        int "SCL GPIO pin"
+        default 22 if IDF_TARGET_ESP32
+        default 9 if IDF_TARGET_ESP32C3
+        default 2 if IDF_TARGET_ESP32S3
+    
+    config BLUSYS_LCD_SSD1306_DEV_ADDR
+        hex "I2C device address"
+        default 0x3C
+    
+    config BLUSYS_LCD_SSD1306_RST_PIN
+        int "RST GPIO pin (-1 if not used)"
+        default -1
+    
+    config BLUSYS_LCD_SSD1306_I2C_FREQ_HZ
+        int "I2C frequency Hz"
+        default 400000
+    
+    endmenu
+endmenu
+

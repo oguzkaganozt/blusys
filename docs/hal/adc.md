@@ -143,4 +143,4 @@ Reads a calibrated millivolt value. Requires factory calibration data to be stor
 
 ## Example App
 
-See `examples/reference/adc_basic/`.
+See `examples/reference/hal` (ADC scenario).

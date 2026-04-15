@@ -144,4 +144,4 @@ All read functions are safe to call from multiple tasks concurrently. `blusys_sy
 
 ## Example App
 
-See `examples/validation/system_info/`.
+See `examples/validation/hal_io_lab/` (menuconfig: system_info scenario).

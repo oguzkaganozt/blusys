@@ -1,47 +1,19 @@
-# Concurrency Tests
+# Concurrency stress tests
 
-Four stress tests that verify concurrent access to the same peripheral handle from two FreeRTOS tasks. Run each with `blusys run examples/<name>`.
+Hardware-oriented stress tests live under `examples/validation/concurrency_suite/`. Pick the scenario in menuconfig (timer, I2C, SPI, UART).
 
----
+## concurrency_suite (timer)
 
-## concurrency_spi
+Two worker tasks race against the timer ISR: one repeatedly stops/starts the timer; the other swaps callbacks. Pass when `concurrent_result: ok` is printed and both workers report zero unexpected errors.
 
-**Wire:** MOSI → MISO (one jumper)
+## concurrency_suite (SPI)
 
-| Target   | MOSI | MISO |
-|----------|------|------|
-| ESP32    | 23   | 19   |
-| ESP32-C3 | 6    | 5    |
-| ESP32-S3 | 1    | 2    |
+Two tasks call `blusys_spi_transfer()` on the same handle. MOSI must be wired to MISO (loopback). Pass when both tasks report zero errors and zero mismatches.
 
-**Pass:** `concurrent_result: ok`
+## concurrency_suite (I2C)
 
----
+Two tasks call `blusys_i2c_master_probe()` on the same handle. No specific slave is required: `BLUSYS_OK`, `BLUSYS_ERR_IO`, and `BLUSYS_ERR_TIMEOUT` are valid per iteration.
 
-## concurrency_i2c
+## concurrency_suite (UART)
 
-**Wire:** nothing — no external connections needed. The test only probes the bus and accepts "no device found" as a valid result.
-
-**Pass:** `concurrent_result: ok`
-
----
-
-## concurrency_timer
-
-**Wire:** nothing — no external connections needed.
-
-**Pass:** `concurrent_result: ok`
-
----
-
-## concurrency_uart
-
-**Wire:** TX → RX (one jumper)
-
-| Target   | TX | RX |
-|----------|----|----|
-| ESP32    | 17 | 16 |
-| ESP32-C3 | 21 | 20 |
-| ESP32-S3 | 1  | 2  |
-
-**Pass:** `concurrent_result: ok`
+One task writes while another reads on the same UART with TX/RX loopback. Pass when bytes received match bytes sent and `concurrent_result: ok`.

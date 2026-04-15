@@ -55,12 +55,10 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 
 ## Example Apps
 
-- [`examples/quickstart/handheld_starter/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/handheld_starter) --- canonical handheld interactive quickstart using shell navigation and setup flow
-- [`examples/reference/surface_ops_panel/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/surface_ops_panel) --- operational panel reference using the same app runtime and shell
-- [`examples/quickstart/headless_telemetry/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/headless_telemetry) --- headless-first connected reference (`interface: headless` in `inventory.yml`)
-- [`examples/reference/surface_gateway/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/surface_gateway) --- coordinator/operator reference (`interface: surface`) with optional local UI
-- [`examples/reference/headless_lan_control/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/headless_lan_control) --- minimal headless connectivity + `lan_control` reference
-- [`examples/reference/handheld_bluetooth/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/handheld_bluetooth) --- handheld interactive + `bluetooth` (GAP) reference
-- [`examples/reference/framework_device_basic/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/framework_device_basic) --- minimal interactive app for framework validation
-- [`examples/reference/connected_device/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connected_device) --- interactive product with connectivity capabilities
-- [`examples/reference/connected_headless/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connected_headless) --- headless product with connectivity capabilities
+- [`examples/quickstart/handheld/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/handheld) --- canonical handheld interactive quickstart using shell navigation and setup flow
+- [`examples/quickstart/headless/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/headless) --- headless-first connected reference (`interface: headless` in `inventory.yml`)
+- [`examples/reference/display/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/display) --- display + LVGL + encoder scenarios (menuconfig)
+- [`examples/reference/connectivity/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connectivity) --- Wi-Fi / HTTP / MQTT client scenarios (menuconfig)
+- [`examples/reference/hal/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/hal) --- HAL scenarios: GPIO, PWM, button, timer, NVS, ADC, SPI, I2C, UART (menuconfig)
+
+Use **handheld** and **headless** quickstarts as supported product-shaped starting points.

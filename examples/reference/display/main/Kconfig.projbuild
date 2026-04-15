@@ -1,0 +1,260 @@
+choice DISPLAY_UI_SCENARIO
+    prompt "Display reference scenario"
+    default DISPLAY_UI_SCENARIO_LCD_BASIC
+
+config DISPLAY_UI_SCENARIO_LCD_BASIC
+    bool "lcd_basic"
+config DISPLAY_UI_SCENARIO_LCD_ST7735_BASIC
+    bool "lcd_st7735_basic"
+config DISPLAY_UI_SCENARIO_UI_BASIC
+    bool "ui_basic (LVGL)"
+config DISPLAY_UI_SCENARIO_ENCODER_BASIC
+    bool "encoder_basic"
+config DISPLAY_UI_SCENARIO_OLED_ENCODER
+    bool "oled_encoder_basic (LVGL + SSD1306)"
+endchoice
+
+menu "lcd_basic"
+    depends on CONFIG_DISPLAY_UI_SCENARIO_LCD_BASIC
+    menu "Blusys LCD Basic Example"
+
+    config BLUSYS_LCD_BASIC_SPI_BUS
+        int "SPI bus"
+        range 0 1
+        default 0
+
+    config BLUSYS_LCD_BASIC_SCLK_PIN
+        int "SCLK GPIO pin"
+        default 18 if IDF_TARGET_ESP32
+        default 4 if IDF_TARGET_ESP32C3
+        default 12 if IDF_TARGET_ESP32S3
+
+    config BLUSYS_LCD_BASIC_MOSI_PIN
+        int "MOSI GPIO pin"
+        default 23 if IDF_TARGET_ESP32
+        default 6 if IDF_TARGET_ESP32C3
+        default 11 if IDF_TARGET_ESP32S3
+
+    config BLUSYS_LCD_BASIC_CS_PIN
+        int "CS GPIO pin"
+        default 5 if IDF_TARGET_ESP32
+        default 7 if IDF_TARGET_ESP32C3
+        default 10 if IDF_TARGET_ESP32S3
+
+    config BLUSYS_LCD_BASIC_DC_PIN
+        int "DC GPIO pin"
+        default 2 if IDF_TARGET_ESP32
+        default 3 if IDF_TARGET_ESP32C3
+        default 13 if IDF_TARGET_ESP32S3
+
+    config BLUSYS_LCD_BASIC_RST_PIN
+        int "RST GPIO pin (-1 if not used)"
+        default -1
+
+    config BLUSYS_LCD_BASIC_BL_PIN
+        int "Backlight GPIO pin (-1 if not used)"
+        default -1
+
+    config BLUSYS_LCD_BASIC_PCLK_HZ
+        int "SPI pixel clock Hz"
+        default 20000000
+
+    endmenu
+endmenu
+
+menu "lcd_st7735_basic"
+    depends on CONFIG_DISPLAY_UI_SCENARIO_LCD_ST7735_BASIC
+    menu "Blusys LCD ST7735 Basic Example"
+
+    config BLUSYS_LCD_ST7735_SPI_BUS
+        int "SPI bus"
+        range 0 1
+        default 0
+
+    config BLUSYS_LCD_ST7735_SCLK_PIN
+        int "SCLK GPIO pin"
+        default 18 if IDF_TARGET_ESP32
+        default 4 if IDF_TARGET_ESP32C3
+        default 12 if IDF_TARGET_ESP32S3
+
+    config BLUSYS_LCD_ST7735_MOSI_PIN
+        int "MOSI GPIO pin"
+        default 23 if IDF_TARGET_ESP32
+        default 6 if IDF_TARGET_ESP32C3
+        default 11 if IDF_TARGET_ESP32S3
+
+    config BLUSYS_LCD_ST7735_CS_PIN
+        int "CS GPIO pin"
+        default 5 if IDF_TARGET_ESP32
+        default 7 if IDF_TARGET_ESP32C3
+        default 10 if IDF_TARGET_ESP32S3
+
+    config BLUSYS_LCD_ST7735_DC_PIN
+        int "DC GPIO pin"
+        default 2 if IDF_TARGET_ESP32
+        default 3 if IDF_TARGET_ESP32C3
+        default 13 if IDF_TARGET_ESP32S3
+
+    config BLUSYS_LCD_ST7735_RST_PIN
+        int "RST GPIO pin (-1 if not used)"
+        default -1
+
+    config BLUSYS_LCD_ST7735_BL_PIN
+        int "Backlight GPIO pin (-1 if not used)"
+        default -1
+
+    config BLUSYS_LCD_ST7735_PCLK_HZ
+        int "SPI pixel clock Hz"
+        default 16000000
+
+    config BLUSYS_LCD_ST7735_X_OFFSET
+        int "ST7735 X offset"
+        default 2
+
+    config BLUSYS_LCD_ST7735_Y_OFFSET
+        int "ST7735 Y offset"
+        default 1
+
+    config BLUSYS_LCD_ST7735_SWAP_XY
+        bool "Swap X/Y"
+        default y
+
+    config BLUSYS_LCD_ST7735_MIRROR_X
+        bool "Mirror X"
+        default y
+
+    config BLUSYS_LCD_ST7735_MIRROR_Y
+        bool "Mirror Y"
+        default n
+
+    config BLUSYS_LCD_ST7735_INVERT_COLOR
+        bool "Invert colors"
+        default n
+
+    endmenu
+endmenu
+
+menu "ui_basic"
+    depends on CONFIG_DISPLAY_UI_SCENARIO_UI_BASIC
+    menu "Blusys UI Basic Example"
+
+        config BLUSYS_UI_SPI_BUS
+            int "SPI bus"
+            range 0 1
+            default 0
+
+        config BLUSYS_UI_SCLK_PIN
+            int "SCLK GPIO pin"
+            default 18 if IDF_TARGET_ESP32
+            default 4 if IDF_TARGET_ESP32C3
+            default 12 if IDF_TARGET_ESP32S3
+
+        config BLUSYS_UI_MOSI_PIN
+            int "MOSI GPIO pin"
+            default 23 if IDF_TARGET_ESP32
+            default 6 if IDF_TARGET_ESP32C3
+            default 11 if IDF_TARGET_ESP32S3
+
+        config BLUSYS_UI_CS_PIN
+            int "CS GPIO pin"
+            default 5 if IDF_TARGET_ESP32
+            default 7 if IDF_TARGET_ESP32C3
+            default 10 if IDF_TARGET_ESP32S3
+
+        config BLUSYS_UI_DC_PIN
+            int "DC GPIO pin"
+            default 2 if IDF_TARGET_ESP32
+            default 3 if IDF_TARGET_ESP32C3
+            default 13 if IDF_TARGET_ESP32S3
+
+        config BLUSYS_UI_RST_PIN
+            int "RST GPIO pin (-1 if not used)"
+            default -1
+
+        config BLUSYS_UI_BL_PIN
+            int "Backlight GPIO pin (-1 if not used)"
+            default -1
+
+        config BLUSYS_UI_PCLK_HZ
+            int "SPI pixel clock Hz"
+            default 8000000
+
+        config BLUSYS_UI_BUF_LINES
+            int "LVGL partial buffer lines"
+            range 1 128
+            default 20
+
+        config BLUSYS_UI_FULL_REFRESH
+            bool "Use experimental full-screen LVGL render buffer"
+            default n
+
+        config BLUSYS_UI_X_OFFSET
+            int "ST7735 X offset"
+            default 0
+
+        config BLUSYS_UI_Y_OFFSET
+            int "ST7735 Y offset"
+            default 0
+
+        config BLUSYS_UI_SWAP_XY
+            bool "Swap X/Y"
+            default y
+
+        config BLUSYS_UI_MIRROR_X
+            bool "Mirror X"
+            default y
+
+        config BLUSYS_UI_MIRROR_Y
+            bool "Mirror Y"
+            default n
+
+        config BLUSYS_UI_INVERT_COLOR
+            bool "Invert colors"
+            default n
+
+        choice BLUSYS_UI_SCENE
+            prompt "UI scene"
+            default BLUSYS_UI_SCENE_FULL
+
+            config BLUSYS_UI_SCENE_LABEL_ONLY
+                bool "Label only"
+
+            config BLUSYS_UI_SCENE_FRAME_ONLY
+                bool "Frame only"
+
+            config BLUSYS_UI_SCENE_FULL
+                bool "Frame + label"
+
+        endchoice
+
+    endmenu
+endmenu
+
+menu "encoder_basic"
+    depends on CONFIG_DISPLAY_UI_SCENARIO_ENCODER_BASIC
+    menu "Blusys Encoder Basic Example"
+
+        config BLUSYS_ENCODER_BASIC_CLK_PIN
+            int "Encoder CLK (A) GPIO pin"
+            range 0 48
+            default 19 if IDF_TARGET_ESP32
+            default 1 if IDF_TARGET_ESP32C3
+            default 5 if IDF_TARGET_ESP32S3
+
+        config BLUSYS_ENCODER_BASIC_DT_PIN
+            int "Encoder DT (B) GPIO pin"
+            range 0 48
+            default 18 if IDF_TARGET_ESP32
+            default 0 if IDF_TARGET_ESP32C3
+            default 6 if IDF_TARGET_ESP32S3
+
+        config BLUSYS_ENCODER_BASIC_SW_PIN
+            int "Encoder SW (button) GPIO pin (-1 to disable)"
+            range -1 48
+            default 23 if IDF_TARGET_ESP32
+            default -1 if IDF_TARGET_ESP32C3
+            default 7 if IDF_TARGET_ESP32S3
+
+    endmenu
+endmenu
+

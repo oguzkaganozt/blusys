@@ -198,5 +198,4 @@ Waits for a pulse frame to complete (idle detected) and fills `pulses` with the 
 
 ## Example App
 
-See `examples/validation/rmt_basic/` for TX.
-See `examples/validation/rmt_rx_basic/` for RX.
+See `examples/validation/rmt_basic/` (menuconfig: TX or RX mode).

@@ -243,5 +243,4 @@ Reads captured audio samples into `buf`. Returns interleaved 16-bit stereo sampl
 
 ## Example App
 
-See `examples/validation/i2s_basic/` for TX.
-See `examples/validation/i2s_rx_basic/` for RX.
+See `examples/validation/i2s_basic/` (menuconfig: TX or RX mode).

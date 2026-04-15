@@ -3,5 +3,5 @@
 # plain chip target; only the build directory differs (`build-qemu*` vs `build-esp32*`).
 #
 # Add CONFIG_* lines when you need QEMU-specific HAL (e.g. virtual framebuffer).
-# Full example: examples/reference/interactive_dashboard/sdkconfig.qemu
+# See docs/app/cli-host-qemu.md for QEMU Kconfig merge notes.
 # CLI matrix: docs/app/cli-host-qemu.md (in the blusys repo)

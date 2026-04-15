@@ -13,7 +13,7 @@ HID input service with dual-transport support: USB OTG host (ESP32-S3, via `espr
 `BLUSYS_FEATURE_USB_HID` is set on all targets. The USB transport additionally requires `BLUSYS_FEATURE_USB_HOST`. Requesting an unsupported transport returns `BLUSYS_ERR_NOT_SUPPORTED`.
 
 !!! note "Managed component — USB transport"
-    Add `espressif/usb_host_hid: "~1.1.0"` to your project's `main/idf_component.yml`. See `examples/validation/usb_hid_basic/main/idf_component.yml`.
+    Add `espressif/usb_host_hid: "~1.1.0"` to your project's `main/idf_component.yml`. See `examples/validation/usb_peripheral_lab/main/idf_component.yml`.
 
 !!! note "BLE transport"
     Enable `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_CENTRAL=y`, and `CONFIG_BT_NIMBLE_ROLE_OBSERVER=y`. Requires NVS (initialized automatically).
@@ -205,4 +205,4 @@ Terminates the transport (disconnects BLE or uninstalls USB host/HID driver) and
 
 ## Example App
 
-See `examples/validation/usb_hid_basic/`.
+See `examples/validation/usb_peripheral_lab` (USB HID host scenario).

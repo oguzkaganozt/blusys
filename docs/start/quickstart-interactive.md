@@ -4,7 +4,7 @@ Build and run a display-first interactive product using the `blusys::app` path.
 
 The default interactive starting point uses the **`handheld`** interface (compact shell, tactile bias):
 
-- example: `examples/quickstart/handheld_starter/`
+- example: `examples/quickstart/handheld/`
 - visual bias: expressive and tactile
 - interaction bias: compact, encoder-friendly control flows
 - architecture: the same reducer, shell, and capability model used everywhere else
@@ -38,8 +38,8 @@ The scaffold generates a host-first interactive app with:
 
 If you want a concrete product-shaped reference immediately, start from:
 
-- `examples/quickstart/handheld_starter/` for compact expressive control surfaces (see its `README.md`)
-- `examples/reference/surface_ops_panel/` for denser operational panels (same layout pattern)
+- `examples/quickstart/handheld/` for compact expressive control surfaces (see its `README.md`)
+- `examples/reference/display/` for display / LVGL / encoder scenarios (menuconfig)
 
 ## Project structure
 

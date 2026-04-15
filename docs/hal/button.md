@@ -192,4 +192,4 @@ Events fire from the **esp_timer task**, not from an ISR. It is safe to call `pr
 
 ## Example App
 
-See `examples/reference/button_basic/` for a runnable example.
+See `examples/reference/hal` (button scenario) for a runnable example.

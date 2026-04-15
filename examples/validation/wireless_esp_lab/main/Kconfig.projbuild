@@ -1,0 +1,72 @@
+choice WIRELESS_ESP_LAB_SCENARIO
+    prompt "ESP wireless lab scenario"
+    default WIRELESS_ESP_LAB_SCENARIO_ESPNOW_BASIC
+
+config WIRELESS_ESP_LAB_SCENARIO_ESPNOW_BASIC
+    bool "espnow_basic"
+config WIRELESS_ESP_LAB_SCENARIO_WIFI_MESH_BASIC
+    bool "wifi_mesh_basic"
+endchoice
+
+menu "espnow_basic"
+    depends on CONFIG_WIRELESS_ESP_LAB_SCENARIO_ESPNOW_BASIC
+    menu "Blusys ESP-NOW Basic Example"
+    endmenu
+endmenu
+
+menu "wifi_mesh_basic"
+    depends on CONFIG_WIRELESS_ESP_LAB_SCENARIO_WIFI_MESH_BASIC
+    menu "WiFi Mesh Basic Example"
+
+        config MESH_ID
+            string "Mesh Network ID (6 hex bytes, e.g. 77:77:77:77:77:77)"
+            default "77:77:77:77:77:77"
+            help
+                6-byte mesh network identifier. All nodes in the same mesh must
+                use the same ID. Format: xx:xx:xx:xx:xx:xx
+
+        config MESH_PASSWORD
+            string "Mesh AP Password"
+            default "MAP_PASSW0RD"
+            help
+                Password for the mesh soft-AP. Must be 6-64 characters.
+                All nodes in the mesh must use the same password.
+
+        config MESH_CHANNEL
+            int "WiFi Channel"
+            default 6
+            range 0 13
+            help
+                WiFi channel for the mesh network. Use 0 for auto-select.
+                All nodes must be on the same channel.
+
+        config MESH_ROUTER_SSID
+            string "Router SSID"
+            default "myssid"
+            help
+                SSID of the upstream router. The root node connects here
+                to provide internet access to the mesh.
+
+        config MESH_ROUTER_PASSWORD
+            string "Router Password"
+            default "mypassword"
+            help
+                Password for the upstream router. Leave empty for open networks.
+
+        config MESH_MAX_LAYER
+            int "Maximum tree depth"
+            default 6
+            range 1 25
+            help
+                Maximum number of layers (hops) allowed in the mesh tree.
+
+        config MESH_MAX_CONNECTIONS
+            int "Maximum children per node"
+            default 6
+            range 1 10
+            help
+                Maximum number of child nodes that each node can accept.
+
+    endmenu
+endmenu
+

@@ -219,7 +219,7 @@ On ESP32, also set:
 CONFIG_BTDM_CTRL_MODE_BLE_ONLY=y
 ```
 
-The `examples/validation/bluetooth_basic/` example provides `sdkconfig.defaults` and `sdkconfig.esp32` with these values preset.
+The `examples/validation/wireless_bt_lab` example provides `sdkconfig.defaults` and `sdkconfig.esp32` with these values preset (select the Classic Bluetooth scenario in `menuconfig` when building).
 
 ## Limitations
 
@@ -231,4 +231,4 @@ The `examples/validation/bluetooth_basic/` example provides `sdkconfig.defaults`
 
 ## Example App
 
-See `examples/validation/bluetooth_basic/`.
+See `examples/validation/wireless_bt_lab`.

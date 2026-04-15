@@ -220,4 +220,4 @@ Registers the ISR callback for watch-point events. Must be called while the coun
 
 ## Example App
 
-See `examples/validation/pcnt_basic/`.
+See `examples/validation/hal_io_lab` (PCNT scenario).

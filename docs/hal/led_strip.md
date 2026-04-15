@@ -238,4 +238,4 @@ blusys_led_strip_open()
 
 ## Example App
 
-See `examples/validation/led_strip_basic/`.
+See `examples/validation/hal_io_lab` (LED strip scenario).

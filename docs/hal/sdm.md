@@ -115,4 +115,4 @@ No ISR-safe calls are defined for the SDM module.
 
 ## Example App
 
-See `examples/validation/sdm_basic/`.
+See `examples/validation/hal_io_lab` (SDM scenario).

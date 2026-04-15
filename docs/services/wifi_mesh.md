@@ -237,4 +237,4 @@ blusys_wifi_mesh_close()
 
 ## Example App
 
-See `examples/validation/wifi_mesh_basic/`.
+See `examples/validation/wireless_esp_lab` (Wi-Fi mesh scenario).

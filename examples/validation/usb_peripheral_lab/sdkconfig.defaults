@@ -1,0 +1,1 @@
+# USB examples rely on TinyUSB / host HID managed components (see main/idf_component.yml).

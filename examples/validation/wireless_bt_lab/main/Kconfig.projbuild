@@ -1,0 +1,44 @@
+choice WIRELESS_BT_LAB_SCENARIO
+    prompt "Bluetooth Nimble lab scenario"
+    default WIRELESS_BT_LAB_SCENARIO_BLUETOOTH_BASIC
+
+config WIRELESS_BT_LAB_SCENARIO_BLUETOOTH_BASIC
+    bool "bluetooth_basic"
+config WIRELESS_BT_LAB_SCENARIO_BLE_GATT_BASIC
+    bool "ble_gatt_basic"
+endchoice
+
+menu "bluetooth_basic"
+    depends on CONFIG_WIRELESS_BT_LAB_SCENARIO_BLUETOOTH_BASIC
+    menu "Bluetooth Basic Example"
+
+        config BT_DEVICE_NAME
+            string "BLE Device Name"
+            default "blusys-device"
+            help
+                The GAP device name broadcast in BLE advertising data.
+                Maximum 29 bytes (advertising payload is 31 bytes; name AD structure
+                uses 2 bytes of overhead).
+
+        choice BT_MODE
+            prompt "BLE Operating Mode"
+            default BT_MODE_ADVERTISE
+            help
+                Select whether the device should advertise itself (peripheral role)
+                or scan for nearby BLE devices (central role).
+
+            config BT_MODE_ADVERTISE
+                bool "Advertise (peripheral)"
+            config BT_MODE_SCAN
+                bool "Scan (central)"
+        endchoice
+
+    endmenu
+endmenu
+
+menu "ble_gatt_basic"
+    depends on CONFIG_WIRELESS_BT_LAB_SCENARIO_BLE_GATT_BASIC
+    menu "Blusys BLE GATT Basic Example"
+    endmenu
+endmenu
+

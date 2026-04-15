@@ -124,8 +124,8 @@ Record the actual pin choices used during testing.
 |---|---|---|---|---|
 | Board name | esp32c3 | smoke | pass | |
 | Board name | esp32c3 | gpio_interrupt | pass | |
-| Board name | esp32c3 | uart_async | pass | |
-| Board name | esp32c3 | timer_basic | pass | |
+| Board name | esp32c3 | uart_basic | pass | |
+| Board name | esp32c3 | hal | pass | |
 | Board name | esp32 | smoke | pass | |
 | Board name | esp32s3 | smoke | pass | |
 

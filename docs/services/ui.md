@@ -187,4 +187,4 @@ The render task calls `lv_timer_handler()` in a loop. All other tasks must brack
 
 ## Example App
 
-`examples/reference/ui_basic/` — opens an ST7735 LCD and renders a centered label.
+`examples/reference/display/` (UI scenario) — opens an ST7735 LCD and renders a centered label.

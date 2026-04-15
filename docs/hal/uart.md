@@ -215,5 +215,4 @@ UART callbacks run in task context through an internal worker task, not in ISR c
 
 ## Example App
 
-See `examples/reference/uart_loopback/` for blocking usage.
-See `examples/reference/uart_async/` for async callback usage.
+See `examples/reference/uart_basic/` (menuconfig: blocking loopback or async callbacks).

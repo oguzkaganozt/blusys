@@ -1,0 +1,278 @@
+choice NETWORK_SERVICES_SCENARIO
+    prompt "Network services validation scenario"
+    default NETWORK_SERVICES_SCENARIO_HTTP_SERVER
+config NETWORK_SERVICES_SCENARIO_HTTP_SERVER
+    bool "http_server_basic"
+config NETWORK_SERVICES_SCENARIO_WS_CLIENT
+    bool "ws_client_basic"
+config NETWORK_SERVICES_SCENARIO_MDNS
+    bool "mdns_basic"
+config NETWORK_SERVICES_SCENARIO_SNTP
+    bool "sntp_basic"
+config NETWORK_SERVICES_SCENARIO_OTA
+    bool "ota_basic"
+config NETWORK_SERVICES_SCENARIO_WIFI_PROV
+    bool "wifi_prov_basic"
+config NETWORK_SERVICES_SCENARIO_LOCAL_CTRL
+    bool "local_ctrl_basic"
+endchoice
+
+menu "http_server_basic options"
+    depends on CONFIG_NETWORK_SERVICES_SCENARIO_HTTP_SERVER
+    menu "HTTP Server Basic Example"
+    
+        config WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID of the AP to connect to.
+    
+        config WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                Password of the AP. Leave empty for open networks.
+    
+        config WIFI_CONNECT_TIMEOUT_MS
+            int "WiFi connect timeout (ms)"
+            default 10000
+            range 1000 60000
+            help
+                Maximum time to wait for a WiFi connection in milliseconds.
+    
+        config HTTP_SERVER_PORT
+            int "HTTP server port"
+            default 80
+            range 1 65535
+            help
+                TCP port the HTTP server listens on.
+    
+    endmenu
+endmenu
+
+menu "ws_client_basic options"
+    depends on CONFIG_NETWORK_SERVICES_SCENARIO_WS_CLIENT
+    menu "WebSocket Client Basic Example"
+    
+        config WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID (network name) of the access point to connect to.
+    
+        config WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                WiFi password. Leave empty for open networks.
+    
+        config WIFI_CONNECT_TIMEOUT_MS
+            int "WiFi connect timeout (ms)"
+            default 10000
+            range 1000 60000
+            help
+                Maximum time in milliseconds to wait for an IP address.
+    
+        config WS_SERVER_URL
+            string "WebSocket server URL"
+            default "ws://echo.websocket.events"
+            help
+                Full WebSocket URL including scheme and path.
+                Use ws:// for plain WebSocket or wss:// for TLS.
+    
+        config WS_CONNECT_TIMEOUT_MS
+            int "WebSocket connect timeout (ms)"
+            default 10000
+            range 1000 60000
+            help
+                Maximum time in milliseconds to wait for the WebSocket handshake.
+    
+        config WS_SEND_INTERVAL_MS
+            int "Message send interval (ms)"
+            default 5000
+            range 500 60000
+            help
+                How often to send a test message to the server.
+    
+    endmenu
+endmenu
+
+menu "mdns_basic options"
+    depends on CONFIG_NETWORK_SERVICES_SCENARIO_MDNS
+    menu "mDNS Basic Example"
+    
+        config WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID of the access point.
+    
+        config WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                WiFi password.
+    
+        config MDNS_HOSTNAME
+            string "mDNS Hostname"
+            default "blusys-device"
+            help
+                mDNS hostname (will be reachable as <hostname>.local).
+    
+        config MDNS_INSTANCE
+            string "mDNS Instance Name"
+            default "Blusys mDNS Example"
+            help
+                Friendly instance name for mDNS.
+    
+    endmenu
+endmenu
+
+menu "sntp_basic options"
+    depends on CONFIG_NETWORK_SERVICES_SCENARIO_SNTP
+    menu "SNTP Basic Example"
+    
+        config WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID of the access point.
+    
+        config WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                WiFi password.
+    
+        config SNTP_SERVER
+            string "NTP Server"
+            default "pool.ntp.org"
+            help
+                Hostname of the NTP server.
+    
+        config SNTP_SYNC_TIMEOUT_MS
+            int "Sync timeout (ms)"
+            default 15000
+            range 1000 60000
+            help
+                Maximum time to wait for time synchronization.
+    
+    endmenu
+endmenu
+
+menu "ota_basic options"
+    depends on CONFIG_NETWORK_SERVICES_SCENARIO_OTA
+    menu "OTA Basic Example"
+    
+        config WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID of the AP to connect to.
+    
+        config WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                Password of the AP. Leave empty for open networks.
+    
+        config WIFI_CONNECT_TIMEOUT_MS
+            int "WiFi connect timeout (ms)"
+            default 10000
+            range 1000 60000
+            help
+                Maximum time to wait for a WiFi connection in milliseconds.
+    
+        config OTA_FIRMWARE_URL
+            string "Firmware URL"
+            default "http://192.168.1.100:8080/firmware.bin"
+            help
+                URL of the firmware binary to download. Supports HTTP and HTTPS.
+                For HTTPS, set OTA_CERT_PEM or the server must use a trusted CA.
+    
+    endmenu
+endmenu
+
+menu "wifi_prov_basic options"
+    depends on CONFIG_NETWORK_SERVICES_SCENARIO_WIFI_PROV
+    menu "WiFi Provisioning Basic Example"
+    
+        choice PROV_TRANSPORT
+            prompt "Provisioning transport"
+            default PROV_TRANSPORT_BLE
+            help
+                Select the transport used to receive WiFi credentials.
+    
+            config PROV_TRANSPORT_BLE
+                bool "BLE"
+                help
+                    Use BLE advertising. Requires CONFIG_BT_NIMBLE_ENABLED.
+    
+            config PROV_TRANSPORT_SOFTAP
+                bool "SoftAP"
+                help
+                    Create a temporary access point and use HTTP to receive credentials.
+        endchoice
+    
+        config PROV_SERVICE_NAME
+            string "Service name"
+            default "PROV_DEVICE"
+            help
+                BLE device name or SoftAP SSID advertised to the provisioning app.
+    
+        config PROV_POP
+            string "Proof of possession"
+            default ""
+            help
+                Optional security string shown to the user in the provisioning app.
+                Leave empty to disable proof-of-possession security.
+    
+        config PROV_SERVICE_KEY
+            string "SoftAP password"
+            default ""
+            help
+                Password for the SoftAP access point. Leave empty for an open AP.
+                Ignored when using BLE transport.
+    
+    endmenu
+endmenu
+
+menu "local_ctrl_basic options"
+    depends on CONFIG_NETWORK_SERVICES_SCENARIO_LOCAL_CTRL
+    menu "Local Control Basic Example"
+    
+        config WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID of the AP to connect to.
+    
+        config WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                Password of the AP. Leave empty for open networks.
+    
+        config WIFI_CONNECT_TIMEOUT_MS
+            int "WiFi connect timeout (ms)"
+            default 10000
+            range 1000 60000
+            help
+                Maximum time to wait for WiFi connection and IP assignment.
+    
+        config LOCAL_CTRL_DEVICE_NAME
+            string "Local control device name"
+            default "blusys-demo"
+            help
+                Display name shown by the built-in local control page.
+    
+        config LOCAL_CTRL_HTTP_PORT
+            int "Local control HTTP port"
+            default 80
+            range 1 65535
+            help
+                TCP port used by the local control HTTP server.
+    
+    endmenu
+endmenu
+

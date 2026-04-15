@@ -5,7 +5,7 @@ Builds LVGL against SDL2 on Linux so the Blusys widget kit and framework code ca
 Two executables are built:
 
 - **`hello_lvgl`** — minimal LVGL-only smoke test that proves the host toolchain + SDL2 display path works end-to-end.
-- **`widget_kit_demo`** — links the full `blusys_framework` surface (core spine + V1 widget kit + layout primitives) against the host LVGL and builds a screen with `blusys::ui::*` calls rather than raw LVGL. Exercises the same runtime → controller → route sink chain as the `framework_app_basic` example.
+- **`widget_kit_demo`** — links the full `blusys_framework` surface (core spine + V1 widget kit + layout primitives) against the host LVGL and builds a screen with `blusys::ui::*` calls rather than raw LVGL. Exercises the same runtime → controller → route sink chain using the same spine + widget-kit contract as the quickstart examples.
 
 ## Product example host builds
 

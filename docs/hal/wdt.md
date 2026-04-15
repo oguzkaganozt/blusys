@@ -124,4 +124,4 @@ Each task manages its own subscription and feed independently. `blusys_wdt_init(
 
 ## Example App
 
-See `examples/validation/wdt_basic/`.
+See `examples/validation/hal_io_lab` (WDT scenario).

@@ -171,4 +171,4 @@ One-shot timers stop themselves after the alarm fires.
 
 ## Example App
 
-See `examples/reference/timer_basic/`.
+See `examples/reference/hal` (timer scenario).

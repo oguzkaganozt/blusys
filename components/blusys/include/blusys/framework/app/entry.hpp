@@ -17,8 +17,8 @@
 // Available entry macros:
 //   BLUSYS_APP(spec)                            — default interactive product when UI is
 //                                                  enabled; headless when BLUSYS_FRAMEWORK_HAS_UI
-//                                                  is off (e.g. headless_telemetry without LVGL)
-//   BLUSYS_APP_INTERACTIVE(spec)                — handheld_starter profile (ST7735/ST7789)
+//                                                  is off (e.g. headless without LVGL)
+//   BLUSYS_APP_INTERACTIVE(spec)                — handheld profile (ST7735/ST7789)
 //   BLUSYS_APP_DASHBOARD(spec, host_title)      — gateway/panel/dashboard SPI profile + SDL title
 //   BLUSYS_APP_MAIN_HOST(spec)                  — interactive, SDL2 host
 //   BLUSYS_APP_MAIN_HOST_PROFILE(spec, profile) — interactive host + explicit window size/title

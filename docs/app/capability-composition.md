@@ -20,7 +20,7 @@ Each **interface** suggests a different **minimal** capability set (enough for a
 |---------|----------------|
 | storage | storage, connectivity (optional) |
 
-Starter: `examples/quickstart/handheld_starter/`.
+Starter: `examples/quickstart/handheld/`.
 
 ### Surface (`--interface surface`)
 
@@ -28,7 +28,7 @@ Starter: `examples/quickstart/handheld_starter/`.
 |---------|----------------|
 | connectivity | connectivity, storage, diagnostics |
 
-Starter: `examples/reference/surface_ops_panel/`.
+Starter: `examples/quickstart/handheld/`.
 
 ### Headless connected (`--interface headless` + connected `--with`)
 
@@ -36,7 +36,7 @@ Starter: `examples/reference/surface_ops_panel/`.
 |---------|----------------|
 | connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: `examples/quickstart/headless_telemetry/`.
+Starter: `examples/quickstart/headless/`.
 
 ### Surface coordinator
 
@@ -44,7 +44,7 @@ Starter: `examples/quickstart/headless_telemetry/`.
 |---------|----------------|
 | connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: `examples/reference/surface_gateway/` (optional local UI depends on build/profile; scaffold selects interface explicitly).
+Starter: `examples/quickstart/headless/` (optional local UI depends on build/profile; scaffold selects interface explicitly).
 
 ## Rule Of Thumb
 
@@ -79,8 +79,8 @@ Operational UI (`blusys::flows::*`, `blusys::screens::*`) stays LVGL-backed and 
 
 For a full reducer-facing translation table, see `map_event` in:
 
-- `examples/quickstart/headless_telemetry/main/platform/app_main.cpp` (headless-first, all seven capabilities)
-- `examples/reference/surface_gateway/main/platform/app_main.cpp` (interactive shell + connected stack)
+- `examples/quickstart/headless/main/platform/app_main.cpp` (headless-first, all seven capabilities)
+- `examples/quickstart/headless/main/platform/app_main.cpp` (connected stack entry)
 
 Keep product-specific tags in `core/`; only the integration layer should map raw integration event IDs to those tags.
 

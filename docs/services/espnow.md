@@ -218,4 +218,4 @@ All functions are thread-safe. The receive and send callbacks are invoked from t
 
 ## Example App
 
-See `examples/validation/espnow_basic/`.
+See `examples/validation/wireless_esp_lab` (ESP-NOW scenario).

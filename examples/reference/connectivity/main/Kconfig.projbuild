@@ -1,0 +1,64 @@
+choice CONNECTIVITY_SCENARIO
+    prompt "Connectivity reference scenario"
+    default CONNECTIVITY_SCENARIO_WIFI_CONNECT
+
+config CONNECTIVITY_SCENARIO_WIFI_CONNECT
+    bool "wifi_connect"
+config CONNECTIVITY_SCENARIO_HTTP_CLIENT
+    bool "http_client_basic"
+config CONNECTIVITY_SCENARIO_MQTT_BASIC
+    bool "mqtt_basic"
+endchoice
+
+menu "Shared WiFi credentials"
+
+    config WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        help
+            SSID (network name) of the access point to connect to.
+
+    config WIFI_PASSWORD
+        string "WiFi Password"
+        default "mypassword"
+        help
+            WiFi password. Leave empty for open networks.
+
+    config WIFI_CONNECT_TIMEOUT_MS
+        int "WiFi connect timeout (ms)"
+        default 10000
+        range 1000 60000
+        help
+            Maximum time in milliseconds to wait for an IP address.
+
+endmenu
+
+menu "HTTP client"
+    depends on CONFIG_CONNECTIVITY_SCENARIO_HTTP_CLIENT
+
+    config HTTP_CLIENT_URL
+        string "HTTP request URL"
+        default "http://httpbin.org/get"
+        help
+            Full URL to fetch with an HTTP GET request.
+
+    config HTTP_CLIENT_TIMEOUT_MS
+        int "HTTP request timeout (ms)"
+        default 10000
+        range 1000 60000
+
+endmenu
+
+menu "MQTT"
+    depends on CONFIG_CONNECTIVITY_SCENARIO_MQTT_BASIC
+
+    config MQTT_BROKER_URL
+        string "MQTT broker URL"
+        default "mqtt://test.mosquitto.org"
+
+    config MQTT_CONNECT_TIMEOUT_MS
+        int "MQTT connect timeout (ms)"
+        default 10000
+        range 1000 60000
+
+endmenu

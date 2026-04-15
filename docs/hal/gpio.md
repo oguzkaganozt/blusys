@@ -221,5 +221,5 @@ GPIO is stateless and pin-based — no open/close handle. Configure a pin, use i
 
 ## Example App
 
-See `examples/reference/gpio_basic/` for input/output usage.
-See `examples/validation/gpio_interrupt/` for ISR callback usage.
+See `examples/reference/hal` (GPIO scenario) for input/output usage.
+See `examples/validation/hal_io_lab` (GPIO interrupt scenario) for ISR callback usage.

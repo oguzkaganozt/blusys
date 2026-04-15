@@ -16,7 +16,7 @@
 //      `intent::decrement`, `intent::increment`, and `intent::confirm`
 //      to a runtime, and a small event handler mutates the slider /
 //      submits a `show_overlay` route command in response — i.e. the
-//      same chain framework_app_basic validates on device.
+//      same chain framework_ui_basic (spine scenario) validates on device.
 //
 // Input works two ways on host:
 //
@@ -27,7 +27,7 @@
 //   map to LV_INDEV_TYPE_ENCODER rotation, Space/Enter maps to the
 //   encoder button press. This drives LVGL focus traversal and widget
 //   activation through the same create_encoder_group + auto_focus_screen
-//   helpers used on real hardware (framework_encoder_basic).
+//   helpers used on real hardware (framework_ui_basic encoder scenario).
 
 #include <SDL2/SDL.h>
 #include <cstdint>
@@ -66,7 +66,7 @@ int32_t clamp_slider(int32_t value)
 // ---- keyboard → encoder bridge ----------------------------------------------
 //
 // Maps SDL keyboard events to LVGL encoder state. Same pattern as
-// framework_encoder_basic's hardware encoder bridge, but fed by
+// framework_ui_basic encoder scenario's hardware encoder bridge, but fed by
 // keyboard instead of quadrature hardware.
 
 struct encoder_state {
@@ -357,7 +357,7 @@ int main(void)
     //
     // Create an LVGL encoder indev fed by keyboard events, wire it to a
     // focus group built from the screen's focusable widgets. This is the
-    // host equivalent of framework_encoder_basic's hardware encoder bridge.
+    // host equivalent of framework_ui_basic encoder scenario's hardware encoder bridge.
     SDL_AddEventWatch(sdl_encoder_key_watch, nullptr);
 
     lv_group_t *encoder_group = blusys::ui::create_encoder_group();
@@ -368,7 +368,7 @@ int main(void)
     lv_indev_set_read_cb(encoder_indev, encoder_indev_read_cb);
     lv_indev_set_group(encoder_indev, encoder_group);
 
-    // Spine wiring — same order as framework_app_basic.
+    // Spine wiring — same order as framework_ui_basic spine scenario.
     g_demo_ctx.state = &g_state;
     g_route_sink.bind(&g_state);
     g_runtime.register_feedback_sink(&g_feedback_sink);
