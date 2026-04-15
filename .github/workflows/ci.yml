@@ -111,6 +111,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-host-deps-${{ runner.os }}-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: apt-host-deps-${{ runner.os }}-
+
       - name: Install host build dependencies
         run: |
           sudo apt-get update
