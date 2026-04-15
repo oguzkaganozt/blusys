@@ -3,11 +3,19 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/framework/ui/style/theme.hpp"
-#include "blusys/drivers/display.h"
 
 #include <cstdint>
 
 namespace blusys::presets {
+
+// Mirror of blusys_display_panel_kind_t — values must stay in sync with the
+// driver enum.  Defined here so the framework UI layer does not have to
+// include a driver header.
+enum class panel_kind : std::uint8_t {
+    rgb565        = 0,  // BLUSYS_DISPLAY_PANEL_KIND_RGB565
+    mono_page     = 1,  // BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE
+    rgb565_native = 2,  // BLUSYS_DISPLAY_PANEL_KIND_RGB565_NATIVE
+};
 
 // Expressive dark — saturated, tactile, characterful.
 // Default for consumer/controller interactive products.
@@ -27,25 +35,25 @@ const blusys::theme_tokens &oled();
 // Returns a scaled copy — does not mutate `base`.
 //
 // Pass `profile.ui.panel_kind` as `kind`.
-// When kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE the function returns
+// When kind == panel_kind::mono_page the function returns
 // `base` unchanged (OLED path is excluded from auto-scaling).
 // When base.design_w == 0 || base.design_h == 0 the function returns
 // `base` unchanged (safe no-op for uninitialised custom themes).
 blusys::theme_tokens for_display(const blusys::theme_tokens &base,
                                   std::uint32_t actual_w,
                                   std::uint32_t actual_h,
-                                  blusys_display_panel_kind_t kind);
+                                  panel_kind kind);
 
 // Auto-select the closest built-in base preset for the given display, then
 // scale it. Equivalent to for_display(auto_base(w, h, kind), w, h, kind).
 //
 // Base selection:
-//   MONO_PAGE        → oled()
+//   mono_page        → oled()
 //   short-edge ≤ 200 → operational_light()
 //   short-edge > 200 → expressive_dark()
 blusys::theme_tokens for_display(std::uint32_t actual_w,
                                   std::uint32_t actual_h,
-                                  blusys_display_panel_kind_t kind);
+                                  panel_kind kind);
 
 }  // namespace blusys::presets
 

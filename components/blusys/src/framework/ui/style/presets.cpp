@@ -315,9 +315,9 @@ inline const lv_font_t *scale_font(const lv_font_t *f, float ratio) noexcept
 // blusys::kTierBreakpointPx in display_constants.hpp — keep in sync.
 // Not #included here: presets.cpp is UI layer, that header is platform layer.
 const blusys::theme_tokens &auto_base(std::uint32_t w, std::uint32_t h,
-                                       blusys_display_panel_kind_t kind) noexcept
+                                       blusys::presets::panel_kind kind) noexcept
 {
-    if (kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE) {
+    if (kind == blusys::presets::panel_kind::mono_page) {
         return oled();
     }
     const std::uint32_t short_edge = (w < h) ? w : h;
@@ -329,10 +329,10 @@ const blusys::theme_tokens &auto_base(std::uint32_t w, std::uint32_t h,
 blusys::theme_tokens for_display(const blusys::theme_tokens &base,
                                   std::uint32_t actual_w,
                                   std::uint32_t actual_h,
-                                  blusys_display_panel_kind_t kind)
+                                  blusys::presets::panel_kind kind)
 {
-    // MONO_PAGE: return unchanged except for orientation — oled preset is pixel-perfect.
-    if (kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE) {
+    // mono_page: return unchanged except for orientation — oled preset is pixel-perfect.
+    if (kind == blusys::presets::panel_kind::mono_page) {
         blusys::theme_tokens t = base;
         t.orientation = blusys::orientation_for(actual_w, actual_h);
         return t;
@@ -414,7 +414,7 @@ blusys::theme_tokens for_display(const blusys::theme_tokens &base,
 
 blusys::theme_tokens for_display(std::uint32_t actual_w,
                                   std::uint32_t actual_h,
-                                  blusys_display_panel_kind_t kind)
+                                  blusys::presets::panel_kind kind)
 {
     return for_display(auto_base(actual_w, actual_h, kind), actual_w, actual_h, kind);
 }

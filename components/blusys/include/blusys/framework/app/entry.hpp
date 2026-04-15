@@ -124,11 +124,11 @@ void run_host(const app_spec<State, Action> &spec,
             ? blusys::presets::for_display(*resolved_theme,
                   static_cast<std::uint32_t>(hor_res),
                   static_cast<std::uint32_t>(ver_res),
-                  BLUSYS_DISPLAY_PANEL_KIND_RGB565)
+                  blusys::presets::panel_kind::rgb565)
             : blusys::presets::for_display(
                   static_cast<std::uint32_t>(hor_res),
                   static_cast<std::uint32_t>(ver_res),
-                  BLUSYS_DISPLAY_PANEL_KIND_RGB565);
+                  blusys::presets::panel_kind::rgb565);
     platform::host_set_theme(static_cast<const void *>(&scaled_theme));
 
     app_runtime<State, Action> runtime(spec);
@@ -201,11 +201,11 @@ void run_device(const app_spec<State, Action> &spec,
             ? blusys::presets::for_display(*resolved_theme,
                   static_cast<std::uint32_t>(profile.lcd.width),
                   static_cast<std::uint32_t>(profile.lcd.height),
-                  profile.ui.panel_kind)
+                  static_cast<blusys::presets::panel_kind>(profile.ui.panel_kind))
             : blusys::presets::for_display(
                   static_cast<std::uint32_t>(profile.lcd.width),
                   static_cast<std::uint32_t>(profile.lcd.height),
-                  profile.ui.panel_kind);
+                  static_cast<blusys::presets::panel_kind>(profile.ui.panel_kind));
     platform::device_set_theme(static_cast<const void *>(&scaled_theme));
 
     app_runtime<State, Action> runtime(spec);
