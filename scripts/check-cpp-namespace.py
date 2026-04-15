@@ -47,6 +47,7 @@ ALLOWLIST_NAMES: frozenset[str] = frozenset(
         "flows.hpp",           # umbrella include (inside flows/)
         "framework.hpp",       # top-level umbrella include
         "inline.hpp",          # capabilities/inline.hpp — macro-only inline defs
+        "dashboard_display_dims.hpp",  # platform/ — preprocessor-only dimension macros
         "callbacks.hpp",       # type aliases only (may or may not have namespace)
         "framework_init.cpp",  # placeholder translation unit (no code body)
     ]
