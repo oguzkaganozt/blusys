@@ -75,13 +75,10 @@ Status-only updates can be ignored in the reducer if `app_ctx` queries are enoug
 
 Operational UI (`blusys::flows::*`, `blusys::screens::*`) stays LVGL-backed and must not call runtime services directly. Wire buttons through `app_ctx::dispatch`, `error_panel_dispatch`, `confirmation_dispatch`, or `app_ctx::request_connectivity_reconnect()` as appropriate; use `ctx.services()` only for framework-approved navigation/routing from UI callbacks that already hold `app_ctx`.
 
-## Reference `map_event` Implementations
+## Reference `map_event` Implementation
 
-For a full reducer-facing translation table, see `map_event` in:
+For a full reducer-facing translation table, see `map_event` in `examples/quickstart/headless/main/platform/app_main.cpp` — the headless quickstart composes all major capabilities (connectivity, storage, OTA, diagnostics, telemetry, lan_control) and shows the complete event mapping pattern.
 
-- `examples/quickstart/headless/main/platform/app_main.cpp` (headless-first, all seven capabilities)
-- `examples/quickstart/headless/main/platform/app_main.cpp` (connected stack entry)
-
-Keep product-specific tags in `core/`; only the integration layer should map raw integration event IDs to those tags.
+Keep product-specific tags in `core/`; only `platform/` should map raw integration event IDs to those tags.
 
 On Linux, `blusys host-build` (monorepo default) places binaries under `scripts/host/build-host/` — including `operational_phase_smoke` (phase machine parity) and `connected_headless_host` (headless reducer + capability stubs). See `scripts/host/README.md`.

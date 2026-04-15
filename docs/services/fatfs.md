@@ -76,14 +76,7 @@ blusys_err_t blusys_fatfs_write(blusys_fatfs_t *fatfs, const char *path,
                                 const void *data, size_t size);
 ```
 
-Creates or overwrites the file at `path` with `data`. The previous contents are discarded.
-
-**Parameters:**
-
-- `fatfs` — filesystem handle
-- `path` — relative path, e.g. `"log.txt"` or `"logs/boot.txt"`
-- `data` — bytes to write
-- `size` — number of bytes to write
+Creates or overwrites the file at `path` with `data`. The previous contents are discarded. `path` is relative, e.g. `"log.txt"` or `"logs/boot.txt"`.
 
 **Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_IO` on write failure or if the parent directory does not exist.
 
@@ -97,15 +90,7 @@ blusys_err_t blusys_fatfs_read(blusys_fatfs_t *fatfs, const char *path,
                                size_t *out_bytes_read);
 ```
 
-Reads up to `buf_size` bytes from the file at `path` into `buf`. Call `blusys_fatfs_size()` first if you need the exact size before allocating a buffer.
-
-**Parameters:**
-
-- `fatfs` — filesystem handle
-- `path` — relative path
-- `buf` — destination buffer
-- `buf_size` — capacity of `buf` in bytes
-- `out_bytes_read` — receives the number of bytes actually read
+Reads up to `buf_size` bytes from the file at `path` into `buf`. `out_bytes_read` receives the number of bytes actually read. Call `blusys_fatfs_size()` first if you need the exact file size before allocating a buffer.
 
 **Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_IO` if the file does not exist or a read error occurred.
 
@@ -173,12 +158,7 @@ Returns the size of the file in bytes.
 blusys_err_t blusys_fatfs_mkdir(blusys_fatfs_t *fatfs, const char *path);
 ```
 
-Creates a single directory level. The call is idempotent — if the directory already exists it returns `BLUSYS_OK`. To create nested paths (`"a/b/c"`) call `mkdir` once per level.
-
-**Parameters:**
-
-- `fatfs` — filesystem handle
-- `path` — relative directory path, e.g. `"logs"`
+Creates a single directory level. Idempotent — returns `BLUSYS_OK` if the directory already exists. To create nested paths (`"a/b/c"`) call `mkdir` once per level.
 
 **Returns:** `BLUSYS_OK` on success or if the directory already exists, `BLUSYS_ERR_IO` if the parent does not exist or creation fails.
 

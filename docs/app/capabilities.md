@@ -16,12 +16,11 @@ Every capability:
 Apps bridge capability events to product actions via `map_event`:
 
 ```cpp
-bool map_event(std::uint32_t source_id, std::uint32_t code,
-               const void *payload, Action *out)
+bool map_event(blusys::capability_event event, Action *out)
 {
     using E = blusys::connectivity_event;
-    if (source_id == blusys::connectivity_capability::kSourceId) {
-        switch (static_cast<E>(code)) {
+    if (event.tag == blusys::capability_event_tag::connectivity) {
+        switch (static_cast<E>(event.code)) {
         case E::got_ip:       *out = Action::wifi_connected;    return true;
         case E::disconnected: *out = Action::wifi_disconnected; return true;
         default:              return false;

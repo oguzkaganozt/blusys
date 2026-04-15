@@ -7,7 +7,9 @@ Platform architecture, development guidelines, target support, and testing refer
 - [Contributing](contributing.md) — local checks, CI jobs, release
 - [Target Matrix](target-matrix.md) — per-module target support and requirements
 - [ADR 0001 — orchestration in framework](adr/0001-orchestration-in-framework.md)
-- [ADR 0002 — HAL component name `blusys_hal`](adr/0002-hal-component-name.md)
+- [ADR 0002 — HAL component name `blusys_hal`](adr/0002-hal-component-name.md) *(superseded)*
+- [ADR 0003 — display auto-scaling and portability](adr/0003-display-auto-scaling.md)
+- [Display portability implementation](display-portability-impl.md)
 
 ## Testing
 

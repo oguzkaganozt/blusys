@@ -142,7 +142,7 @@ Advanced or validation-only surfaces may require a different mix of examples, do
 ### Validation Layers
 
 1. build all shipped examples for `esp32`, `esp32c3`, and `esp32s3`
-2. run the hardware smoke tests in `guides/hardware-smoke-tests.md`
+2. run the hardware smoke tests in `docs/internals/testing/hardware-smoke-tests.md`
 3. run the concurrency examples when changing lifecycle, locking, or callback behavior
 
 ### Testing Rules
@@ -184,7 +184,6 @@ Advanced or validation-only surfaces may require a different mix of examples, do
 ## Project Tracking
 
 - product foundations: `../README.md` (**Product foundations**)
-- repository guidance for agents: `../CLAUDE.md`
 
 ## Maintaining
 
@@ -205,7 +204,7 @@ Dependency direction within the component: framework → services → drivers �
 
 ### Pre-merge / pre-release checks
 
-Aligned with `.github/workflows/ci.yml` and repository root `CLAUDE.md`:
+Aligned with `.github/workflows/ci.yml`:
 
 - `./blusys lint` — layering (`scripts/lint-layering.sh`) + framework UI source list consistency
 - `python3 scripts/check-inventory.py`

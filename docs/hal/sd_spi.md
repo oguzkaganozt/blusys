@@ -129,14 +129,7 @@ blusys_err_t blusys_sd_spi_write(blusys_sd_spi_t *sd, const char *path,
                                   const void *data, size_t size);
 ```
 
-Creates or overwrites the file at `path` with `data`. The previous contents are discarded.
-
-**Parameters:**
-
-- `sd` — SD card handle
-- `path` — relative path, e.g. `"log.txt"` or `"logs/boot.txt"`
-- `data` — bytes to write
-- `size` — number of bytes to write
+Creates or overwrites the file at `path` with `data`. The previous contents are discarded. `path` is relative, e.g. `"log.txt"` or `"logs/boot.txt"`.
 
 **Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_IO` on write failure or if the parent directory does not exist.
 
@@ -150,15 +143,7 @@ blusys_err_t blusys_sd_spi_read(blusys_sd_spi_t *sd, const char *path,
                                  size_t *out_bytes_read);
 ```
 
-Reads up to `buf_size` bytes from the file at `path` into `buf`.
-
-**Parameters:**
-
-- `sd` — SD card handle
-- `path` — relative path
-- `buf` — destination buffer
-- `buf_size` — capacity of `buf` in bytes
-- `out_bytes_read` — receives the number of bytes actually read
+Reads up to `buf_size` bytes from the file at `path` into `buf`. `out_bytes_read` receives the number of bytes actually read.
 
 **Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_IO` if the file does not exist or a read error occurred.
 

@@ -104,7 +104,7 @@ The same `app_spec`, State, Actions, and `update()` compile for all entries. Swa
 
 ## Stock device profile headers
 
-Beyond ST7735, the framework ships small **data-first** profile factories under `blusys/app/profiles/`. Override fields after construction for your PCB.
+Beyond ST7735, the framework ships small **data-first** profile factories under `blusys/framework/app/profiles/`. Override fields after construction for your PCB.
 
 | Header | Factory (typical) | Role |
 |--------|-------------------|------|

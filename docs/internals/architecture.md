@@ -205,7 +205,8 @@ headers from within the framework layer.
 Authoring contract: every widget follows the six-rule contract (theme tokens only,
 config struct interface, setters own state transitions, standard state set, one folder
 per widget, header is the spec). Stock-backed widgets use a fixed-capacity slot pool
-keyed by `BLUSYS_UI_<NAME>_POOL_SIZE`. See `components/blusys/widget-author-guide.md`.
+keyed by `BLUSYS_UI_<NAME>_POOL_SIZE`. See the **Widget kit** section above for the
+contract details.
 
 ## CMake Usage
 
@@ -239,54 +240,23 @@ Some HAL modules expose the same peripheral in both directions under separate ha
 
 ## Design Rationale
 
-Key decisions and their reasoning, preserved here for future contributors.
+**Single merged component.** One `components/blusys/` replaces the old three-component model (`blusys_hal`, `blusys_services`, `blusys_framework`). Same encapsulation, no cross-component `REQUIRES` overhead.
 
-**Single merged component.** The old three-component model (`blusys_hal`,
-`blusys_services`, `blusys_framework`) created artificial `REQUIRES` edges and
-forced product teams to reason about inter-component compatibility. A single
-`components/blusys/` component with strict internal layering enforced by CI lint
-gives the same encapsulation with zero cross-component overhead.
+**HAL and drivers stay C.** Explicit lifecycle and deterministic behavior matter most at the MCU boundary; C++ encapsulation adds no meaningful benefit here.
 
-**HAL and drivers stay C.** HAL is the layer closest to the MCU. Explicit lifecycle,
-deterministic behavior, and the simplest possible low-level surface are most critical
-here. Drivers (display, input, sensor, actuator) compose HAL primitives into hardware
-drivers; they are mostly stateless or hold trivial state and do not benefit meaningfully
-from C++ encapsulation.
+**Services stay C.** Existing service implementations (`wifi.c`, `mqtt.c`, `ota.c`) are already well-factored around opaque handles; migration to C++ would be speculative churn.
 
-**Services stay C.** The existing C service implementations (`wifi.c`, `mqtt.c`,
-`ota.c`) are already well-factored around opaque handles and explicit lifecycle —
-the same structure C++ classes would give. Migrating would force every service from
-`.c` to `.cpp` for speculative benefit.
+**Framework is C++.** Designated initializers, captureless lambdas, `enum class`, and templates earn their keep in the widget kit and state machine layer.
 
-**Framework is C++** because the widget kit needs designated initializers for config
-structs, captureless lambdas for semantic callbacks, `enum class` for variants, and
-template containers. Controller state machines, router logic, intent dispatch, and
-feedback channels all benefit from the same toolset. C++ earns its keep concretely here.
+**Single namespace `blusys`.** All framework types live directly in `namespace blusys` — no sub-namespace disambiguation in product code.
 
-**Single namespace `blusys`.** All framework types live directly in `namespace blusys`
-(e.g. `blusys::app_ctx`, `blusys::intent`, `blusys::app_spec`), not in sub-namespaces.
-This removes forced disambiguation in product code.
+**Fixed-capacity allocation.** Framework spine and widget kit never call `new`/`malloc` after init. Static pools sized by KConfig; fail-loud assert on exhaustion.
 
-**Fixed-capacity allocation.** The framework spine and widget kit never call `new` or
-`malloc` after initialization. Widget callback slots use static pools sized by KConfig.
-The pool fires a fail-loud assert on exhaustion — silent exhaustion is worse than a crash.
+**Single version tag.** All layers ship under one git tag; one pin in `idf_component.yml`.
 
-**Single version tag per release.** All layers ship under one git tag. Product repos
-pin one tag in their `idf_component.yml`. A multi-component version matrix would
-require product teams to reason about inter-layer compatibility on every update.
+**Theme as one struct.** `theme_tokens` is populated at boot, read by every widget. No JSON pipeline.
 
-**Theme as one struct.** The `theme_tokens` struct is populated at boot by product code
-and read by every widget. No JSON pipeline, no design-tool integration, no secondary
-theme-file format.
-
-**`main/` is the single local component for scaffolded product apps.** The canonical
-scaffold keeps all product-owned code under `main/core/`, `main/ui/`, and
-`main/platform/` so the app structure stays obvious and the local component model
-stays singular.
-
-**Six-rule widget contract.** Every widget follows the same contract (theme tokens only,
-config struct interface, setters own state transitions, standard state set, one folder,
-header is the spec) so any developer can read any widget and know where to look.
+**Six-rule widget contract.** Every widget follows the same contract (theme tokens only, config struct, setters own transitions, standard state, one folder, header is the spec).
 
 ## Lifecycle Verbs
 
@@ -317,7 +287,7 @@ The framework uses LVGL's built-in flex and scroll so product code declares stru
 1. **Prefer LVGL flex** (`LV_LAYOUT_FLEX`, `lv_obj_set_flex_flow`, `lv_obj_set_flex_align`). No parallel layout engine.
 2. **Bound the scroll viewport.** The shell's scrollable page column must be a flex child with bounded height (`shell` `content_area` + `page_create_in`) so chrome (tabs, header) is not pushed off-screen.
 3. **Stock widgets size to constraints.** Widgets placed in flex rows with a fixed row height must respect the allocated size (`gauge` scales its arc on `LV_EVENT_SIZE_CHANGED` via `blusys::flex_layout::effective_cross_extent_for_row_child`).
-4. **Escape hatch.** Custom product UI may use raw LVGL inside custom widgets or an explicit custom scope, keeping the same focus/action/runtime contracts as `widget-author-guide.md`.
+4. **Escape hatch.** Custom product UI may use raw LVGL inside custom widgets or an explicit custom scope, keeping the same focus/action/runtime contracts as the six-rule widget contract above.
 
 **Primitives:**
 

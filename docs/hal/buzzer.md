@@ -251,16 +251,11 @@ Calling `play()` or `play_sequence()` while already playing cancels the current 
 
 ## Thread Safety
 
-All public functions are safe to call from any task. The handle uses a FreeRTOS mutex to serialise concurrent `play()`, `stop()`, and `set_callback()` calls, and a spinlock to protect shared state with the timer callback.
-
-## Callback Context
-
-The `BLUSYS_BUZZER_EVENT_DONE` callback fires from the `esp_timer` task. It is safe to call `printf`, FreeRTOS APIs, and most blusys functions from within it. **Do not call `blusys_buzzer_close()` from within the callback** — it will deadlock waiting for the callback to return.
+All public functions are safe to call from any task. The handle uses a FreeRTOS mutex to serialise concurrent `play()`, `stop()`, and `set_callback()` calls, and a spinlock to protect shared state with the timer callback. The `BLUSYS_BUZZER_EVENT_DONE` callback fires from the `esp_timer` task — do not call `blusys_buzzer_close()` from within it.
 
 ## Limitations
 
 - **`notes` lifetime**: the array passed to `blusys_buzzer_play_sequence()` must remain valid until `BLUSYS_BUZZER_EVENT_DONE` fires.
 - **Max 4 handles**: the PWM HAL supports a maximum of 4 concurrent handles across all PWM-based modules.
-- **No close from callback**: calling `blusys_buzzer_close()` from within the buzzer callback deadlocks.
 - **One callback per handle**: only one callback can be registered at a time.
 - **`play()` requires freq_hz > 0**: use `play_sequence()` with a rest note for silence within a melody.

@@ -48,17 +48,6 @@ if (need_network) {
 }
 ```
 
-## Open Networks
-
-Pass `NULL` or `""` as the password for open (unsecured) networks:
-
-```c
-blusys_wifi_sta_config_t cfg = {
-    .ssid     = "OpenNet",
-    .password = NULL,
-};
-```
-
 ## Event Callback
 
 You can subscribe to WiFi lifecycle events without changing the blocking `connect()` flow:
@@ -301,12 +290,7 @@ blusys_wifi_close()
 - `max_retries = 0` disables retries
 - `max_retries = -1` retries forever
 
-## Callback Notes
-
-- callbacks are asynchronous and should stay short
-- use your own task or queue for heavier work
-- callbacks are informational; do not call `blusys_wifi_connect()`, `blusys_wifi_disconnect()`, or `blusys_wifi_close()` from them
 
 ## Example App
 
-See `examples/reference/wifi_connect/`.
+See `examples/reference/connectivity/`.

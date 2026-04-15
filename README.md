@@ -120,7 +120,6 @@ idf_component_register(SRCS "main.c"   REQUIRES blusys)
 idf_component_register(SRCS "main.cpp" REQUIRES blusys)
 ```
 
-Widget authoring: **[widget-author-guide.md](components/blusys/widget-author-guide.md)**.
 
 ---
 

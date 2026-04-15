@@ -58,9 +58,9 @@ Model new capabilities on `storage_capability` (`blusys/app/capabilities/storage
 7. **`start()` sets `rt_`, `stop()` clears it.** `post_integration_event` is null-safe; events fire only while the runtime is bound.
 8. **`poll()` must be non-blocking.** Capabilities share the runtime thread; long work belongs in a worker task owned inside the capability.
 
-## Wiring in `integration/`
+## Wiring in `platform/`
 
-Add the capability to the `app_spec`'s `capability_list`; map its events to product actions in `integration/capability_event_map.cpp` (or via `app_spec::map_event`). The reducer consumes those actions and never calls the capability directly.
+Add the capability to the `app_spec`'s `capability_list`; map its events to product actions in `platform/app_main.cpp` (or via `app_spec::map_event`). The reducer consumes those actions and never calls the capability directly.
 
 Typed event helpers live in `blusys/app/integration_dispatch.hpp` (`dispatch_variant`) — prefer those over raw integer compares when the event set grows.
 

@@ -93,38 +93,6 @@ void app_main(void)
 - No BLE dependency; works on all targets unconditionally.
 - Set `service_key` in the config to password-protect the AP.
 
-## Proof of Possession (PoP)
-
-The `pop` field adds a security layer — the mobile app prompts the user to enter this string, preventing unauthorized provisioning.
-
-```c
-blusys_wifi_prov_config_t cfg = {
-    .transport    = BLUSYS_WIFI_PROV_TRANSPORT_BLE,
-    .service_name = "PROV_DEVICE",
-    .pop          = "abcd1234",   /* user must enter this in the app */
-    .on_event     = on_event,
-};
-```
-
-Pass `NULL` to disable PoP (uses `WIFI_PROV_SECURITY_0`).
-
-## Resetting Credentials
-
-To force re-provisioning, erase the stored credentials:
-
-```c
-blusys_wifi_prov_reset();
-/* blusys_wifi_prov_is_provisioned() now returns false */
-```
-
-## Common Mistakes
-
-- Calling `blusys_wifi_prov_is_provisioned()` before `open()` returns `false` because the provisioning manager is not initialized yet — call it after `open()`.
-- Forgetting the BLE transport requirements (`CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, `CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y`, and `CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y`) — `open()` returns `BLUSYS_ERR_NOT_SUPPORTED`.
-- Opening BLE provisioning while `blusys_bluetooth`, `blusys_ble_gatt`, or BLE `blusys_usb_hid` is already open — `open()` returns `BLUSYS_ERR_INVALID_STATE`.
-- Using a 5 GHz SSID — the ESP32 radio supports 2.4 GHz only.
-- Not calling `close()` after provisioning — the WiFi stack and NVS partition are not released.
-
 ## Types
 
 ### `blusys_wifi_prov_transport_t`
@@ -306,4 +274,4 @@ All handle-based functions are protected by a FreeRTOS mutex. `blusys_wifi_prov_
 
 ## Example App
 
-See `examples/validation/wifi_prov_basic/`.
+See `examples/validation/network_services/` (WiFi provisioning scenario).

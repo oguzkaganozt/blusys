@@ -276,12 +276,6 @@ blusys_err_t blusys_lcd_get_dimensions(blusys_lcd_t *lcd,
 
 Returns the panel dimensions configured at open time. Either `width` or `height` may be NULL if only one dimension is needed.
 
-**Parameters:**
-
-- `lcd` — handle returned by `blusys_lcd_open()`
-- `width` — receives the panel width in pixels; may be NULL
-- `height` — receives the panel height in pixels; may be NULL
-
 **Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_ARG` if `lcd` is NULL or both `width` and `height` are NULL.
 
 ## Lifecycle

@@ -4,77 +4,28 @@ Unified 7-segment display service supporting direct GPIO, 74HC595 shift-register
 
 ## Quick Example
 
-=== "MAX7219"
+```c
+#include "blusys/drivers/display/seven_seg.h"
 
-    ```c
-    #include "blusys/drivers/display/seven_seg.h"
+blusys_seven_seg_t *display;
 
-    blusys_seven_seg_t *display;
+blusys_seven_seg_config_t cfg = {
+    .driver      = BLUSYS_SEVEN_SEG_DRIVER_MAX7219,
+    .digit_count = 4,
+    .max7219 = {
+        .mosi_pin = 23,
+        .clk_pin  = 18,
+        .cs_pin   = 5,
+    },
+};
 
-    blusys_seven_seg_config_t cfg = {
-        .driver      = BLUSYS_SEVEN_SEG_DRIVER_MAX7219,
-        .digit_count = 4,
-        .max7219 = {
-            .mosi_pin = 23,
-            .clk_pin  = 18,
-            .cs_pin   = 5,
-        },
-    };
+blusys_seven_seg_open(&cfg, &display);
+blusys_seven_seg_write_int(display, 1234, false);
+/* ... */
+blusys_seven_seg_close(display);
+```
 
-    blusys_seven_seg_open(&cfg, &display);
-    blusys_seven_seg_write_int(display, 1234, false);
-    /* ... */
-    blusys_seven_seg_close(display);
-    ```
-
-=== "74HC595"
-
-    ```c
-    #include "blusys/drivers/display/seven_seg.h"
-
-    blusys_seven_seg_t *display;
-
-    blusys_seven_seg_config_t cfg = {
-        .driver      = BLUSYS_SEVEN_SEG_DRIVER_74HC595,
-        .digit_count = 1,
-        .hc595 = {
-            .data_pin    = 13,
-            .clk_pin     = 14,
-            .latch_pin   = 15,
-            .common_pins = { 16, -1, -1, -1, -1, -1, -1, -1 },
-            .common_anode = false,
-        },
-    };
-
-    blusys_seven_seg_open(&cfg, &display);
-    blusys_seven_seg_write_int(display, 7, false);
-    /* ... */
-    blusys_seven_seg_close(display);
-    ```
-
-=== "Direct GPIO"
-
-    ```c
-    #include "blusys/drivers/display/seven_seg.h"
-
-    blusys_seven_seg_t *display;
-
-    blusys_seven_seg_config_t cfg = {
-        .driver      = BLUSYS_SEVEN_SEG_DRIVER_GPIO,
-        .digit_count = 1,
-        .gpio = {
-            .pin_a = 2,  .pin_b = 4,  .pin_c = 5,  .pin_d = 18,
-            .pin_e = 19, .pin_f = 21, .pin_g = 22, .pin_dp = -1,
-            .common_pins  = { 23, -1, -1, -1, -1, -1, -1, -1 },
-            .common_anode = false,
-        },
-    };
-
-    blusys_seven_seg_open(&cfg, &display);
-    blusys_seven_seg_write_int(display, 5, false);
-    /* ... */
-    blusys_seven_seg_close(display);
-    ```
+For 74HC595 and Direct GPIO configs, substitute the matching union member (`hc595` or `gpio`) from the Types section; the `open/write/close` calls are identical.
 
 ## Common Mistakes
 

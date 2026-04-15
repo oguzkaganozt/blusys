@@ -15,7 +15,7 @@ static const blusys::app_spec<State, Action> spec{
     .on_init       = on_init, // optional: void(app_ctx&, app_services&, State&) — UI setup for interactive apps
     .map_intent    = map_intent, // optional: bool(app_services&, intent, Action*) — encoder/keyboard → Action
     .on_tick       = on_tick, // optional: void(app_ctx&, app_services&, State&, uint32_t) — periodic callback
-    .tick_period_ms = 100,    // tick interval (default 100 ms)
+    .tick_period_ms = 100,    // tick interval; default is 10 ms
 };
 ```
 

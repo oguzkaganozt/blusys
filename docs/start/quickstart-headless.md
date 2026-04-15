@@ -46,7 +46,7 @@ my_sensor/
   sdkconfig.defaults
   blusys.project.yml
   main/
-    CMakeLists.txt     — idf_component_register listing core + integration
+    CMakeLists.txt     — idf_component_register listing core + platform
     idf_component.yml
     core/
       app_logic.hpp    — State, Action, update(), on_tick() declarations

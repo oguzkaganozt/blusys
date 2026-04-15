@@ -17,7 +17,7 @@ Single entry point for firmware, PC iteration, and ESP-IDF QEMU. Paths below are
 | Firmware for a chip | `blusys build . esp32s3` (or `esp32` / `esp32c3`) |
 | Host (SDL, same repo layout) | `blusys build . host` or `blusys host-build` |
 | Firmware for QEMU (same Kconfig as chip unless you override) | `blusys build . qemu32s3` |
-| Optional QEMU-only Kconfig merge | Edit project `sdkconfig.qemu` (scaffold ships a commented stub; full example: `examples/reference/interactive_dashboard/sdkconfig.qemu`) |
+| Optional QEMU-only Kconfig merge | Edit project `sdkconfig.qemu` (scaffold ships a commented stub; display-class examples show typical overrides) |
 | Run QEMU after a build | `blusys qemu . qemu32s3` (UART / automation-style) |
 | QEMU with IDF virtual framebuffer (LVGL / `esp_lcd_qemu_rgb` class apps) | `blusys qemu . qemu32s3 --graphics` |
 | QEMU, IDF monitor, no SDL window | `blusys qemu . qemu32s3 --serial-only` |
@@ -39,4 +39,3 @@ With **`--graphics`** or **`--serial-only`**, the same build uses ESP-IDF’s **
 
 - [Validation and host loop](validation-host-loop.md) — host smokes, scaffold, CI
 - `scripts/host/README.md` — monorepo host harness (`blusys host-build` with no path)
-- `examples/reference/interactive_dashboard/` — QEMU RGB + `sdkconfig.qemu` reference

@@ -78,18 +78,9 @@ Insert after `theme_feedback_voice feedback_voice;` (currently line 56), before 
 
 ### 1b — Reorder the `density` enum so `normal` is the zero value
 
-**Why:** After Step 2a removes `density_mode` from the presets, any theme that bypasses
-`for_display()` (e.g., a developer calling `set_theme(expressive_dark())` directly) receives
-a zero-initialised `density_mode`. With the current ordering (`compact` first), that yields
-`density::compact` — which the Step 4 change would interpret as "collapse all chrome". We want
-the unscaled escape-hatch path to produce the sane middle default (`normal`), not a
-chrome-collapsed one.
+After Step 2a removes `density_mode` from preset initializers, any theme bypassing `for_display()` receives zero-initialised `density_mode`. `normal` must be the zero value to avoid unintended chrome collapse on those paths. No code serializes the underlying integer; no code compares `density_mode` against an explicit value except `for_display()` and the Step 4 `!= compact` check.
 
-**Verified safe:** No code in the repository compares `density_mode` against an explicit enum
-value (only presence-read in `presets.cpp:16` smoke assertion and Step 4's `!= compact` check).
-No serialization uses the underlying integer values.
-
-**Change:** Replace the existing enum (currently lines 13–17):
+Replace the existing enum (currently lines 13–17):
 
 ```cpp
 enum class density : std::uint8_t {
@@ -101,11 +92,9 @@ enum class density : std::uint8_t {
 
 ### 1c — Document `density_mode` as derived
 
-**Why:** `density_mode` has a single authoritative writer after this change (`for_display()` —
-Step 2b). Preset authors no longer set it. The field's docstring must state this clearly so the
-next person to touch a preset doesn't reintroduce the dual-authorship collision.
+`for_display()` is the sole writer of `density_mode` after Step 2a. Update the docstring so preset authors don't reintroduce direct writes.
 
-**Change:** Replace the existing `// ---- density ----` block (currently lines 51–52):
+Replace the existing `// ---- density ----` block (currently lines 51–52):
 
 ```cpp
     // ---- density ----
@@ -169,16 +158,7 @@ on the production path, making the initializer misleading.
 
 ### Update the smoke assertion
 
-`presets.cpp:16` compares `expressive.density_mode == operational.density_mode`. Before
-this change that compared `comfortable == compact` (false). After this change both are
-zero-initialised to `density::normal`, so the assertion would flip. Either:
-
-- Update the assertion to reference something else that differs between the two presets
-  (e.g., `expressive.color_primary.full != operational.color_primary.full`), or
-- Delete the assertion — it was a sanity check that the two presets are distinct, now better
-  expressed on color or feedback_voice.
-
-Pick whichever reads cleaner in context; the exact replacement is not load-bearing.
+`presets.cpp:16` compared `expressive.density_mode == operational.density_mode`; both are now zero-initialised to `normal`, so the assertion flips. Replace with a color or `feedback_voice` comparison instead.
 
 ---
 
@@ -398,20 +378,7 @@ blusys::theme_tokens for_display(std::uint32_t actual_w,
 
 ## Step 3 — Single-source compile-time display dimensions
 
-The dashboard-profile → pixel-dimensions mapping is currently *implicit*: it lives partly in
-`auto.hpp`'s host fallback block (as literals) and partly inside `profiles::*_WxH()` function
-names on the ESP path. A naive `display_constants.hpp` would add a **third** copy of the Kconfig
-dispatch. To avoid that drift surface, Step 3 is split:
-
-- **3a** creates one authoritative header for dashboard display dimensions.
-- **3b** rewrites `auto.hpp`'s host fallback to consume it (removing literals).
-- **3c** creates `display_constants.hpp`, also consuming it (no dispatch of its own).
-
-After this split there is a single Kconfig-and-host dispatch for dashboard dimensions in the
-repo. Per-chip profile functions (e.g., `profiles::ili9341_320x240()`) continue to own the rest
-of the profile struct; dimensions in their function names must match the shared header (enforced
-by review — drift would immediately be caught when a developer changes the Kconfig dispatch and
-sees the preset struct dimensions go out of sync).
+**3a** creates one authoritative header for the Kconfig/host dispatch. **3b** and **3c** consume it, eliminating the duplicate literals currently in `auto.hpp` and avoiding a third copy in `display_constants.hpp`.
 
 ### Step 3a — `dashboard_display_dims.hpp` (new file)
 
@@ -584,12 +551,6 @@ inline constexpr display_tier kDisplayTier = tier_for(kDisplayWidth, kDisplayHei
 }  // namespace blusys
 ```
 
-**Note on the 200 px breakpoint:** `auto_base()` in `presets.cpp` (Step 2b) hardcodes the same
-`short_edge <= 200` check. presets.cpp cannot include a platform header without creating a
-layer violation (presets is UI, display_constants is platform). The breakpoint is therefore
-declared in two places: `kTierBreakpointPx` here, and a literal `200` in `auto_base()` with a
-comment pointing to this constant. If a third call site appears, promote the constant into a
-UI-layer header both can share.
 
 ---
 
@@ -597,14 +558,7 @@ UI-layer header both can share.
 
 **File:** `components/blusys/src/framework/ui/composition/shell.cpp`
 
-`density_mode` is set by `for_display()` based on the scale ratio but currently read nowhere in the
-framework. `shell_create()` must honor it. When `density_mode == compact`, the header bar, status
-bar, **and** tab bar are suppressed — every pixel matters on a 160×128 (or smaller) display, so
-the entire chrome collapses, not just the header and tabs. The content area already uses
-`lv_obj_set_flex_grow(content_area, 1)` so it expands to fill the full screen automatically.
-
-**Change:** In `shell_create()`, add `full_chrome` immediately before the `// Header bar.` comment
-(currently line 67), and gate all three chrome blocks (header, status bar, tab bar) on it.
+In `shell_create()`, add `full_chrome` before the `// Header bar.` comment (line 67) and gate all three chrome blocks on it. The content area already has `flex_grow=1` so it fills the screen when chrome is absent.
 
 **Before (lines 55–68 in shell.cpp):**
 ```cpp
@@ -678,14 +632,7 @@ shell shell_create(const shell_config &config)
 
 **File:** `components/blusys/include/blusys/framework/app/entry.hpp`
 
-Both `run_host()` and `run_device()` currently pass the resolved theme raw to the platform layer.
-After this change they always route through `for_display()`, which:
-- scales a developer-supplied theme if `spec.theme` (or `identity->theme`) is set, preserving colours
-- auto-selects and scales the closest built-in preset otherwise
-
-`scaled_theme` is a local value. Both `platform::device_set_theme()` and `platform::host_set_theme()`
-call `blusys::set_theme()` which copies the tokens into a static before returning, so passing a
-pointer to a local is safe.
+Both `run_host()` and `run_device()` pass `scaled_theme` (a local) to the platform set-theme call. `set_theme()` copies tokens into a static, so a local pointer is safe.
 
 ### Add `presets.hpp` include
 

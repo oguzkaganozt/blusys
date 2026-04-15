@@ -90,4 +90,3 @@ Single tag covers the merged `components/blusys/` component. Before tagging:
 
 - [Architecture](architecture.md)
 - [Guidelines](guidelines.md) — `Maintaining` and `Integration baseline` sections
-- Repository root `CLAUDE.md` — agent-facing conventions

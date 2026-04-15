@@ -49,7 +49,7 @@ my_product/
   sdkconfig.defaults
   blusys.project.yml   — declared interface, capabilities, policies
   main/
-    CMakeLists.txt     — idf_component_register listing core, ui, and integration
+    CMakeLists.txt     — idf_component_register listing core, ui, and platform
     idf_component.yml
     core/
       app_logic.hpp    — State, Action, update(); domain-only (no LVGL component defs)

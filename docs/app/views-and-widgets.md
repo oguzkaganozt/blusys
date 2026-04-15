@@ -45,7 +45,7 @@ All widget helpers take the parent container as the first argument.
 | Interactive | `button`, `toggle`, `slider`, `modal`, `overlay`, `list`, `tabs`, `dropdown`, `input_field`, `knob` |
 | Display | `progress`, `card`, `gauge`, `chart`, `data_table`, `level_bar`, `vu_strip` |
 
-Authoring rules for contributors live in `components/blusys/widget-author-guide.md`.
+Authoring rules for contributors live in `docs/internals/architecture.md` (widget kit section).
 
 ### Labels and headings
 
@@ -127,10 +127,10 @@ void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state)
     // Register screens by route ID.
     ctx.services().screen_router()->register_screen(RouteId::home,
         [](blusys::app_ctx &ctx, const void *, lv_group_t **g) -> lv_obj_t * {
-            auto p = blusys::blusys::page_create();
+            auto p = blusys::page_create();
             // ... build home screen ...
             if (g) *g = p.group;
-            blusys::blusys::page_load(p);
+            blusys::page_load(p);
             return p.screen;
         });
 
