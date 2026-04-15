@@ -63,13 +63,13 @@ edge_fragment="$(make_fragment \
     'CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI=y')"
 
 build_variant \
-    "$REPO_ROOT/examples/quickstart/handheld_starter" \
+    "$REPO_ROOT/examples/quickstart/handheld" \
     "build-$TARGET-display-st7789" \
     "$controller_fragment" \
-    "handheld_starter $TARGET ST7789"
+    "handheld $TARGET ST7789"
 
 build_variant \
-    "$REPO_ROOT/examples/quickstart/headless_telemetry" \
+    "$REPO_ROOT/examples/quickstart/headless" \
     "build-$TARGET-display-local-ui" \
     "$edge_fragment" \
-    "headless_telemetry $TARGET SSD1306 local UI"
+    "headless $TARGET SSD1306 local UI"
