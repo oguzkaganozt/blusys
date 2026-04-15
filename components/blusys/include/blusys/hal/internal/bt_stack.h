@@ -8,6 +8,7 @@ typedef enum {
     BLUSYS_BT_STACK_OWNER_BLE_GATT,
     BLUSYS_BT_STACK_OWNER_USB_HID_BLE,
     BLUSYS_BT_STACK_OWNER_WIFI_PROV_BLE,
+    BLUSYS_BT_STACK_OWNER_BLE_HID_DEVICE,
 } blusys_bt_stack_owner_t;
 
 /* Returns BLUSYS_ERR_BUSY if another owner already holds the controller. */

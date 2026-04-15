@@ -67,6 +67,7 @@ set(blusys_sources
     src/drivers/display.c
     # --- Services layer ---
     src/services/connectivity/ble_gatt.c
+    src/services/connectivity/ble_hid_device.c
     src/services/connectivity/bluetooth.c
     src/services/connectivity/espnow.c
     src/services/connectivity/wifi.c
@@ -111,6 +112,8 @@ set(blusys_sources
     src/framework/app/ctx.cpp
     src/framework/app/services.cpp
     # --- Framework capabilities ---
+    src/framework/capabilities/ble_hid_device.cpp
+    src/framework/capabilities/ble_hid_device_host.cpp
     src/framework/capabilities/bluetooth.cpp
     src/framework/capabilities/bluetooth_host.cpp
     src/framework/capabilities/connectivity.cpp

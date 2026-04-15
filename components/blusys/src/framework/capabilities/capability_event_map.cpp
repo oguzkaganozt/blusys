@@ -1,5 +1,6 @@
 #include "blusys/framework/capabilities/event.hpp"
 
+#include "blusys/framework/capabilities/ble_hid_device.hpp"
 #include "blusys/framework/capabilities/bluetooth.hpp"
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/capabilities/diagnostics.hpp"
@@ -248,6 +249,25 @@ bool map_integration_event(std::uint32_t event_id, std::uint32_t event_code,
             return true;
         case lan_control_event::capability_ready:
             *out = {capability_event_tag::lan_control_ready, 0};
+            return true;
+        default:
+            break;
+        }
+    }
+
+    if (band == 0x0C00u) {
+        switch (static_cast<ble_hid_device_event>(event_id)) {
+        case ble_hid_device_event::advertising_started:
+            *out = {capability_event_tag::ble_hid_advertising_started, 0};
+            return true;
+        case ble_hid_device_event::client_connected:
+            *out = {capability_event_tag::ble_hid_client_connected, 0};
+            return true;
+        case ble_hid_device_event::client_disconnected:
+            *out = {capability_event_tag::ble_hid_client_disconnected, 0};
+            return true;
+        case ble_hid_device_event::capability_ready:
+            *out = {capability_event_tag::ble_hid_ready, 0};
             return true;
         default:
             break;

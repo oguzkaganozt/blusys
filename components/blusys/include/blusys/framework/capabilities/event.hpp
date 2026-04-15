@@ -96,6 +96,12 @@ enum class capability_event_tag : std::uint16_t {
     mqtt_error,
     mqtt_ready,
 
+    // ble_hid_device (raw IDs: 0x0Cxx)
+    ble_hid_advertising_started,
+    ble_hid_client_connected,
+    ble_hid_client_disconnected,
+    ble_hid_ready,
+
     // `map_integration_event()` had no case; `raw_event_id` / `raw_event_code` hold the
     // original `app_event` id/code when `app_spec::map_event` is non-null.
     integration_passthrough,

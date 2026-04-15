@@ -1,0 +1,47 @@
+menu "Bluetooth Controller example"
+
+    config BTCTRL_DEVICE_NAME
+        string "BLE advertised name"
+        default "Blusys Controller"
+        help
+            Shown in OS Bluetooth pairing UI. Must be ≤29 characters.
+
+    config BTCTRL_VOL_UP_GPIO
+        int "Volume Up button GPIO"
+        default 0
+        help
+            Push-to-ground button to emit Consumer Control Volume Increment (0x00E9).
+
+    config BTCTRL_VOL_DOWN_GPIO
+        int "Volume Down button GPIO"
+        default 1
+        help
+            Push-to-ground button to emit Consumer Control Volume Decrement (0x00EA).
+
+    config BTCTRL_MUTE_GPIO
+        int "Mute button GPIO"
+        default 2
+        help
+            Push-to-ground button to emit Consumer Control Mute (0x00E2).
+
+    config BTCTRL_STATUS_LED_GPIO
+        int "Status LED GPIO"
+        default 8
+        help
+            Drives a status LED. Off before advertising, blinks while
+            advertising, solid while a client is connected. -1 disables.
+
+    config BTCTRL_STATUS_LED_ACTIVE_LOW
+        bool "Status LED is active-low"
+        default n
+
+    config BTCTRL_SIMULATE_ON_CONNECT
+        bool "Auto-simulate 3x Vol+ then 3x Vol- once paired"
+        default y
+        help
+            Useful when bringing the firmware up on a dev board without real
+            buttons wired. On every client connect, the device emits three
+            Volume Increment clicks followed by three Volume Decrement clicks.
+            Disable this once real buttons are attached.
+
+endmenu

@@ -148,6 +148,8 @@ void app_ctx::bind_capability_pointers_from_list(app_ctx &ctx, capability_list *
             ctx.mqtt_host_ = static_cast<mqtt_host_capability *>(c);
 #endif
             break;
+        case capability_kind::ble_hid_device:
+            break;
         case capability_kind::custom:
             break;
         }
