@@ -13,7 +13,8 @@ int main()
     const auto &expressive = blusys::app::presets::expressive_dark();
     const auto &operational = blusys::app::presets::operational_light();
 
-    if (expressive.density_mode == operational.density_mode) {
+    if (expressive.design_w == 0 || operational.design_w == 0 ||
+        expressive.design_w == operational.design_w) {
         return 1;
     }
     if (expressive.touch_target_min <= operational.touch_target_min) {
