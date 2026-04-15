@@ -59,29 +59,29 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
     case action_tag::level_delta:
         if (!state.hold_enabled) {
             state.level = blusys_examples::clamp_percent(state.level + event.value);
-            ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
-                              blusys::framework::feedback_pattern::click);
+            ctx.emit_feedback(blusys::feedback_channel::haptic,
+                              blusys::feedback_pattern::click);
         }
         break;
 
     case action_tag::toggle_hold:
         state.hold_enabled = !state.hold_enabled;
-        ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
+        ctx.emit_feedback(blusys::feedback_channel::haptic,
                           state.hold_enabled
-                              ? blusys::framework::feedback_pattern::warning
-                              : blusys::framework::feedback_pattern::click);
+                              ? blusys::feedback_pattern::warning
+                              : blusys::feedback_pattern::click);
         break;
 
     case action_tag::set_accent:
         state.accent_index = event.value;
-        ctx.emit_feedback(blusys::framework::feedback_channel::audio,
-                          blusys::framework::feedback_pattern::click);
+        ctx.emit_feedback(blusys::feedback_channel::audio,
+                          blusys::feedback_pattern::click);
         break;
 
     case action_tag::confirm:
         ctx.services().show_overlay(overlay::confirm);
-        ctx.emit_feedback(blusys::framework::feedback_channel::audio,
-                          blusys::framework::feedback_pattern::confirm);
+        ctx.emit_feedback(blusys::feedback_channel::audio,
+                          blusys::feedback_pattern::confirm);
         BLUSYS_LOGI(kTag, "confirmed level=%ld accent=%s hold=%s",
                     static_cast<long>(state.level),
                     accent_name(state.accent_index),
@@ -112,20 +112,20 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
     ui::sync_all_panels(state);
 }
 
-bool map_intent(blusys::app_services &svc, blusys::framework::intent intent, action *out)
+bool map_intent(blusys::app_services &svc, blusys::intent intent, action *out)
 {
     (void)svc;
     switch (intent) {
-    case blusys::framework::intent::increment:
+    case blusys::intent::increment:
         *out = action{.tag = action_tag::level_delta, .value = 4};
         return true;
-    case blusys::framework::intent::decrement:
+    case blusys::intent::decrement:
         *out = action{.tag = action_tag::level_delta, .value = -4};
         return true;
-    case blusys::framework::intent::confirm:
+    case blusys::intent::confirm:
         *out = action{.tag = action_tag::confirm};
         return true;
-    case blusys::framework::intent::cancel:
+    case blusys::intent::cancel:
         *out = action{.tag = action_tag::toggle_hold};
         return true;
     default:

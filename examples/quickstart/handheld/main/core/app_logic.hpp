@@ -56,7 +56,7 @@ struct app_state {
 };
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event);
-bool map_intent(blusys::app_services &svc, blusys::framework::intent intent, action *out);
+bool map_intent(blusys::app_services &svc, blusys::intent intent, action *out);
 
 const char *accent_name(std::int32_t index);
 

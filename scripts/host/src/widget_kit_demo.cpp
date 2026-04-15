@@ -130,44 +130,44 @@ struct app_state {
 
 // ---- feedback sink: host-side logger ---------------------------------------
 
-class logging_feedback_sink final : public blusys::framework::feedback_sink {
+class logging_feedback_sink final : public blusys::feedback_sink {
 public:
-    bool supports(blusys::framework::feedback_channel) const override
+    bool supports(blusys::feedback_channel) const override
     {
         return true;
     }
 
-    void emit(const blusys::framework::feedback_event &event) override
+    void emit(const blusys::feedback_event &event) override
     {
         BLUSYS_LOGI(kTag,
                     "feedback: channel=%s pattern=%s value=%lu",
-                    blusys::framework::feedback_channel_name(event.channel),
-                    blusys::framework::feedback_pattern_name(event.pattern),
+                    blusys::feedback_channel_name(event.channel),
+                    blusys::feedback_pattern_name(event.pattern),
                     static_cast<unsigned long>(event.value));
     }
 };
 
 // ---- route sink: applies route commands to real widgets --------------------
 
-class ui_route_sink final : public blusys::framework::route_sink {
+class ui_route_sink final : public blusys::route_sink {
 public:
     void bind(app_state *state) { state_ = state; }
 
-    void submit(const blusys::framework::route_command &command) override
+    void submit(const blusys::route_command &command) override
     {
         BLUSYS_LOGI(kTag,
                     "route: %s id=%lu",
-                    blusys::framework::route_command_type_name(command.type),
+                    blusys::route_command_type_name(command.type),
                     static_cast<unsigned long>(command.id));
 
         if (state_ == nullptr) return;
 
         switch (command.type) {
-        case blusys::framework::route_command_type::show_overlay:
-            blusys::ui::overlay_show(state_->toast);
+        case blusys::route_command_type::show_overlay:
+            blusys::overlay_show(state_->toast);
             break;
-        case blusys::framework::route_command_type::hide_overlay:
-            blusys::ui::overlay_hide(state_->toast);
+        case blusys::route_command_type::hide_overlay:
+            blusys::overlay_hide(state_->toast);
             break;
         default:
             break;
@@ -186,12 +186,12 @@ struct demo_handler_ctx {
 
 demo_handler_ctx g_demo_ctx{};
 
-static blusys_err_t demo_on_init(void *ctx, blusys::framework::feedback_bus *fb)
+static blusys_err_t demo_on_init(void *ctx, blusys::feedback_bus *fb)
 {
     (void)ctx;
-    blusys::framework::feedback_dispatch(fb, {
-        .channel = blusys::framework::feedback_channel::visual,
-        .pattern = blusys::framework::feedback_pattern::focus,
+    blusys::feedback_dispatch(fb, {
+        .channel = blusys::feedback_channel::visual,
+        .pattern = blusys::feedback_pattern::focus,
         .value   = 1,
         .payload = nullptr,
     });
@@ -199,46 +199,46 @@ static blusys_err_t demo_on_init(void *ctx, blusys::framework::feedback_bus *fb)
 }
 
 static void demo_on_event(void *ctx,
-                          const blusys::framework::app_event &event,
-                          blusys::framework::feedback_bus *fb,
-                          blusys::framework::route_sink *routes)
+                          const blusys::app_event &event,
+                          blusys::feedback_bus *fb,
+                          blusys::route_sink *routes)
 {
     auto *h = static_cast<demo_handler_ctx *>(ctx);
-    if (event.kind != blusys::framework::app_event_kind::intent) {
+    if (event.kind != blusys::app_event_kind::intent) {
         return;
     }
     if (h->state == nullptr || h->state->slider == nullptr) {
         return;
     }
 
-    switch (blusys::framework::app_event_intent(event)) {
-    case blusys::framework::intent::increment: {
-        const int32_t cur = blusys::ui::slider_get_value(h->state->slider);
-        blusys::ui::slider_set_value(h->state->slider, clamp_slider(cur + kSliderStep));
-        blusys::framework::feedback_dispatch(fb, {
-            .channel = blusys::framework::feedback_channel::haptic,
-            .pattern = blusys::framework::feedback_pattern::click,
+    switch (blusys::app_event_intent(event)) {
+    case blusys::intent::increment: {
+        const int32_t cur = blusys::slider_get_value(h->state->slider);
+        blusys::slider_set_value(h->state->slider, clamp_slider(cur + kSliderStep));
+        blusys::feedback_dispatch(fb, {
+            .channel = blusys::feedback_channel::haptic,
+            .pattern = blusys::feedback_pattern::click,
             .value   = 1,
             .payload = nullptr,
         });
         break;
     }
-    case blusys::framework::intent::decrement: {
-        const int32_t cur = blusys::ui::slider_get_value(h->state->slider);
-        blusys::ui::slider_set_value(h->state->slider, clamp_slider(cur - kSliderStep));
-        blusys::framework::feedback_dispatch(fb, {
-            .channel = blusys::framework::feedback_channel::haptic,
-            .pattern = blusys::framework::feedback_pattern::click,
+    case blusys::intent::decrement: {
+        const int32_t cur = blusys::slider_get_value(h->state->slider);
+        blusys::slider_set_value(h->state->slider, clamp_slider(cur - kSliderStep));
+        blusys::feedback_dispatch(fb, {
+            .channel = blusys::feedback_channel::haptic,
+            .pattern = blusys::feedback_pattern::click,
             .value   = 1,
             .payload = nullptr,
         });
         break;
     }
-    case blusys::framework::intent::confirm: {
-        blusys::framework::route_dispatch(routes, blusys::framework::route::show_overlay(1));
-        blusys::framework::feedback_dispatch(fb, {
-            .channel = blusys::framework::feedback_channel::audio,
-            .pattern = blusys::framework::feedback_pattern::confirm,
+    case blusys::intent::confirm: {
+        blusys::route_dispatch(routes, blusys::route::show_overlay(1));
+        blusys::feedback_dispatch(fb, {
+            .channel = blusys::feedback_channel::audio,
+            .pattern = blusys::feedback_pattern::confirm,
             .value   = 1,
             .payload = nullptr,
         });
@@ -254,31 +254,31 @@ static void demo_on_event(void *ctx,
 app_state                   g_state{};
 ui_route_sink               g_route_sink{};
 logging_feedback_sink       g_feedback_sink{};
-blusys::framework::runtime  g_runtime{};
-blusys::framework::runtime *g_runtime_ptr = &g_runtime;
+blusys::runtime  g_runtime{};
+blusys::runtime *g_runtime_ptr = &g_runtime;
 
 void build_demo_screen()
 {
-    blusys::ui::set_theme(blusys::presets::expressive_dark());
+    blusys::set_theme(blusys::presets::expressive_dark());
 
-    lv_obj_t *screen = blusys::ui::screen_create({});
+    lv_obj_t *screen = blusys::screen_create({});
     g_state.screen = screen;
-    lv_obj_t *col = blusys::ui::col_create(screen, {
-        .gap     = blusys::ui::theme().spacing_md,
-        .padding = blusys::ui::theme().spacing_lg,
+    lv_obj_t *col = blusys::col_create(screen, {
+        .gap     = blusys::theme().spacing_md,
+        .padding = blusys::theme().spacing_lg,
     });
 
-    blusys::ui::label_create(col, {
+    blusys::label_create(col, {
         .text = "Blusys widget kit",
-        .font = blusys::ui::theme().font_title,
+        .font = blusys::theme().font_title,
     });
-    blusys::ui::divider_create(col, {});
-    blusys::ui::label_create(col, {
+    blusys::divider_create(col, {});
+    blusys::label_create(col, {
         .text = "Volume",
-        .font = blusys::ui::theme().font_body,
+        .font = blusys::theme().font_body,
     });
 
-    g_state.slider = blusys::ui::slider_create(col, {
+    g_state.slider = blusys::slider_create(col, {
         .min       = kSliderMin,
         .max       = kSliderMax,
         .initial   = kSliderInit,
@@ -287,45 +287,45 @@ void build_demo_screen()
         .disabled  = false,
     });
 
-    lv_obj_t *button_row = blusys::ui::row_create(col, {
-        .gap     = blusys::ui::theme().spacing_sm,
+    lv_obj_t *button_row = blusys::row_create(col, {
+        .gap     = blusys::theme().spacing_sm,
         .padding = 0,
     });
 
-    blusys::ui::button_create(button_row, {
+    blusys::button_create(button_row, {
         .label   = "Down",
-        .variant = blusys::ui::button_variant::secondary,
+        .variant = blusys::button_variant::secondary,
         .on_press = +[](void *user_data) {
-            auto *runtime = static_cast<blusys::framework::runtime *>(user_data);
-            runtime->post_intent(blusys::framework::intent::decrement);
+            auto *runtime = static_cast<blusys::runtime *>(user_data);
+            runtime->post_intent(blusys::intent::decrement);
         },
         .user_data = g_runtime_ptr,
     });
-    blusys::ui::button_create(button_row, {
+    blusys::button_create(button_row, {
         .label   = "Up",
-        .variant = blusys::ui::button_variant::secondary,
+        .variant = blusys::button_variant::secondary,
         .on_press = +[](void *user_data) {
-            auto *runtime = static_cast<blusys::framework::runtime *>(user_data);
-            runtime->post_intent(blusys::framework::intent::increment);
+            auto *runtime = static_cast<blusys::runtime *>(user_data);
+            runtime->post_intent(blusys::intent::increment);
         },
         .user_data = g_runtime_ptr,
     });
-    blusys::ui::button_create(button_row, {
+    blusys::button_create(button_row, {
         .label   = "OK",
-        .variant = blusys::ui::button_variant::primary,
+        .variant = blusys::button_variant::primary,
         .on_press = +[](void *user_data) {
-            auto *runtime = static_cast<blusys::framework::runtime *>(user_data);
-            runtime->post_intent(blusys::framework::intent::confirm);
+            auto *runtime = static_cast<blusys::runtime *>(user_data);
+            runtime->post_intent(blusys::intent::confirm);
         },
         .user_data = g_runtime_ptr,
     });
 
-    blusys::ui::label_create(col, {
+    blusys::label_create(col, {
         .text = "Keys: Arrow keys = focus  |  Space/Enter = press",
-        .font = blusys::ui::theme().font_body,
+        .font = blusys::theme().font_body,
     });
 
-    g_state.toast = blusys::ui::overlay_create(screen, {
+    g_state.toast = blusys::overlay_create(screen, {
         .text        = "Confirmed",
         .duration_ms = 1500,
         .on_hidden   = nullptr,
@@ -360,8 +360,8 @@ int main(void)
     // host equivalent of framework_ui_basic encoder scenario's hardware encoder bridge.
     SDL_AddEventWatch(sdl_encoder_key_watch, nullptr);
 
-    lv_group_t *encoder_group = blusys::ui::create_encoder_group();
-    blusys::ui::auto_focus_screen(g_state.screen, encoder_group);
+    lv_group_t *encoder_group = blusys::create_encoder_group();
+    blusys::auto_focus_screen(g_state.screen, encoder_group);
 
     lv_indev_t *encoder_indev = lv_indev_create();
     lv_indev_set_type(encoder_indev, LV_INDEV_TYPE_ENCODER);
@@ -373,7 +373,7 @@ int main(void)
     g_route_sink.bind(&g_state);
     g_runtime.register_feedback_sink(&g_feedback_sink);
 
-    blusys::framework::runtime_handler handler{};
+    blusys::runtime_handler handler{};
     handler.context      = &g_demo_ctx;
     handler.on_init      = demo_on_init;
     handler.handle_event = demo_on_event;
@@ -388,7 +388,7 @@ int main(void)
 
     BLUSYS_LOGI(kTag, "widget kit demo running — arrow keys=focus, space/enter=press, mouse=click");
     BLUSYS_LOGI(kTag, "initial slider = %ld",
-                static_cast<long>(blusys::ui::slider_get_value(g_state.slider)));
+                static_cast<long>(blusys::slider_get_value(g_state.slider)));
 
     // Main loop: drive LVGL ticks + timers and step the runtime each
     // frame so queued intents (from button clicks) are processed.

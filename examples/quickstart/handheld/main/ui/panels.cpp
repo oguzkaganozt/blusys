@@ -15,7 +15,7 @@ void ShellChrome::sync(const app_state &state, const char *accent_line)
         blusys::set_badge_text(badge, setup_ready ? "Ready" : "Setup");
         blusys::set_badge_level(
             badge,
-            setup_ready ? blusys::ui::badge_level::success : blusys::ui::badge_level::warning);
+            setup_ready ? blusys::badge_level::success : blusys::badge_level::warning);
     }
 
     if (detail != nullptr) {
@@ -38,8 +38,8 @@ void HomePanel::sync(const app_state &state)
                                           state.hold_enabled ? "Hold" : "Live");
         blusys::set_badge_level(
             hold_badge,
-            state.hold_enabled ? blusys::ui::badge_level::warning
-                               : blusys::ui::badge_level::success);
+            state.hold_enabled ? blusys::badge_level::warning
+                               : blusys::badge_level::success);
     }
 }
 
@@ -50,7 +50,7 @@ void StatusPanel::sync(const app_state &state)
         blusys::set_badge_text(setup_badge, ready ? "Provisioned" : "Waiting");
         blusys::set_badge_level(
             setup_badge,
-            ready ? blusys::ui::badge_level::success : blusys::ui::badge_level::warning);
+            ready ? blusys::badge_level::success : blusys::badge_level::warning);
     }
     if (storage_kv != nullptr) {
         blusys::set_kv_value(storage_kv,

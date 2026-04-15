@@ -70,16 +70,16 @@ void update(blusys::app_ctx &ctx, SensorState &state, const Action &action)
 
     case ActionTag::check_alarm:
         state.alarm_active = true;
-        ctx.emit_feedback(blusys::framework::feedback_channel::audio,
-                          blusys::framework::feedback_pattern::warning);
+        ctx.emit_feedback(blusys::feedback_channel::audio,
+                          blusys::feedback_pattern::warning);
         BLUSYS_LOGW(kTag, "ALARM: temperature %.1f exceeds threshold",
                     static_cast<double>(state.temperature));
         break;
 
     case ActionTag::reset_alarm:
         state.alarm_active = false;
-        ctx.emit_feedback(blusys::framework::feedback_channel::audio,
-                          blusys::framework::feedback_pattern::success);
+        ctx.emit_feedback(blusys::feedback_channel::audio,
+                          blusys::feedback_pattern::success);
         BLUSYS_LOGI(kTag, "alarm cleared — temperature %.1f normal",
                     static_cast<double>(state.temperature));
         break;

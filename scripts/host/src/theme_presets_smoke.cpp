@@ -30,11 +30,11 @@ int main()
         return 6;
     }
 
-    blusys::ui::set_theme(expressive);
+    blusys::set_theme(expressive);
     const std::uint32_t flash_ms =
-        blusys::ui::visual_flash_ms(blusys::framework::feedback_preset_expressive(),
-                                      blusys::framework::feedback_pattern::click,
-                                      blusys::ui::theme());
+        blusys::visual_flash_ms(blusys::feedback_preset_expressive(),
+                                      blusys::feedback_pattern::click,
+                                      blusys::theme());
     if (flash_ms == 0) {
         return 5;
     }

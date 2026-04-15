@@ -49,9 +49,9 @@ std::uint8_t host_auto_zoom(int w, int h)
 
 // ---- framework runtime binding for intent posting ----
 
-static blusys::framework::runtime *g_runtime = nullptr;
+static blusys::runtime *g_runtime = nullptr;
 
-void host_set_runtime(blusys::framework::runtime *rt)
+void host_set_runtime(blusys::runtime *rt)
 {
     g_runtime = rt;
 }
@@ -136,18 +136,18 @@ static void encoder_read_cb(lv_indev_t * /*indev*/, lv_indev_data_t *data)
     if (g_runtime != nullptr) {
         if (diff > 0) {
             for (int i = 0; i < diff; ++i) {
-                g_runtime->post_intent(blusys::framework::intent::increment);
+                g_runtime->post_intent(blusys::intent::increment);
             }
         } else if (diff < 0) {
             for (int i = 0; i < -diff; ++i) {
-                g_runtime->post_intent(blusys::framework::intent::decrement);
+                g_runtime->post_intent(blusys::intent::decrement);
             }
         }
 
         // Fire confirm on the press edge, not every poll while held.
         if (g_encoder_state.press_edge) {
             g_encoder_state.press_edge = false;
-            g_runtime->post_intent(blusys::framework::intent::confirm);
+            g_runtime->post_intent(blusys::intent::confirm);
         }
 
         // Long-press simulation: fire once after holding Enter for kLongPressMs.
@@ -155,13 +155,13 @@ static void encoder_read_cb(lv_indev_t * /*indev*/, lv_indev_data_t *data)
             const uint32_t held_ms = SDL_GetTicks() - g_encoder_state.enter_down_tick;
             if (held_ms >= kLongPressMs) {
                 g_encoder_state.long_press_fired = true;
-                g_runtime->post_intent(blusys::framework::intent::long_press);
+                g_runtime->post_intent(blusys::intent::long_press);
             }
         }
 
         // Release intent on key-up edge.
         if (!g_encoder_state.enter_down && g_encoder_state.enter_down_tick != 0) {
-            g_runtime->post_intent(blusys::framework::intent::release);
+            g_runtime->post_intent(blusys::intent::release);
             g_encoder_state.enter_down_tick = 0;
         }
     }
@@ -225,7 +225,7 @@ void host_frame_delay(std::uint32_t ms)
 void host_set_theme(const void *tokens)
 {
     if (tokens != nullptr) {
-        blusys::ui::set_theme(*static_cast<const blusys::ui::theme_tokens *>(tokens));
+        blusys::set_theme(*static_cast<const blusys::theme_tokens *>(tokens));
     }
 }
 

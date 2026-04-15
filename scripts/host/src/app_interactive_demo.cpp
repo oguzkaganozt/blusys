@@ -54,8 +54,8 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
         if (!state.muted && state.volume < 100) {
             state.volume += 5;
             view::set_value(state.slider, state.volume);
-            ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
-                              blusys::framework::feedback_pattern::click);
+            ctx.emit_feedback(blusys::feedback_channel::haptic,
+                              blusys::feedback_pattern::click);
         }
         break;
 
@@ -63,8 +63,8 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
         if (!state.muted && state.volume > 0) {
             state.volume -= 5;
             view::set_value(state.slider, state.volume);
-            ctx.emit_feedback(blusys::framework::feedback_channel::haptic,
-                              blusys::framework::feedback_pattern::click);
+            ctx.emit_feedback(blusys::feedback_channel::haptic,
+                              blusys::feedback_pattern::click);
         }
         break;
 
@@ -77,8 +77,8 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
 
     case Tag::confirm:
         ctx.services().show_overlay(1);
-        ctx.emit_feedback(blusys::framework::feedback_channel::audio,
-                          blusys::framework::feedback_pattern::confirm);
+        ctx.emit_feedback(blusys::feedback_channel::audio,
+                          blusys::feedback_pattern::confirm);
         BLUSYS_LOGI(kTag, "confirmed — volume=%ld", static_cast<long>(state.volume));
         break;
     }
@@ -86,20 +86,20 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
 
 // ---- intent-to-action map ----
 
-bool map_intent(blusys::app_services &svc, blusys::framework::intent intent, Action *out)
+bool map_intent(blusys::app_services &svc, blusys::intent intent, Action *out)
 {
     (void)svc;
     switch (intent) {
-    case blusys::framework::intent::increment:
+    case blusys::intent::increment:
         *out = Action{.tag = Tag::volume_up};
         return true;
-    case blusys::framework::intent::decrement:
+    case blusys::intent::decrement:
         *out = Action{.tag = Tag::volume_down};
         return true;
-    case blusys::framework::intent::confirm:
+    case blusys::intent::confirm:
         *out = Action{.tag = Tag::confirm};
         return true;
-    case blusys::framework::intent::cancel:
+    case blusys::intent::cancel:
         *out = Action{.tag = Tag::toggle_mute};
         return true;
     default:
@@ -119,7 +119,7 @@ void on_init(app_ctx &ctx, app_services &svc, AppState &state)
 
     state.mute_label = view::label(p.content, "Volume");
 
-    state.slider = blusys::ui::slider_create(p.content, {
+    state.slider = blusys::slider_create(p.content, {
         .min     = 0,
         .max     = 100,
         .initial = state.volume,
@@ -128,11 +128,11 @@ void on_init(app_ctx &ctx, app_services &svc, AppState &state)
     auto *btn_row = view::row(p.content);
 
     view::button(btn_row, "Down", Action{.tag = Tag::volume_down}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(btn_row, "Up", Action{.tag = Tag::volume_up}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(btn_row, "Mute", Action{.tag = Tag::toggle_mute}, &ctx,
-                 blusys::ui::button_variant::ghost);
+                 blusys::button_variant::ghost);
     view::button(btn_row, "OK", Action{.tag = Tag::confirm}, &ctx);
 
     view::overlay_create(p.screen, 1,

@@ -26,7 +26,7 @@ void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state)
     view::divider(p.content);
     view::label(p.content, "Brightness");
 
-    state.slider = blusys::ui::slider_create(p.content, {
+    state.slider = blusys::slider_create(p.content, {
         .min     = 0,
         .max     = 100,
         .initial = state.brightness,
@@ -34,9 +34,9 @@ void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state)
 
     auto *btn_row = view::row(p.content);
     view::button(btn_row, "-", Action{.tag = Tag::brightness_down}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(btn_row, "+", Action{.tag = Tag::brightness_up}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(btn_row, "OK", Action{.tag = Tag::confirm}, &ctx);
 
     view::page_load(p);

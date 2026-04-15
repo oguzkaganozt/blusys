@@ -141,7 +141,7 @@ lv_obj_t *create_home(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t 
     lv_obj_set_width(meters, LV_PCT(100));
     const auto vu_initial = static_cast<std::uint8_t>((st->level * 12) / 100);
     st->home.output.vu_strip =
-        view::vu_strip(meters, 12, vu_initial, blusys::ui::vu_orientation::vertical);
+        view::vu_strip(meters, 12, vu_initial, blusys::vu_orientation::vertical);
     st->home.output.level_bar =
         view::level_bar(meters, 0, 100, st->level, "Output");
     st->home.output.vu_segment_count = 12;
@@ -150,21 +150,21 @@ lv_obj_t *create_home(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t 
     st->home.hold_badge = view::status_badge(hero,
                                                   st->hold_enabled ? "Hold" : "Live",
                                                   st->hold_enabled
-                                                      ? blusys::ui::badge_level::warning
-                                                      : blusys::ui::badge_level::success);
+                                                      ? blusys::badge_level::warning
+                                                      : blusys::badge_level::success);
 
     auto *controls = view::row(page.content);
     view::button(controls, "Down", action{.tag = action_tag::level_delta, .value = -6}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(controls, "Up", action{.tag = action_tag::level_delta, .value = 6}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(controls, st->hold_enabled ? "Release" : "Hold",
                  action{.tag = action_tag::toggle_hold}, &ctx,
-                 blusys::ui::button_variant::ghost);
+                 blusys::button_variant::ghost);
 
     auto *actions = view::row(page.content);
     view::button(actions, "Setup", action{.tag = action_tag::open_setup}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(actions, "Commit", action{.tag = action_tag::confirm}, &ctx);
 
     if (group_out != nullptr) {
@@ -201,17 +201,17 @@ lv_obj_t *create_status(blusys::app_ctx &ctx, const void * /*params*/, lv_group_
     lv_obj_set_width(summary, LV_PCT(100));
     st->status.setup_badge = view::status_badge(summary,
                                                        setup_ready ? "Provisioned" : "Waiting",
-                                                       setup_ready ? blusys::ui::badge_level::success
-                                                                   : blusys::ui::badge_level::warning);
+                                                       setup_ready ? blusys::badge_level::success
+                                                                   : blusys::badge_level::warning);
     st->status.output_kv = view::key_value(summary, "Output", "64%");
     st->status.hold_kv = view::key_value(summary, "Hold", "Off");
     st->status.storage_kv = view::key_value(summary, "Storage", "Pending");
 
     auto *actions = view::row(page.content);
     view::button(actions, "Run Setup", action{.tag = action_tag::open_setup}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(actions, "Settings", action{.tag = action_tag::show_settings}, &ctx,
-                 blusys::ui::button_variant::ghost);
+                 blusys::button_variant::ghost);
 
     if (group_out != nullptr) {
         *group_out = page.group;
@@ -338,9 +338,9 @@ void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state)
         view::shell_set_tabs(*ctx.services().shell(), tabs, sizeof(tabs) / sizeof(tabs[0]), &ctx.services());
 
         if (lv_obj_t *surface = view::shell_status_surface(*ctx.services().shell()); surface != nullptr) {
-            state.shell.badge = view::status_badge(surface, "Setup", blusys::ui::badge_level::warning);
+            state.shell.badge = view::status_badge(surface, "Setup", blusys::badge_level::warning);
             state.shell.detail =
-                view::label(surface, "Punch  64%", blusys::ui::theme().font_body_sm);
+                view::label(surface, "Punch  64%", blusys::theme().font_body_sm);
         }
 
         if (ctx.services().overlay_manager() != nullptr) {

@@ -37,6 +37,6 @@ struct Action {
 
 void update(app_ctx &ctx, State &state, const Action &action);
 
-bool map_intent(blusys::app_services &svc, blusys::framework::intent intent, Action *out);
+bool map_intent(blusys::app_services &svc, blusys::intent intent, Action *out);
 
 }  // namespace connected_device

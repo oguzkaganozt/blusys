@@ -23,7 +23,7 @@ void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, AppState &state)
 
     state.mute_label = view::label(p.content, "Volume");
 
-    state.slider = blusys::ui::slider_create(p.content, {
+    state.slider = blusys::slider_create(p.content, {
         .min     = 0,
         .max     = 100,
         .initial = state.volume,
@@ -32,11 +32,11 @@ void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, AppState &state)
     auto *btn_row = view::row(p.content);
 
     view::button(btn_row, "Down", Action{.tag = Tag::volume_down}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(btn_row, "Up", Action{.tag = Tag::volume_up}, &ctx,
-                 blusys::ui::button_variant::secondary);
+                 blusys::button_variant::secondary);
     view::button(btn_row, "Mute", Action{.tag = Tag::toggle_mute}, &ctx,
-                 blusys::ui::button_variant::ghost);
+                 blusys::button_variant::ghost);
     view::button(btn_row, "OK", Action{.tag = Tag::confirm}, &ctx);
 
     view::overlay_create(p.screen, 1,
