@@ -41,8 +41,9 @@ static const char *TAG = "blusys_ble_hid";
 #define HID_VERSION_1_11         0x0111u
 
 /* Consumer-Control report: one 1-byte report, no report-ID prefix on the
- * payload (NimBLE input-report convention). Four bits → Vol+, Vol-, Mute,
- * Play/Pause; four padding bits round out the byte.
+ * payload (NimBLE input-report convention). Eight bits, one per usage:
+ *   bit 0 Vol+  bit 1 Vol-  bit 2 Mute       bit 3 Play/Pause
+ *   bit 4 Next  bit 5 Prev  bit 6 Bright+    bit 7 Bright-
  */
 static const uint8_t kReportMap[] = {
     0x05, 0x0C,       /* Usage Page (Consumer)                 */
@@ -52,14 +53,16 @@ static const uint8_t kReportMap[] = {
     0x15, 0x00,       /*   Logical Minimum (0)                 */
     0x25, 0x01,       /*   Logical Maximum (1)                 */
     0x75, 0x01,       /*   Report Size (1)                     */
-    0x95, 0x04,       /*   Report Count (4)                    */
-    0x09, 0xE9,       /*   Usage (Volume Increment)            */
-    0x09, 0xEA,       /*   Usage (Volume Decrement)            */
-    0x09, 0xE2,       /*   Usage (Mute)                        */
-    0x09, 0xCD,       /*   Usage (Play/Pause)                  */
+    0x95, 0x08,       /*   Report Count (8)                    */
+    0x09, 0xE9,       /*   Usage (Volume Increment)   bit 0    */
+    0x09, 0xEA,       /*   Usage (Volume Decrement)   bit 1    */
+    0x09, 0xE2,       /*   Usage (Mute)               bit 2    */
+    0x09, 0xCD,       /*   Usage (Play/Pause)         bit 3    */
+    0x09, 0xB5,       /*   Usage (Next Track)         bit 4    */
+    0x09, 0xB6,       /*   Usage (Prev Track)         bit 5    */
+    0x09, 0x6F,       /*   Usage (Brightness Up)      bit 6    */
+    0x09, 0x70,       /*   Usage (Brightness Down)    bit 7    */
     0x81, 0x02,       /*   Input (Data, Variable, Absolute)    */
-    0x95, 0x04,       /*   Report Count (4)                    */
-    0x81, 0x03,       /*   Input (Constant, Variable, Abs)     */
     0xC0              /* End Collection                        */
 };
 
@@ -801,11 +804,15 @@ bool blusys_ble_hid_device_is_ready(const blusys_ble_hid_device_t *handle)
 static int consumer_usage_to_bit(uint16_t usage)
 {
     switch (usage) {
-    case BLUSYS_HID_USAGE_VOLUME_UP:   return 0;
-    case BLUSYS_HID_USAGE_VOLUME_DOWN: return 1;
-    case BLUSYS_HID_USAGE_MUTE:        return 2;
-    case BLUSYS_HID_USAGE_PLAY_PAUSE:  return 3;
-    default:                           return -1;
+    case BLUSYS_HID_USAGE_VOLUME_UP:       return 0;
+    case BLUSYS_HID_USAGE_VOLUME_DOWN:     return 1;
+    case BLUSYS_HID_USAGE_MUTE:            return 2;
+    case BLUSYS_HID_USAGE_PLAY_PAUSE:      return 3;
+    case BLUSYS_HID_USAGE_NEXT_TRACK:      return 4;
+    case BLUSYS_HID_USAGE_PREV_TRACK:      return 5;
+    case BLUSYS_HID_USAGE_BRIGHTNESS_UP:   return 6;
+    case BLUSYS_HID_USAGE_BRIGHTNESS_DOWN: return 7;
+    default:                               return -1;
     }
 }
 

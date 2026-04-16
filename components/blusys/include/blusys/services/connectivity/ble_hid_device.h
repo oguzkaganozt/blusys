@@ -47,10 +47,14 @@ typedef struct {
 } blusys_ble_hid_device_config_t;
 
 /** Consumer-control HID usage codes understood by send_consumer. */
-#define BLUSYS_HID_USAGE_VOLUME_UP     0x00E9u
-#define BLUSYS_HID_USAGE_VOLUME_DOWN   0x00EAu
-#define BLUSYS_HID_USAGE_MUTE          0x00E2u
-#define BLUSYS_HID_USAGE_PLAY_PAUSE    0x00CDu
+#define BLUSYS_HID_USAGE_VOLUME_UP       0x00E9u
+#define BLUSYS_HID_USAGE_VOLUME_DOWN     0x00EAu
+#define BLUSYS_HID_USAGE_MUTE            0x00E2u
+#define BLUSYS_HID_USAGE_PLAY_PAUSE      0x00CDu
+#define BLUSYS_HID_USAGE_NEXT_TRACK      0x00B5u
+#define BLUSYS_HID_USAGE_PREV_TRACK      0x00B6u
+#define BLUSYS_HID_USAGE_BRIGHTNESS_UP   0x006Fu
+#define BLUSYS_HID_USAGE_BRIGHTNESS_DOWN 0x0070u
 
 /**
  * @brief Initialize the HID peripheral and begin advertising.
