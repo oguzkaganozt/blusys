@@ -873,6 +873,24 @@ void on_tick_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
         enter_deep_sleep();
     }
 
+    // ── Periodic metadata poll (every 5 s while AVRC connected) ─────────────────
+    // Belt-and-suspenders for platforms that register notifications but never
+    // fire them (e.g. Linux/BlueZ + Spotify).  Notifications remain subscribed;
+    // this poll catches whatever they miss.
+    static std::uint32_t s_last_meta_poll_ms = 0;
+    if (state.avrc_connected && now_ms - s_last_meta_poll_ms >= 5000u) {
+        s_last_meta_poll_ms = now_ms;
+        // Reset accumulator so stale half-received data doesn't block dispatch.
+        taskENTER_CRITICAL(&s_track_mux);
+        s_pend_title_valid  = false;
+        s_pend_artist_valid = false;
+        taskEXIT_CRITICAL(&s_track_mux);
+        // Use a fixed tl=15 for poll requests so they don't collide with the
+        // notification-driven alloc_tl() sequence (which cycles 1–14).
+        esp_avrc_ct_send_metadata_cmd(0x0Fu,
+            ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_ARTIST);
+    }
+
     // ── Battery sampling (every 30 s) ─────────────────────────────────────────
     static std::uint32_t s_last_battery_ms = 0;
     if (s_battery_adc != nullptr && now_ms - s_last_battery_ms >= 30'000u) {
