@@ -429,8 +429,13 @@ void avrc_ct_cb(esp_avrc_ct_cb_event_t event, esp_avrc_ct_cb_param_t *param)
         break;
 
     case ESP_AVRC_CT_GET_RN_CAPABILITIES_RSP_EVT:
-        // Store peer capabilities mask, then subscribe to TRACK_CHANGE if available,
-        // and immediately request metadata for the currently playing track.
+        // Store peer capabilities mask, subscribe to TRACK_CHANGE and
+        // PLAY_STATUS_CHANGE, then immediately request the current track.
+        //
+        // PLAY_STATUS_CHANGE is critical: when a track is already loaded but
+        // paused at connect time the initial metadata query returns empty
+        // strings.  When the user hits Play, TRACK_CHANGE doesn't fire
+        // (same track), but PLAY_STATUS_CHANGE does — we use it to re-query.
         s_peer_rn_cap = param->get_rn_caps_rsp.evt_set;
         BLUSYS_LOGI(kTag, "AVRC RN caps: 0x%x", s_peer_rn_cap.bits);
 
@@ -439,6 +444,12 @@ void avrc_ct_cb(esp_avrc_ct_cb_event_t event, esp_avrc_ct_cb_param_t *param)
                                                ESP_AVRC_RN_TRACK_CHANGE)) {
             esp_avrc_ct_send_register_notification_cmd(
                 alloc_tl(), ESP_AVRC_RN_TRACK_CHANGE, 0);
+        }
+        if (esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_TEST,
+                                               &s_peer_rn_cap,
+                                               ESP_AVRC_RN_PLAY_STATUS_CHANGE)) {
+            esp_avrc_ct_send_register_notification_cmd(
+                alloc_tl(), ESP_AVRC_RN_PLAY_STATUS_CHANGE, 0);
         }
         esp_avrc_ct_send_metadata_cmd(alloc_tl(),
             ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_ARTIST);
@@ -480,7 +491,7 @@ void avrc_ct_cb(esp_avrc_ct_cb_event_t event, esp_avrc_ct_cb_param_t *param)
 
     case ESP_AVRC_CT_CHANGE_NOTIFY_EVT:
         if (param->change_ntf.event_id == ESP_AVRC_RN_TRACK_CHANGE) {
-            BLUSYS_LOGI(kTag, "AVRC track changed — re-registering notification");
+            BLUSYS_LOGI(kTag, "AVRC track changed — re-registering");
 
             // Clear stale pending data from the previous track.
             taskENTER_CRITICAL(&s_track_mux);
@@ -495,6 +506,25 @@ void avrc_ct_cb(esp_avrc_ct_cb_event_t event, esp_avrc_ct_cb_param_t *param)
                 esp_avrc_ct_send_register_notification_cmd(
                     alloc_tl(), ESP_AVRC_RN_TRACK_CHANGE, 0);
             }
+            esp_avrc_ct_send_metadata_cmd(alloc_tl(),
+                ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_ARTIST);
+
+        } else if (param->change_ntf.event_id == ESP_AVRC_RN_PLAY_STATUS_CHANGE) {
+            BLUSYS_LOGI(kTag, "AVRC play status changed — re-registering, fetching metadata");
+
+            // Re-register so we get the next status change.
+            if (esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_TEST,
+                                                   &s_peer_rn_cap,
+                                                   ESP_AVRC_RN_PLAY_STATUS_CHANGE)) {
+                esp_avrc_ct_send_register_notification_cmd(
+                    alloc_tl(), ESP_AVRC_RN_PLAY_STATUS_CHANGE, 0);
+            }
+            // Re-query metadata: if the track was already loaded but paused at
+            // connect time (causing empty strings), this refreshes on resume.
+            taskENTER_CRITICAL(&s_track_mux);
+            s_pend_title_valid  = false;
+            s_pend_artist_valid = false;
+            taskEXIT_CRITICAL(&s_track_mux);
             esp_avrc_ct_send_metadata_cmd(alloc_tl(),
                 ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_ARTIST);
         }
