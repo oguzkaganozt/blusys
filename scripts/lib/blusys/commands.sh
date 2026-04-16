@@ -212,16 +212,52 @@ cmd_size() {
 }
 
 cmd_erase() {
-    if [[ $# -gt 3 ]]; then
+    if [[ $# -gt 2 ]]; then
         blusys_help_erase
         exit 1
     fi
 
-    blusys_setup_with_port "$@" || exit 1
-    blusys_setup_idf_env
-    blusys_print_info_port
+    # Erase needs no project — just a port and an optional chip target.
+    local port_arg="" target_arg=""
+    case $# in
+        0) ;;
+        1)
+            if [[ "$1" == /dev/* ]]; then
+                port_arg="$1"
+            elif blusys_is_target "$1"; then
+                target_arg="$1"
+            else
+                printf 'error: expected a port (/dev/...) or target, got: %s\n' "$1" >&2
+                blusys_help_erase
+                exit 1
+            fi
+            ;;
+        2)
+            if [[ "$1" == /dev/* ]]; then
+                port_arg="$1"; target_arg="$2"
+            elif [[ "$2" == /dev/* ]]; then
+                target_arg="$1"; port_arg="$2"
+            else
+                printf 'error: expected [port] [target] or [target] [port]\n' >&2
+                blusys_help_erase
+                exit 1
+            fi
+            ;;
+    esac
 
-    blusys_idf_py -p "$PORT" erase-flash
+    blusys_setup_idf_env
+
+    local port
+    port="$(blusys_detect_port "$port_arg")" || exit 1
+
+    local chip="auto"
+    if [[ -n "$target_arg" ]]; then
+        chip="$(blusys_idf_target_from_build_label "$target_arg" 2>/dev/null)" || chip="$target_arg"
+    fi
+
+    printf 'Port:  %s\n' "$port"
+    printf 'Chip:  %s\n' "$chip"
+    esptool.py --chip "$chip" -p "$port" erase_flash
 }
 
 cmd_fullclean() {
@@ -331,7 +367,7 @@ cmd_example() {
         run)            cmd_run "$example_path" "$@" ;;
         config|menuconfig) cmd_config "$example_path" "$@" ;;
         size)           cmd_size "$example_path" "$@" ;;
-        erase)          cmd_erase "$example_path" "$@" ;;
+        erase)          cmd_erase "$@" ;;
         clean)          cmd_clean "$example_path" "$@" ;;
         fullclean)      cmd_fullclean "$example_path" ;;
         qemu)           cmd_qemu "$example_path" "$@" ;;
