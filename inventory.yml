@@ -675,6 +675,21 @@ examples:
   - esp32s3
   ci_pr: false
   ci_nightly: true
+- name: atlas
+  category: reference
+  visibility: public
+  tier: framework
+  targets:
+  - esp32
+  - esp32c3
+  - esp32s3
+  ci_pr: false
+  ci_nightly: true
+  interface: headless
+  capabilities:
+  - connectivity
+  policies: []
+  layout_exempt: true
 - name: display
   category: reference
   visibility: public

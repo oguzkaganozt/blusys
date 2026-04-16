@@ -27,6 +27,17 @@ typedef void (*blusys_mqtt_message_cb_t)(const char    *topic,
                                          size_t         payload_len,
                                          void          *user_ctx);
 
+/* Transport state transitions surfaced to higher layers. Delivered from
+   the MQTT client task — treat like an ISR: no blocking work, just latch
+   a flag or post to your own queue. */
+typedef enum {
+    BLUSYS_MQTT_STATE_CONNECTED    = 0,
+    BLUSYS_MQTT_STATE_DISCONNECTED = 1,
+    BLUSYS_MQTT_STATE_ERROR        = 2,
+} blusys_mqtt_state_t;
+
+typedef void (*blusys_mqtt_state_cb_t)(blusys_mqtt_state_t state, void *user_ctx);
+
 typedef struct {
     const char               *broker_url;     /* required; e.g. "mqtt://broker.example.com:1883" */
     const char               *username;        /* NULL = no authentication */
@@ -35,7 +46,8 @@ typedef struct {
     const char               *server_cert_pem; /* PEM CA cert for MQTTS; NULL skips verification */
     int                       timeout_ms;      /* connect timeout; BLUSYS_TIMEOUT_FOREVER to block */
     blusys_mqtt_message_cb_t  message_cb;      /* called on incoming messages; NULL = no subscription handling */
-    void                     *user_ctx;        /* passed through to message_cb */
+    blusys_mqtt_state_cb_t    state_cb;        /* called on connected/disconnected/error; NULL = none */
+    void                     *user_ctx;        /* passed through to message_cb and state_cb */
 } blusys_mqtt_config_t;
 
 /* Allocate and initialise an MQTT client.  Does not connect to the broker.
@@ -58,13 +70,15 @@ blusys_err_t blusys_mqtt_connect(blusys_mqtt_t *handle);
 blusys_err_t blusys_mqtt_disconnect(blusys_mqtt_t *handle);
 
 /* Publish a message.  Fire-and-forget: QoS acknowledgments are handled by the
-   ESP-IDF MQTT stack and are not surfaced here.
+   ESP-IDF MQTT stack and are not surfaced here.  When retain is true the
+   broker stores the message as the latest retained payload on that topic.
    Returns BLUSYS_ERR_INVALID_STATE if not connected. */
 blusys_err_t blusys_mqtt_publish(blusys_mqtt_t *handle,
                                   const char    *topic,
                                   const uint8_t *payload,
                                   size_t         payload_len,
-                                  blusys_mqtt_qos_t qos);
+                                  blusys_mqtt_qos_t qos,
+                                  bool           retain);
 
 /* Subscribe to a topic filter.  Incoming messages are delivered via the message_cb
    set at open time.

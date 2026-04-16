@@ -65,8 +65,16 @@ public:
     [[nodiscard]] const ota_status &status() const { return status_; }
 
     // Product calls this from system/ in response to a reducer action.
-    // Blocks until the OTA download + flash completes or fails.
+    // Blocks until the OTA download + flash completes or fails. Uses
+    // `cfg_.firmware_url` (and `cfg_.cert_pem`) as the source.
     blusys_err_t request_update();
+
+    // Dynamic-URL variant — used when the firmware URL and (optionally)
+    // certificate are handed to the device at runtime, e.g. pushed over
+    // MQTT by Atlas OTA announcements. `cert_pem == nullptr` falls back
+    // to `cfg_.cert_pem` (often the same broker CA bundle is reused for
+    // HTTPS). Does not mutate `cfg_`.
+    blusys_err_t request_update(const char *url, const char *cert_pem = nullptr);
 
     // Used by the services-layer OTA progress callback (not a general app API).
     void emit_download_progress(std::uint8_t pct);
@@ -116,6 +124,7 @@ public:
     [[nodiscard]] const ota_status &status() const { return status_; }
 
     blusys_err_t request_update();
+    blusys_err_t request_update(const char *url, const char *cert_pem = nullptr);
 
     void emit_download_progress(std::uint8_t pct);
 

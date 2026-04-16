@@ -103,8 +103,13 @@ void ota_capability::stop()
 
 blusys_err_t ota_capability::request_update()
 {
-    if (cfg_.firmware_url == nullptr) {
-        BLUSYS_LOGE(TAG, "firmware_url is required");
+    return request_update(cfg_.firmware_url, cfg_.cert_pem);
+}
+
+blusys_err_t ota_capability::request_update(const char *url, const char *cert_pem)
+{
+    if (url == nullptr || url[0] == '\0') {
+        BLUSYS_LOGE(TAG, "request_update: url is required");
         return BLUSYS_ERR_INVALID_ARG;
     }
 
@@ -113,8 +118,8 @@ blusys_err_t ota_capability::request_update()
     pending_flags_.fetch_or(kPendingDownloadStarted, std::memory_order_release);
 
     blusys_ota_config_t ota_cfg{};
-    ota_cfg.url           = cfg_.firmware_url;
-    ota_cfg.cert_pem      = cfg_.cert_pem;
+    ota_cfg.url           = url;
+    ota_cfg.cert_pem      = cert_pem != nullptr ? cert_pem : cfg_.cert_pem;
     ota_cfg.timeout_ms    = cfg_.timeout_ms;
     ota_cfg.on_progress   = blusys_ota_c_progress;
     ota_cfg.progress_ctx  = this;
@@ -131,7 +136,7 @@ blusys_err_t ota_capability::request_update()
     blusys_ota_close(handle);
 
     if (err == BLUSYS_OK) {
-        BLUSYS_LOGI(TAG, "OTA download + flash complete");
+        BLUSYS_LOGI(TAG, "OTA download + flash complete (%s)", url);
         pending_flags_.fetch_or(kPendingApplyComplete, std::memory_order_release);
     } else {
         BLUSYS_LOGE(TAG, "OTA perform failed: %d", static_cast<int>(err));

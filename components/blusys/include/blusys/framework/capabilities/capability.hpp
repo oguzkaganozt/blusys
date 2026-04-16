@@ -30,7 +30,8 @@ enum class capability_kind : std::uint8_t {
     diagnostics,
     telemetry,
     provisioning,
-    mqtt_host,
+    mqtt_host,    // host (SDL) — libmosquitto
+    mqtt,         // device — blusys_mqtt service (ESP-IDF)
     lan_control,
     usb,
     custom,

@@ -88,7 +88,7 @@ void run_mqtt_basic(void)
     const char *msg = "hello from blusys";
     err = blusys_mqtt_publish(mqtt, MQTT_TOPIC,
                                (const uint8_t *)msg, strlen(msg),
-                               BLUSYS_MQTT_QOS_1);
+                               BLUSYS_MQTT_QOS_1, false);
     if (err != BLUSYS_OK) {
         printf("mqtt_publish failed: %s\n", blusys_err_string(err));
     } else {

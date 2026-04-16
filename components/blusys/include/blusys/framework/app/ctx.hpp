@@ -33,6 +33,7 @@ class telemetry_capability;
 class lan_control_capability;
 class usb_capability;
 class mqtt_host_capability;
+class mqtt_capability;
 
 class app_ctx {
 public:
@@ -103,6 +104,10 @@ public:
     // Host (SDL) MQTT client — nullptr when capability not registered or on ESP-IDF product builds.
     [[nodiscard]] mqtt_host_capability *mqtt_host();
 
+    // Device MQTT client (blusys_mqtt on ESP-IDF) — nullptr when capability
+    // not registered or on host builds.
+    [[nodiscard]] mqtt_capability *mqtt();
+
     // ---- capability requests (integration calls from intent bridges) ----
     // These forward to the composed capability when present; otherwise return
     // BLUSYS_ERR_INVALID_STATE.
@@ -132,6 +137,7 @@ private:
     lan_control_capability   *lan_control_  = nullptr;
     usb_capability           *usb_          = nullptr;
     mqtt_host_capability      *mqtt_host_   = nullptr;
+    mqtt_capability            *mqtt_        = nullptr;
 };
 
 }  // namespace blusys
