@@ -8,9 +8,15 @@ namespace {
 
 constexpr const char *kTag = "bt_controller";
 
-constexpr std::uint16_t kUsageVolumeUp   = 0x00E9;
-constexpr std::uint16_t kUsageVolumeDown = 0x00EA;
-constexpr std::uint16_t kUsageMute       = 0x00E2;
+// Consumer Control HID usages (Consumer page 0x0C)
+constexpr std::uint16_t kUsageVolumeUp    = 0x00E9;
+constexpr std::uint16_t kUsageVolumeDown  = 0x00EA;
+constexpr std::uint16_t kUsageMute        = 0x00E2;
+constexpr std::uint16_t kUsagePlayPause   = 0x00CD;
+constexpr std::uint16_t kUsageNextTrack   = 0x00B5;
+constexpr std::uint16_t kUsagePrevTrack   = 0x00B6;
+constexpr std::uint16_t kUsageBrightUp    = 0x006F;
+constexpr std::uint16_t kUsageBrightDown  = 0x0070;
 
 hid_send_fn s_hid_send = nullptr;
 led_set_fn  s_led_set  = nullptr;
@@ -30,6 +36,16 @@ const char *op_state_name(op_state s)
     return "?";
 }
 
+const char *ctrl_mode_name(ctrl_mode m)
+{
+    switch (m) {
+    case ctrl_mode::volume:     return "volume";
+    case ctrl_mode::media:      return "media";
+    case ctrl_mode::brightness: return "brightness";
+    }
+    return "?";
+}
+
 namespace {
 
 void emit(std::uint16_t usage, bool pressed)
@@ -39,11 +55,28 @@ void emit(std::uint16_t usage, bool pressed)
     }
 }
 
+// Emit a press + immediate release (one-shot consumer usage).
+void click(std::uint16_t usage)
+{
+    emit(usage, true);
+    emit(usage, false);
+}
+
 void apply_led(const app_state &state)
 {
     if (s_led_set != nullptr) {
         s_led_set(state.ble_connected);
     }
+}
+
+ctrl_mode next_mode(ctrl_mode m)
+{
+    switch (m) {
+    case ctrl_mode::volume:     return ctrl_mode::media;
+    case ctrl_mode::media:      return ctrl_mode::brightness;
+    case ctrl_mode::brightness: return ctrl_mode::volume;
+    }
+    return ctrl_mode::volume;
 }
 
 }  // namespace
@@ -53,6 +86,7 @@ void update(blusys::app_ctx & /*ctx*/, app_state &state, const action &event)
     using CET = blusys::capability_event_tag;
 
     switch (event.tag) {
+
     case action_tag::capability_event:
         switch (event.cap_event.tag) {
         case CET::ble_hid_advertising_started:
@@ -82,33 +116,68 @@ void update(blusys::app_ctx & /*ctx*/, app_state &state, const action &event)
         break;
 
     case action_tag::button:
-        ++state.press_count;
         switch (event.btn) {
-        case intent::vol_up_press:
-            emit(kUsageVolumeUp, true);
-            if (state.volume_est < 100) state.volume_est += 5;
+
+        // ── Rotation ─────────────────────────────────────────────────────────
+        case intent::turn_cw:
+            ++state.press_count;
+            switch (state.mode) {
+            case ctrl_mode::volume:
+                click(kUsageVolumeUp);
+                if (state.volume_est < 100) state.volume_est += 5;
+                break;
+            case ctrl_mode::media:      click(kUsageNextTrack);  break;
+            case ctrl_mode::brightness: click(kUsageBrightUp);   break;
+            }
             break;
-        case intent::vol_up_release:
-            emit(kUsageVolumeUp, false);
+
+        case intent::turn_ccw:
+            ++state.press_count;
+            switch (state.mode) {
+            case ctrl_mode::volume:
+                click(kUsageVolumeDown);
+                if (state.volume_est > 0) state.volume_est -= 5;
+                break;
+            case ctrl_mode::media:      click(kUsagePrevTrack);  break;
+            case ctrl_mode::brightness: click(kUsageBrightDown); break;
+            }
             break;
-        case intent::vol_down_press:
-            emit(kUsageVolumeDown, true);
-            if (state.volume_est > 0) state.volume_est -= 5;
+
+        // ── Button: deferred short-press to avoid collision with long-press ──
+        case intent::button_press:
+            state.button_held      = true;
+            state.long_press_fired = false;
             break;
-        case intent::vol_down_release:
-            emit(kUsageVolumeDown, false);
+
+        case intent::button_long_press:
+            // Cycle mode; short-press action suppressed on release.
+            state.long_press_fired = true;
+            state.mode = next_mode(state.mode);
+            BLUSYS_LOGI(kTag, "mode → %s", ctrl_mode_name(state.mode));
             break;
-        case intent::mute_press:
-            emit(kUsageMute, true);
-            state.muted = !state.muted;
-            break;
-        case intent::mute_release:
-            emit(kUsageMute, false);
+
+        case intent::button_release:
+            if (state.button_held && !state.long_press_fired) {
+                // Short press confirmed — perform context action.
+                ++state.press_count;
+                switch (state.mode) {
+                case ctrl_mode::volume:
+                    click(kUsageMute);
+                    state.muted = !state.muted;
+                    break;
+                case ctrl_mode::media:      click(kUsagePlayPause); break;
+                case ctrl_mode::brightness: click(kUsageMute);      break;
+                }
+            }
+            state.button_held      = false;
+            state.long_press_fired = false;
             break;
         }
+
         BLUSYS_LOGI(kTag,
-                    "btn #%lu  phase=%s  vol_est=%d%%  muted=%s",
+                    "btn #%lu  mode=%-10s  phase=%-11s  vol_est=%3d%%  muted=%s",
                     static_cast<unsigned long>(state.press_count),
+                    ctrl_mode_name(state.mode),
                     op_state_name(state.phase),
                     state.volume_est,
                     state.muted ? "yes" : "no");
