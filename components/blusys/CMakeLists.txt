@@ -122,6 +122,7 @@ set(blusys_sources
     src/framework/capabilities/diagnostics_host.cpp
     src/framework/capabilities/lan_control.cpp
     src/framework/capabilities/lan_control_host.cpp
+    src/framework/capabilities/mqtt.cpp
     src/framework/capabilities/mqtt_host.cpp
     src/framework/capabilities/ota.cpp
     src/framework/capabilities/ota_host.cpp

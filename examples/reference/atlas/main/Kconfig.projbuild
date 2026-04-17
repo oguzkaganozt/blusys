@@ -1,0 +1,20 @@
+menu "Atlas example"
+
+    comment "Fallback values used only when include/atlas_config.h is missing."
+    comment "Normally produced by scripts/provision-blusys-esp32.sh on the Atlas side."
+
+    config ATLAS_FIRMWARE_VERSION
+        string "Firmware version reported in state"
+        default "1.0.0-blusys"
+
+    config ATLAS_HEARTBEAT_INTERVAL_MS
+        int "Heartbeat publish interval (ms)"
+        default 30000
+        range 5000 600000
+
+    config ATLAS_STATE_REPORT_INTERVAL_MS
+        int "State publish interval (ms)"
+        default 300000
+        range 30000 3600000
+
+endmenu

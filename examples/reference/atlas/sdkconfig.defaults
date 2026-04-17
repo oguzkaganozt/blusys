@@ -1,0 +1,16 @@
+# Flash / partitions — dual OTA slots, NVS, SPIFFS
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+# CONFIG_PARTITION_TABLE_SINGLE_APP is not set
+
+# MQTT over TLS — certificate bundle + larger buffers for state payloads.
+CONFIG_MQTT_TRANSPORT_SSL=y
+CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN=8192
+CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN=4096
+
+# Main task stack — Atlas OTA + mbedTLS pushes beyond the 3.5K default.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# Enable LWIP SNTP (blusys connectivity capability syncs time from pool.ntp.org).
+CONFIG_LWIP_SNTP_MAX_SERVERS=2

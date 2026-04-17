@@ -24,6 +24,7 @@ struct blusys_mqtt {
     esp_mqtt_client_handle_t  esp_handle;
     blusys_lock_t             lock;
     blusys_mqtt_message_cb_t  message_cb;
+    blusys_mqtt_state_cb_t    state_cb;
     void                     *user_ctx;
     EventGroupHandle_t        event_group;
     volatile bool             connected;
@@ -41,16 +42,25 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
         h->connected = true;
         xEventGroupClearBits(h->event_group, MQTT_DISCONNECTED_BIT | MQTT_ERROR_BIT);
         xEventGroupSetBits(h->event_group, MQTT_CONNECTED_BIT);
+        if (h->state_cb != NULL) {
+            h->state_cb(BLUSYS_MQTT_STATE_CONNECTED, h->user_ctx);
+        }
         break;
 
     case MQTT_EVENT_DISCONNECTED:
         h->connected = false;
         xEventGroupClearBits(h->event_group, MQTT_CONNECTED_BIT);
         xEventGroupSetBits(h->event_group, MQTT_DISCONNECTED_BIT);
+        if (h->state_cb != NULL) {
+            h->state_cb(BLUSYS_MQTT_STATE_DISCONNECTED, h->user_ctx);
+        }
         break;
 
     case MQTT_EVENT_ERROR:
         xEventGroupSetBits(h->event_group, MQTT_ERROR_BIT);
+        if (h->state_cb != NULL) {
+            h->state_cb(BLUSYS_MQTT_STATE_ERROR, h->user_ctx);
+        }
         break;
 
     case MQTT_EVENT_DATA:
@@ -103,6 +113,7 @@ blusys_err_t blusys_mqtt_open(const blusys_mqtt_config_t *config, blusys_mqtt_t 
     }
 
     h->message_cb  = config->message_cb;
+    h->state_cb    = config->state_cb;
     h->user_ctx    = config->user_ctx;
     h->timeout_ms  = config->timeout_ms;
 
@@ -230,7 +241,8 @@ blusys_err_t blusys_mqtt_publish(blusys_mqtt_t *handle,
                                   const char    *topic,
                                   const uint8_t *payload,
                                   size_t         payload_len,
-                                  blusys_mqtt_qos_t qos)
+                                  blusys_mqtt_qos_t qos,
+                                  bool           retain)
 {
     if ((handle == NULL) || (topic == NULL)) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -251,7 +263,7 @@ blusys_err_t blusys_mqtt_publish(blusys_mqtt_t *handle,
                                           (const char *)payload,
                                           (int)payload_len,
                                           (int)qos,
-                                          0);
+                                          retain ? 1 : 0);
 
     blusys_lock_give(&handle->lock);
     return (msg_id >= 0) ? BLUSYS_OK : BLUSYS_ERR_IO;
@@ -351,13 +363,15 @@ blusys_err_t blusys_mqtt_publish(blusys_mqtt_t *handle,
                                   const char    *topic,
                                   const uint8_t *payload,
                                   size_t         payload_len,
-                                  blusys_mqtt_qos_t qos)
+                                  blusys_mqtt_qos_t qos,
+                                  bool           retain)
 {
     (void) handle;
     (void) topic;
     (void) payload;
     (void) payload_len;
     (void) qos;
+    (void) retain;
     return BLUSYS_ERR_NOT_SUPPORTED;
 }
 

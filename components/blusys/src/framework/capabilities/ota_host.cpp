@@ -40,7 +40,13 @@ void ota_capability::stop()
 
 blusys_err_t ota_capability::request_update()
 {
-    BLUSYS_LOGI(TAG, "host stub: simulating OTA update");
+    return request_update(cfg_.firmware_url, cfg_.cert_pem);
+}
+
+blusys_err_t ota_capability::request_update(const char *url, const char * /*cert_pem*/)
+{
+    BLUSYS_LOGI(TAG, "host stub: simulating OTA update (url=%s)",
+                url != nullptr ? url : "<cfg>");
     last_progress_posted_ = 255;
     status_.downloading = true;
     post_event(ota_event::download_started, 0);

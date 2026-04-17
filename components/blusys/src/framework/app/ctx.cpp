@@ -9,6 +9,7 @@
 #include "blusys/framework/capabilities/lan_control.hpp"
 #include "blusys/framework/capabilities/usb.hpp"
 #include "blusys/framework/capabilities/list.hpp"
+#include "blusys/framework/capabilities/mqtt.hpp"
 #ifndef ESP_PLATFORM
 #include "blusys/framework/capabilities/mqtt_host.hpp"
 #endif
@@ -98,6 +99,11 @@ mqtt_host_capability *app_ctx::mqtt_host()
     return mqtt_host_;
 }
 
+mqtt_capability *app_ctx::mqtt()
+{
+    return mqtt_;
+}
+
 blusys_err_t app_ctx::request_connectivity_reconnect()
 {
     if (connectivity_ == nullptr) {
@@ -147,6 +153,9 @@ void app_ctx::bind_capability_pointers_from_list(app_ctx &ctx, capability_list *
 #ifndef ESP_PLATFORM
             ctx.mqtt_host_ = static_cast<mqtt_host_capability *>(c);
 #endif
+            break;
+        case capability_kind::mqtt:
+            ctx.mqtt_ = static_cast<mqtt_capability *>(c);
             break;
         case capability_kind::ble_hid_device:
             break;
