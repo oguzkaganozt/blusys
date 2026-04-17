@@ -29,15 +29,14 @@ if [[ "$CI_FLAG" != "ci_pr" && "$CI_FLAG" != "ci_nightly" ]]; then
     exit 2
 fi
 
-# Extract example names where the given CI flag is true
-# Uses a simple grep+awk approach to avoid requiring yq/python in the CI container
+# Extract example names where the given CI flag is true AND target is supported
 mapfile -t example_names < <(
     python3 -c "
 import yaml, sys
 with open('$REPO_ROOT/inventory.yml') as f:
     inv = yaml.safe_load(f)
 for ex in inv.get('examples', []):
-    if ex.get('$CI_FLAG'):
+    if ex.get('$CI_FLAG') and '$TARGET' in ex.get('targets', []):
         print(ex['name'])
 " 2>/dev/null || {
     printf 'error: failed to parse inventory.yml (PyYAML required)\n' >&2
