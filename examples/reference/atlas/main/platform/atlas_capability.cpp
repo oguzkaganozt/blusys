@@ -1,7 +1,6 @@
 #include "platform/atlas_capability.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/hal/log.h"
-#include "blusys/hal/system.h"
 
 #include "esp_system.h"
 #include "nvs_flash.h"

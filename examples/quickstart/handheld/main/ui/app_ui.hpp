@@ -1,8 +1,7 @@
 #pragma once
 
 #include "core/app_logic.hpp"
-#include "blusys/framework/flows/settings.hpp"
-#include "blusys/framework/flows/provisioning_flow.hpp"
+#include "blusys/blusys.hpp"
 
 namespace handheld_starter::ui {
 

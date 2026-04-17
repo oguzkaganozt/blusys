@@ -1,11 +1,8 @@
 #include "ui/app_ui.hpp"
 
 #include "core/app_logic.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/ui/binding/action_widgets.hpp"
-#include "blusys/framework/ui/composition/page.hpp"
-#include "blusys/framework/ui/widgets/slider.hpp"
-#include "blusys/hal/log.h"
 
 namespace framework_device_basic::ui {
 

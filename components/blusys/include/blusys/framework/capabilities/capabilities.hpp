@@ -1,8 +1,13 @@
 #pragma once
 
+#include "blusys/framework/capabilities/capability.hpp"
+#include "blusys/framework/capabilities/event.hpp"
+#include "blusys/framework/capabilities/list.hpp"
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/capabilities/storage.hpp"
 #include "blusys/framework/capabilities/bluetooth.hpp"
+#include "blusys/framework/capabilities/ble_hid_device.hpp"
+#include "blusys/framework/capabilities/mqtt.hpp"
 #include "blusys/framework/capabilities/ota.hpp"
 #include "blusys/framework/capabilities/diagnostics.hpp"
 #include "blusys/framework/capabilities/telemetry.hpp"

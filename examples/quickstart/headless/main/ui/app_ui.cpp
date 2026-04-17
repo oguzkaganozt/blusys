@@ -4,11 +4,8 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "ui/app_ui.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/ui/binding/action_widgets.hpp"
-#include "blusys/framework/ui/binding/bindings.hpp"
-#include "blusys/framework/ui/composition/page.hpp"
-#include "blusys/hal/log.h"
 
 #include "lvgl.h"
 

@@ -1,9 +1,6 @@
 #pragma once
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/capabilities/capability.hpp"
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/capabilities/mqtt.hpp"
-#include "blusys/framework/capabilities/ota.hpp"
 
 #include "core/atlas_logic.hpp"
 

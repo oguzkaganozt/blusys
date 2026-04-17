@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-BASELINE_MAX=34   # P3 drives this to 0.
+BASELINE_MAX=0
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
@@ -27,9 +27,11 @@ cd "$repo_root"
 pattern='[[:alnum:]_]\.services\s*\(\s*\)'
 scopes=(components/blusys/ examples/)
 
-hits=$(grep -rEn "$pattern" \
+hits_output=$(grep -rEn "$pattern" \
         --include='*.c' --include='*.cpp' --include='*.h' --include='*.hpp' \
-        "${scopes[@]}" 2>/dev/null | wc -l)
+        "${scopes[@]}" 2>/dev/null || true)
+hits=$(printf '%s' "$hits_output" | grep -c . || true)
+hits=${hits:-0}
 
 if [ "$hits" -gt "$BASELINE_MAX" ]; then
     echo "check-no-service-locator: FAIL — ctx.services() hits=$hits, baseline max=$BASELINE_MAX" >&2
@@ -41,10 +43,6 @@ if [ "$hits" -gt "$BASELINE_MAX" ]; then
     exit 1
 fi
 
-if [ "$hits" -lt "$BASELINE_MAX" ]; then
-    echo "check-no-service-locator: note — hits=$hits, baseline=$BASELINE_MAX." >&2
-    echo "  Tighten BASELINE_MAX to $hits in this script." >&2
-fi
 
 echo "check-no-service-locator: OK — hits=$hits (baseline max $BASELINE_MAX)"
 exit 0

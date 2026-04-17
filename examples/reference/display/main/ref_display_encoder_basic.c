@@ -7,7 +7,6 @@
 #if CONFIG_DISPLAY_UI_SCENARIO_ENCODER_BASIC
 
 #include "blusys/blusys.h"
-#include "blusys/drivers/encoder.h"
 #include "driver/gpio.h"
 
 /* Software encoder simulator — drives CLK/DT as INPUT_OUTPUT so the encoder's

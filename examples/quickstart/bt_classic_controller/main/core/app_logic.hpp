@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/app/app.hpp"
 
 namespace bt_classic_controller {
 

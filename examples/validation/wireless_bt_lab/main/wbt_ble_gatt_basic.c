@@ -8,8 +8,8 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "blusys/blusys.h"
 
-#include "blusys/services/connectivity/ble_gatt.h"
 
 /*
  * Custom GATT service with two characteristics:

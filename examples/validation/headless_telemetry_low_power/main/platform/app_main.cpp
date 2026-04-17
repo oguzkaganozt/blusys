@@ -1,10 +1,8 @@
 // Validation: headless connectivity + telemetry with CONFIG_PM_ENABLE (low_power policy).
 
 #include "core/app_logic.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/capabilities/telemetry.hpp"
-#include "blusys/hal/log.h"
 
 namespace telemetry_lp::system {
 

@@ -5,14 +5,10 @@
 // policy stay in each example — those diverge between BLE and Classic BT.
 
 #include "blusys_examples/clamp_percent.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/hal/error.h"
-#include "blusys/hal/log.h"
 
 #ifdef ESP_PLATFORM
-#include "blusys/drivers/encoder.h"
-#include "blusys/hal/adc.h"
-#include "blusys/hal/gpio.h"
 #endif
 
 #include <cstdint>

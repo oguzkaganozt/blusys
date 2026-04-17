@@ -5,15 +5,8 @@
 // behavior stays in core/.
 
 #include "core/app_logic.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/capabilities/diagnostics.hpp"
-#include "blusys/framework/capabilities/lan_control.hpp"
-#include "blusys/framework/capabilities/ota.hpp"
-#include "blusys/framework/capabilities/storage.hpp"
-#include "blusys/framework/capabilities/telemetry.hpp"
-#include "blusys/framework/platform/build.hpp"
-#include "blusys/hal/log.h"
 
 #include <cstdio>
 #include <cstdint>
@@ -28,8 +21,6 @@
 
 #if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM) && \
     defined(CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI) && CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI
-#include "blusys/framework/ui/style/presets.hpp"
-#include "blusys/framework/platform/profiles/ssd1306.hpp"
 #endif
 
 namespace headless_telemetry::system {

@@ -1,10 +1,8 @@
 #include "core/app_logic.hpp"
 
 #include "blusys_examples/clamp_percent.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/capabilities/storage.hpp"
-#include "blusys/hal/log.h"
 
 #include <cstdint>
 #include <optional>

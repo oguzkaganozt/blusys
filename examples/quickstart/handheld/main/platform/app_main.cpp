@@ -1,10 +1,7 @@
 #include "core/app_logic.hpp"
 #include "ui/app_ui.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/platform/auto.hpp"
-#include "blusys/framework/platform/auto_shell.hpp"
-#include "blusys/framework/platform/build.hpp"
-#include "blusys/framework/capabilities/connectivity.hpp"
 namespace handheld_starter::system {
 
 const char *controller_profile_label_for_build()

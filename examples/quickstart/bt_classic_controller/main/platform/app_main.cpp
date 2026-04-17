@@ -15,9 +15,8 @@
 //   GPIO23 (SW button) is NOT an RTC GPIO on ESP32 and cannot be in the mask.
 
 #include "core/app_logic.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/app/app.hpp"
-#include "blusys/hal/log.h"
 #include "blusys_examples/bt_controller_hw.hpp"
 
 #ifdef ESP_PLATFORM
@@ -30,7 +29,6 @@
 #include "esp_hidd_api.h"
 #include "esp_a2dp_api.h"
 #include "esp_avrc_api.h"
-#include "blusys/hal/sleep.h"
 #include "esp_sleep.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
@@ -38,8 +36,6 @@
 #endif
 
 #if defined(ESP_PLATFORM) && defined(CONFIG_BTCC_DISPLAY_ENABLED)
-#include "blusys/drivers/lcd.h"
-#include "blusys/drivers/display.h"
 #include "lvgl.h"
 #endif
 

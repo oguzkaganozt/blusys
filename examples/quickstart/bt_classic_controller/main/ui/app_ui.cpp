@@ -1,7 +1,7 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "ui/app_ui.hpp"
-#include "blusys/hal/log.h"
+#include "blusys/blusys.hpp"
 
 namespace bt_classic_controller::ui {
 

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "blusys/services/connectivity/bluetooth.h"
+#include "blusys/blusys.h"
 
 #ifndef CONFIG_BT_DEVICE_NAME
 #define CONFIG_BT_DEVICE_NAME "blusys-device"
