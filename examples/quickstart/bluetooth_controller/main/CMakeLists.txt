@@ -2,6 +2,8 @@ idf_component_register(
     SRCS
         "core/app_logic.cpp"
         "platform/app_main.cpp"
-    INCLUDE_DIRS "."
+    INCLUDE_DIRS
+        "."
+        "../../../include"
     REQUIRES blusys
 )

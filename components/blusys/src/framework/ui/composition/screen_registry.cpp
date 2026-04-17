@@ -18,14 +18,7 @@ std::uint32_t screen_registry::nav_route_at(std::size_t index_from_bottom) const
     return nav_stack_[index_from_bottom].route_id;
 }
 
-bool screen_registry::register_screen(std::uint32_t    route_id,
-                                      screen_create_fn  create_fn,
-                                      screen_destroy_fn destroy_fn)
-{
-    return register_screen(route_id, create_fn, destroy_fn, {});
-}
-
-bool screen_registry::register_screen(std::uint32_t         route_id,
+bool screen_registry::register_screen(std::uint32_t          route_id,
                                       screen_create_fn       create_fn,
                                       screen_destroy_fn      destroy_fn,
                                       const screen_lifecycle &lifecycle)
@@ -183,10 +176,6 @@ bool screen_registry::load_screen(std::uint32_t route_id,
     fire_hide_hooks();
 
     if (in_shell) {
-        const auto shell_spec =
-            blusys::resolve_transition(transition_field, default_transition);
-        const bool shell_animated = (shell_spec.type != blusys::transition_type::none);
-
         destroy_active();
 
         // Re-parent screen content into the shell's content area if the
@@ -202,56 +191,43 @@ bool screen_registry::load_screen(std::uint32_t route_id,
         active_destroy_fn_ = entry->destroy_fn;
         active_lifecycle_  = entry->lifecycle;
 
-        if (shell_animated) {
-            blusys::shell_content_enter_anim(screen, shell_spec);
+        if (spec.type != blusys::transition_type::none) {
+            blusys::shell_content_enter_anim(screen, spec);
         } else {
             lv_obj_set_style_opa(screen, LV_OPA_COVER, 0);
         }
-
-        if (focus_scope_ != nullptr) {
-            focus_scope_->reset();
-            focus_scope_->push_scope(screen);
-        } else if (group != nullptr) {
-            lv_indev_t *indev = lv_indev_get_next(nullptr);
-            while (indev != nullptr) {
-                if (lv_indev_get_type(indev) == LV_INDEV_TYPE_ENCODER) {
-                    lv_indev_set_group(indev, group);
-                }
-                indev = lv_indev_get_next(indev);
-            }
-        }
-
-        for (const auto &callback : screen_changed_callbacks_) {
-            if (callback.fn != nullptr) {
-                callback.fn(screen, callback.user_ctx);
-            }
-        }
-
-        fire_show_hooks(screen, entry->lifecycle);
-        return true;
-    }
-
-    if (animated) {
-        if (active_screen_ != nullptr && active_destroy_fn_ != nullptr) {
-            active_destroy_fn_(active_screen_);
-            active_destroy_fn_ = nullptr;
-        }
-        active_screen_    = nullptr;
-        active_lifecycle_ = {};
     } else {
-        destroy_active();
+        if (animated) {
+            // Destroy old screen eagerly; lv_screen_load_anim's delete_old
+            // flag is redundant once the user destroy_fn has run.
+            if (active_screen_ != nullptr && active_destroy_fn_ != nullptr) {
+                active_destroy_fn_(active_screen_);
+                active_destroy_fn_ = nullptr;
+            }
+            active_screen_    = nullptr;
+            active_lifecycle_ = {};
+        } else {
+            destroy_active();
+        }
+
+        active_screen_     = screen;
+        active_destroy_fn_ = entry->destroy_fn;
+        active_lifecycle_  = entry->lifecycle;
+
+        if (animated) {
+            lv_screen_load_anim(screen, spec.lv_anim, spec.duration, 0, true);
+        } else {
+            lv_screen_load(screen);
+        }
     }
 
-    active_screen_     = screen;
-    active_destroy_fn_ = entry->destroy_fn;
-    active_lifecycle_  = entry->lifecycle;
+    finalize_load(screen, group, entry->lifecycle);
+    return true;
+}
 
-    if (animated) {
-        lv_screen_load_anim(screen, spec.lv_anim, spec.duration, 0, true);
-    } else {
-        lv_screen_load(screen);
-    }
-
+void screen_registry::finalize_load(lv_obj_t *screen, lv_group_t *group,
+                                     const screen_lifecycle &lifecycle)
+{
     if (focus_scope_ != nullptr) {
         focus_scope_->reset();
         focus_scope_->push_scope(screen);
@@ -271,8 +247,7 @@ bool screen_registry::load_screen(std::uint32_t route_id,
         }
     }
 
-    fire_show_hooks(screen, entry->lifecycle);
-    return true;
+    fire_show_hooks(screen, lifecycle);
 }
 
 void screen_registry::destroy_active()

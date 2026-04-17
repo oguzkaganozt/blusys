@@ -19,38 +19,30 @@ bool overlay_manager::register_overlay(std::uint32_t id, lv_obj_t *overlay)
 
 void overlay_manager::submit(const blusys::route_command &command)
 {
-    switch (command.type) {
-    case blusys::route_command_type::show_overlay: {
-        lv_obj_t *w = find(command.id);
-        if (w != nullptr) {
-            blusys::overlay_show(w);
-            if (focus_scope_ != nullptr) {
-                focus_scope_->push_scope(w);
-            }
-        } else {
-            BLUSYS_LOGW(kTag, "show_overlay: unknown id=%lu",
-                        static_cast<unsigned long>(command.id));
-        }
-        break;
+    using T = blusys::route_command_type;
+    const bool is_show = (command.type == T::show_overlay);
+    if (!is_show && command.type != T::hide_overlay) {
+        return;
     }
-    case blusys::route_command_type::hide_overlay: {
-        lv_obj_t *w = find(command.id);
-        if (w != nullptr) {
-            blusys::overlay_hide(w);
-            if (focus_scope_ != nullptr) {
-                focus_scope_->pop_scope();
-            }
-        } else {
-            BLUSYS_LOGW(kTag, "hide_overlay: unknown id=%lu",
-                        static_cast<unsigned long>(command.id));
-        }
-        break;
-    }
-    default:
-        BLUSYS_LOGI(kTag, "route: %s id=%lu",
-                    blusys::route_command_type_name(command.type),
+
+    lv_obj_t *w = find(command.id);
+    if (w == nullptr) {
+        BLUSYS_LOGW(kTag, "%s: unknown id=%lu",
+                    is_show ? "show_overlay" : "hide_overlay",
                     static_cast<unsigned long>(command.id));
-        break;
+        return;
+    }
+
+    if (is_show) {
+        blusys::overlay_show(w);
+        if (focus_scope_ != nullptr) {
+            focus_scope_->push_scope(w);
+        }
+    } else {
+        blusys::overlay_hide(w);
+        if (focus_scope_ != nullptr) {
+            focus_scope_->pop_scope();
+        }
     }
 }
 

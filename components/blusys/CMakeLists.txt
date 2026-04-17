@@ -129,16 +129,12 @@ set(blusys_sources
     src/framework/capabilities/usb.cpp
 )
 
-# Per-target capability table (HAL)
-if(IDF_TARGET STREQUAL "esp32")
-    list(APPEND blusys_sources src/hal/targets/esp32/target_caps.c)
-elseif(IDF_TARGET STREQUAL "esp32c3")
-    list(APPEND blusys_sources src/hal/targets/esp32c3/target_caps.c)
-elseif(IDF_TARGET STREQUAL "esp32s3")
-    list(APPEND blusys_sources src/hal/targets/esp32s3/target_caps.c)
-else()
+# Target capability table (HAL). Single TU; chooses the right struct via
+# CONFIG_IDF_TARGET_* at compile time.
+if(NOT IDF_TARGET MATCHES "^(esp32|esp32c3|esp32s3)$")
     message(FATAL_ERROR "blusys currently supports only esp32, esp32c3, and esp32s3")
 endif()
+list(APPEND blusys_sources src/hal/target_caps.c)
 
 # ---------------------------------------------------------------------------
 # ESP-IDF component registration

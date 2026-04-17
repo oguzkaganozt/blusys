@@ -68,29 +68,16 @@ public:
     void submit(const blusys::route_command &command) override;
 
     // Register a screen by route ID. Called during on_init.
-    bool register_screen(std::uint32_t    route_id,
-                         screen_create_fn  create_fn,
-                         screen_destroy_fn destroy_fn = nullptr);
-
-    // Register a screen with lifecycle hooks.
-    bool register_screen(std::uint32_t         route_id,
+    bool register_screen(std::uint32_t          route_id,
                          screen_create_fn       create_fn,
-                         screen_destroy_fn      destroy_fn,
-                         const screen_lifecycle &lifecycle);
+                         screen_destroy_fn      destroy_fn = nullptr,
+                         const screen_lifecycle &lifecycle = {});
 
     template <typename RouteEnum, typename = std::enable_if_t<std::is_enum_v<RouteEnum>>>
-    bool register_screen(RouteEnum route_id,
-                           screen_create_fn create_fn,
-                           screen_destroy_fn destroy_fn = nullptr)
-    {
-        return register_screen(static_cast<std::uint32_t>(route_id), create_fn, destroy_fn);
-    }
-
-    template <typename RouteEnum, typename = std::enable_if_t<std::is_enum_v<RouteEnum>>>
-    bool register_screen(RouteEnum route_id,
-                         screen_create_fn create_fn,
-                         screen_destroy_fn destroy_fn,
-                         const screen_lifecycle &lifecycle)
+    bool register_screen(RouteEnum              route_id,
+                         screen_create_fn       create_fn,
+                         screen_destroy_fn      destroy_fn = nullptr,
+                         const screen_lifecycle &lifecycle = {})
     {
         return register_screen(static_cast<std::uint32_t>(route_id), create_fn, destroy_fn, lifecycle);
     }
