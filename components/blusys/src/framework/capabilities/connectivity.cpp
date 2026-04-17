@@ -1,5 +1,3 @@
-#ifdef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/engine/pending_events.hpp"
 #include "blusys/framework/engine/intent.hpp"
@@ -405,4 +403,3 @@ void connectivity_capability::check_capability_ready()
 
 }  // namespace blusys
 
-#endif  // ESP_PLATFORM

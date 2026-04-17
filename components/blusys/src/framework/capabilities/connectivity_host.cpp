@@ -1,5 +1,3 @@
-#ifndef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
@@ -103,4 +101,3 @@ blusys_err_t connectivity_capability::request_reconnect()
 
 }  // namespace blusys
 
-#endif  // !ESP_PLATFORM

@@ -101,7 +101,7 @@ blusys::storage_capability storage{{
     .spiffs_base_path = "/gw",
 }};
 
-blusys::capability_list capabilities{
+blusys::capability_list_storage capabilities{
     &connectivity, &lan_control, &telemetry, &diagnostics, &ota, &storage};
 
 void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_services &svc, app_state &state, std::uint32_t now_ms)

@@ -111,40 +111,30 @@ set(blusys_sources
     src/framework/platform/app_headless_platform_esp.cpp
     src/framework/app/ctx.cpp
     src/framework/app/services.cpp
-    # --- Framework capabilities ---
+    # --- Framework capabilities (ESP-IDF / device implementations) ---
+    # Host stub implementations (*_host.cpp) are excluded here — the
+    # host CMake bridge (cmake/blusys_host_bridge.cmake) picks them up
+    # for PC builds. mqtt_host keeps its own class on host and is
+    # excluded from the device build entirely.
     src/framework/capabilities/ble_hid_device.cpp
-    src/framework/capabilities/ble_hid_device_host.cpp
     src/framework/capabilities/bluetooth.cpp
-    src/framework/capabilities/bluetooth_host.cpp
     src/framework/capabilities/connectivity.cpp
-    src/framework/capabilities/connectivity_host.cpp
     src/framework/capabilities/diagnostics.cpp
-    src/framework/capabilities/diagnostics_host.cpp
     src/framework/capabilities/lan_control.cpp
-    src/framework/capabilities/lan_control_host.cpp
     src/framework/capabilities/mqtt.cpp
-    src/framework/capabilities/mqtt_host.cpp
     src/framework/capabilities/ota.cpp
-    src/framework/capabilities/ota_host.cpp
     src/framework/capabilities/provisioning.cpp
-    src/framework/capabilities/provisioning_host.cpp
     src/framework/capabilities/storage.cpp
-    src/framework/capabilities/storage_host.cpp
     src/framework/capabilities/telemetry.cpp
     src/framework/capabilities/usb.cpp
-    src/framework/capabilities/usb_host.cpp
 )
 
-# Per-target capability table (HAL)
-if(IDF_TARGET STREQUAL "esp32")
-    list(APPEND blusys_sources src/hal/targets/esp32/target_caps.c)
-elseif(IDF_TARGET STREQUAL "esp32c3")
-    list(APPEND blusys_sources src/hal/targets/esp32c3/target_caps.c)
-elseif(IDF_TARGET STREQUAL "esp32s3")
-    list(APPEND blusys_sources src/hal/targets/esp32s3/target_caps.c)
-else()
+# Target capability table (HAL). Single TU; chooses the right struct via
+# CONFIG_IDF_TARGET_* at compile time.
+if(NOT IDF_TARGET MATCHES "^(esp32|esp32c3|esp32s3)$")
     message(FATAL_ERROR "blusys currently supports only esp32, esp32c3, and esp32s3")
 endif()
+list(APPEND blusys_sources src/hal/target_caps.c)
 
 # ---------------------------------------------------------------------------
 # ESP-IDF component registration

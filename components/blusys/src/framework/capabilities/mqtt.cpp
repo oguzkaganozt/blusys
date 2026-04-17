@@ -1,5 +1,3 @@
-#ifdef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/mqtt.hpp"
 
 #include "blusys/framework/engine/event_queue.hpp"
@@ -259,46 +257,3 @@ void mqtt_capability::set_message_handler(mqtt_message_handler_fn handler, void 
 }
 
 }  // namespace blusys
-
-#else  // !ESP_PLATFORM — host stub (use mqtt_host_capability instead).
-
-#include "blusys/framework/capabilities/mqtt.hpp"
-#include "blusys/hal/log.h"
-
-namespace blusys {
-
-mqtt_capability::mqtt_capability(const mqtt_config &cfg) : cfg_(cfg) {}
-
-blusys_err_t mqtt_capability::start(blusys::runtime &rt)
-{
-    rt_ = &rt;
-    BLUSYS_LOGW("mqtt",
-                "device mqtt_capability is ESP-IDF only; use mqtt_host_capability on host");
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-void mqtt_capability::stop() { rt_ = nullptr; }
-void mqtt_capability::poll(std::uint32_t) {}
-
-blusys_err_t mqtt_capability::publish(const char *, const void *, std::size_t, int, bool)
-{ return BLUSYS_ERR_NOT_SUPPORTED; }
-
-blusys_err_t mqtt_capability::subscribe(const char *, int)
-{ return BLUSYS_ERR_NOT_SUPPORTED; }
-
-blusys_err_t mqtt_capability::unsubscribe(const char *)
-{ return BLUSYS_ERR_NOT_SUPPORTED; }
-
-void mqtt_capability::set_message_handler(mqtt_message_handler_fn handler, void *user_ctx)
-{
-    handler_     = handler;
-    handler_ctx_ = user_ctx;
-}
-
-blusys_err_t mqtt_capability::open_broker() { return BLUSYS_ERR_NOT_SUPPORTED; }
-void mqtt_capability::close_broker() {}
-void mqtt_capability::issue_auto_subscribes() {}
-
-}  // namespace blusys
-
-#endif  // ESP_PLATFORM

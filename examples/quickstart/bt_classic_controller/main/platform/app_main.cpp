@@ -18,6 +18,7 @@
 
 #include "blusys/framework/app/app.hpp"
 #include "blusys/hal/log.h"
+#include "blusys_examples/bt_controller_hw.hpp"
 
 #ifdef ESP_PLATFORM
 #include "sdkconfig.h"
@@ -29,9 +30,6 @@
 #include "esp_hidd_api.h"
 #include "esp_a2dp_api.h"
 #include "esp_avrc_api.h"
-#include "blusys/drivers/encoder.h"
-#include "blusys/hal/adc.h"
-#include "blusys/hal/gpio.h"
 #include "blusys/hal/sleep.h"
 #include "esp_sleep.h"
 #include "esp_timer.h"
@@ -175,91 +173,17 @@ void dispatch_button(bt_classic_controller::intent btn)
 
 #ifdef ESP_PLATFORM
 
-// ── LED ───────────────────────────────────────────────────────────────────────
-void led_set(bool on)
+// ── Peripherals (LED, encoder, battery) ──────────────────────────────────────
+blusys_examples::status_led      s_led;
+blusys_examples::battery_monitor s_battery;
+blusys_examples::encoder_input   s_encoder;
+
+void led_set(bool on) { s_led.set(on); }
+
+void on_encoder_event(blusys_examples::encoder_event ev)
 {
-    if (kStatusLedPin < 0) {
-        return;
-    }
-    blusys_gpio_write(kStatusLedPin, kStatusLedActiveLow ? !on : on);
-}
-
-void status_led_init()
-{
-    if (kStatusLedPin < 0) {
-        return;
-    }
-    blusys_gpio_reset(kStatusLedPin);
-    blusys_gpio_set_output(kStatusLedPin);
-    led_set(false);
-}
-
-// ── Encoder ───────────────────────────────────────────────────────────────────
-blusys_encoder_t *s_encoder = nullptr;
-
-void on_encoder_event(blusys_encoder_t * /*enc*/,
-                      blusys_encoder_event_t event,
-                      int /*position*/,
-                      void * /*ctx*/)
-{
-    using I = bt_classic_controller::intent;
-    switch (event) {
-    case BLUSYS_ENCODER_EVENT_CW:         dispatch_button(I::turn_cw);           break;
-    case BLUSYS_ENCODER_EVENT_CCW:        dispatch_button(I::turn_ccw);          break;
-    case BLUSYS_ENCODER_EVENT_PRESS:      dispatch_button(I::button_press);      break;
-    case BLUSYS_ENCODER_EVENT_RELEASE:    dispatch_button(I::button_release);    break;
-    case BLUSYS_ENCODER_EVENT_LONG_PRESS: dispatch_button(I::button_long_press); break;
-    default: break;
-    }
-}
-
-blusys_err_t open_encoder()
-{
-    blusys_encoder_config_t cfg{};
-    cfg.clk_pin       = kEncoderClkPin;
-    cfg.dt_pin        = kEncoderDtPin;
-    cfg.sw_pin        = kEncoderSwPin;
-    cfg.long_press_ms = CONFIG_BTCC_ENCODER_LONG_PRESS_MS;
-    blusys_err_t err = blusys_encoder_open(&cfg, &s_encoder);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE(kTag, "encoder_open failed: %d", static_cast<int>(err));
-        return err;
-    }
-    return blusys_encoder_set_callback(s_encoder, on_encoder_event, nullptr);
-}
-
-// ── Battery ADC ───────────────────────────────────────────────────────────────
-blusys_adc_t *s_battery_adc = nullptr;
-
-void battery_init()
-{
-    if (kBatteryAdcPin < 0) {
-        return;
-    }
-    blusys_err_t err = blusys_adc_open(kBatteryAdcPin,
-                                        BLUSYS_ADC_ATTEN_DB_12,
-                                        &s_battery_adc);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGW(kTag, "battery ADC open failed: %d — reporting disabled",
-                    static_cast<int>(err));
-        s_battery_adc = nullptr;
-    }
-}
-
-void battery_sample()
-{
-    if (s_battery_adc == nullptr) {
-        return;
-    }
-    int mv = 0;
-    if (blusys_adc_read_mv(s_battery_adc, &mv) != BLUSYS_OK) {
-        return;
-    }
-    int range = kBatteryMvFull - kBatteryMvEmpty;
-    int pct   = (range > 0) ? (mv - kBatteryMvEmpty) * 100 / range : 0;
-    if (pct < 0)   pct = 0;
-    if (pct > 100) pct = 100;
-    BLUSYS_LOGI(kTag, "battery: %d mV → %d%%", mv, pct);
+    dispatch_button(
+        blusys_examples::map_encoder_intent<bt_classic_controller::intent>(ev));
 }
 
 // ── Deep sleep ────────────────────────────────────────────────────────────────
@@ -804,9 +728,15 @@ void on_init_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
     ESP_ERROR_CHECK(esp_bt_hid_device_init());
 
     // ── 11. Peripherals ──────────────────────────────────────────────────────
-    status_led_init();
-    battery_init();
-    open_encoder();
+    s_led.init({.pin = kStatusLedPin, .active_low = kStatusLedActiveLow});
+    s_battery.init({.adc_pin  = kBatteryAdcPin,
+                    .mv_empty = kBatteryMvEmpty,
+                    .mv_full  = kBatteryMvFull});
+    s_encoder.open({.clk_pin       = kEncoderClkPin,
+                    .dt_pin        = kEncoderDtPin,
+                    .sw_pin        = kEncoderSwPin,
+                    .long_press_ms = CONFIG_BTCC_ENCODER_LONG_PRESS_MS},
+                   on_encoder_event);
 
     // Stamp first activity so the 120s sleep clock starts now.
     s_activity_pending.store(true, std::memory_order_relaxed);
@@ -893,9 +823,9 @@ void on_tick_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
 
     // ── Battery sampling (every 30 s) ─────────────────────────────────────────
     static std::uint32_t s_last_battery_ms = 0;
-    if (s_battery_adc != nullptr && now_ms - s_last_battery_ms >= 30'000u) {
+    if (s_battery.enabled() && now_ms - s_last_battery_ms >= 30'000u) {
         s_last_battery_ms = now_ms;
-        battery_sample();
+        (void)s_battery.sample_pct();  // logged inside; no BT Classic battery service
     }
 
 #ifdef CONFIG_BTCC_DISPLAY_ENABLED

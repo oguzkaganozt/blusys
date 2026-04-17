@@ -35,14 +35,7 @@ void screen_router::sync_shell_chrome(shell &s)
     shell_sync_tabs_for_nav_stack(s, screens_);
 }
 
-bool screen_router::register_screen(std::uint32_t    route_id,
-                                     screen_create_fn  create_fn,
-                                     screen_destroy_fn destroy_fn)
-{
-    return screens_.register_screen(route_id, create_fn, destroy_fn);
-}
-
-bool screen_router::register_screen(std::uint32_t         route_id,
+bool screen_router::register_screen(std::uint32_t          route_id,
                                      screen_create_fn       create_fn,
                                      screen_destroy_fn      destroy_fn,
                                      const screen_lifecycle &lifecycle)

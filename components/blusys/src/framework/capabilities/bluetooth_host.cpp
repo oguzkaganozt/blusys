@@ -1,5 +1,3 @@
-#ifndef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/bluetooth.hpp"
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
@@ -44,4 +42,3 @@ void bluetooth_capability::stop()
 
 }  // namespace blusys
 
-#endif  // !ESP_PLATFORM

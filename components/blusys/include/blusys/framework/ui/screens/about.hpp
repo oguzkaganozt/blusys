@@ -24,7 +24,7 @@ struct about_screen_config {
     std::size_t extra_count        = 0;
 
     // When true, appends chip model, free heap, min heap, uptime, and IDF
-    // version from `ctx.diagnostics()` when the diagnostics capability is composed.
+    // version from `ctx.status_of<diagnostics_capability>()` when the diagnostics capability is composed.
     bool fill_diagnostics_from_ctx = false;
 };
 

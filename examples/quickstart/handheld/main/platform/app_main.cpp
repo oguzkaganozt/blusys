@@ -37,7 +37,7 @@ static blusys::connectivity_capability connectivity{{
     .prov_pop = "123456",
 }};
 
-static blusys::capability_list capabilities{&storage, &connectivity};
+static blusys::capability_list_storage capabilities{&storage, &connectivity};
 
 static const blusys::app_spec<app_state, action> spec{
     .initial_state = {},

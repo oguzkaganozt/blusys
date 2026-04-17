@@ -1,5 +1,3 @@
-#ifndef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/ble_hid_device.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
@@ -93,4 +91,3 @@ blusys_err_t ble_hid_device_capability::set_battery(std::uint8_t percent)
 
 }  // namespace blusys
 
-#endif  // !ESP_PLATFORM

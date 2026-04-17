@@ -16,12 +16,10 @@
 #include "blusys/framework/app/app.hpp"
 #include "blusys/framework/capabilities/ble_hid_device.hpp"
 #include "blusys/hal/log.h"
+#include "blusys_examples/bt_controller_hw.hpp"
 
 #ifdef ESP_PLATFORM
 #include "sdkconfig.h"
-#include "blusys/drivers/encoder.h"
-#include "blusys/hal/adc.h"
-#include "blusys/hal/gpio.h"
 #include "blusys/hal/sleep.h"
 #include "esp_sleep.h"
 #include "esp_timer.h"
@@ -72,7 +70,7 @@ blusys::ble_hid_device_capability hid_device{{
     .initial_battery_pct = 100,
 }};
 
-blusys::capability_list capabilities{&hid_device};
+blusys::capability_list_storage capabilities{&hid_device};
 
 // ── Dispatch plumbing ────────────────────────────────────────────────────────
 blusys::app_ctx *s_ctx = nullptr;
@@ -202,116 +200,35 @@ void hid_send_adapter(std::uint16_t usage, bool pressed)
 // ── Device-only: LED, encoder, battery, deep sleep ───────────────────────────
 #ifdef ESP_PLATFORM
 
-void led_set(bool on)
+blusys_examples::status_led      s_led;
+blusys_examples::battery_monitor s_battery;
+blusys_examples::encoder_input   s_encoder;
+
+void led_set(bool on) { s_led.set(on); }
+
+void on_encoder_event(blusys_examples::encoder_event ev)
 {
-    if (kStatusLedPin < 0) {
-        return;
-    }
-    blusys_gpio_write(kStatusLedPin, kStatusLedActiveLow ? !on : on);
-}
-
-void status_led_init()
-{
-    if (kStatusLedPin < 0) {
-        return;
-    }
-    blusys_gpio_reset(kStatusLedPin);
-    blusys_gpio_set_output(kStatusLedPin);
-    led_set(false);
-}
-
-// Encoder ─────────────────────────────────────────────────────────────────────
-blusys_encoder_t *s_encoder = nullptr;
-
-void on_encoder_event(blusys_encoder_t * /*encoder*/,
-                      blusys_encoder_event_t event,
-                      int /*position*/,
-                      void * /*user_ctx*/)
-{
-    using I = bluetooth_controller::intent;
-    switch (event) {
-    case BLUSYS_ENCODER_EVENT_CW:         dispatch_button(I::turn_cw);           break;
-    case BLUSYS_ENCODER_EVENT_CCW:        dispatch_button(I::turn_ccw);          break;
-    case BLUSYS_ENCODER_EVENT_PRESS:      dispatch_button(I::button_press);      break;
-    case BLUSYS_ENCODER_EVENT_RELEASE:    dispatch_button(I::button_release);    break;
-    case BLUSYS_ENCODER_EVENT_LONG_PRESS: dispatch_button(I::button_long_press); break;
-    default: break;
-    }
-}
-
-blusys_err_t open_encoder()
-{
-    blusys_encoder_config_t cfg{};
-    cfg.clk_pin       = kEncoderClkPin;
-    cfg.dt_pin        = kEncoderDtPin;
-    cfg.sw_pin        = kEncoderSwPin;
-    cfg.long_press_ms = CONFIG_BTCTRL_ENCODER_LONG_PRESS_MS;
-    blusys_err_t err = blusys_encoder_open(&cfg, &s_encoder);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE(kTag, "encoder_open failed: %d", static_cast<int>(err));
-        return err;
-    }
-    return blusys_encoder_set_callback(s_encoder, on_encoder_event, nullptr);
-}
-
-// Battery ADC ─────────────────────────────────────────────────────────────────
-blusys_adc_t *s_battery_adc = nullptr;
-
-void battery_init()
-{
-    if (kBatteryAdcPin < 0) {
-        return;
-    }
-    blusys_err_t err = blusys_adc_open(kBatteryAdcPin,
-                                        BLUSYS_ADC_ATTEN_DB_12,
-                                        &s_battery_adc);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGW(kTag,
-                    "battery ADC open(pin=%d) failed: %d — battery reporting disabled",
-                    kBatteryAdcPin, static_cast<int>(err));
-        s_battery_adc = nullptr;
-    }
-}
-
-void battery_sample()
-{
-    if (s_battery_adc == nullptr) {
-        return;
-    }
-    int mv = 0;
-    if (blusys_adc_read_mv(s_battery_adc, &mv) != BLUSYS_OK) {
-        return;
-    }
-    int range = kBatteryMvFull - kBatteryMvEmpty;
-    int pct   = (range > 0) ? (mv - kBatteryMvEmpty) * 100 / range : 0;
-    if (pct < 0)   pct = 0;
-    if (pct > 100) pct = 100;
-    hid_device.set_battery(static_cast<std::uint8_t>(pct));
-    BLUSYS_LOGI(kTag, "battery: %d mV → %d%%", mv, pct);
+    dispatch_button(
+        blusys_examples::map_encoder_intent<bluetooth_controller::intent>(ev));
 }
 
 // Deep sleep ──────────────────────────────────────────────────────────────────
+// Wake on the encoder's CLK low edge only.
+// SW is excluded because the button sits high while idle.
 void enter_deep_sleep()
 {
-    // Build wake mask only from valid (non-negative) pins.
-    std::uint64_t wake_mask = 0;
-    if (kEncoderClkPin >= 0) wake_mask |= (1ULL << kEncoderClkPin);
-    if (kEncoderSwPin  >= 0) wake_mask |= (1ULL << kEncoderSwPin);
-
-    if (wake_mask == 0) {
-        BLUSYS_LOGW(kTag, "deep sleep skipped — no valid wake pins configured");
+    if (kEncoderClkPin < 0) {
+        BLUSYS_LOGW(kTag, "deep sleep skipped — no valid wake pin configured");
         return;
     }
 
+    std::uint64_t wake_mask = (1ULL << kEncoderClkPin);
+
     BLUSYS_LOGI(kTag,
-                "inactivity timeout — entering deep sleep "
-                "(wake: CLK GPIO %d, SW GPIO %d)",
-                kEncoderClkPin, kEncoderSwPin);
+                "inactivity timeout — entering deep sleep (wake: CLK GPIO %d low)",
+                kEncoderClkPin);
 #ifdef CONFIG_IDF_TARGET_ESP32C3
-    if (kEncoderClkPin >= 0)
-        esp_deep_sleep_enable_gpio_wakeup(1ULL << kEncoderClkPin, ESP_GPIO_WAKEUP_GPIO_LOW);
-    if (kEncoderSwPin >= 0)
-        esp_deep_sleep_enable_gpio_wakeup(1ULL << kEncoderSwPin, ESP_GPIO_WAKEUP_GPIO_LOW);
+    esp_deep_sleep_enable_gpio_wakeup(wake_mask, ESP_GPIO_WAKEUP_GPIO_LOW);
 #else
     esp_sleep_enable_ext1_wakeup(wake_mask, ESP_EXT1_WAKEUP_ALL_LOW);
 #endif
@@ -484,9 +401,15 @@ void on_init_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
     bluetooth_controller::set_hid_send(hid_send_adapter);
     bluetooth_controller::set_led_setter(led_set);
     s_activity_pending.store(true, std::memory_order_relaxed);  // first tick stamps s_last_activity_ms
-    status_led_init();
-    battery_init();
-    open_encoder();
+    s_led.init({.pin = kStatusLedPin, .active_low = kStatusLedActiveLow});
+    s_battery.init({.adc_pin  = kBatteryAdcPin,
+                    .mv_empty = kBatteryMvEmpty,
+                    .mv_full  = kBatteryMvFull});
+    s_encoder.open({.clk_pin       = kEncoderClkPin,
+                    .dt_pin        = kEncoderDtPin,
+                    .sw_pin        = kEncoderSwPin,
+                    .long_press_ms = CONFIG_BTCTRL_ENCODER_LONG_PRESS_MS},
+                   on_encoder_event);
     BLUSYS_LOGI(kTag,
                 "bluetooth controller up — "
                 "encoder: clk=%d dt=%d sw=%d  long_press=%dms  "
@@ -513,9 +436,10 @@ void on_tick_device(blusys::app_ctx & /*ctx*/, blusys::app_services & /*svc*/,
 
     // Battery: sample every 30 s
     static std::uint32_t s_last_battery_ms = 0;
-    if (s_battery_adc != nullptr && now_ms - s_last_battery_ms >= 30'000u) {
+    if (s_battery.enabled() && now_ms - s_last_battery_ms >= 30'000u) {
         s_last_battery_ms = now_ms;
-        battery_sample();
+        int pct = s_battery.sample_pct();
+        if (pct >= 0) hid_device.set_battery(static_cast<std::uint8_t>(pct));
     }
 
     // Consume the activity flag written by dispatch_button (encoder callback context).

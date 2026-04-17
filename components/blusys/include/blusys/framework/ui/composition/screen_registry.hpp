@@ -57,15 +57,10 @@ public:
     // Register a screen factory for a given route ID.
     // destroy_fn may be nullptr — the framework will call lv_obj_delete.
     // Returns false if the registry is full.
-    bool register_screen(std::uint32_t    route_id,
-                         screen_create_fn  create_fn,
-                         screen_destroy_fn destroy_fn = nullptr);
-
-    // Register a screen with lifecycle hooks.
-    bool register_screen(std::uint32_t         route_id,
+    bool register_screen(std::uint32_t          route_id,
                          screen_create_fn       create_fn,
-                         screen_destroy_fn      destroy_fn,
-                         const screen_lifecycle &lifecycle);
+                         screen_destroy_fn      destroy_fn = nullptr,
+                         const screen_lifecycle &lifecycle = {});
 
     // Execute a navigation command. Returns true if the route was found
     // and the navigation completed. show_overlay / hide_overlay are not
@@ -121,6 +116,8 @@ private:
     void destroy_active();
     void fire_hide_hooks();
     void fire_show_hooks(lv_obj_t *screen, const screen_lifecycle &lifecycle);
+    void finalize_load(lv_obj_t *screen, lv_group_t *group,
+                       const screen_lifecycle &lifecycle);
 
     blusys::static_vector<screen_entry, kMaxScreens>  entries_{};
     blusys::static_vector<nav_entry, kMaxStackDepth>  nav_stack_{};

@@ -34,6 +34,10 @@ public:
     // scope's group to all encoder indevs.
     void pop_scope();
 
+    // Remove a specific scope by container.
+    // Useful when an overlay is hidden out of LIFO order.
+    bool remove_scope(lv_obj_t *container);
+
     // Re-walk the current scope's container and rebuild its focus group.
     // Call after adding or removing widgets dynamically.
     void refresh_current();
@@ -53,10 +57,13 @@ private:
         lv_group_t *group     = nullptr;
     };
 
-    void bind_group_to_encoders(lv_group_t *group);
-
     blusys::static_vector<scope_entry, kMaxScopes> stack_{};
 };
+
+// Attach `group` to every LV_INDEV_TYPE_ENCODER input device currently
+// registered with LVGL.  Used by both `focus_scope_manager` and the
+// screen registry's fallback encoder path.
+void bind_group_to_encoders(lv_group_t *group);
 
 }  // namespace blusys
 

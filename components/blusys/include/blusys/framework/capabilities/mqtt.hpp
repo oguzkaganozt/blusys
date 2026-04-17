@@ -8,7 +8,7 @@
 // their own code. Instead:
 //
 //   blusys::mqtt_capability mqtt{mqtt_config{...}};
-//   blusys::capability_list caps{&connectivity, &mqtt, ...};
+//   blusys::capability_list_storage caps{&connectivity, &mqtt, ...};
 //
 //   // After Wi-Fi + SNTP come up (observe in reducer):
 //   mqtt.mark_network_ready(true);
@@ -61,9 +61,8 @@ struct mqtt_message {
     std::size_t  payload_len  = 0;
 };
 
-struct mqtt_status {
+struct mqtt_status : capability_status_base {
     bool          connected         = false;
-    bool          capability_ready  = false;
     std::uint32_t messages_rx       = 0;
     std::uint32_t publishes_tx      = 0;
     char          last_error[96]    = {};

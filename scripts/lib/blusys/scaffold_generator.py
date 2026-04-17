@@ -614,7 +614,7 @@ namespace {namespace_name}::system {{
 
 {os.linesep.join(instances)}
 
-blusys::capability_list capabilities{{{cap_list}}};
+blusys::capability_list_storage capabilities{{{cap_list}}};
 
 const blusys::app_spec<app_state, action> spec{{
     .initial_state = {{}},

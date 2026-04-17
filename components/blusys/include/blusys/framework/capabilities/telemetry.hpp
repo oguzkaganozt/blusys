@@ -25,11 +25,10 @@ struct telemetry_metric {
     std::uint32_t timestamp_ms = 0;
 };
 
-struct telemetry_status {
+struct telemetry_status : capability_status_base {
     std::uint16_t buffered_count  = 0;
     std::uint16_t total_delivered = 0;
     std::uint16_t total_failed    = 0;
-    bool          capability_ready    = false;
 };
 
 // User-provided delivery callback. Called from poll() when the buffer

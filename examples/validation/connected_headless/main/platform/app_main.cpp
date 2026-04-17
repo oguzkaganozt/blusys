@@ -39,7 +39,7 @@ static blusys::storage_capability stor{{
     .spiffs_base_path = "/fs",
 }};
 
-static blusys::capability_list capabilities{&conn, &stor};
+static blusys::capability_list_storage capabilities{&conn, &stor};
 
 static const blusys::app_spec<connected_headless::State, connected_headless::Action> spec{
     .initial_state  = {},

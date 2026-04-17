@@ -1,5 +1,3 @@
-#ifdef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/diagnostics.hpp"
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
@@ -121,4 +119,3 @@ void diagnostics_capability::collect_snapshot()
 
 }  // namespace blusys
 
-#endif  // ESP_PLATFORM

@@ -1,5 +1,6 @@
 #include "core/app_logic.hpp"
 
+#include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/hal/log.h"
 
 namespace connected_device {
@@ -14,7 +15,7 @@ void update(app_ctx &ctx, State &state, const Action &action)
         case CET::wifi_got_ip:
             state.connected = true;
             view_ns::set_text(state.status_lbl, "Connected");
-            if (auto *conn = ctx.connectivity(); conn != nullptr) {
+            if (auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
                 view_ns::set_text(state.ip_lbl, conn->ip_info.ip);
             }
             break;

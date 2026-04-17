@@ -1,5 +1,6 @@
 #include "core/app_logic.hpp"
 
+#include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/hal/log.h"
 
 #include <cstdio>
@@ -23,7 +24,7 @@ void update(blusys::app_ctx &ctx, State &state, const Action &action)
         switch (action.cap_event.tag) {
         case CET::wifi_got_ip:
             state.connected = true;
-            if (auto *conn = ctx.connectivity(); conn != nullptr) {
+            if (auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
                 BLUSYS_LOGI(TAG, "Wi-Fi connected, IP: %s", conn->ip_info.ip);
             }
             break;

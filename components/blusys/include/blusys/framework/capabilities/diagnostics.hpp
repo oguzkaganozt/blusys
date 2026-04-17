@@ -31,9 +31,8 @@ struct diagnostics_snapshot {
     std::uint32_t flash_size    = 0;
 };
 
-struct diagnostics_status {
+struct diagnostics_status : capability_status_base {
     bool console_running = false;
-    bool capability_ready    = false;
     diagnostics_snapshot last_snapshot{};
 };
 

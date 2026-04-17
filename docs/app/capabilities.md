@@ -52,7 +52,7 @@ blusys::connectivity_config conn_cfg{
 #include "blusys/framework/capabilities/capability_list.hpp"
 
 static blusys::connectivity_capability conn{conn_cfg};
-static blusys::capability_list capabilities{&conn};
+static blusys::capability_list_storage capabilities{&conn};
 
 static const blusys::app_spec<State, Action> spec{
     .initial_state = {},
@@ -66,7 +66,7 @@ static const blusys::app_spec<State, Action> spec{
 
 ```cpp
 // In on_tick or update():
-const auto *status = ctx.connectivity();
+const auto *status = ctx.status_of<blusys::connectivity_capability>();
 if (status != nullptr && status->connected) {
     // WiFi is up
 }
@@ -99,7 +99,7 @@ blusys::storage_config stor_cfg{
 #include "blusys/framework/capabilities/storage.hpp"
 
 static blusys::storage_capability stor{stor_cfg};
-static blusys::capability_list capabilities{&conn, &stor};
+static blusys::capability_list_storage capabilities{&conn, &stor};
 ```
 
 ### File access (ESP-IDF target only)
@@ -113,7 +113,7 @@ blusys_fatfs_t *fatfs  = ctx.fatfs();   // FAT FS handle
 ### Status query
 
 ```cpp
-const auto *status = ctx.storage();
+const auto *status = ctx.status_of<blusys::storage_capability>();
 if (status != nullptr && status->spiffs_mounted) {
     // SPIFFS is ready
 }

@@ -29,14 +29,13 @@ enum class ota_event : std::uint32_t {
     capability_ready      = 0x04FF,
 };
 
-struct ota_status {
+struct ota_status : capability_status_base {
     bool    downloading      = false;
     bool    download_complete = false;
     bool    apply_complete   = false;
     bool    rollback_pending = false;
     bool    marked_valid     = false;
     std::uint8_t progress_pct = 0;
-    bool    capability_ready     = false;
 };
 
 // ---- device implementation ----

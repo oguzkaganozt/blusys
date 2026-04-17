@@ -38,13 +38,12 @@ enum class usb_class : std::uint8_t {
     msc = 1 << 2,
 };
 
-struct usb_status {
+struct usb_status : capability_status_base {
     bool role_active = false;
     bool device_ready = false;
     bool host_ready = false;
     bool device_connected = false;
     bool host_attached = false;
-    bool capability_ready = false;
 };
 
 // Exactly one of host or device mode per product; `usb_capability` opens only

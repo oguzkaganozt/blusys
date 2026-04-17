@@ -1,5 +1,3 @@
-#ifdef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/storage.hpp"
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
@@ -106,4 +104,3 @@ void storage_capability::stop()
 
 }  // namespace blusys
 
-#endif  // ESP_PLATFORM

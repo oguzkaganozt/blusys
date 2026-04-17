@@ -1,6 +1,7 @@
 #pragma once
 
 #include "blusys/framework/app/services.hpp"
+#include "blusys/framework/capabilities/list.hpp"
 #include "blusys/framework/feedback/feedback.hpp"
 
 #include "blusys/hal/error.h"
@@ -13,27 +14,6 @@
 namespace blusys {
 
 class app_runtime_base;
-struct capability_list;
-
-// Forward declarations for capability status types.
-struct connectivity_status;
-struct storage_status;
-struct bluetooth_status;
-struct ota_status;
-struct diagnostics_status;
-struct telemetry_status;
-struct lan_control_status;
-struct usb_status;
-class connectivity_capability;
-class storage_capability;
-class bluetooth_capability;
-class ota_capability;
-class diagnostics_capability;
-class telemetry_capability;
-class lan_control_capability;
-class usb_capability;
-class mqtt_host_capability;
-class mqtt_capability;
 
 class app_ctx {
 public:
@@ -90,23 +70,43 @@ public:
 
     [[nodiscard]] void *product_state_raw() const { return product_state_; }
 
-    // ---- capability status queries ----
+    // ---- capability lookup ----
+    //
+    // Returns a pointer to the composed capability of type T, or nullptr if
+    // no capability of that kind is in the product's `capability_list`.
+    // T must expose `static constexpr capability_kind kind_value`.
+    //
+    //   auto *mqtt = ctx.get<blusys::mqtt_capability>();
+    //   if (mqtt != nullptr) { mqtt->publish(...); }
+    template <typename T>
+    [[nodiscard]] T *get() const noexcept
+    {
+        static_assert(std::is_base_of_v<capability_base, T>,
+                      "ctx.get<T>: T must derive from capability_base");
+        if (capabilities_ == nullptr) {
+            return nullptr;
+        }
+        for (std::size_t i = 0; i < capabilities_->count; ++i) {
+            capability_base *c = capabilities_->items[i];
+            if (c != nullptr && c->kind() == T::kind_value) {
+                return static_cast<T *>(c);
+            }
+        }
+        return nullptr;
+    }
 
-    [[nodiscard]] const connectivity_status *connectivity() const;
-    [[nodiscard]] const storage_status *storage() const;
-    [[nodiscard]] const bluetooth_status *bluetooth() const;
-    [[nodiscard]] const ota_status *ota() const;
-    [[nodiscard]] const diagnostics_status *diagnostics() const;
-    [[nodiscard]] const telemetry_status *telemetry() const;
-    [[nodiscard]] const lan_control_status *lan_control() const;
-    [[nodiscard]] const usb_status *usb() const;
-
-    // Host (SDL) MQTT client — nullptr when capability not registered or on ESP-IDF product builds.
-    [[nodiscard]] mqtt_host_capability *mqtt_host();
-
-    // Device MQTT client (blusys_mqtt on ESP-IDF) — nullptr when capability
-    // not registered or on host builds.
-    [[nodiscard]] mqtt_capability *mqtt();
+    // Convenience: returns `&capability->status()` or nullptr when the
+    // capability is not composed.
+    //
+    //   if (const auto *s = ctx.status_of<connectivity_capability>();
+    //       s != nullptr && s->has_ip) { ... }
+    template <typename T>
+    [[nodiscard]] auto status_of() const noexcept
+        -> decltype(&std::declval<const T>().status())
+    {
+        const T *c = get<T>();
+        return c != nullptr ? &c->status() : nullptr;
+    }
 
     // ---- capability requests (integration calls from intent bridges) ----
     // These forward to the composed capability when present; otherwise return
@@ -116,28 +116,19 @@ public:
 private:
     friend class app_runtime_base;
 
-    static void bind_capability_pointers_from_list(app_ctx &ctx, capability_list *capabilities);
-
     std::uint32_t action_queue_drop_count_ = 0;
 
     using dispatch_fn = bool (*)(void *runtime, const void *action);
 
-    blusys::feedback_bus *feedback_bus_ = nullptr;
-    dispatch_fn                        dispatch_fn_  = nullptr;
-    void                              *runtime_ptr_  = nullptr;
-    void                              *product_state_ = nullptr;
-    app_services                      *services_      = nullptr;
+    blusys::feedback_bus *feedback_bus_  = nullptr;
+    dispatch_fn           dispatch_fn_   = nullptr;
+    void                 *runtime_ptr_   = nullptr;
+    void                 *product_state_ = nullptr;
+    app_services         *services_      = nullptr;
 
-    connectivity_capability *connectivity_  = nullptr;
-    storage_capability      *storage_       = nullptr;
-    bluetooth_capability    *bluetooth_     = nullptr;
-    ota_capability            *ota_         = nullptr;
-    diagnostics_capability   *diagnostics_  = nullptr;
-    telemetry_capability     *telemetry_    = nullptr;
-    lan_control_capability   *lan_control_  = nullptr;
-    usb_capability           *usb_          = nullptr;
-    mqtt_host_capability      *mqtt_host_   = nullptr;
-    mqtt_capability            *mqtt_        = nullptr;
+    // Non-owning view of the product's composed capability list. Set by the
+    // runtime during init; drives `get<T>()` / `status_of<T>()`.
+    capability_list *capabilities_ = nullptr;
 };
 
 }  // namespace blusys
