@@ -4,7 +4,6 @@
 #include "blusys/framework/flows/settings.hpp"
 #include "blusys/framework/ui/screens/about.hpp"
 #include "blusys/framework/ui/binding/action_widgets.hpp"
-#include "blusys/framework/ui/composition/overlay_manager.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
 #include <cstdint>
 
@@ -35,8 +34,8 @@ enum settings_id : std::uint32_t {
 
 view::page make_page(blusys::app_ctx &ctx, bool scrollable)
 {
-    if (ctx.fx().nav.shell() != nullptr) {
-        return view::page_create_in(ctx.fx().nav.shell()->content_area, {.scrollable = scrollable});
+    if (ctx.fx().nav.has_shell()) {
+        return view::page_create_in(ctx.fx().nav.content_area(), {.scrollable = scrollable});
     }
     return view::page_create({.scrollable = scrollable});
 }
@@ -80,16 +79,16 @@ void on_setup_hide(lv_obj_t * /*screen*/, void *user_data)
 void on_setup_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app_ctx *>(user_data);
-    if (ctx != nullptr && ctx->fx().nav.shell() != nullptr) {
-        view::shell_set_title(*ctx->fx().nav.shell(), "Setup");
+    if (ctx != nullptr) {
+        ctx->fx().nav.set_title("Setup");
     }
 }
 
 void on_about_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app_ctx *>(user_data);
-    if (ctx != nullptr && ctx->fx().nav.shell() != nullptr) {
-        view::shell_set_title(*ctx->fx().nav.shell(), "About");
+    if (ctx != nullptr) {
+        ctx->fx().nav.set_title("About");
     }
 }
 
@@ -170,7 +169,7 @@ lv_obj_t *create_home(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t 
     if (group_out != nullptr) {
         *group_out = page.group;
     }
-    return ctx.fx().nav.shell() != nullptr ? page.content : page.screen;
+    return ctx.fx().nav.has_shell() ? page.content : page.screen;
 }
 
 lv_obj_t *create_status(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
@@ -216,7 +215,7 @@ lv_obj_t *create_status(blusys::app_ctx &ctx, const void * /*params*/, lv_group_
     if (group_out != nullptr) {
         *group_out = page.group;
     }
-    return ctx.fx().nav.shell() != nullptr ? page.content : page.screen;
+    return ctx.fx().nav.has_shell() ? page.content : page.screen;
 }
 
 lv_obj_t *create_settings(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
@@ -309,7 +308,7 @@ lv_obj_t *create_about(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t
     return blusys::screens::about_screen_create(ctx, &config, group_out);
 }
 
-void register_all_screens(view::screen_router *router, blusys::app_ctx &ctx)
+void register_all_screens(blusys::app_ctx &ctx)
 {
     static const view::screen_registration kRoutes[] = {
         view::screen_row(route::home, &create_home, nullptr, nullptr, &on_home_hide),
@@ -319,7 +318,7 @@ void register_all_screens(view::screen_router *router, blusys::app_ctx &ctx)
         view::screen_row(route::about, &create_about, nullptr, &on_about_show, nullptr),
     };
 
-    router->register_screens(&ctx, kRoutes, sizeof(kRoutes) / sizeof(kRoutes[0]));
+    ctx.fx().nav.register_screens(&ctx, kRoutes, sizeof(kRoutes) / sizeof(kRoutes[0]));
 }
 
 }  // namespace
@@ -329,34 +328,26 @@ void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state)
     (void)fx;
     (void)state;
 
-    if (ctx.fx().nav.shell() != nullptr) {
+    if (ctx.fx().nav.has_shell()) {
         const view::shell_tab_item tabs[] = {
             view::shell_tab_row("Ctrl", route::home, "Controller"),
             view::shell_tab_row("Stat", route::status, "Status"),
             view::shell_tab_row("Set", route::settings, "Settings"),
         };
-        view::shell_set_tabs(*ctx.fx().nav.shell(), tabs, sizeof(tabs) / sizeof(tabs[0]),
-                             ctx.fx().nav.screen_router());
+        ctx.fx().nav.set_tab_items(tabs, sizeof(tabs) / sizeof(tabs[0]));
 
-        if (lv_obj_t *surface = view::shell_status_surface(*ctx.fx().nav.shell()); surface != nullptr) {
+        if (lv_obj_t *surface = ctx.fx().nav.status_surface(); surface != nullptr) {
             state.shell.badge = view::status_badge(surface, "Setup", blusys::badge_level::warning);
             state.shell.detail =
                 view::label(surface, "Punch  64%", blusys::theme().font_body_sm);
         }
 
-        if (ctx.fx().nav.overlay_manager() != nullptr) {
-            view::overlay_create(ctx.fx().nav.shell()->root, static_cast<std::uint32_t>(overlay::confirm),
-                                 {.text = "Scene committed", .duration_ms = 1200},
-                                 *ctx.fx().nav.overlay_manager());
-        }
+        ctx.fx().nav.create_overlay(ctx.fx().nav.shell_root(),
+                                    overlay::confirm,
+                                    {.text = "Scene committed", .duration_ms = 1200});
     }
 
-    auto *router = ctx.fx().nav.screen_router();
-    if (router == nullptr) {
-        return;
-    }
-
-    register_all_screens(router, ctx);
+    register_all_screens(ctx);
 
     ctx.fx().nav.to(route::home);
 }

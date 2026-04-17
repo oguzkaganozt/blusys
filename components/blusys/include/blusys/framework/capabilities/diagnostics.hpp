@@ -2,12 +2,7 @@
 
 #include "blusys/framework/capabilities/capability.hpp"
 
-#include <cstddef>
 #include <cstdint>
-
-#ifdef ESP_PLATFORM
-#include "blusys/framework/services/system.h"
-#endif
 
 namespace blusys { class runtime; }
 
@@ -36,22 +31,23 @@ struct diagnostics_status : capability_status_base {
     diagnostics_snapshot last_snapshot{};
 };
 
-// ---- device implementation ----
-
-#ifdef ESP_PLATFORM
+// ---- configuration (platform-independent) ----
 
 struct diagnostics_config {
-    bool enable_console         = false;
-    int  console_uart_num       = 0;
-    int  console_baud_rate      = 115200;
+    bool enable_console              = false;
+    int  console_uart_num            = 0;
+    int  console_baud_rate           = 115200;
     std::uint32_t snapshot_interval_ms = 5000;
 };
+
+// ---- capability class ----
 
 class diagnostics_capability final : public capability_base {
 public:
     static constexpr capability_kind kind_value = capability_kind::diagnostics;
 
     explicit diagnostics_capability(const diagnostics_config &cfg);
+    ~diagnostics_capability() override;
 
     [[nodiscard]] capability_kind kind() const override { return capability_kind::diagnostics; }
 
@@ -68,49 +64,13 @@ private:
         post_integration_event(static_cast<std::uint32_t>(ev));
     }
 
-    diagnostics_config cfg_;
-    diagnostics_status status_{};
-    blusys_console_t *console_ = nullptr;
-    std::uint32_t last_snapshot_ms_ = 0;
-    bool first_poll_ = true;
-};
-
-#else  // host stub
-
-struct diagnostics_config {
-    bool enable_console         = false;
-    int  console_uart_num       = 0;
-    int  console_baud_rate      = 115200;
-    std::uint32_t snapshot_interval_ms = 5000;
-};
-
-class diagnostics_capability final : public capability_base {
-public:
-    static constexpr capability_kind kind_value = capability_kind::diagnostics;
-
-    explicit diagnostics_capability(const diagnostics_config &cfg)
-        : cfg_(cfg) {}
-
-    [[nodiscard]] capability_kind kind() const override { return capability_kind::diagnostics; }
-
-    blusys_err_t start(blusys::runtime &rt) override;
-    void poll(std::uint32_t now_ms) override;
-    void stop() override;
-
-    [[nodiscard]] const diagnostics_status &status() const { return status_; }
-
-private:
-    void post_event(diagnostics_event ev)
-    {
-        post_integration_event(static_cast<std::uint32_t>(ev));
-    }
+    struct impl;
+    impl *impl_ = nullptr;
 
     diagnostics_config cfg_;
     diagnostics_status status_{};
-    bool first_poll_ = true;
-    std::uint32_t last_snapshot_ms_ = 0;
+    bool           first_poll_        = true;
+    std::uint32_t  last_snapshot_ms_  = 0;
 };
-
-#endif  // ESP_PLATFORM
 
 }  // namespace blusys

@@ -7,10 +7,24 @@ static const char *TAG = "blusys_bt";
 
 namespace blusys {
 
+struct bluetooth_capability::impl {
+    bool first_poll = true;
+};
+
+bluetooth_capability::bluetooth_capability(const bluetooth_config &cfg)
+    : cfg_(cfg), impl_(new impl{})
+{
+}
+
+bluetooth_capability::~bluetooth_capability()
+{
+    delete impl_;
+}
+
 blusys_err_t bluetooth_capability::start(blusys::runtime &rt)
 {
     rt_ = &rt;
-    first_poll_ = true;
+    impl_->first_poll = true;
 
     status_.gap_ready = true;
     status_.gatt_ready = true;
@@ -22,10 +36,10 @@ blusys_err_t bluetooth_capability::start(blusys::runtime &rt)
 
 void bluetooth_capability::poll(std::uint32_t /*now_ms*/)
 {
-    if (!first_poll_) {
+    if (!impl_->first_poll) {
         return;
     }
-    first_poll_ = false;
+    impl_->first_poll = false;
 
     status_.capability_ready = true;
     post_event(bluetooth_event::gap_ready);
@@ -40,5 +54,14 @@ void bluetooth_capability::stop()
     rt_ = nullptr;
 }
 
-}  // namespace blusys
+void bluetooth_capability::gatt_conn_handler(std::uint16_t /*conn_handle*/,
+                                             bool /*connected*/,
+                                             void * /*user_ctx*/)
+{
+}
 
+void bluetooth_capability::check_capability_ready()
+{
+}
+
+}  // namespace blusys

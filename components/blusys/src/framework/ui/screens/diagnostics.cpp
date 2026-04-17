@@ -2,7 +2,6 @@
 
 #include "blusys/framework/ui/screens/diagnostics.hpp"
 #include "blusys/framework/ui/composition/page.hpp"
-#include "blusys/framework/ui/composition/shell.hpp"
 #include "blusys/framework/ui/style/theme.hpp"
 #include "blusys/framework/ui/widgets/button.hpp"
 #include "blusys/framework/ui/primitives/divider.hpp"
@@ -16,10 +15,9 @@ lv_obj_t *diagnostics_screen_create(app_ctx &ctx, const void *params,
     const auto &t   = blusys::theme();
 
     page page;
-    auto *shell = ctx.fx().nav.shell();
-    const bool in_shell = shell != nullptr && shell->content_area != nullptr;
+    const bool in_shell = ctx.fx().nav.has_shell();
     if (in_shell) {
-        page = page_create_in(shell->content_area, {.scrollable = true});
+        page = page_create_in(ctx.fx().nav.content_area(), {.scrollable = true});
     } else {
         page = page_create({.scrollable = true});
     }

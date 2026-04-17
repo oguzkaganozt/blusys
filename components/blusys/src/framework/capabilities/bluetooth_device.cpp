@@ -3,14 +3,38 @@
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
+#include "blusys/framework/services/net.h"
+
+#include <atomic>
 
 static const char *TAG = "blusys_bt";
 
 namespace blusys {
 
+namespace {
+
+constexpr std::uint32_t kPendingNone              = 0;
+constexpr std::uint32_t kPendingGapReady          = 1 << 0;
+constexpr std::uint32_t kPendingGattReady         = 1 << 1;
+constexpr std::uint32_t kPendingClientConnected   = 1 << 2;
+constexpr std::uint32_t kPendingClientDisconnected = 1 << 3;
+
+}  // namespace
+
+struct bluetooth_capability::impl {
+    blusys_bluetooth_t           *bt           = nullptr;
+    blusys_ble_gatt_t            *gatt         = nullptr;
+    std::atomic<std::uint32_t>    pending_flags{kPendingNone};
+};
+
 bluetooth_capability::bluetooth_capability(const bluetooth_config &cfg)
-    : cfg_(cfg)
+    : cfg_(cfg), impl_(new impl{})
 {
+}
+
+bluetooth_capability::~bluetooth_capability()
+{
+    delete impl_;
 }
 
 blusys_err_t bluetooth_capability::start(blusys::runtime &rt)
@@ -22,8 +46,6 @@ blusys_err_t bluetooth_capability::start(blusys::runtime &rt)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    // If GATT services are provided, use the GATT server path (which
-    // includes GAP advertising automatically).
     if (cfg_.services != nullptr && cfg_.svc_count > 0) {
         blusys_ble_gatt_config_t gatt_cfg{};
         gatt_cfg.device_name   = cfg_.device_name;
@@ -32,7 +54,7 @@ blusys_err_t bluetooth_capability::start(blusys::runtime &rt)
         gatt_cfg.conn_cb       = gatt_conn_handler;
         gatt_cfg.conn_user_ctx = this;
 
-        blusys_err_t err = blusys_ble_gatt_open(&gatt_cfg, &gatt_);
+        blusys_err_t err = blusys_ble_gatt_open(&gatt_cfg, &impl_->gatt);
         if (err != BLUSYS_OK) {
             if (err == BLUSYS_ERR_BUSY) {
                 BLUSYS_LOGE(TAG,
@@ -47,14 +69,13 @@ blusys_err_t bluetooth_capability::start(blusys::runtime &rt)
         status_.gap_ready = true;
         status_.gatt_ready = true;
         status_.advertising = true;
-        pending_flags_.fetch_or(kPendingGapReady | kPendingGattReady,
-                                std::memory_order_release);
+        impl_->pending_flags.fetch_or(kPendingGapReady | kPendingGattReady,
+                                      std::memory_order_release);
     } else {
-        // GAP-only path.
         blusys_bluetooth_config_t bt_cfg{};
         bt_cfg.device_name = cfg_.device_name;
 
-        blusys_err_t err = blusys_bluetooth_open(&bt_cfg, &bt_);
+        blusys_err_t err = blusys_bluetooth_open(&bt_cfg, &impl_->bt);
         if (err != BLUSYS_OK) {
             if (err == BLUSYS_ERR_BUSY) {
                 BLUSYS_LOGE(TAG,
@@ -67,10 +88,10 @@ blusys_err_t bluetooth_capability::start(blusys::runtime &rt)
         }
 
         status_.gap_ready = true;
-        pending_flags_.fetch_or(kPendingGapReady, std::memory_order_release);
+        impl_->pending_flags.fetch_or(kPendingGapReady, std::memory_order_release);
 
         if (cfg_.auto_advertise) {
-            err = blusys_bluetooth_advertise_start(bt_);
+            err = blusys_bluetooth_advertise_start(impl_->bt);
             if (err == BLUSYS_OK) {
                 status_.advertising = true;
             } else {
@@ -85,7 +106,7 @@ blusys_err_t bluetooth_capability::start(blusys::runtime &rt)
 void bluetooth_capability::poll(std::uint32_t /*now_ms*/)
 {
     const std::uint32_t flags =
-        detail::drain_pending_flags(pending_flags_, kPendingNone);
+        detail::drain_pending_flags(impl_->pending_flags, kPendingNone);
     if (flags == kPendingNone) {
         return;
     }
@@ -117,14 +138,14 @@ void bluetooth_capability::poll(std::uint32_t /*now_ms*/)
 
 void bluetooth_capability::stop()
 {
-    if (gatt_ != nullptr) {
-        blusys_ble_gatt_close(gatt_);
-        gatt_ = nullptr;
+    if (impl_->gatt != nullptr) {
+        blusys_ble_gatt_close(impl_->gatt);
+        impl_->gatt = nullptr;
     }
-    if (bt_ != nullptr) {
-        blusys_bluetooth_advertise_stop(bt_);
-        blusys_bluetooth_close(bt_);
-        bt_ = nullptr;
+    if (impl_->bt != nullptr) {
+        blusys_bluetooth_advertise_stop(impl_->bt);
+        blusys_bluetooth_close(impl_->bt);
+        impl_->bt = nullptr;
     }
     status_ = {};
     rt_ = nullptr;
@@ -136,13 +157,12 @@ void bluetooth_capability::gatt_conn_handler(std::uint16_t conn_handle,
 {
     auto *self = static_cast<bluetooth_capability *>(user_ctx);
     if (connected) {
-        self->pending_flags_.fetch_or(kPendingClientConnected,
-                                      std::memory_order_release);
+        self->impl_->pending_flags.fetch_or(kPendingClientConnected,
+                                            std::memory_order_release);
     } else {
-        self->pending_flags_.fetch_or(kPendingClientDisconnected,
-                                      std::memory_order_release);
+        self->impl_->pending_flags.fetch_or(kPendingClientDisconnected,
+                                            std::memory_order_release);
     }
-    // Forward to user callback if provided.
     if (self->cfg_.conn_cb != nullptr) {
         self->cfg_.conn_cb(conn_handle, connected, self->cfg_.conn_user_ctx);
     }
@@ -167,4 +187,3 @@ void bluetooth_capability::check_capability_ready()
 }
 
 }  // namespace blusys
-

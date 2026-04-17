@@ -9,6 +9,20 @@ static const char *TAG = "blusys_diag";
 
 namespace blusys {
 
+struct diagnostics_capability::impl {};
+
+diagnostics_capability::diagnostics_capability(const diagnostics_config &cfg)
+    : cfg_(cfg), impl_(new impl{})
+{
+}
+
+diagnostics_capability::~diagnostics_capability()
+{
+    delete impl_;
+}
+
+void diagnostics_capability::collect_snapshot() {}
+
 blusys_err_t diagnostics_capability::start(blusys::runtime &rt)
 {
     rt_ = &rt;

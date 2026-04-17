@@ -2,13 +2,11 @@
 
 #include "blusys/framework/capabilities/capability.hpp"
 
-#include <cstddef>
 #include <cstdint>
-#include <atomic>
 
-#ifdef ESP_PLATFORM
-#include "blusys/framework/services/net.h"
-#endif
+// Forward declaration for device-side Wi-Fi provisioning handle.
+struct blusys_wifi_prov;
+typedef struct blusys_wifi_prov blusys_wifi_prov_t;
 
 namespace blusys { class runtime; }
 
@@ -23,7 +21,7 @@ enum class provisioning_event : std::uint32_t {
     failed               = 0x0703,
     already_provisioned  = 0x0710,
     reset_complete       = 0x0711,
-    capability_ready         = 0x07FF,
+    capability_ready     = 0x07FF,
 };
 
 struct provisioning_status : capability_status_base {
@@ -35,77 +33,27 @@ struct provisioning_status : capability_status_base {
     char qr_payload[256]      = {};
 };
 
-// ---- device implementation ----
-
-#ifdef ESP_PLATFORM
+// ---- configuration ----
 
 struct provisioning_config {
-    blusys_wifi_prov_transport_t transport = BLUSYS_WIFI_PROV_TRANSPORT_BLE;
-    const char *service_name     = nullptr;
-    const char *pop              = nullptr;
-    const char *service_key      = nullptr;
-    bool auto_start              = true;
-    bool skip_if_provisioned     = true;
+    // On device, cast to blusys_wifi_prov_transport_t.
+    // 0 = BLE, 1 = SoftAP (matches BLUSYS_WIFI_PROV_TRANSPORT_BLE/SOFTAP).
+    int         transport           = 0;
+    const char *service_name        = nullptr;
+    const char *pop                 = nullptr;
+    const char *service_key         = nullptr;
+    bool        auto_start          = true;
+    bool        skip_if_provisioned = true;
 };
+
+// ---- capability class ----
 
 class provisioning_capability final : public capability_base {
 public:
     static constexpr capability_kind kind_value = capability_kind::provisioning;
 
     explicit provisioning_capability(const provisioning_config &cfg);
-
-    [[nodiscard]] capability_kind kind() const override { return capability_kind::provisioning; }
-
-    blusys_err_t start(blusys::runtime &rt) override;
-    void poll(std::uint32_t now_ms) override;
-    void stop() override;
-
-    [[nodiscard]] const provisioning_status &status() const { return status_; }
-
-    // Erase stored credentials and restart provisioning.
-    blusys_err_t request_reset();
-
-private:
-    static constexpr std::uint32_t kPendingNone         = 0;
-    static constexpr std::uint32_t kPendingStarted      = 1 << 0;
-    static constexpr std::uint32_t kPendingCredentials   = 1 << 1;
-    static constexpr std::uint32_t kPendingSuccess       = 1 << 2;
-    static constexpr std::uint32_t kPendingFailed        = 1 << 3;
-    static constexpr std::uint32_t kPendingResetComplete  = 1 << 4;
-
-    static void prov_event_handler(blusys_wifi_prov_event_t event,
-                                   const blusys_wifi_prov_credentials_t *creds,
-                                   void *user_ctx);
-
-    void post_event(provisioning_event ev)
-    {
-        post_integration_event(static_cast<std::uint32_t>(ev));
-    }
-
-    provisioning_config cfg_;
-    provisioning_status status_{};
-    blusys_wifi_prov_t *prov_ = nullptr;
-    std::atomic<std::uint32_t> pending_flags_{kPendingNone};
-    bool already_posted_ = false;
-};
-
-#else  // host stub
-
-struct provisioning_config {
-    int transport           = 0;
-    const char *service_name = nullptr;
-    const char *pop          = nullptr;
-    const char *service_key  = nullptr;
-    bool auto_start          = true;
-    bool skip_if_provisioned = true;
-};
-
-class provisioning_capability final : public capability_base {
-public:
-    static constexpr capability_kind kind_value = capability_kind::provisioning;
-
-    explicit provisioning_capability(const provisioning_config &cfg)
-        : cfg_(cfg) {}
+    ~provisioning_capability() override;
 
     [[nodiscard]] capability_kind kind() const override { return capability_kind::provisioning; }
 
@@ -118,16 +66,18 @@ public:
     blusys_err_t request_reset();
 
 private:
+    static void prov_event_handler(int event, const void *creds, void *user_ctx);
     void post_event(provisioning_event ev)
     {
         post_integration_event(static_cast<std::uint32_t>(ev));
     }
+
+    struct impl;
+    impl *impl_ = nullptr;
 
     provisioning_config cfg_;
     provisioning_status status_{};
     bool first_poll_ = true;
 };
-
-#endif  // ESP_PLATFORM
 
 }  // namespace blusys

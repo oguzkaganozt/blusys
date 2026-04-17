@@ -22,6 +22,7 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/framework/ui/composition/screen_router.hpp"
 #include "blusys/framework/ui/composition/shell.hpp"
+#include "blusys/framework/ui/controller/navigation_controller.hpp"
 #endif
 
 namespace blusys {
@@ -58,9 +59,9 @@ protected:
     }
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    static void bind_fx_navigation(app_ctx &ctx, screen_router *router, shell *shell)
+    static void bind_fx_navigation(app_ctx &ctx, navigation_controller *ctrl)
     {
-        ctx.fx_.bind_navigation(router, shell);
+        ctx.fx_.bind_navigation(ctrl);
     }
 #endif
 
@@ -133,36 +134,18 @@ public:
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
         wire_screen_router(services_, &screen_router_);
         screen_router_.bind_ctx(&ctx_);
-        bind_fx_navigation(ctx_, &screen_router_, nullptr);
-#endif
 
-        bind_ctx(ctx_, framework_runtime_.feedback_bus_ptr(), &dispatch_trampoline, this);
-
-#ifdef BLUSYS_FRAMEWORK_HAS_UI
-        // Create and load the interaction shell if configured.
         if (spec_.shell != nullptr) {
             shell_ = shell_create(*spec_.shell);
-            shell_.router = &screen_router_;
-            bind_fx_navigation(ctx_, &screen_router_, &shell_);
             wire_shell(services_, &shell_);
             shell_load(shell_);
-
-            // Tell the screen_registry to swap content inside the shell's
-            // content area instead of loading standalone screens.
             screen_router_.bind_shell(shell_.content_area);
-
-            // Auto-update shell chrome (back button, tab highlight, title) on every transition.
-            screen_router_.set_screen_changed_callback(
-                [](lv_obj_t * /*screen*/, void *user_ctx) {
-                    auto *s = static_cast<shell *>(user_ctx);
-                    if (s == nullptr || s->router == nullptr) {
-                        return;
-                    }
-                    s->router->sync_shell_chrome(*s);
-                    shell_set_back_visible(*s, s->router->stack_depth() > 1);
-                },
-                &shell_);
+            shell_.router = &screen_router_;
+            controller_.bind(&screen_router_, &shell_);
+        } else {
+            controller_.bind(&screen_router_, nullptr);
         }
+        bind_fx_navigation(ctx_, &controller_);
 #endif
 
         bind_capabilities(ctx_, spec_.capabilities);
@@ -219,10 +202,6 @@ public:
     [[nodiscard]] const State &state() const { return state_; }
     [[nodiscard]] State &state() { return state_; }
     [[nodiscard]] app_ctx &ctx() { return ctx_; }
-
-#ifdef BLUSYS_FRAMEWORK_HAS_UI
-    [[nodiscard]] class screen_router &screen_router() { return screen_router_; }
-#endif
 
 private:
     static constexpr std::size_t kMaxDrainIterations = 32;
@@ -333,8 +312,9 @@ private:
     blusys::ring_buffer<Action, ActionQueueCap>          action_queue_{};
     detail::feedback_logging_sink                        feedback_logging_sink_{};
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-    class screen_router                            screen_router_{};
-    struct shell                                   shell_{};
+    class screen_router       screen_router_{};
+    struct shell              shell_{};
+    navigation_controller     controller_{};
 #else
     detail::default_route_sink                           default_route_sink_{};
 #endif

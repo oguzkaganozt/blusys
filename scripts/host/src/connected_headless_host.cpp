@@ -6,6 +6,7 @@
 // bridge as on-device.
 
 #include "blusys/framework/app/app.hpp"
+#include "blusys/framework/capabilities/event.hpp"
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/capabilities/storage.hpp"
 #include "blusys/hal/log.h"

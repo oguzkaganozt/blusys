@@ -1,14 +1,25 @@
 #include "blusys/framework/capabilities/lan_control.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
+#include "blusys/framework/services/net.h"
 
 static const char *TAG = "blusys_lan";
 
 namespace blusys {
 
+struct lan_control_capability::impl {
+    blusys_local_ctrl_t *ctrl = nullptr;
+    blusys_mdns_t       *mdns = nullptr;
+};
+
 lan_control_capability::lan_control_capability(const lan_control_config &cfg)
-    : cfg_(cfg)
+    : cfg_(cfg), impl_(new impl{})
 {
+}
+
+lan_control_capability::~lan_control_capability()
+{
+    delete impl_;
 }
 
 blusys_err_t lan_control_capability::start(blusys::runtime &rt)
@@ -30,7 +41,7 @@ blusys_err_t lan_control_capability::start(blusys::runtime &rt)
     ctrl_cfg.status_cb        = cfg_.status_cb;
     ctrl_cfg.user_ctx         = cfg_.user_ctx;
 
-    blusys_err_t err = blusys_local_ctrl_open(&ctrl_cfg, &ctrl_);
+    blusys_err_t err = blusys_local_ctrl_open(&ctrl_cfg, &impl_->ctrl);
     if (err != BLUSYS_OK) {
         BLUSYS_LOGE(TAG, "local_ctrl open failed: %d", static_cast<int>(err));
         return err;
@@ -47,16 +58,16 @@ blusys_err_t lan_control_capability::start(blusys::runtime &rt)
         mdns_cfg.hostname = hostname;
         mdns_cfg.instance_name = instance;
 
-        err = blusys_mdns_open(&mdns_cfg, &mdns_);
+        err = blusys_mdns_open(&mdns_cfg, &impl_->mdns);
         if (err != BLUSYS_OK) {
             BLUSYS_LOGE(TAG, "mdns open failed: %d", static_cast<int>(err));
             stop();
             return err;
         }
 
-        err = blusys_mdns_add_service(mdns_, instance,
+        err = blusys_mdns_add_service(impl_->mdns, instance,
                                       cfg_.service_type != nullptr ? cfg_.service_type : "_http",
-                                      cfg_.service_proto,
+                                      static_cast<blusys_mdns_proto_t>(cfg_.service_proto),
                                       cfg_.http_port,
                                       nullptr,
                                       0);
@@ -81,19 +92,19 @@ void lan_control_capability::poll(std::uint32_t /*now_ms*/)
 
 void lan_control_capability::stop()
 {
-    if (mdns_ != nullptr) {
+    if (impl_->mdns != nullptr) {
         if (cfg_.advertise_mdns) {
             (void)blusys_mdns_remove_service(
-                mdns_,
+                impl_->mdns,
                 cfg_.service_type != nullptr ? cfg_.service_type : "_http",
-                cfg_.service_proto);
+                static_cast<blusys_mdns_proto_t>(cfg_.service_proto));
         }
-        blusys_mdns_close(mdns_);
-        mdns_ = nullptr;
+        blusys_mdns_close(impl_->mdns);
+        impl_->mdns = nullptr;
     }
-    if (ctrl_ != nullptr) {
-        blusys_local_ctrl_close(ctrl_);
-        ctrl_ = nullptr;
+    if (impl_->ctrl != nullptr) {
+        blusys_local_ctrl_close(impl_->ctrl);
+        impl_->ctrl = nullptr;
     }
 
     status_ = {};
@@ -119,4 +130,3 @@ void lan_control_capability::check_capability_ready()
 }
 
 }  // namespace blusys
-

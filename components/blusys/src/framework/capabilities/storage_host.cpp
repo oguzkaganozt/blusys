@@ -7,6 +7,18 @@ static const char *TAG = "blusys_stor";
 
 namespace blusys {
 
+struct storage_capability::impl {};
+
+storage_capability::storage_capability(const storage_config &cfg)
+    : cfg_(cfg), impl_(new impl{})
+{
+}
+
+storage_capability::~storage_capability()
+{
+    delete impl_;
+}
+
 blusys_err_t storage_capability::start(blusys::runtime &rt)
 {
     rt_ = &rt;

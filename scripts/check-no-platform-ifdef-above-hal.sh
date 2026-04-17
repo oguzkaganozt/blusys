@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-BASELINE_MAX=44   # P5 drives this to 0.
+BASELINE_MAX=26   # P5 in progress — capability headers now clean; remaining in examples/tests.
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"

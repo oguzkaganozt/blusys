@@ -3,7 +3,6 @@
 #include "core/app_logic.hpp"
 
 #include "blusys/framework/ui/binding/action_widgets.hpp"
-#include "blusys/framework/ui/composition/overlay_manager.hpp"
 #include "blusys/framework/ui/composition/page.hpp"
 #include "blusys/framework/ui/widgets/slider.hpp"
 #include "blusys/hal/log.h"
@@ -39,9 +38,7 @@ void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, AppState &state)
                  blusys::button_variant::ghost);
     view::button(btn_row, "OK", Action{.tag = Tag::confirm}, &ctx);
 
-    view::overlay_create(p.screen, 1,
-                         {.text = "Settings saved", .duration_ms = 1500},
-                         *ctx.fx().nav.overlay_manager());
+    ctx.fx().nav.create_overlay(p.screen, 1, {.text = "Settings saved", .duration_ms = 1500});
 
     view::page_load(p);
 

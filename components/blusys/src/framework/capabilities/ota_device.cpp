@@ -3,12 +3,41 @@
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
+#include "blusys/framework/services/system.h"
 
 #include "esp_ota_ops.h"
+
+#include <atomic>
 
 static const char *TAG = "blusys_ota";
 
 namespace blusys {
+
+namespace {
+
+constexpr std::uint32_t kPendingNone           = 0;
+constexpr std::uint32_t kPendingApplyComplete  = 1 << 0;
+constexpr std::uint32_t kPendingApplyFailed    = 1 << 1;
+constexpr std::uint32_t kPendingMarkedValid    = 1 << 2;
+constexpr std::uint32_t kPendingRollback       = 1 << 3;
+constexpr std::uint32_t kPendingCapabilityReady = 1 << 4;
+constexpr std::uint32_t kPendingDownloadStarted = 1 << 5;
+
+}  // namespace
+
+struct ota_capability::impl {
+    std::atomic<std::uint32_t> impl_->pending_flags_{kPendingNone};
+};
+
+ota_capability::ota_capability(const ota_config &cfg)
+    : cfg_(cfg), impl_(new impl{})
+{
+}
+
+ota_capability::~ota_capability()
+{
+    delete impl_;
+}
 
 namespace {
 
@@ -18,11 +47,6 @@ extern "C" void blusys_ota_c_progress(uint8_t percent, void *user_ctx)
 }
 
 }  // namespace
-
-ota_capability::ota_capability(const ota_config &cfg)
-    : cfg_(cfg)
-{
-}
 
 blusys_err_t ota_capability::start(blusys::runtime &rt)
 {
@@ -39,14 +63,14 @@ blusys_err_t ota_capability::start(blusys::runtime &rt)
                 if (err == BLUSYS_OK) {
                     status_.rollback_pending = false;
                     status_.marked_valid = true;
-                    pending_flags_.fetch_or(kPendingMarkedValid, std::memory_order_release);
+                    impl_->pending_flags_.fetch_or(kPendingMarkedValid, std::memory_order_release);
                     BLUSYS_LOGI(TAG, "firmware marked valid (auto)");
                 } else {
-                    pending_flags_.fetch_or(kPendingRollback, std::memory_order_release);
+                    impl_->pending_flags_.fetch_or(kPendingRollback, std::memory_order_release);
                     BLUSYS_LOGW(TAG, "mark valid failed: %d", static_cast<int>(err));
                 }
             } else {
-                pending_flags_.fetch_or(kPendingRollback, std::memory_order_release);
+                impl_->pending_flags_.fetch_or(kPendingRollback, std::memory_order_release);
                 BLUSYS_LOGI(TAG, "rollback pending — waiting for manual mark_valid");
             }
         }
@@ -54,14 +78,14 @@ blusys_err_t ota_capability::start(blusys::runtime &rt)
 
     // Defer capability_ready to first poll so reducer receives it through
     // the normal event flow (not during init).
-    pending_flags_.fetch_or(kPendingCapabilityReady, std::memory_order_release);
+    impl_->pending_flags_.fetch_or(kPendingCapabilityReady, std::memory_order_release);
     return BLUSYS_OK;
 }
 
 void ota_capability::poll(std::uint32_t /*now_ms*/)
 {
     const std::uint32_t flags =
-        detail::drain_pending_flags(pending_flags_, kPendingNone);
+        detail::drain_pending_flags(impl_->pending_flags_, kPendingNone);
     if (flags == kPendingNone) {
         return;
     }
@@ -115,7 +139,7 @@ blusys_err_t ota_capability::request_update(const char *url,
 
     last_progress_posted_ = 255;
     status_.downloading = true;
-    pending_flags_.fetch_or(kPendingDownloadStarted, std::memory_order_release);
+    impl_->pending_flags_.fetch_or(kPendingDownloadStarted, std::memory_order_release);
 
     blusys_ota_config_t ota_cfg{};
     ota_cfg.url             = url;
@@ -130,7 +154,7 @@ blusys_err_t ota_capability::request_update(const char *url,
     blusys_err_t err = blusys_ota_open(&ota_cfg, &handle);
     if (err != BLUSYS_OK) {
         BLUSYS_LOGE(TAG, "ota open failed: %d", static_cast<int>(err));
-        pending_flags_.fetch_or(kPendingApplyFailed, std::memory_order_release);
+        impl_->pending_flags_.fetch_or(kPendingApplyFailed, std::memory_order_release);
         return err;
     }
 
@@ -139,10 +163,10 @@ blusys_err_t ota_capability::request_update(const char *url,
 
     if (err == BLUSYS_OK) {
         BLUSYS_LOGI(TAG, "OTA download + flash complete (%s)", url);
-        pending_flags_.fetch_or(kPendingApplyComplete, std::memory_order_release);
+        impl_->pending_flags_.fetch_or(kPendingApplyComplete, std::memory_order_release);
     } else {
         BLUSYS_LOGE(TAG, "OTA perform failed: %d", static_cast<int>(err));
-        pending_flags_.fetch_or(kPendingApplyFailed, std::memory_order_release);
+        impl_->pending_flags_.fetch_or(kPendingApplyFailed, std::memory_order_release);
     }
 
     return err;

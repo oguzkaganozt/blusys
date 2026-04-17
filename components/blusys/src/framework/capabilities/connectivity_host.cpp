@@ -9,17 +9,27 @@ static const char *TAG = "blusys_conn";
 
 namespace blusys {
 
+struct connectivity_capability::impl {};
+
+connectivity_capability::connectivity_capability(const connectivity_config &cfg)
+    : cfg_(cfg), impl_(new impl{})
+{
+}
+
+connectivity_capability::~connectivity_capability()
+{
+    delete impl_;
+}
+
 blusys_err_t connectivity_capability::start(blusys::runtime &rt)
 {
     rt_ = &rt;
     first_poll_ = true;
 
-    // On host, immediately mark configured services as ready.
     if (cfg_.wifi_ssid != nullptr) {
         status_.wifi_connected = true;
         status_.has_ip         = true;
     }
-
     if (cfg_.sntp_server != nullptr) {
         status_.time_synced = true;
     }
@@ -50,8 +60,6 @@ void connectivity_capability::poll(std::uint32_t /*now_ms*/)
     }
     first_poll_ = false;
 
-    // Post simulated events on the first poll so the app reducer receives them
-    // through the normal event flow (not during init).
     if (cfg_.wifi_ssid != nullptr) {
         status_.wifi_connecting = true;
         post_event(connectivity_event::wifi_started);
@@ -62,7 +70,6 @@ void connectivity_capability::poll(std::uint32_t /*now_ms*/)
         post_event(connectivity_event::wifi_connected);
         post_event(connectivity_event::wifi_got_ip);
     }
-
     if (cfg_.sntp_server != nullptr) {
         post_event(connectivity_event::time_synced);
     }
@@ -99,5 +106,22 @@ blusys_err_t connectivity_capability::request_reconnect()
     return BLUSYS_OK;
 }
 
-}  // namespace blusys
+void connectivity_capability::wifi_event_handler(blusys_wifi_t * /*wifi*/, int /*event*/,
+                                                  const void * /*info*/, void * /*user_ctx*/)
+{
+}
 
+void connectivity_capability::prov_event_handler(int /*event*/, const void * /*creds*/,
+                                                  void * /*user_ctx*/)
+{
+}
+
+void connectivity_capability::start_dependent_services(std::uint32_t /*now_ms*/)
+{
+}
+
+void connectivity_capability::check_capability_ready()
+{
+}
+
+}  // namespace blusys

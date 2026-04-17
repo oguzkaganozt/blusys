@@ -1,4 +1,5 @@
 #include "blusys/framework/capabilities/mqtt.hpp"
+#include "blusys/framework/services/session.h"
 
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
@@ -19,6 +20,17 @@ void copy_trunc(char *dst, std::size_t dst_sz, const char *src, std::size_t src_
     const std::size_t n = (src == nullptr) ? 0 : std::min(src_len, dst_sz - 1U);
     if (n > 0) std::memcpy(dst, src, n);
     dst[n] = '\0';
+}
+
+void mqtt_message_trampoline(const char *topic, const std::uint8_t *payload,
+                             std::size_t len, void *ctx)
+{
+    static_cast<mqtt_capability *>(ctx)->on_mqtt_message(topic, payload, len);
+}
+
+void mqtt_state_trampoline(blusys_mqtt_state_t state, void *ctx)
+{
+    static_cast<mqtt_capability *>(ctx)->on_mqtt_state(static_cast<int>(state));
 }
 
 }  // namespace
@@ -61,8 +73,6 @@ void mqtt_capability::stop()
 
 void mqtt_capability::poll(std::uint32_t now_ms)
 {
-    // ---- 1. Drain connection-state transitions from the MQTT task. ----
-
     if (pending_connected_.exchange(false)) {
         connected_               = true;
         status_.connected        = true;
@@ -82,8 +92,6 @@ void mqtt_capability::poll(std::uint32_t now_ms)
         post_ev(mqtt_event::error);
     }
 
-    // ---- 2. Drain inbound messages. ----
-
     drained_.clear();
     {
         std::lock_guard<std::mutex> lock(pending_mtx_);
@@ -97,8 +105,6 @@ void mqtt_capability::poll(std::uint32_t now_ms)
         post_ev(mqtt_event::message_received, &m);
     }
 
-    // ---- 3. Lazy open / reconnect. ----
-
     if (!connected_ && network_ready_ && now_ms >= next_reconnect_ms_) {
         const blusys_err_t err = open_broker();
         if (err != BLUSYS_OK) {
@@ -109,7 +115,6 @@ void mqtt_capability::poll(std::uint32_t now_ms)
             backoff_ms_        = std::min(backoff_ms_ * 2U, cfg_.reconnect_max_ms);
             post_ev(mqtt_event::error);
         }
-        // On success, state_cb → pending_connected_ will be picked up next poll().
     }
 }
 
@@ -126,8 +131,8 @@ blusys_err_t mqtt_capability::open_broker()
     mc.client_id       = cfg_.client_id;
     mc.server_cert_pem = cfg_.server_cert_pem;
     mc.timeout_ms      = cfg_.connect_timeout_ms;
-    mc.message_cb      = &mqtt_capability::mqtt_cb;
-    mc.state_cb        = &mqtt_capability::state_cb;
+    mc.message_cb      = mqtt_message_trampoline;
+    mc.state_cb        = mqtt_state_trampoline;
     mc.user_ctx        = this;
     mc.will_topic       = cfg_.will_topic;
     mc.will_payload     = cfg_.will_payload;
@@ -155,12 +160,10 @@ blusys_err_t mqtt_capability::open_broker()
 void mqtt_capability::close_broker()
 {
     if (mqtt_handle_ == nullptr) return;
-    (void)blusys_mqtt_disconnect(mqtt_handle_);
-    (void)blusys_mqtt_close(mqtt_handle_);
-    mqtt_handle_             = nullptr;
-    // state_cb would fire on graceful disconnect; set the pending flag
-    // directly here so `poll()` observes the transition even if the
-    // capability is being torn down and won't tick again.
+    auto *h = static_cast<blusys_mqtt_t *>(mqtt_handle_);
+    (void)blusys_mqtt_disconnect(h);
+    (void)blusys_mqtt_close(h);
+    mqtt_handle_ = nullptr;
     pending_disconnected_.store(true);
 }
 
@@ -173,41 +176,38 @@ void mqtt_capability::issue_auto_subscribes()
     }
 }
 
-void mqtt_capability::mqtt_cb(const char *topic, const std::uint8_t *payload,
-                              std::size_t payload_len, void *user_ctx)
+void mqtt_capability::on_mqtt_message(const char *topic, const std::uint8_t *payload,
+                                       std::size_t len)
 {
-    auto *self = static_cast<mqtt_capability *>(user_ctx);
-    if (self == nullptr || topic == nullptr) return;
+    if (topic == nullptr) return;
 
-    std::lock_guard<std::mutex> lock(self->pending_mtx_);
-    if (self->pending_.size() >= kMaxPending) {
-        self->pending_.erase(self->pending_.begin());
+    std::lock_guard<std::mutex> lock(pending_mtx_);
+    if (pending_.size() >= kMaxPending) {
+        pending_.erase(pending_.begin());
     }
     mqtt_message m{};
     copy_trunc(m.topic, sizeof(m.topic), topic, std::strlen(topic));
     const std::size_t cap = sizeof(m.payload) - 1U;
-    const std::size_t n   = std::min(payload_len, cap);
+    const std::size_t n   = std::min(len, cap);
     if (payload != nullptr && n > 0) {
         std::memcpy(m.payload, payload, n);
     }
     m.payload[n]  = '\0';
     m.payload_len = n;
-    self->pending_.push_back(m);
+    pending_.push_back(m);
 }
 
-void mqtt_capability::state_cb(blusys_mqtt_state_t state, void *user_ctx)
+void mqtt_capability::on_mqtt_state(int state)
 {
-    auto *self = static_cast<mqtt_capability *>(user_ctx);
-    if (self == nullptr) return;
-    switch (state) {
+    switch (static_cast<blusys_mqtt_state_t>(state)) {
     case BLUSYS_MQTT_STATE_CONNECTED:
-        self->pending_connected_.store(true);
+        pending_connected_.store(true);
         break;
     case BLUSYS_MQTT_STATE_DISCONNECTED:
-        self->pending_disconnected_.store(true);
+        pending_disconnected_.store(true);
         break;
     case BLUSYS_MQTT_STATE_ERROR:
-        self->pending_error_.store(true);
+        pending_error_.store(true);
         break;
     }
 }
@@ -219,9 +219,10 @@ blusys_err_t mqtt_capability::publish(const char *topic,
     if (mqtt_handle_ == nullptr || !connected_) {
         return BLUSYS_ERR_INVALID_STATE;
     }
+    auto *h = static_cast<blusys_mqtt_t *>(mqtt_handle_);
     const int q = qos >= 0 ? qos : (cfg_.default_qos > 0 ? cfg_.default_qos : 1);
     const blusys_err_t err = blusys_mqtt_publish(
-        mqtt_handle_, topic,
+        h, topic,
         static_cast<const std::uint8_t *>(payload), len,
         static_cast<blusys_mqtt_qos_t>(q), retain);
     if (err == BLUSYS_OK) {
@@ -237,9 +238,9 @@ blusys_err_t mqtt_capability::subscribe(const char *topic_filter, int qos)
     if (mqtt_handle_ == nullptr || !connected_) {
         return BLUSYS_ERR_INVALID_STATE;
     }
+    auto *h = static_cast<blusys_mqtt_t *>(mqtt_handle_);
     const int q = qos >= 0 ? qos : (cfg_.default_qos > 0 ? cfg_.default_qos : 1);
-    return blusys_mqtt_subscribe(mqtt_handle_, topic_filter,
-                                 static_cast<blusys_mqtt_qos_t>(q));
+    return blusys_mqtt_subscribe(h, topic_filter, static_cast<blusys_mqtt_qos_t>(q));
 }
 
 blusys_err_t mqtt_capability::unsubscribe(const char *topic_filter)
@@ -247,7 +248,8 @@ blusys_err_t mqtt_capability::unsubscribe(const char *topic_filter)
     if (mqtt_handle_ == nullptr || !connected_) {
         return BLUSYS_ERR_INVALID_STATE;
     }
-    return blusys_mqtt_unsubscribe(mqtt_handle_, topic_filter);
+    auto *h = static_cast<blusys_mqtt_t *>(mqtt_handle_);
+    return blusys_mqtt_unsubscribe(h, topic_filter);
 }
 
 void mqtt_capability::set_message_handler(mqtt_message_handler_fn handler, void *user_ctx)

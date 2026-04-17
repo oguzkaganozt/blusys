@@ -137,9 +137,7 @@ void on_init(app_ctx &ctx, app_fx &fx, AppState &state)
                  blusys::button_variant::ghost);
     view::button(btn_row, "OK", Action{.tag = Tag::confirm}, &ctx);
 
-    view::overlay_create(p.screen, 1,
-                         {.text = "Settings saved", .duration_ms = 1500},
-                         *ctx.fx().nav.overlay_manager());
+    ctx.fx().nav.create_overlay(p.screen, 1, {.text = "Settings saved", .duration_ms = 1500});
 
     view::page_load(p);
 

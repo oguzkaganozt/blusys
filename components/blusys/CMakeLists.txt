@@ -122,17 +122,17 @@ set(blusys_sources
     # host CMake bridge (cmake/blusys_host_bridge.cmake) picks them up
     # for PC builds. mqtt_host keeps its own class on host and is
     # excluded from the device build entirely.
-    src/framework/capabilities/ble_hid_device.cpp
-    src/framework/capabilities/bluetooth.cpp
-    src/framework/capabilities/connectivity.cpp
-    src/framework/capabilities/diagnostics.cpp
-    src/framework/capabilities/lan_control.cpp
-    src/framework/capabilities/mqtt.cpp
-    src/framework/capabilities/ota.cpp
-    src/framework/capabilities/provisioning.cpp
-    src/framework/capabilities/storage.cpp
+    src/framework/capabilities/ble_hid_device_device.cpp
+    src/framework/capabilities/bluetooth_device.cpp
+    src/framework/capabilities/connectivity_device.cpp
+    src/framework/capabilities/diagnostics_device.cpp
+    src/framework/capabilities/lan_control_device.cpp
+    src/framework/capabilities/mqtt_device.cpp
+    src/framework/capabilities/ota_device.cpp
+    src/framework/capabilities/provisioning_device.cpp
+    src/framework/capabilities/storage_device.cpp
     src/framework/capabilities/telemetry.cpp
-    src/framework/capabilities/usb.cpp
+    src/framework/capabilities/usb_device.cpp
 )
 
 # Target capability table (HAL). Single TU; chooses the right struct via
@@ -230,6 +230,7 @@ endif()
 if("lvgl__lvgl" IN_LIST build_components)
     idf_component_get_property(lvgl_lib lvgl__lvgl COMPONENT_LIB)
     target_sources(${COMPONENT_LIB} PRIVATE
+        src/framework/ui/controller/navigation_controller.cpp
         src/framework/ui/composition/overlay_manager.cpp
         src/framework/ui/composition/page.cpp
         src/framework/ui/composition/screen_registry.cpp

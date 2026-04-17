@@ -9,12 +9,23 @@ static const char *TAG = "blusys_prov";
 
 namespace blusys {
 
+struct provisioning_capability::impl {};
+
+provisioning_capability::provisioning_capability(const provisioning_config &cfg)
+    : cfg_(cfg), impl_(new impl{})
+{
+}
+
+provisioning_capability::~provisioning_capability()
+{
+    delete impl_;
+}
+
 blusys_err_t provisioning_capability::start(blusys::runtime &rt)
 {
     rt_ = &rt;
     first_poll_ = true;
 
-    // On host, simulate already-provisioned state.
     status_.is_provisioned = true;
     status_.capability_ready = true;
     std::strncpy(status_.qr_payload,
@@ -53,5 +64,9 @@ blusys_err_t provisioning_capability::request_reset()
     return BLUSYS_OK;
 }
 
-}  // namespace blusys
+void provisioning_capability::prov_event_handler(int /*event*/, const void * /*creds*/,
+                                                  void * /*user_ctx*/)
+{
+}
 
+}  // namespace blusys

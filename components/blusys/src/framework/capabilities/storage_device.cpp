@@ -2,6 +2,7 @@
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
+#include "blusys/framework/services/storage.h"
 
 #include "nvs_flash.h"
 
@@ -9,10 +10,23 @@ static const char *TAG = "blusys_stor";
 
 namespace blusys {
 
+struct storage_capability::impl {
+    blusys_fs_t    *spiffs = nullptr;
+    blusys_fatfs_t *fatfs  = nullptr;
+};
+
 storage_capability::storage_capability(const storage_config &cfg)
-    : cfg_(cfg)
+    : cfg_(cfg), impl_(new impl{})
 {
 }
+
+storage_capability::~storage_capability()
+{
+    delete impl_;
+}
+
+blusys_fs_t    *storage_capability::spiffs() const { return impl_->spiffs; }
+blusys_fatfs_t *storage_capability::fatfs()  const { return impl_->fatfs;  }
 
 blusys_err_t storage_capability::start(blusys::runtime &rt)
 {
@@ -38,7 +52,7 @@ blusys_err_t storage_capability::start(blusys::runtime &rt)
         fs_cfg.partition_label        = cfg_.spiffs_partition_label;
         fs_cfg.format_if_mount_failed = cfg_.spiffs_format_on_fail;
 
-        blusys_err_t err = blusys_fs_mount(&fs_cfg, &spiffs_);
+        blusys_err_t err = blusys_fs_mount(&fs_cfg, &impl_->spiffs);
         if (err == BLUSYS_OK) {
             status_.spiffs_mounted = true;
             post_event(storage_event::spiffs_mounted);
@@ -55,7 +69,7 @@ blusys_err_t storage_capability::start(blusys::runtime &rt)
         fat_cfg.partition_label        = cfg_.fatfs_partition_label;
         fat_cfg.format_if_mount_failed = cfg_.fatfs_format_on_fail;
 
-        blusys_err_t err = blusys_fatfs_mount(&fat_cfg, &fatfs_);
+        blusys_err_t err = blusys_fatfs_mount(&fat_cfg, &impl_->fatfs);
         if (err == BLUSYS_OK) {
             status_.fatfs_mounted = true;
             post_event(storage_event::fatfs_mounted);
@@ -65,7 +79,6 @@ blusys_err_t storage_capability::start(blusys::runtime &rt)
         }
     }
 
-    // Check if everything that was requested is now up.
     bool ready = true;
     if (cfg_.spiffs_base_path != nullptr && !status_.spiffs_mounted) {
         ready = false;
@@ -89,13 +102,13 @@ void storage_capability::poll(std::uint32_t /*now_ms*/)
 
 void storage_capability::stop()
 {
-    if (fatfs_ != nullptr) {
-        blusys_fatfs_unmount(fatfs_);
-        fatfs_ = nullptr;
+    if (impl_->fatfs != nullptr) {
+        blusys_fatfs_unmount(impl_->fatfs);
+        impl_->fatfs = nullptr;
     }
-    if (spiffs_ != nullptr) {
-        blusys_fs_unmount(spiffs_);
-        spiffs_ = nullptr;
+    if (impl_->spiffs != nullptr) {
+        blusys_fs_unmount(impl_->spiffs);
+        impl_->spiffs = nullptr;
     }
 
     status_ = {};
@@ -103,4 +116,3 @@ void storage_capability::stop()
 }
 
 }  // namespace blusys
-

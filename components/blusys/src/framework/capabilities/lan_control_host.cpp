@@ -6,10 +6,24 @@ static const char *TAG = "blusys_lan";
 
 namespace blusys {
 
+struct lan_control_capability::impl {
+    bool first_poll = true;
+};
+
+lan_control_capability::lan_control_capability(const lan_control_config &cfg)
+    : cfg_(cfg), impl_(new impl{})
+{
+}
+
+lan_control_capability::~lan_control_capability()
+{
+    delete impl_;
+}
+
 blusys_err_t lan_control_capability::start(blusys::runtime &rt)
 {
     rt_ = &rt;
-    first_poll_ = true;
+    impl_->first_poll = true;
 
     if (cfg_.device_name == nullptr) {
         BLUSYS_LOGE(TAG, "device_name is required");
@@ -26,10 +40,10 @@ blusys_err_t lan_control_capability::start(blusys::runtime &rt)
 
 void lan_control_capability::poll(std::uint32_t /*now_ms*/)
 {
-    if (!first_poll_) {
+    if (!impl_->first_poll) {
         return;
     }
-    first_poll_ = false;
+    impl_->first_poll = false;
 
     post_event(lan_control_event::http_ready);
     if (cfg_.advertise_mdns) {
@@ -44,5 +58,8 @@ void lan_control_capability::stop()
     rt_ = nullptr;
 }
 
-}  // namespace blusys
+void lan_control_capability::check_capability_ready()
+{
+}
 
+}  // namespace blusys

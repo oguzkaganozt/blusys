@@ -4,7 +4,7 @@
 #include "blusys/framework/engine/router.hpp"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-#include "blusys/framework/ui/composition/screen_router.hpp"
+#include "blusys/framework/ui/controller/navigation_controller.hpp"
 #endif
 
 #include <cstddef>
@@ -14,9 +14,7 @@
 namespace blusys {
 
 class app_runtime_base;
-class screen_router;
-class overlay_manager;
-struct shell;
+class navigation_controller;
 
 #ifndef ESP_PLATFORM
 struct blusys_fs;
@@ -27,8 +25,9 @@ typedef struct blusys_fatfs blusys_fatfs_t;
 
 // Typed effect bridge for navigation and storage.
 //
-// The surface is still narrow, but it is bound directly to runtime-owned
-// router / shell / storage pointers instead of a mutable runtime bridge.
+// nav provides the full navigation and registration surface; product code
+// never needs to reach the underlying screen_router, overlay_manager,
+// focus_scope_manager, or shell directly.
 class app_fx {
 public:
     class nav_fx {
@@ -36,8 +35,8 @@ public:
         void to(std::uint32_t route_id, const void *params = nullptr)
         {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-            if (router_ != nullptr) {
-                router_->submit(blusys::route::set_root(route_id, params));
+            if (ctrl_ != nullptr) {
+                ctrl_->submit(blusys::route::set_root(route_id, params));
             }
 #else
             (void)route_id;
@@ -54,8 +53,8 @@ public:
         void push(std::uint32_t route_id, const void *params = nullptr)
         {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-            if (router_ != nullptr) {
-                router_->submit(blusys::route::push(route_id, params));
+            if (ctrl_ != nullptr) {
+                ctrl_->submit(blusys::route::push(route_id, params));
             }
 #else
             (void)route_id;
@@ -72,8 +71,8 @@ public:
         void replace(std::uint32_t route_id, const void *params = nullptr)
         {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-            if (router_ != nullptr) {
-                router_->submit(blusys::route::replace(route_id, params));
+            if (ctrl_ != nullptr) {
+                ctrl_->submit(blusys::route::replace(route_id, params));
             }
 #else
             (void)route_id;
@@ -90,8 +89,8 @@ public:
         void back()
         {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-            if (router_ != nullptr) {
-                router_->submit(blusys::route::pop());
+            if (ctrl_ != nullptr) {
+                ctrl_->submit(blusys::route::pop());
             }
 #endif
         }
@@ -99,8 +98,8 @@ public:
         void show_overlay(std::uint32_t overlay_id, const void *params = nullptr)
         {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-            if (router_ != nullptr) {
-                router_->submit(blusys::route::show_overlay(overlay_id, params));
+            if (ctrl_ != nullptr) {
+                ctrl_->submit(blusys::route::show_overlay(overlay_id, params));
             }
 #else
             (void)overlay_id;
@@ -117,8 +116,8 @@ public:
         void hide_overlay(std::uint32_t overlay_id)
         {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-            if (router_ != nullptr) {
-                router_->submit(blusys::route::hide_overlay(overlay_id));
+            if (ctrl_ != nullptr) {
+                ctrl_->submit(blusys::route::hide_overlay(overlay_id));
             }
 #else
             (void)overlay_id;
@@ -134,7 +133,7 @@ public:
         [[nodiscard]] std::size_t navigation_stack_depth() const
         {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-            return router_ != nullptr ? router_->stack_depth() : 0;
+            return ctrl_ != nullptr ? ctrl_->stack_depth() : 0;
 #else
             return 0;
 #endif
@@ -143,46 +142,105 @@ public:
         [[nodiscard]] bool can_navigate_back() const
         {
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-            return router_ != nullptr && router_->stack_depth() > 1;
+            return ctrl_ != nullptr && ctrl_->stack_depth() > 1;
 #else
             return false;
 #endif
         }
 
-        [[nodiscard]] ::blusys::screen_router *screen_router() const
-        {
+        // ---- registration API ----
+
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-            return router_;
-#else
-            return nullptr;
-#endif
+        bool register_screen(std::uint32_t              route_id,
+                             ::blusys::screen_create_fn  create,
+                             ::blusys::screen_destroy_fn destroy   = nullptr,
+                             const ::blusys::screen_lifecycle &lifecycle = {})
+        {
+            return ctrl_ != nullptr && ctrl_->register_screen(route_id, create, destroy, lifecycle);
         }
 
-        [[nodiscard]] ::blusys::overlay_manager *overlay_manager() const
+        template <typename RouteEnum, typename = std::enable_if_t<std::is_enum_v<RouteEnum>>>
+        bool register_screen(RouteEnum                   route,
+                             ::blusys::screen_create_fn  create,
+                             ::blusys::screen_destroy_fn destroy   = nullptr,
+                             const ::blusys::screen_lifecycle &lifecycle = {})
         {
-#ifdef BLUSYS_FRAMEWORK_HAS_UI
-            return router_ != nullptr ? &router_->overlays() : nullptr;
-#else
-            return nullptr;
-#endif
+            return register_screen(static_cast<std::uint32_t>(route), create, destroy, lifecycle);
         }
 
-        [[nodiscard]] ::blusys::shell *shell() const
+        bool register_screens(::blusys::app_ctx                    *ctx,
+                              const ::blusys::screen_registration  *rows,
+                              std::size_t                           count)
         {
-            return shell_;
+            return ctrl_ != nullptr && ctrl_->register_screens(ctx, rows, count);
         }
+
+        bool register_overlay(std::uint32_t id, lv_obj_t *overlay)
+        {
+            return ctrl_ != nullptr && ctrl_->register_overlay(id, overlay);
+        }
+
+        template <typename OverlayEnum, typename = std::enable_if_t<std::is_enum_v<OverlayEnum>>>
+        bool register_overlay(OverlayEnum id, lv_obj_t *overlay)
+        {
+            return register_overlay(static_cast<std::uint32_t>(id), overlay);
+        }
+
+        lv_obj_t *create_overlay(lv_obj_t *parent, std::uint32_t id,
+                                  const ::blusys::overlay_config &config)
+        {
+            return ctrl_ != nullptr ? ctrl_->create_overlay(parent, id, config) : nullptr;
+        }
+
+        template <typename OverlayEnum, typename = std::enable_if_t<std::is_enum_v<OverlayEnum>>>
+        lv_obj_t *create_overlay(lv_obj_t *parent, OverlayEnum id,
+                                  const ::blusys::overlay_config &config)
+        {
+            return create_overlay(parent, static_cast<std::uint32_t>(id), config);
+        }
+
+        void set_tab_items(const ::blusys::shell_tab_item *items, std::size_t count)
+        {
+            if (ctrl_ != nullptr) ctrl_->set_tab_items(items, count);
+        }
+
+        // ---- shell surface accessors ----
+
+        [[nodiscard]] bool has_shell() const
+        {
+            return ctrl_ != nullptr && ctrl_->has_shell();
+        }
+
+        [[nodiscard]] lv_obj_t *content_area() const
+        {
+            return ctrl_ != nullptr ? ctrl_->content_area() : nullptr;
+        }
+
+        [[nodiscard]] lv_obj_t *shell_root() const
+        {
+            return ctrl_ != nullptr ? ctrl_->shell_root() : nullptr;
+        }
+
+        [[nodiscard]] lv_obj_t *status_surface() const
+        {
+            return ctrl_ != nullptr ? ctrl_->status_surface() : nullptr;
+        }
+
+        void set_title(const char *title)
+        {
+            if (ctrl_ != nullptr) ctrl_->set_title(title);
+        }
+#endif  // BLUSYS_FRAMEWORK_HAS_UI
 
     private:
         friend class app_fx;
 
-        void bind(::blusys::screen_router *router, ::blusys::shell *shell) noexcept
+        void bind(::blusys::navigation_controller *ctrl) noexcept
         {
-            router_ = router;
-            shell_  = shell;
+            ctrl_ = ctrl;
         }
 
-        ::blusys::screen_router *router_ = nullptr;
-        ::blusys::shell         *shell_  = nullptr;
+        ::blusys::navigation_controller *ctrl_ = nullptr;
     };
 
     class storage_fx {
@@ -216,9 +274,9 @@ public:
 private:
     friend class app_runtime_base;
 
-    void bind_navigation(::blusys::screen_router *router, ::blusys::shell *shell) noexcept
+    void bind_navigation(::blusys::navigation_controller *ctrl) noexcept
     {
-        nav.bind(router, shell);
+        nav.bind(ctrl);
     }
 
     void bind_storage(storage_capability *storage_cap) noexcept

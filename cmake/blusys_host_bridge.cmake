@@ -122,6 +122,8 @@ set(_BLUSYS_HOST_BRIDGE_INTERACTIVE_SOURCES
     # UI — input
     ${BLUSYS_COMPONENT_DIR}/src/framework/ui/input/encoder.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/ui/input/focus_scope.cpp
+    # UI — controller
+    ${BLUSYS_COMPONENT_DIR}/src/framework/ui/controller/navigation_controller.cpp
     # UI — composition
     ${BLUSYS_COMPONENT_DIR}/src/framework/ui/composition/overlay_manager.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/ui/composition/page.cpp

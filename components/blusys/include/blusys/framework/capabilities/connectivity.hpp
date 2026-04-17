@@ -4,11 +4,18 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <atomic>
 
-#ifdef ESP_PLATFORM
-#include "blusys/framework/services/net.h"
-#endif
+// Forward declarations for device-side service handles.
+struct blusys_wifi;          typedef struct blusys_wifi          blusys_wifi_t;
+struct blusys_sntp;          typedef struct blusys_sntp          blusys_sntp_t;
+struct blusys_mdns;          typedef struct blusys_mdns          blusys_mdns_t;
+struct blusys_local_ctrl;    typedef struct blusys_local_ctrl    blusys_local_ctrl_t;
+struct blusys_wifi_prov;     typedef struct blusys_wifi_prov     blusys_wifi_prov_t;
+
+// Forward declarations for config types that use service-layer structs.
+struct blusys_local_ctrl_action_t;
+using blusys_local_ctrl_status_cb_t =
+    blusys_err_t (*)(char *json_buf, std::size_t json_buf_size, void *user_ctx);
 
 namespace blusys { class runtime; }
 
@@ -16,8 +23,6 @@ namespace blusys {
 
 // ---- shared types (always available) ----
 
-// Well-known integration event IDs posted by the connectivity capability.
-// Apps match on these inside `on_event()` to convert into app-specific actions.
 enum class connectivity_event : std::uint32_t {
     wifi_started              = 0x0100,
     wifi_connecting           = 0x0101,
@@ -39,18 +44,13 @@ enum class connectivity_event : std::uint32_t {
     capability_ready          = 0x01FF,
 };
 
-// IP info — mirrors the C struct on device, standalone on host.
-#ifdef ESP_PLATFORM
-using connectivity_ip_info = blusys_wifi_ip_info_t;
-#else
+// IP address info — uniform struct on both host and device.
 struct connectivity_ip_info {
     char ip[16]      = "192.168.1.100";
     char netmask[16] = "255.255.255.0";
     char gateway[16] = "192.168.1.1";
 };
-#endif
 
-// Current connectivity state, queryable via ctx.status_of<connectivity_capability>().
 struct connectivity_provisioning_status {
     bool is_provisioned       = false;
     bool service_running      = false;
@@ -63,8 +63,8 @@ struct connectivity_provisioning_status {
 
 struct connectivity_status : capability_status_base {
     bool wifi_connected     = false;
-    bool wifi_connecting    = false;  // initial association or reconnect in progress
-    bool wifi_reconnecting  = false;  // driver reported reconnecting after loss
+    bool wifi_connecting    = false;
+    bool wifi_reconnecting  = false;
     bool has_ip             = false;
     bool time_synced        = false;
     bool mdns_running       = false;
@@ -74,12 +74,8 @@ struct connectivity_status : capability_status_base {
     connectivity_provisioning_status provisioning{};
 };
 
-// ---- device implementation ----
+// ---- configuration ----
 
-#ifdef ESP_PLATFORM
-
-// Declarative connectivity configuration.
-// Each subsystem is optional — enabled when its key field is non-null.
 struct connectivity_config {
     // Wi-Fi (enabled when ssid != nullptr)
     const char *wifi_ssid          = nullptr;
@@ -100,29 +96,31 @@ struct connectivity_config {
     const char *mdns_instance_name = nullptr;
 
     // Local control (enabled when device_name != nullptr)
-    const char *local_ctrl_device_name           = nullptr;
-    std::uint16_t local_ctrl_port                = 80;
-    const blusys_local_ctrl_action_t *local_ctrl_actions = nullptr;
-    std::size_t local_ctrl_action_count          = 0;
-    blusys_local_ctrl_status_cb_t local_ctrl_status_cb = nullptr;
-    void *local_ctrl_user_ctx                    = nullptr;
+    const char                       *local_ctrl_device_name  = nullptr;
+    std::uint16_t                     local_ctrl_port         = 80;
+    const blusys_local_ctrl_action_t *local_ctrl_actions      = nullptr;
+    std::size_t                       local_ctrl_action_count = 0;
+    blusys_local_ctrl_status_cb_t     local_ctrl_status_cb    = nullptr;
+    void                             *local_ctrl_user_ctx     = nullptr;
 
-    // Provisioning / onboarding (enabled when service_name != nullptr).
-    // BLE transport shares the controller with bluetooth_capability (and other BLE
-    // consumers) via HAL `blusys_bt_stack` — mutually exclusive at runtime.
-    blusys_wifi_prov_transport_t prov_transport = BLUSYS_WIFI_PROV_TRANSPORT_BLE;
-    const char *prov_service_name = nullptr;
-    const char *prov_pop          = nullptr;
-    const char *prov_service_key  = nullptr;
-    bool prov_auto_start          = true;
-    bool prov_skip_if_provisioned = true;
+    // Provisioning (enabled when service_name != nullptr).
+    // transport: 0 = BLE, 1 = SoftAP (matches BLUSYS_WIFI_PROV_TRANSPORT_BLE/SOFTAP).
+    int         prov_transport          = 0;
+    const char *prov_service_name       = nullptr;
+    const char *prov_pop                = nullptr;
+    const char *prov_service_key        = nullptr;
+    bool        prov_auto_start         = true;
+    bool        prov_skip_if_provisioned = true;
 };
+
+// ---- capability class ----
 
 class connectivity_capability final : public capability_base {
 public:
     static constexpr capability_kind kind_value = capability_kind::connectivity;
 
     explicit connectivity_capability(const connectivity_config &cfg);
+    ~connectivity_capability() override;
 
     [[nodiscard]] capability_kind kind() const override { return capability_kind::connectivity; }
 
@@ -132,115 +130,26 @@ public:
 
     [[nodiscard]] const connectivity_status &status() const { return status_; }
 
-    // Explicitly trigger a reconnect attempt. Products call this from
-    // system/ in response to a reducer action.
     blusys_err_t request_reconnect();
 
 private:
-    static constexpr std::uint32_t kPendingNone         = 0;
-    static constexpr std::uint32_t kPendingConnected    = 1 << 0;
-    static constexpr std::uint32_t kPendingGotIp        = 1 << 1;
-    static constexpr std::uint32_t kPendingDisconnected = 1 << 2;
-    static constexpr std::uint32_t kPendingReconnecting = 1 << 3;
-    static constexpr std::uint32_t kPendingManualConnecting = 1 << 4;
-    static constexpr std::uint32_t kPendingDriverStarted    = 1 << 5;
-    static constexpr std::uint32_t kPendingDriverConnecting = 1 << 6;
-    static constexpr std::uint32_t kPendingProvStarted      = 1 << 7;
-    static constexpr std::uint32_t kPendingProvCredentials  = 1 << 8;
-    static constexpr std::uint32_t kPendingProvSuccess      = 1 << 9;
-    static constexpr std::uint32_t kPendingProvFailed       = 1 << 10;
-    static constexpr std::uint32_t kPendingProvAlreadyDone  = 1 << 11;
-    static constexpr std::uint32_t kPendingProvReset        = 1 << 12;
-
-    static void wifi_event_handler(blusys_wifi_t *wifi,
-                                   blusys_wifi_event_t event,
-                                   const blusys_wifi_event_info_t *info,
-                                   void *user_ctx);
-    static void prov_event_handler(blusys_wifi_prov_event_t event,
-                                   const blusys_wifi_prov_credentials_t *creds,
-                                   void *user_ctx);
-
+    // Device-side event handlers; int used for event type to avoid device enums in header.
+    static void wifi_event_handler(blusys_wifi_t *wifi, int event,
+                                   const void *info, void *user_ctx);
+    static void prov_event_handler(int event, const void *creds, void *user_ctx);
     void start_dependent_services(std::uint32_t now_ms);
-    void post_event(connectivity_event ev)
-    {
-        post_integration_event(static_cast<std::uint32_t>(ev));
-    }
     void check_capability_ready();
-
-    connectivity_config   cfg_;
-    connectivity_status   status_{};
-
-    blusys_wifi_t       *wifi_  = nullptr;
-    blusys_sntp_t       *sntp_  = nullptr;
-    blusys_mdns_t       *mdns_  = nullptr;
-    blusys_local_ctrl_t *ctrl_  = nullptr;
-    blusys_wifi_prov_t  *prov_  = nullptr;
-
-    std::atomic<std::uint32_t> pending_flags_{kPendingNone};
-    bool dependent_services_started_ = false;
-    std::uint32_t sntp_sync_started_ms_ = 0;
-    bool sntp_timeout_reported_ = false;
-};
-
-#else  // host stub
-
-// Host-side config — same shape, but fields are only used to decide
-// which simulated events to post.
-struct connectivity_config {
-    const char *wifi_ssid          = nullptr;
-    const char *wifi_password      = nullptr;
-    bool        auto_reconnect     = true;
-    int         reconnect_delay_ms = 1000;
-    int         max_retries        = -1;
-    int         connect_timeout_ms = 10000;
-
-    const char *sntp_server        = nullptr;
-    const char *sntp_server2       = nullptr;
-    bool        sntp_smooth_sync   = false;
-    int         sntp_timeout_ms    = 10000;
-
-    const char *mdns_hostname      = nullptr;
-    const char *mdns_instance_name = nullptr;
-
-    const char *local_ctrl_device_name = nullptr;
-    std::uint16_t local_ctrl_port      = 80;
-
-    int prov_transport                = 0;
-    const char *prov_service_name     = nullptr;
-    const char *prov_pop              = nullptr;
-    const char *prov_service_key      = nullptr;
-    bool prov_auto_start              = true;
-    bool prov_skip_if_provisioned     = true;
-};
-
-class connectivity_capability final : public capability_base {
-public:
-    static constexpr capability_kind kind_value = capability_kind::connectivity;
-
-    explicit connectivity_capability(const connectivity_config &cfg)
-        : cfg_(cfg) {}
-
-    [[nodiscard]] capability_kind kind() const override { return capability_kind::connectivity; }
-
-    blusys_err_t start(blusys::runtime &rt) override;
-    void poll(std::uint32_t now_ms) override;
-    void stop() override;
-
-    [[nodiscard]] const connectivity_status &status() const { return status_; }
-
-    blusys_err_t request_reconnect();
-
-private:
     void post_event(connectivity_event ev)
     {
         post_integration_event(static_cast<std::uint32_t>(ev));
     }
 
-    connectivity_config   cfg_;
-    connectivity_status   status_{};
+    struct impl;
+    impl *impl_ = nullptr;
+
+    connectivity_config cfg_;
+    connectivity_status status_{};
     bool first_poll_ = true;
 };
-
-#endif  // ESP_PLATFORM
 
 }  // namespace blusys

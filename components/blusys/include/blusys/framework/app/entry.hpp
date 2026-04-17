@@ -219,14 +219,9 @@ void run_device(const app_spec<State, Action> &spec,
     }
 
     // Input bridge (optional — only if profile declares an encoder).
+    // navigation_controller::on_transition handles focus refresh and chrome sync,
+    // so no callback override is needed here.
     input_bridge bridge{};
-    struct device_screen_changed_ctx {
-        app_runtime<State, Action> *runtime = nullptr;
-        bool                          has_shell = false;
-    } screen_cb_ctx{};
-    screen_cb_ctx.runtime   = &runtime;
-    screen_cb_ctx.has_shell = (spec.shell != nullptr);
-
     if (profile.has_encoder) {
         input_bridge_config bridge_cfg{};
         bridge_cfg.encoder_config = profile.encoder;
@@ -237,28 +232,6 @@ void run_device(const app_spec<State, Action> &spec,
                         "input bridge open failed: %d — continuing without encoder",
                         static_cast<int>(bridge_err));
             profile.has_encoder = false;
-        } else {
-            // Encoder indev is rebound by focus_scope_manager; refresh the
-            // walking group after each transition. When a shell is present,
-            // re-apply the same chrome updates as app_runtime::init (which
-            // this callback overrides).
-            runtime.screen_router().set_screen_changed_callback(
-                [](lv_obj_t * /*screen*/, void *ctx) {
-                    auto *p = static_cast<device_screen_changed_ctx *>(ctx);
-                    if (p == nullptr || p->runtime == nullptr) {
-                        return;
-                    }
-                    p->runtime->screen_router().focus_scopes().refresh_current();
-                    if (p->has_shell) {
-                        auto *sh = p->runtime->ctx().fx().nav.shell();
-                        if (sh != nullptr) {
-                            p->runtime->screen_router().sync_shell_chrome(*sh);
-                            shell_set_back_visible(
-                                *sh, p->runtime->screen_router().stack_depth() > 1);
-                        }
-                    }
-                },
-                &screen_cb_ctx);
         }
     }
 

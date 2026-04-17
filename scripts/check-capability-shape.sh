@@ -13,11 +13,7 @@
 
 set -euo pipefail
 
-BASELINE_MISSING_DEVICE_CPP=14   # P5 drives this to 0.
-                                  # Current debt: 12 *_device rename needs +
-                                  # 2 capabilities without a *_host.cpp
-                                  # (mqtt_host is host-only; telemetry is
-                                  # platform-agnostic so uses a single .cpp).
+BASELINE_MISSING_DEVICE_CPP=0    # P5 complete: all capabilities have *_device.cpp + *_host.cpp.
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
@@ -34,6 +30,8 @@ for hdr in "$cap_hdr_dir"/*.hpp; do
     case "$name" in
         capability|capabilities|event|event_table|list|inline|capability_base)
             continue;;  # shared infra, not a capability
+        mqtt_host|telemetry)
+            continue;;  # mqtt_host is host-only; telemetry is platform-agnostic (single .cpp)
     esac
 
     host_cpp="$cap_src_dir/${name}_host.cpp"

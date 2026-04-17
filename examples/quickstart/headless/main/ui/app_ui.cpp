@@ -98,15 +98,10 @@ void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state)
 
 #if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI) && \
     CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI
-    auto *router = ctx.fx().nav.screen_router();
-    if (router == nullptr) {
-        return;
-    }
-
     static const view::screen_registration kRoutes[] = {
         view::screen_row(route::status, &create_status, nullptr, nullptr, nullptr),
     };
-    router->register_screens(&ctx, kRoutes, sizeof(kRoutes) / sizeof(kRoutes[0]));
+    ctx.fx().nav.register_screens(&ctx, kRoutes, sizeof(kRoutes) / sizeof(kRoutes[0]));
     ctx.fx().nav.to(route::status);
 
     lv_timer_create(refresh_timer_cb, 400, &state);

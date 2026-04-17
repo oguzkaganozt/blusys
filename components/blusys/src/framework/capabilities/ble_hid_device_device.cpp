@@ -2,14 +2,36 @@
 #include "blusys/framework/engine/pending_events.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
+#include "blusys/services/connectivity/ble_hid_device.h"
+
+#include <atomic>
 
 static const char *TAG = "blusys_ble_hid";
 
 namespace blusys {
 
+namespace {
+
+constexpr std::uint32_t kPendingNone               = 0;
+constexpr std::uint32_t kPendingAdvertisingStarted = 1 << 0;
+constexpr std::uint32_t kPendingClientConnected    = 1 << 1;
+constexpr std::uint32_t kPendingClientDisconnected = 1 << 2;
+
+}  // namespace
+
+struct ble_hid_device_capability::impl {
+    blusys_ble_hid_device_t       *hid          = nullptr;
+    std::atomic<std::uint32_t>     pending_flags{kPendingNone};
+};
+
 ble_hid_device_capability::ble_hid_device_capability(const ble_hid_device_config &cfg)
-    : cfg_(cfg)
+    : cfg_(cfg), impl_(new impl{})
 {
+}
+
+ble_hid_device_capability::~ble_hid_device_capability()
+{
+    delete impl_;
 }
 
 blusys_err_t ble_hid_device_capability::start(blusys::runtime &rt)
@@ -30,7 +52,7 @@ blusys_err_t ble_hid_device_capability::start(blusys::runtime &rt)
     hid_cfg.conn_cb              = conn_handler;
     hid_cfg.conn_user_ctx        = this;
 
-    blusys_err_t err = blusys_ble_hid_device_open(&hid_cfg, &hid_);
+    blusys_err_t err = blusys_ble_hid_device_open(&hid_cfg, &impl_->hid);
     if (err != BLUSYS_OK) {
         if (err == BLUSYS_ERR_BUSY) {
             BLUSYS_LOGE(TAG,
@@ -44,14 +66,14 @@ blusys_err_t ble_hid_device_capability::start(blusys::runtime &rt)
     }
 
     status_.advertising = true;
-    pending_flags_.fetch_or(kPendingAdvertisingStarted, std::memory_order_release);
+    impl_->pending_flags.fetch_or(kPendingAdvertisingStarted, std::memory_order_release);
     return BLUSYS_OK;
 }
 
 void ble_hid_device_capability::poll(std::uint32_t /*now_ms*/)
 {
     const std::uint32_t flags =
-        detail::drain_pending_flags(pending_flags_, kPendingNone);
+        detail::drain_pending_flags(impl_->pending_flags, kPendingNone);
     if (flags == kPendingNone) {
         return;
     }
@@ -73,9 +95,9 @@ void ble_hid_device_capability::poll(std::uint32_t /*now_ms*/)
 
 void ble_hid_device_capability::stop()
 {
-    if (hid_ != nullptr) {
-        blusys_ble_hid_device_close(hid_);
-        hid_ = nullptr;
+    if (impl_->hid != nullptr) {
+        blusys_ble_hid_device_close(impl_->hid);
+        impl_->hid = nullptr;
     }
     status_ = {};
     rt_ = nullptr;
@@ -85,11 +107,11 @@ void ble_hid_device_capability::conn_handler(bool connected, void *user_ctx)
 {
     auto *self = static_cast<ble_hid_device_capability *>(user_ctx);
     if (connected) {
-        self->pending_flags_.fetch_or(kPendingClientConnected,
-                                      std::memory_order_release);
+        self->impl_->pending_flags.fetch_or(kPendingClientConnected,
+                                            std::memory_order_release);
     } else {
-        self->pending_flags_.fetch_or(kPendingClientDisconnected,
-                                      std::memory_order_release);
+        self->impl_->pending_flags.fetch_or(kPendingClientDisconnected,
+                                            std::memory_order_release);
     }
 }
 
@@ -107,29 +129,28 @@ void ble_hid_device_capability::check_capability_ready()
 
 blusys_err_t ble_hid_device_capability::send_consumer(std::uint16_t usage, bool pressed)
 {
-    if (hid_ == nullptr) {
+    if (impl_->hid == nullptr) {
         return BLUSYS_ERR_INVALID_STATE;
     }
-    return blusys_ble_hid_device_send_consumer(hid_, usage, pressed);
+    return blusys_ble_hid_device_send_consumer(impl_->hid, usage, pressed);
 }
 
 blusys_err_t ble_hid_device_capability::set_battery(std::uint8_t percent)
 {
-    if (hid_ == nullptr) {
+    if (impl_->hid == nullptr) {
         return BLUSYS_ERR_INVALID_STATE;
     }
-    return blusys_ble_hid_device_set_battery(hid_, percent);
+    return blusys_ble_hid_device_set_battery(impl_->hid, percent);
 }
 
 bool ble_hid_device_capability::is_connected() const
 {
-    return hid_ != nullptr && blusys_ble_hid_device_is_connected(hid_);
+    return impl_->hid != nullptr && blusys_ble_hid_device_is_connected(impl_->hid);
 }
 
 bool ble_hid_device_capability::is_ready() const
 {
-    return hid_ != nullptr && blusys_ble_hid_device_is_ready(hid_);
+    return impl_->hid != nullptr && blusys_ble_hid_device_is_ready(impl_->hid);
 }
 
 }  // namespace blusys
-

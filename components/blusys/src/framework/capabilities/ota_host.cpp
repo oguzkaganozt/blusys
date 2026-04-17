@@ -7,6 +7,18 @@ static const char *TAG = "blusys_ota";
 
 namespace blusys {
 
+struct ota_capability::impl {};
+
+ota_capability::ota_capability(const ota_config &cfg)
+    : cfg_(cfg), impl_(new impl{})
+{
+}
+
+ota_capability::~ota_capability()
+{
+    delete impl_;
+}
+
 blusys_err_t ota_capability::start(blusys::runtime &rt)
 {
     rt_ = &rt;
