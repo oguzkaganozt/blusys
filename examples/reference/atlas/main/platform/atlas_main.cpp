@@ -52,6 +52,14 @@ constexpr const char *kTag = "atlas_app";
 // ota_capability: device OTA download + flash. Atlas OTA announcements
 // feed into it via request_update(url) — no dedicated firmware_url in cfg.
 
+// Last-Will-and-Testament: broker publishes this (retained) if the session
+// drops ungracefully, so the dashboard flips to offline within the MQTT
+// keepalive window. The matching retained `"online":true` is republished
+// from atlas_capability::on_mqtt_connected() on every (re)connect.
+constexpr const char kAtlasLwtTopic[]   = "atlas/" ATLAS_DEVICE_ID "/up/state";
+constexpr const char kAtlasLwtPayload[] =
+    "{\"online\":false,\"firmwareVersion\":\"" CONFIG_ATLAS_FIRMWARE_VERSION "\"}";
+
 blusys::mqtt_config mqtt_cfg{
     .broker_url         = ATLAS_MQTT_BROKER,
     .client_id          = ATLAS_DEVICE_ID,
@@ -62,6 +70,11 @@ blusys::mqtt_config mqtt_cfg{
     .default_qos        = 1,
     .reconnect_min_ms   = 2000,
     .reconnect_max_ms   = 60000,
+    .will_topic         = kAtlasLwtTopic,
+    .will_payload       = kAtlasLwtPayload,
+    .will_payload_len   = sizeof(kAtlasLwtPayload) - 1,
+    .will_qos           = 1,
+    .will_retain        = true,
 };
 
 blusys::mqtt_capability mqtt{mqtt_cfg};

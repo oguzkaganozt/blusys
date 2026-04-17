@@ -53,6 +53,12 @@ public:
     blusys_err_t publish_heartbeat(const char *json, std::size_t len);
     blusys_err_t publish_event(const char *json, std::size_t len);
 
+    // Command result publish. `command_id` must be the value extracted
+    // from the incoming down/command payload. `error_message` is ignored
+    // on ack and included verbatim on fail (may be nullptr).
+    blusys_err_t publish_command_ack(const char *command_id);
+    blusys_err_t publish_command_fail(const char *command_id, const char *error_message);
+
 private:
     static void on_mqtt_message(const blusys::mqtt_message &msg, void *user_ctx);
     void        handle_mqtt_message(const blusys::mqtt_message &msg);

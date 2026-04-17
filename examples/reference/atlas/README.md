@@ -48,15 +48,17 @@ Reserved integration event IDs — posted by `atlas_capability` into the
 blusys runtime and delivered to the reducer via `app_spec::map_event`
 (as `capability_event_tag::integration_passthrough`):
 
-| ID       | Symbol                            | Meaning                               |
-|----------|-----------------------------------|---------------------------------------|
-| `0x0900` | `atlas_event::broker_connecting`  | TLS handshake starting                |
+| ID       | Symbol                            | Meaning                                |
+|----------|-----------------------------------|----------------------------------------|
 | `0x0901` | `atlas_event::broker_connected`   | CONNACK received, subscriptions active |
 | `0x0902` | `atlas_event::broker_disconnected`| Session lost — reconnect pending       |
-| `0x0903` | `atlas_event::broker_error`       | Connect attempt failed                |
-| `0x0910` | `atlas_event::command_received`   | `atlas/{id}/down/command`             |
-| `0x0911` | `atlas_event::state_desired`      | `atlas/{id}/down/state`               |
-| `0x0912` | `atlas_event::ota_announcement`   | `atlas/{id}/down/ota`                 |
+| `0x0910` | `atlas_event::command_received`   | `atlas/{id}/down/command`              |
+| `0x0911` | `atlas_event::state_desired`      | `atlas/{id}/down/state`                |
+| `0x0912` | `atlas_event::ota_announcement`   | `atlas/{id}/down/ota`                  |
+
+Connect-attempt failures surface via the canonical
+`capability_event_tag::mqtt_error` on the underlying `mqtt_capability` —
+the Atlas adapter does not re-emit them under a custom ID.
 
 IDs live inside the reserved **product-custom** band `0x0900–0x09FF`
 (see `blusys/framework/capabilities/capability.hpp`).
