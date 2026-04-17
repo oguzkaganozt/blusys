@@ -21,6 +21,8 @@ const char *blusys_err_domain_string(blusys_err_domain_t domain)
     case err_domain_hal_timer:          return "hal.timer";
     case err_domain_hal_uart:           return "hal.uart";
 
+    case err_domain_persistence:        return "persistence";
+
     case err_domain_count:              break;
     }
     return "?";

@@ -24,8 +24,9 @@ namespace {
 static const blusys::shell_config kShellConfig =
     blusys::auto_shell(blusys::auto_profile_interactive(), "Controller");
 
+static blusys::persistence_capability persistence{};
+
 static blusys::storage_capability storage{{
-    .init_nvs        = true,
     .spiffs_base_path = "/controller",
 }};
 
@@ -34,7 +35,7 @@ static blusys::connectivity_capability connectivity{{
     .prov_pop = "123456",
 }};
 
-static blusys::capability_list_storage capabilities{&storage, &connectivity};
+static blusys::capability_list_storage capabilities{&persistence, &storage, &connectivity};
 
 static blusys::flows::flow_base * const kFlows[] = {
     &ui::kSettingsFlow,

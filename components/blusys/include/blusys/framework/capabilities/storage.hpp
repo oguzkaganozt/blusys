@@ -31,8 +31,6 @@ struct storage_status : capability_status_base {
 // ---- configuration (platform-independent) ----
 
 struct storage_config {
-    bool init_nvs = false;
-
     const char *spiffs_base_path       = nullptr;
     const char *spiffs_partition_label  = nullptr;
     bool        spiffs_format_on_fail   = true;

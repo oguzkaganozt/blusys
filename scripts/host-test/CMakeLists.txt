@@ -56,6 +56,17 @@ target_compile_options(blusys_test_core PRIVATE
     -Wall -Wextra
 )
 
+# ── Persistence host stub (uses STL containers; compiled without -fno-exceptions) ──
+add_library(blusys_persistence_host STATIC
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/persistence_host.cpp
+)
+target_include_directories(blusys_persistence_host PUBLIC
+    ${BLUSYS_COMPONENT_DIR}/include
+    ${BLUSYS_REPO_ROOT}/scripts/host/include_host
+)
+target_link_libraries(blusys_persistence_host PUBLIC blusys_test_core)
+target_compile_options(blusys_persistence_host PRIVATE -Wall -Wextra)
+
 # ── Fake HAL backend (replaces real hal/gpio.c, hal/timer.c, hal/uart.c) ──
 add_library(blusys_fake_hal STATIC
     ${BLUSYS_COMPONENT_DIR}/src/framework/test/fake_hal/gpio.c
@@ -69,7 +80,7 @@ target_compile_options(blusys_fake_hal PRIVATE -Wall -Wextra)
 
 # ── p0c_smoke ───────────────────────────────────────────────────────────
 add_executable(p0c_smoke ${BLUSYS_REPO_ROOT}/scripts/host/src/p0c_smoke.cpp)
-target_link_libraries(p0c_smoke PRIVATE blusys_test_core blusys_fake_hal)
+target_link_libraries(p0c_smoke PRIVATE blusys_test_core blusys_persistence_host blusys_fake_hal)
 target_compile_options(p0c_smoke PRIVATE
     -fno-exceptions -fno-rtti -fno-threadsafe-statics
     -Wall -Wextra
@@ -78,7 +89,7 @@ add_test(NAME p0c_smoke COMMAND p0c_smoke)
 
 # ── session_helper_smoke (session state machine) ───────────────────────────
 add_executable(session_helper_smoke ${BLUSYS_REPO_ROOT}/scripts/host/src/session_helper_smoke.cpp)
-target_link_libraries(session_helper_smoke PRIVATE blusys_test_core)
+target_link_libraries(session_helper_smoke PRIVATE blusys_test_core blusys_persistence_host)
 target_compile_options(session_helper_smoke PRIVATE
     -fno-exceptions -fno-rtti -fno-threadsafe-statics
     -Wall -Wextra

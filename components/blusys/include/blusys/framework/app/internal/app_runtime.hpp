@@ -5,6 +5,7 @@
 
 #include "blusys/framework/app/ctx.hpp"
 #include "blusys/framework/app/spec.hpp"
+#include "blusys/framework/capabilities/persistence.hpp"
 #include "blusys/framework/flows/flow_base.hpp"
 #include "blusys/framework/capabilities/list.hpp"
 #include "blusys/framework/engine/internal/default_route_sink.hpp"
@@ -29,6 +30,7 @@
 namespace blusys {
 
 class storage_capability;
+class persistence_capability;
 
 // ---- non-template base: wires app_ctx internals ----
 
@@ -69,6 +71,11 @@ protected:
     static void bind_fx_storage(app_ctx &ctx, storage_capability *storage)
     {
         ctx.fx_.bind_storage(storage);
+    }
+
+    static void bind_fx_persistence(app_ctx &ctx, persistence_capability *persistence)
+    {
+        ctx.fx_.bind_persistence(persistence);
     }
 
     static void wire_route_sink(app_services &svc, blusys::route_sink *sink)
@@ -151,6 +158,7 @@ public:
 
         bind_capabilities(ctx_, spec_.capabilities);
         bind_fx_storage(ctx_, ctx_.get<storage_capability>());
+        bind_fx_persistence(ctx_, ctx_.get<persistence_capability>());
         start_capabilities();
         sync_services_storage(ctx_, services_);
         bind_product_state(ctx_, static_cast<void *>(&state_));
@@ -253,10 +261,24 @@ private:
         if (spec_.capabilities == nullptr) {
             return;
         }
+
+        // Persistence starts first: it owns NVS init and runs schema migrations
+        // for all other capabilities before they read their persisted state.
+        auto* persistence = ctx_.get<persistence_capability>();
+        if (persistence != nullptr) {
+            blusys_err_t err = persistence->start(framework_runtime_);
+            if (err != BLUSYS_OK) {
+                BLUSYS_LOGW("blusys_app", "persistence capability start failed: %d",
+                            static_cast<int>(err));
+            } else {
+                persistence->run_migrations(*spec_.capabilities);
+            }
+        }
+
         for (std::size_t i = 0; i < spec_.capabilities->count; ++i) {
             capability_base *c = spec_.capabilities->items[i];
-            if (c == nullptr) {
-                continue;
+            if (c == nullptr || c == persistence) {
+                continue;  // skip persistence (already started above)
             }
             blusys_err_t err = c->start(framework_runtime_);
             if (err != BLUSYS_OK) {
@@ -284,11 +306,16 @@ private:
         if (spec_.capabilities == nullptr) {
             return;
         }
+        // Stop in reverse order; persistence stops last (symmetrical with start).
+        auto* persistence = ctx_.get<persistence_capability>();
         for (std::size_t i = spec_.capabilities->count; i > 0; --i) {
             capability_base *c = spec_.capabilities->items[i - 1];
-            if (c != nullptr) {
+            if (c != nullptr && c != persistence) {
                 c->stop();
             }
+        }
+        if (persistence != nullptr) {
+            persistence->stop();
         }
     }
 

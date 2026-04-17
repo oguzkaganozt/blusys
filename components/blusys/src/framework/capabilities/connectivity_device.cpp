@@ -5,8 +5,6 @@
 #include "blusys/hal/log.h"
 #include "blusys/framework/services/net.h"
 
-#include "nvs_flash.h"
-
 #include <atomic>
 #include <cstring>
 
@@ -58,17 +56,6 @@ connectivity_capability::~connectivity_capability()
 blusys_err_t connectivity_capability::start(blusys::runtime &rt)
 {
     rt_ = &rt;
-
-    esp_err_t nvs_err = nvs_flash_init();
-    if (nvs_err == ESP_ERR_NVS_NO_FREE_PAGES ||
-        nvs_err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        nvs_flash_erase();
-        nvs_err = nvs_flash_init();
-    }
-    if (nvs_err != ESP_OK) {
-        BLUSYS_LOGE(TAG, "NVS init failed: %d", nvs_err);
-        return BLUSYS_ERR_INTERNAL;
-    }
 
     if (cfg_.wifi_ssid != nullptr) {
         blusys_wifi_sta_config_t wifi_cfg{};

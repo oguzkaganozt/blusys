@@ -47,6 +47,9 @@ typedef enum {
     err_domain_hal_timer,
     err_domain_hal_uart,
 
+    /* Persistence capability (P10). */
+    err_domain_persistence,
+
     err_domain_count,
 } blusys_err_domain_t;
 

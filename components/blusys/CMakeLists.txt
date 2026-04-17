@@ -129,6 +129,7 @@ set(blusys_sources
     src/framework/capabilities/lan_control_device.cpp
     src/framework/capabilities/mqtt_device.cpp
     src/framework/capabilities/ota_device.cpp
+    src/framework/capabilities/persistence_device.cpp
     src/framework/capabilities/provisioning_device.cpp
     src/framework/capabilities/storage_device.cpp
     src/framework/capabilities/telemetry.cpp

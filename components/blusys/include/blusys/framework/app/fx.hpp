@@ -1,6 +1,7 @@
 #pragma once
 
 #include "blusys/framework/capabilities/storage.hpp"
+#include "blusys/framework/capabilities/persistence.hpp"
 #include "blusys/framework/engine/router.hpp"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
@@ -268,8 +269,87 @@ public:
         storage_capability *storage_ = nullptr;
     };
 
+    // Typed settings surface backed by persistence_capability.
+    // Returns BLUSYS_ERR_INVALID_STATE if no persistence_capability is composed.
+    class settings_fx {
+    public:
+        [[nodiscard]] bool is_ready() const
+        {
+            return persistence_ != nullptr && persistence_->status().nvs_ready;
+        }
+
+        blusys_err_t get_u32(const char* key, std::uint32_t* out) const
+        {
+            return persistence_ != nullptr
+                ? persistence_->app_get_u32(key, out)
+                : BLUSYS_ERR_INVALID_STATE;
+        }
+
+        blusys_err_t set_u32(const char* key, std::uint32_t value)
+        {
+            return persistence_ != nullptr
+                ? persistence_->app_set_u32(key, value)
+                : BLUSYS_ERR_INVALID_STATE;
+        }
+
+        blusys_err_t get_i32(const char* key, std::int32_t* out) const
+        {
+            return persistence_ != nullptr
+                ? persistence_->app_get_i32(key, out)
+                : BLUSYS_ERR_INVALID_STATE;
+        }
+
+        blusys_err_t set_i32(const char* key, std::int32_t value)
+        {
+            return persistence_ != nullptr
+                ? persistence_->app_set_i32(key, value)
+                : BLUSYS_ERR_INVALID_STATE;
+        }
+
+        blusys_err_t get_str(const char* key, char* out, std::size_t* len) const
+        {
+            return persistence_ != nullptr
+                ? persistence_->app_get_str(key, out, len)
+                : BLUSYS_ERR_INVALID_STATE;
+        }
+
+        blusys_err_t set_str(const char* key, const char* value)
+        {
+            return persistence_ != nullptr
+                ? persistence_->app_set_str(key, value)
+                : BLUSYS_ERR_INVALID_STATE;
+        }
+
+        blusys_err_t get_blob(const char* key, void* out, std::size_t* len) const
+        {
+            return persistence_ != nullptr
+                ? persistence_->app_get_blob(key, out, len)
+                : BLUSYS_ERR_INVALID_STATE;
+        }
+
+        blusys_err_t set_blob(const char* key, const void* value, std::size_t len)
+        {
+            return persistence_ != nullptr
+                ? persistence_->app_set_blob(key, value, len)
+                : BLUSYS_ERR_INVALID_STATE;
+        }
+
+        blusys_err_t erase(const char* key)
+        {
+            return persistence_ != nullptr
+                ? persistence_->app_erase(key)
+                : BLUSYS_ERR_INVALID_STATE;
+        }
+
+    private:
+        friend class app_fx;
+        void bind(persistence_capability* p) noexcept { persistence_ = p; }
+        persistence_capability* persistence_ = nullptr;
+    };
+
     nav_fx nav;
     storage_fx storage;
+    settings_fx settings;
 
 private:
     friend class app_runtime_base;
@@ -282,6 +362,11 @@ private:
     void bind_storage(storage_capability *storage_cap) noexcept
     {
         storage.bind(storage_cap);
+    }
+
+    void bind_persistence(persistence_capability *persistence_cap) noexcept
+    {
+        settings.bind(persistence_cap);
     }
 };
 

@@ -9,6 +9,8 @@
 
 namespace blusys {
 
+class capability_persistence_schema;  // full type in capabilities/persistence.hpp
+
 // Integration event ID ranges (reserved, non-overlapping):
 //   connectivity   0x0100 – 0x01FF
 //   storage        0x0200 – 0x02FF
@@ -22,6 +24,7 @@ namespace blusys {
 //   lan_control    0x0A00 – 0x0AFF
 //   usb            0x0B00 – 0x0BFF
 //   ble_hid_device 0x0C00 – 0x0CFF
+//   persistence    0x0D00 – 0x0DFF
 
 enum class capability_kind : std::uint8_t {
     connectivity,
@@ -36,6 +39,7 @@ enum class capability_kind : std::uint8_t {
     lan_control,
     usb,
     ble_hid_device,
+    persistence,
     custom,
 };
 
@@ -86,6 +90,14 @@ public:
     // capability_kind kind_value` equal to what `kind()` returns.
     // `app_ctx::get<T>()` uses it to locate a capability by type without
     // a registry switch.
+
+    // Returns non-null if this capability implements capability_persistence_schema.
+    // Override and return `this` to opt into schema versioning and migration.
+    // Default: nullptr (no persistence schema).
+    [[nodiscard]] virtual capability_persistence_schema* as_persistence_schema() noexcept
+    {
+        return nullptr;
+    }
 
 protected:
     // Shared integration-event emit helper. Capabilities set `rt_` in start()

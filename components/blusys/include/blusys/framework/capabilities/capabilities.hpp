@@ -13,3 +13,4 @@
 #include "blusys/framework/capabilities/telemetry.hpp"
 #include "blusys/framework/capabilities/lan_control.hpp"
 #include "blusys/framework/capabilities/usb.hpp"
+#include "blusys/framework/capabilities/persistence.hpp"

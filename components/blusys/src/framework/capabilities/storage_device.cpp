@@ -4,8 +4,6 @@
 #include "blusys/hal/log.h"
 #include "blusys/framework/services/storage.h"
 
-#include "nvs_flash.h"
-
 static const char *TAG = "blusys_stor";
 
 namespace blusys {
@@ -31,19 +29,6 @@ blusys_fatfs_t *storage_capability::fatfs()  const { return impl_->fatfs;  }
 blusys_err_t storage_capability::start(blusys::runtime &rt)
 {
     rt_ = &rt;
-
-    if (cfg_.init_nvs) {
-        esp_err_t nvs_err = nvs_flash_init();
-        if (nvs_err == ESP_ERR_NVS_NO_FREE_PAGES ||
-            nvs_err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-            nvs_flash_erase();
-            nvs_err = nvs_flash_init();
-        }
-        if (nvs_err != ESP_OK) {
-            BLUSYS_LOGE(TAG, "NVS init failed: %d", nvs_err);
-            return BLUSYS_ERR_INTERNAL;
-        }
-    }
 
     // SPIFFS
     if (cfg_.spiffs_base_path != nullptr) {

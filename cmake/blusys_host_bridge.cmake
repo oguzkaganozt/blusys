@@ -88,6 +88,7 @@ set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/storage_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/bluetooth_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/ota_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/persistence_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/diagnostics_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/lan_control_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/provisioning_host.cpp
