@@ -180,6 +180,11 @@ function(blusys_host_bridge_add_library MODE)
 
     set(_sources ${_BLUSYS_HOST_BRIDGE_COMMON_SOURCES})
 
+    # Common host sources now include MQTT capability glue, so every host
+    # framework library needs libmosquitto on its link line.
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(MOSQUITTO REQUIRED IMPORTED_TARGET libmosquitto)
+
     if(MODE STREQUAL "interactive")
         list(APPEND _sources ${_BLUSYS_HOST_BRIDGE_INTERACTIVE_SOURCES})
     endif()
@@ -212,6 +217,8 @@ function(blusys_host_bridge_add_library MODE)
         target_link_libraries(${lib_name} PUBLIC PkgConfig::SDL2)
         target_compile_definitions(${lib_name} PUBLIC SDL_MAIN_HANDLED)
     endif()
+
+    target_link_libraries(${lib_name} PUBLIC PkgConfig::MOSQUITTO)
 endfunction()
 
 # ── Compile options shared by product host executables ──────────────────────
