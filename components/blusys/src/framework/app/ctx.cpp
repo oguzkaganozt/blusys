@@ -157,6 +157,8 @@ void app_ctx::bind_capability_pointers_from_list(app_ctx &ctx, capability_list *
         case capability_kind::mqtt:
             ctx.mqtt_ = static_cast<mqtt_capability *>(c);
             break;
+        case capability_kind::ble_hid_device:
+            break;
         case capability_kind::custom:
             break;
         }

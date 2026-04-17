@@ -80,6 +80,7 @@ set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_COMPONENT_DIR}/src/framework/app/ctx.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/app/services.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/capability_event_map.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/ble_hid_device_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/connectivity_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/storage_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/bluetooth_host.cpp

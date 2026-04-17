@@ -81,6 +81,7 @@ nav:
           - ESP-NOW: services/espnow.md
           - Bluetooth: services/bluetooth.md
           - BLE GATT: services/ble_gatt.md
+          - BLE HID Device: services/ble_hid_device.md
           - mDNS: services/mdns.md
       - Protocol:
           - HTTP: services/http.md

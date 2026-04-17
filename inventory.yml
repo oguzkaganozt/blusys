@@ -457,6 +457,16 @@ modules:
   doc: docs/services/ble_gatt.md
   examples:
   - wireless_bt_lab
+- name: ble_hid_device
+  tier: service
+  support: supported
+  targets:
+  - esp32
+  - esp32c3
+  - esp32s3
+  doc: docs/services/ble_hid_device.md
+  examples:
+  - bluetooth_controller
 - name: mdns
   tier: service
   support: supported
@@ -635,6 +645,20 @@ examples:
   - diagnostics
   - ota
   - storage
+  policies: []
+- name: bluetooth_controller
+  category: quickstart
+  visibility: public
+  tier: framework
+  targets:
+  - esp32
+  - esp32c3
+  - esp32s3
+  ci_pr: true
+  ci_nightly: true
+  interface: headless
+  capabilities:
+  - ble_hid_device
   policies: []
 - name: connected_device
   category: validation
@@ -885,6 +909,9 @@ docs:
   section: services
   visibility: public
 - path: docs/services/ble_gatt.md
+  section: services
+  visibility: public
+- path: docs/services/ble_hid_device.md
   section: services
   visibility: public
 - path: docs/services/mdns.md

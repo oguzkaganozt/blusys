@@ -1,0 +1,106 @@
+menu "Bluetooth Controller example"
+
+    config BTCTRL_DEVICE_NAME
+        string "BLE advertised name"
+        default "Blusys Controller"
+        help
+            Shown in OS Bluetooth pairing UI. Must be ≤29 characters.
+
+    config BTCTRL_ENCODER_CLK_GPIO
+        int "Encoder CLK (A) GPIO"
+        default 0
+        help
+            CLK/A pin of the EC11 rotary encoder. CW rotation emits Volume Up.
+
+    config BTCTRL_ENCODER_DT_GPIO
+        int "Encoder DT (B) GPIO"
+        default 1
+        help
+            DT/B pin of the EC11 rotary encoder. CCW rotation emits Volume Down.
+
+    config BTCTRL_ENCODER_SW_GPIO
+        int "Encoder switch (button) GPIO"
+        default 3
+        help
+            Push-button pin of the EC11. Press emits Mute/Unmute. -1 to disable.
+
+    config BTCTRL_STATUS_LED_GPIO
+        int "Status LED GPIO"
+        default -1
+        help
+            Drives a status LED. Off before advertising, blinks while
+            advertising, solid while a client is connected. -1 disables.
+
+    config BTCTRL_STATUS_LED_ACTIVE_LOW
+        bool "Status LED is active-low"
+        default n
+
+    config BTCTRL_ENCODER_LONG_PRESS_MS
+        int "Encoder button long-press threshold (ms)"
+        default 600
+        help
+            Hold time that triggers a long press, which cycles the operating
+            mode (volume → media → brightness → volume). Short press still
+            performs the context action (mute / play-pause).
+
+    config BTCTRL_BATTERY_ADC_GPIO
+        int "Battery voltage ADC GPIO (-1 to disable)"
+        default -1
+        help
+            GPIO connected to a resistor divider across the battery. Sampled
+            every 30 s and reported via the BLE Battery Service. -1 disables
+            battery reporting (defaults to 100 %).
+
+    config BTCTRL_BATTERY_MV_EMPTY
+        int "ADC pin voltage at 0 % battery (mV)"
+        default 1500
+        help
+            Expected ADC pin millivolts when the battery is fully discharged.
+            For a LiPo (3.0 V min) through a 1:1 divider this is 1500 mV.
+
+    config BTCTRL_BATTERY_MV_FULL
+        int "ADC pin voltage at 100 % battery (mV)"
+        default 2100
+        help
+            Expected ADC pin millivolts when the battery is fully charged.
+            For a LiPo (4.2 V max) through a 1:1 divider this is 2100 mV.
+
+    config BTCTRL_SLEEP_TIMEOUT_S
+        int "Deep-sleep inactivity timeout in seconds (0 = disabled)"
+        default 120
+        help
+            Seconds of encoder inactivity before the device enters deep sleep.
+            Any encoder rotation wakes it (CLK pin low edge). Set 0 to disable.
+
+    config BTCTRL_SIMULATE_ON_CONNECT
+        bool "Auto-simulate 3x Vol+ then 3x Vol- once paired"
+        default n
+        help
+            Useful when bringing the firmware up on a dev board without real
+            buttons wired. On every client connect, the device emits three
+            Volume Increment clicks followed by three Volume Decrement clicks.
+            Disable this once real buttons are attached.
+
+    config BTCTRL_DISPLAY_ENABLED
+        bool "Enable SSD1306 128x64 OLED display"
+        default y
+        help
+            Show BLE status, active mode, and volume level on a 128x64
+            SSD1306 connected via I2C. Requires lvgl/lvgl ~9.2 in
+            idf_component.yml.
+
+    config BTCTRL_DISPLAY_I2C_SDA_GPIO
+        int "Display I2C SDA GPIO"
+        default 8
+        depends on BTCTRL_DISPLAY_ENABLED
+        help
+            SDA pin for the SSD1306 I2C bus.
+
+    config BTCTRL_DISPLAY_I2C_SCL_GPIO
+        int "Display I2C SCL GPIO"
+        default 9
+        depends on BTCTRL_DISPLAY_ENABLED
+        help
+            SCL pin for the SSD1306 I2C bus.
+
+endmenu

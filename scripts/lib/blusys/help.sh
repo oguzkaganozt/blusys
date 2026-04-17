@@ -95,8 +95,15 @@ blusys_help_size() {
 }
 
 blusys_help_erase() {
-    printf 'Usage: blusys erase [project] [port] [esp32|esp32c3|esp32s3]\n'
+    printf 'Usage: blusys erase [port] [esp32|esp32c3|esp32s3]\n'
     printf '\nErase the entire flash of the connected device.\n'
+    printf 'No project directory is required — erase is a device-only operation.\n'
+    printf 'Port and target are both optional; port is auto-detected when only one\n'
+    printf 'USB serial device is connected.\n'
+    printf '\nExamples:\n'
+    printf '  blusys erase\n'
+    printf '  blusys erase esp32c3\n'
+    printf '  blusys erase /dev/ttyACM0 esp32c3\n'
 }
 
 blusys_help_menuconfig() {

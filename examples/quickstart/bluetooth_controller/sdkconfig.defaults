@@ -1,0 +1,41 @@
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+# CONFIG_ESPTOOLPY_FLASHSIZE_2MB is not set
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+# NimBLE — peripheral role only (HID-over-GATT).
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
+CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y
+# CONFIG_BT_NIMBLE_ROLE_CENTRAL is not set
+# CONFIG_BT_NIMBLE_ROLE_OBSERVER is not set
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_SM_SC=y
+# Bonds survive reboot. If the HID report map changes, hosts must re-pair
+# (forget + re-add the device) or they will reject the new descriptor.
+CONFIG_BT_NIMBLE_NVS_PERSIST=y
+CONFIG_BT_NIMBLE_MAX_BONDS=3
+CONFIG_BT_NIMBLE_MAX_CCCDS=4
+
+# Encoder pins — CLK and DT swapped to correct rotation direction.
+CONFIG_BTCTRL_ENCODER_CLK_GPIO=1
+CONFIG_BTCTRL_ENCODER_DT_GPIO=0
+
+# Turn on the auto-simulation hook by default so bench-up works without
+# buttons. Flip to `# CONFIG_BTCTRL_SIMULATE_ON_CONNECT is not set` once real
+# buttons are wired.
+# CONFIG_BTCTRL_SIMULATE_ON_CONNECT is not set
+CONFIG_BTCTRL_SLEEP_TIMEOUT_S=120
+
+# Status LED disabled — GPIO 8 is used for I2C SDA (SSD1306).
+CONFIG_BTCTRL_STATUS_LED_GPIO=-1
+
+# LVGL — required for SSD1306 display
+CONFIG_LV_OS_FREERTOS=y
+CONFIG_LV_COLOR_DEPTH_16=y
+CONFIG_LV_FONT_MONTSERRAT_20=y
+
+# Main task stack: default 3584 is too small once BLE + LVGL widget
+# construction run in the same task (run_headless uses app_main directly).
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288

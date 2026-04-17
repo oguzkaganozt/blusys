@@ -21,6 +21,7 @@ namespace blusys {
 //                  `app_spec::map_event` as `integration_passthrough` until mapped)
 //   lan_control    0x0A00 – 0x0AFF
 //   usb            0x0B00 – 0x0BFF
+//   ble_hid_device 0x0C00 – 0x0CFF
 
 enum class capability_kind : std::uint8_t {
     connectivity,
@@ -34,6 +35,7 @@ enum class capability_kind : std::uint8_t {
     mqtt,         // device — blusys_mqtt service (ESP-IDF)
     lan_control,
     usb,
+    ble_hid_device,
     custom,
 };
 

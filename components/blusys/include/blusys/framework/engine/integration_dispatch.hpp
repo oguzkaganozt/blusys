@@ -12,6 +12,7 @@
 // without memorizing hex ranges.
 
 #include "blusys/framework/capabilities/capability.hpp"
+#include "blusys/framework/capabilities/ble_hid_device.hpp"
 #include "blusys/framework/capabilities/bluetooth.hpp"
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/capabilities/diagnostics.hpp"
@@ -50,6 +51,8 @@ namespace blusys {
         return capability_kind::lan_control;
     case 0x0B:
         return capability_kind::usb;
+    case 0x0C:
+        return capability_kind::ble_hid_device;
     default:
         return std::nullopt;
     }
@@ -220,6 +223,24 @@ namespace blusys {
     case usb_event::host_attached:
     case usb_event::host_detached:
     case usb_event::capability_ready:
+        *out = e;
+        return true;
+    default:
+        return false;
+    }
+}
+
+[[nodiscard]] inline bool as_ble_hid_device_event(std::uint32_t id, ble_hid_device_event *out)
+{
+    if (out == nullptr) {
+        return false;
+    }
+    const auto e = static_cast<ble_hid_device_event>(id);
+    switch (e) {
+    case ble_hid_device_event::advertising_started:
+    case ble_hid_device_event::client_connected:
+    case ble_hid_device_event::client_disconnected:
+    case ble_hid_device_event::capability_ready:
         *out = e;
         return true;
     default:
