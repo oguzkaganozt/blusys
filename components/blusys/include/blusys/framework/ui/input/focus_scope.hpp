@@ -53,10 +53,13 @@ private:
         lv_group_t *group     = nullptr;
     };
 
-    void bind_group_to_encoders(lv_group_t *group);
-
     blusys::static_vector<scope_entry, kMaxScopes> stack_{};
 };
+
+// Attach `group` to every LV_INDEV_TYPE_ENCODER input device currently
+// registered with LVGL.  Used by both `focus_scope_manager` and the
+// screen registry's fallback encoder path.
+void bind_group_to_encoders(lv_group_t *group);
 
 }  // namespace blusys
 

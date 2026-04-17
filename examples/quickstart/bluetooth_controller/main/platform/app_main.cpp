@@ -208,15 +208,8 @@ void led_set(bool on) { s_led.set(on); }
 
 void on_encoder_event(blusys_examples::encoder_event ev)
 {
-    using E = blusys_examples::encoder_event;
-    using I = bluetooth_controller::intent;
-    switch (ev) {
-    case E::cw:         dispatch_button(I::turn_cw);           break;
-    case E::ccw:        dispatch_button(I::turn_ccw);          break;
-    case E::press:      dispatch_button(I::button_press);      break;
-    case E::release:    dispatch_button(I::button_release);    break;
-    case E::long_press: dispatch_button(I::button_long_press); break;
-    }
+    dispatch_button(
+        blusys_examples::map_encoder_intent<bluetooth_controller::intent>(ev));
 }
 
 // Deep sleep ──────────────────────────────────────────────────────────────────
@@ -412,12 +405,12 @@ void on_init_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
     s_led.init({.pin = kStatusLedPin, .active_low = kStatusLedActiveLow});
     s_battery.init({.adc_pin  = kBatteryAdcPin,
                     .mv_empty = kBatteryMvEmpty,
-                    .mv_full  = kBatteryMvFull}, kTag);
+                    .mv_full  = kBatteryMvFull});
     s_encoder.open({.clk_pin       = kEncoderClkPin,
                     .dt_pin        = kEncoderDtPin,
                     .sw_pin        = kEncoderSwPin,
                     .long_press_ms = CONFIG_BTCTRL_ENCODER_LONG_PRESS_MS},
-                   on_encoder_event, kTag);
+                   on_encoder_event);
     BLUSYS_LOGI(kTag,
                 "bluetooth controller up — "
                 "encoder: clk=%d dt=%d sw=%d  long_press=%dms  "

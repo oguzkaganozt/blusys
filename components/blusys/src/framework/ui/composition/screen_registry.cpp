@@ -232,13 +232,7 @@ void screen_registry::finalize_load(lv_obj_t *screen, lv_group_t *group,
         focus_scope_->reset();
         focus_scope_->push_scope(screen);
     } else if (group != nullptr) {
-        lv_indev_t *indev = lv_indev_get_next(nullptr);
-        while (indev != nullptr) {
-            if (lv_indev_get_type(indev) == LV_INDEV_TYPE_ENCODER) {
-                lv_indev_set_group(indev, group);
-            }
-            indev = lv_indev_get_next(indev);
-        }
+        bind_group_to_encoders(group);
     }
 
     for (const auto &callback : screen_changed_callbacks_) {

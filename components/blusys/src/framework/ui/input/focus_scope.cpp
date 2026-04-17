@@ -82,7 +82,7 @@ void focus_scope_manager::reset()
     }
 }
 
-void focus_scope_manager::bind_group_to_encoders(lv_group_t *group)
+void bind_group_to_encoders(lv_group_t *group)
 {
     lv_indev_t *indev = lv_indev_get_next(nullptr);
     while (indev != nullptr) {

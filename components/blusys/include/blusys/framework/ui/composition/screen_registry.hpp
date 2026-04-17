@@ -116,8 +116,6 @@ private:
     void destroy_active();
     void fire_hide_hooks();
     void fire_show_hooks(lv_obj_t *screen, const screen_lifecycle &lifecycle);
-    // Post-load tail shared by the shell and non-shell paths: focus scope /
-    // encoder indev rebind, screen-changed callbacks, on_show/on_focus_gained.
     void finalize_load(lv_obj_t *screen, lv_group_t *group,
                        const screen_lifecycle &lifecycle);
 
