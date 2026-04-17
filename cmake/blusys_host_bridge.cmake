@@ -89,6 +89,7 @@ set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/lan_control_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/provisioning_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/usb_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/mqtt_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/telemetry.cpp
 )
 

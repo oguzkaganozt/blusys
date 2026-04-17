@@ -447,6 +447,7 @@ modules:
   doc: docs/services/bluetooth.md
   examples:
   - wireless_bt_lab
+  - bt_classic_controller
 - name: ble_gatt
   tier: service
   support: supported
@@ -645,6 +646,17 @@ examples:
   - diagnostics
   - ota
   - storage
+  policies: []
+- name: bt_classic_controller
+  category: quickstart
+  visibility: public
+  tier: framework
+  targets:
+  - esp32
+  ci_pr: true
+  ci_nightly: true
+  interface: handheld
+  capabilities: []
   policies: []
 - name: bluetooth_controller
   category: quickstart
