@@ -307,7 +307,7 @@ void enter_deep_sleep()
                 "inactivity timeout — entering deep sleep "
                 "(wake: CLK GPIO %d, SW GPIO %d)",
                 kEncoderClkPin, kEncoderSwPin);
-    esp_deep_sleep_enable_gpio_wakeup(wake_mask, ESP_GPIO_WAKEUP_GPIO_LOW);
+    esp_sleep_enable_gpio_wakeup(wake_mask, ESP_EXT1_WAKEUP_ALL_LOW);
     blusys_sleep_enter_deep();
 }
 
