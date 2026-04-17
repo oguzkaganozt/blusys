@@ -41,7 +41,10 @@ void overlay_manager::submit(const blusys::route_command &command)
     } else {
         blusys::overlay_hide(w);
         if (focus_scope_ != nullptr) {
-            focus_scope_->pop_scope();
+            if (!focus_scope_->remove_scope(w)) {
+                BLUSYS_LOGW(kTag, "hide_overlay: scope not found for id=%lu",
+                            static_cast<unsigned long>(command.id));
+            }
         }
     }
 }

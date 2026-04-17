@@ -50,6 +50,38 @@ void focus_scope_manager::pop_scope()
     }
 }
 
+bool focus_scope_manager::remove_scope(lv_obj_t *container)
+{
+    if (container == nullptr || stack_.empty()) {
+        return false;
+    }
+
+    std::size_t idx = stack_.size();
+    for (std::size_t i = 0; i < stack_.size(); ++i) {
+        if (stack_[i].container == container) {
+            idx = i;
+            break;
+        }
+    }
+    if (idx == stack_.size()) {
+        return false;
+    }
+
+    if (stack_[idx].group != nullptr) {
+        lv_group_delete(stack_[idx].group);
+    }
+
+    for (std::size_t i = idx + 1; i < stack_.size(); ++i) {
+        stack_[i - 1] = stack_[i];
+    }
+    stack_.pop_back();
+
+    if (!stack_.empty()) {
+        bind_group_to_encoders(stack_[stack_.size() - 1].group);
+    }
+    return true;
+}
+
 void focus_scope_manager::refresh_current()
 {
     if (stack_.empty()) {

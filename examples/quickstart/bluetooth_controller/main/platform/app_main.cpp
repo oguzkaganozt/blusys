@@ -213,26 +213,21 @@ void on_encoder_event(blusys_examples::encoder_event ev)
 }
 
 // Deep sleep ──────────────────────────────────────────────────────────────────
-// ESP32 / ESP32-S3 use ext1 wakeup (GPIO-wakeup-from-deepsleep is only
-// available on RISC-V targets — SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP).  Both
-// targets accept the encoder's CLK/SW pins as ext1 sources when they're
-// RTC-capable.
+// Wake on the encoder's CLK low edge only.
+// SW is excluded because the button sits high while idle.
 void enter_deep_sleep()
 {
-    std::uint64_t wake_mask = 0;
-    if (kEncoderClkPin >= 0) wake_mask |= (1ULL << kEncoderClkPin);
-    if (kEncoderSwPin  >= 0) wake_mask |= (1ULL << kEncoderSwPin);
-
-    if (wake_mask == 0) {
-        BLUSYS_LOGW(kTag, "deep sleep skipped — no valid wake pins configured");
+    if (kEncoderClkPin < 0) {
+        BLUSYS_LOGW(kTag, "deep sleep skipped — no valid wake pin configured");
         return;
     }
 
+    std::uint64_t wake_mask = (1ULL << kEncoderClkPin);
+
     BLUSYS_LOGI(kTag,
-                "inactivity timeout — entering deep sleep "
-                "(wake: CLK GPIO %d, SW GPIO %d, ALL_LOW)",
-                kEncoderClkPin, kEncoderSwPin);
-    esp_sleep_enable_ext1_wakeup(wake_mask, ESP_EXT1_WAKEUP_ALL_LOW);
+                "inactivity timeout — entering deep sleep (wake: CLK GPIO %d low)",
+                kEncoderClkPin);
+    esp_deep_sleep_enable_gpio_wakeup(wake_mask, ESP_GPIO_WAKEUP_GPIO_LOW);
     blusys_sleep_enter_deep();
 }
 

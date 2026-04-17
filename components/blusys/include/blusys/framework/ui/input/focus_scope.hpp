@@ -34,6 +34,10 @@ public:
     // scope's group to all encoder indevs.
     void pop_scope();
 
+    // Remove a specific scope by container.
+    // Useful when an overlay is hidden out of LIFO order.
+    bool remove_scope(lv_obj_t *container);
+
     // Re-walk the current scope's container and rebuild its focus group.
     // Call after adding or removing widgets dynamically.
     void refresh_current();
