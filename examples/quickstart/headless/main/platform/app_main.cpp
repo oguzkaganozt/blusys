@@ -29,6 +29,7 @@
 #if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM) && \
     defined(CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI) && CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI
 #include "blusys/framework/ui/style/presets.hpp"
+#include "blusys/framework/platform/profiles/ssd1306.hpp"
 #endif
 
 namespace headless_telemetry::system {
@@ -192,6 +193,11 @@ void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_fx &fx, app_state &state, st
 
 // ---- app spec ----
 
+#if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM) && \
+    defined(CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI) && CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI
+static const blusys::device_profile kLocalUiProfile = blusys::platform::ssd1306_128x64();
+#endif
+
 const blusys::app_spec<app_state, action> spec{
     .initial_state  = {},
     .update         = update,
@@ -208,6 +214,7 @@ const blusys::app_spec<app_state, action> spec{
 #if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI) && \
     CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI
     .theme          = &blusys::presets::oled(),
+    .profile        = &kLocalUiProfile,
 #endif
 #endif
 };
@@ -218,9 +225,7 @@ const blusys::app_spec<app_state, action> spec{
 
 #if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI) && \
     CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI && defined(BLUSYS_FRAMEWORK_HAS_UI)
-#include "blusys/framework/platform/profiles/ssd1306.hpp"
-BLUSYS_APP_MAIN_DEVICE(headless_telemetry::system::spec,
-                       blusys::platform::ssd1306_128x64())
+BLUSYS_APP(headless_telemetry::system::spec)
 #else
-BLUSYS_APP_MAIN_HEADLESS(headless_telemetry::system::spec)
+BLUSYS_APP_HEADLESS(headless_telemetry::system::spec)
 #endif

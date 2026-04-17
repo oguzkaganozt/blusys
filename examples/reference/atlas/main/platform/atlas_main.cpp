@@ -215,4 +215,4 @@ const blusys::app_spec<app_state, action> spec{
 
 }  // namespace atlas_example::system
 
-BLUSYS_APP_MAIN_HEADLESS(atlas_example::system::spec)
+BLUSYS_APP_HEADLESS(atlas_example::system::spec)

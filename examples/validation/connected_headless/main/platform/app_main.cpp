@@ -52,4 +52,4 @@ static const blusys::app_spec<connected_headless::State, connected_headless::Act
 
 }  // namespace
 
-BLUSYS_APP_MAIN_HEADLESS(spec)
+BLUSYS_APP_HEADLESS(spec)

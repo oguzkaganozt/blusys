@@ -2,29 +2,20 @@
 
 // Entry macros for blusys::app products.
 //
-// These macros define the program entry point and run the app runtime
-// loop. Product code should use exactly one of these macros at file
-// scope, passing in the app_spec to run.
+// These macros define the program entry point and run the app runtime loop.
+// Product code uses exactly ONE macro at file scope, passing the app_spec.
 //
-// The macros hide:
-//   - main() / app_main() definition
-//   - LVGL init and display setup (interactive path)
-//   - LCD and UI service bring-up (device path)
-//   - encoder input wiring (device path)
-//   - theme selection and application
-//   - runtime construction and main loop
+// Available macros:
+//   BLUSYS_APP(spec)          — interactive product (host SDL or device LCD+input).
+//                               On ESP_PLATFORM: uses spec.profile or auto_profile_interactive().
+//                               On host: uses spec.profile lcd size or 480x320, spec.host_title.
+//                               When BLUSYS_FRAMEWORK_HAS_UI is off: behaves as BLUSYS_APP_HEADLESS.
+//   BLUSYS_APP_HEADLESS(spec) — no UI, no LVGL; runs the headless runtime loop.
 //
-// Available entry macros:
-//   BLUSYS_APP(spec)                            — default interactive product when UI is
-//                                                  enabled; headless when BLUSYS_FRAMEWORK_HAS_UI
-//                                                  is off (e.g. headless without LVGL)
-//   BLUSYS_APP_INTERACTIVE(spec)                — handheld profile (ST7735/ST7789)
-//   BLUSYS_APP_DASHBOARD(spec, host_title)      — gateway/panel/dashboard SPI profile + SDL title
-//   BLUSYS_APP_MAIN_HOST(spec)                  — interactive, SDL2 host
-//   BLUSYS_APP_MAIN_HOST_PROFILE(spec, profile) — interactive host + explicit window size/title
-//   BLUSYS_APP_MAIN_HEADLESS(spec)              — no UI, terminal
-//   BLUSYS_APP_MAIN_HEADLESS_PROFILE(spec, hl)  — headless + headless_profile
-//   BLUSYS_APP_MAIN_DEVICE(spec, profile)       — device target with LCD + optional encoder
+// Platform and display selection live in spec, not in macro names:
+//   .profile    = &blusys::platform::st7735_160x128()  ← pin display profile
+//   .host_title = "My Dashboard"                        ← SDL window title
+//   .flows      = {&kSettingsFlow}                      ← spec-selectable flows
 
 #include "blusys/framework/app/internal/app_runtime.hpp"
 #include "blusys/framework/platform/host.hpp"
@@ -32,8 +23,7 @@
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
 
-// Device-specific headers — only available in the IDF component build
-// (the host harness does not have blusys_services on its include path).
+// Device-specific headers — only available in the IDF component build.
 #if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM)
 #include "blusys/framework/platform/profile.hpp"
 #include "blusys/framework/platform/input_bridge.hpp"
@@ -44,6 +34,7 @@
 #endif
 
 #if defined(BLUSYS_FRAMEWORK_HAS_UI) && !defined(ESP_PLATFORM)
+#include "blusys/framework/platform/profile.hpp"
 #include "blusys/framework/platform/touch_bridge.hpp"
 #endif
 
@@ -56,17 +47,12 @@
 #include <cstdio>
 
 // ---- platform function declarations (resolved at link time) ----
-//
-// These are defined in platform-specific .cpp files (e.g. app_host_platform.cpp).
-// They use C++ linkage in a flat namespace to avoid mangling issues.
 
 namespace blusys::platform {
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-// Host platform (SDL2)
 void host_init(int w, int h, const char *title);
 void host_set_runtime(blusys::runtime *rt);
-// First LVGL POINTER indev (SDL mouse on host), or nullptr.
 void *host_find_pointer_indev();
 std::uint32_t host_get_ticks_ms();
 void host_tick_inc(std::uint32_t ms);
@@ -75,7 +61,6 @@ void host_frame_delay(std::uint32_t ms);
 void host_set_theme(const void *tokens);
 
 #ifdef ESP_PLATFORM
-// Device platform (ESP-IDF)
 blusys_err_t device_init(blusys::device_profile &profile,
                          blusys_lcd_t **lcd_out,
                          blusys_display_t **ui_out);
@@ -98,7 +83,7 @@ namespace blusys::detail {
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
-// identity->theme takes precedence over spec.theme (see app_spec.hpp).
+// identity->theme takes precedence over spec.theme.
 template <typename State, typename Action>
 const blusys::theme_tokens *resolve_theme_tokens(const app_spec<State, Action> &spec)
 {
@@ -111,11 +96,17 @@ const blusys::theme_tokens *resolve_theme_tokens(const app_spec<State, Action> &
 // ---- host interactive entry (SDL2 + LVGL) ----
 
 template <typename State, typename Action>
-void run_host(const app_spec<State, Action> &spec,
-              int hor_res = 480,
-              int ver_res = 320,
-              const char *title = "Blusys App")
+void run_host(const app_spec<State, Action> &spec)
 {
+    // Window size: from spec.profile if set, else default 480x320.
+    int hor_res = 480;
+    int ver_res = 320;
+    if (spec.profile != nullptr && spec.profile->lcd.width > 0) {
+        hor_res = static_cast<int>(spec.profile->lcd.width);
+        ver_res = static_cast<int>(spec.profile->lcd.height);
+    }
+    const char *title = (spec.host_title != nullptr) ? spec.host_title : "Blusys App";
+
     platform::host_init(hor_res, ver_res, title);
 
     const blusys::theme_tokens *resolved_theme = resolve_theme_tokens(spec);
@@ -138,12 +129,8 @@ void run_host(const app_spec<State, Action> &spec,
         return;
     }
 
-    // Bind framework runtime to host encoder so it posts intents
-    // (increment, decrement, confirm, long_press, release) matching
-    // the device input_bridge behavior.
     platform::host_set_runtime(&runtime.framework_runtime());
 
-    // Pointer indev (SDL mouse): semantic tap / swipe intents for parity with device touch.
     blusys::touch_bridge host_touch{};
     {
         auto *ptr = static_cast<lv_indev_t *>(platform::host_find_pointer_indev());
@@ -177,9 +164,13 @@ void run_host(const app_spec<State, Action> &spec,
 #ifdef ESP_PLATFORM
 
 template <typename State, typename Action>
-void run_device(const app_spec<State, Action> &spec,
-                device_profile profile)
+void run_device(const app_spec<State, Action> &spec)
 {
+    // Profile: use spec.profile if set, otherwise fall back to auto_profile_interactive().
+    device_profile profile = (spec.profile != nullptr)
+                             ? *spec.profile
+                             : blusys::auto_profile_interactive();
+
     blusys_lcd_t *lcd = nullptr;
     blusys_display_t  *ui  = nullptr;
 
@@ -189,9 +180,6 @@ void run_device(const app_spec<State, Action> &spec,
         return;
     }
 
-    // LVGL 9: all API (theme, widget tree, indev) must run under the same lock
-    // as lv_timer_handler() in the render task — otherwise concurrent access can
-    // trip lv_inv_area assertions and wedge the main task.
     platform::device_ui_lock(ui);
     blusys_display_invalidation_begin(ui);
 
@@ -218,9 +206,6 @@ void run_device(const app_spec<State, Action> &spec,
         return;
     }
 
-    // Input bridge (optional — only if profile declares an encoder).
-    // navigation_controller::on_transition handles focus refresh and chrome sync,
-    // so no callback override is needed here.
     input_bridge bridge{};
     if (profile.has_encoder) {
         input_bridge_config bridge_cfg{};
@@ -235,7 +220,6 @@ void run_device(const app_spec<State, Action> &spec,
         }
     }
 
-    // Touch / pointer bridge (optional — uses first LVGL POINTER indev).
     blusys::touch_bridge touch{};
     if (profile.has_touch) {
         auto *ptr = static_cast<lv_indev_t *>(platform::device_find_pointer_indev());
@@ -252,7 +236,6 @@ void run_device(const app_spec<State, Action> &spec,
     blusys_display_invalidation_end(ui);
     platform::device_ui_unlock(ui);
 
-    // Button array bridge (optional — only if profile declares buttons).
     button_array_bridge btn_bridge{};
     if (profile.button_count > 0 && profile.buttons != nullptr) {
         button_array_config btn_cfg{};
@@ -305,7 +288,6 @@ template <typename State, typename Action>
 void run_headless(const app_spec<State, Action> &spec,
                   const platform::headless_profile &profile = platform::headless_default())
 {
-    // Ensure log output is visible even when piped (stdout may be fully buffered).
     std::setvbuf(stdout, nullptr, _IOLBF, 0);
 
     app_runtime<State, Action> runtime(spec);
@@ -336,110 +318,49 @@ void run_headless(const app_spec<State, Action> &spec,
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
-#define BLUSYS_APP_MAIN_HOST(spec_expr)                                     \
-    int main(void) {                                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        ::blusys::detail::run_host(_blusys_spec);                      \
-        return 0;                                                           \
-    }
-
-// Like BLUSYS_APP_MAIN_HOST but reads window size and title from a
-// blusys::host_profile struct. Useful for product profiles that
-// have a fixed display size (e.g. 128×32 OLED, 320×240 TFT).
-#define BLUSYS_APP_MAIN_HOST_PROFILE(spec_expr, profile_expr)               \
-    int main(void) {                                                        \
-        auto _blusys_spec    = (spec_expr);                                 \
-        auto _blusys_profile = (profile_expr);                              \
-        ::blusys::detail::run_host(_blusys_spec,                       \
-                                        _blusys_profile.hor_res,            \
-                                        _blusys_profile.ver_res,            \
-                                        _blusys_profile.title);             \
-        return 0;                                                           \
-    }
-
 #ifdef ESP_PLATFORM
-#define BLUSYS_APP_MAIN_DEVICE(spec_expr, profile_expr)                     \
-    extern "C" void app_main(void) {                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        auto _blusys_profile = (profile_expr);                              \
-        ::blusys::detail::run_device(_blusys_spec, _blusys_profile);   \
+
+#define BLUSYS_APP(spec_expr)                                           \
+    extern "C" void app_main(void) {                                    \
+        auto _blusys_spec = (spec_expr);                                \
+        ::blusys::detail::run_device(_blusys_spec);                     \
     }
 
-#define BLUSYS_APP_INTERACTIVE(spec_expr)                                   \
-    extern "C" void app_main(void) {                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        ::blusys::detail::run_device(_blusys_spec,                     \
-                                          ::blusys::auto_profile_interactive()); \
+#else  // host
+
+#define BLUSYS_APP(spec_expr)                                           \
+    int main(void) {                                                    \
+        auto _blusys_spec = (spec_expr);                                \
+        ::blusys::detail::run_host(_blusys_spec);                       \
+        return 0;                                                       \
     }
 
-#define BLUSYS_APP_DASHBOARD(spec_expr, host_title_literal)                 \
-    extern "C" void app_main(void) {                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        (void)(host_title_literal);                                         \
-        ::blusys::detail::run_device(_blusys_spec,                     \
-                                          ::blusys::auto_profile_dashboard()); \
-    }
-#else
-#define BLUSYS_APP_INTERACTIVE(spec_expr)                                   \
-    int main(void) {                                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        const auto _hp = ::blusys::auto_host_profile_interactive();    \
-        ::blusys::detail::run_host(_blusys_spec,                       \
-                                        _hp.hor_res,                        \
-                                        _hp.ver_res,                        \
-                                        _hp.title);                         \
-        return 0;                                                           \
-    }
-
-#define BLUSYS_APP_DASHBOARD(spec_expr, host_title_literal)                 \
-    int main(void) {                                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        const auto _hp = ::blusys::auto_host_profile_dashboard(        \
-            (host_title_literal));                                          \
-        ::blusys::detail::run_host(_blusys_spec,                       \
-                                        _hp.hor_res,                        \
-                                        _hp.ver_res,                        \
-                                        _hp.title);                         \
-        return 0;                                                           \
-    }
 #endif  // ESP_PLATFORM
 
-#define BLUSYS_APP(spec_expr) BLUSYS_APP_INTERACTIVE(spec_expr)
+#else  // !BLUSYS_FRAMEWORK_HAS_UI — BLUSYS_APP falls through to headless
+
+#define BLUSYS_APP(spec_expr) BLUSYS_APP_HEADLESS(spec_expr)
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
 
-#if !defined(BLUSYS_FRAMEWORK_HAS_UI)
-#define BLUSYS_APP(spec_expr) BLUSYS_APP_MAIN_HEADLESS(spec_expr)
-#endif
+// BLUSYS_APP_HEADLESS — no UI, no LVGL. Link-time decision: headless apps
+// genuinely don't link LVGL, so this cannot collapse into BLUSYS_APP.
 
 #if defined(ESP_PLATFORM)
-#define BLUSYS_APP_MAIN_HEADLESS(spec_expr)                                 \
-    extern "C" void app_main(void) {                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        ::blusys::detail::run_headless(_blusys_spec);                  \
+
+#define BLUSYS_APP_HEADLESS(spec_expr)                                  \
+    extern "C" void app_main(void) {                                    \
+        auto _blusys_spec = (spec_expr);                                \
+        ::blusys::detail::run_headless(_blusys_spec);                   \
     }
 
-// Like `BLUSYS_APP_MAIN_HEADLESS` but passes a `blusys::platform::headless_profile`
-// for code-first headless configuration (e.g. boot log label).
-#define BLUSYS_APP_MAIN_HEADLESS_PROFILE(spec_expr, profile_expr)           \
-    extern "C" void app_main(void) {                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        auto _blusys_hl     = (profile_expr);                                \
-        ::blusys::detail::run_headless(_blusys_spec, _blusys_hl);      \
-    }
 #else
-#define BLUSYS_APP_MAIN_HEADLESS(spec_expr)                                 \
-    int main(void) {                                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        ::blusys::detail::run_headless(_blusys_spec);                  \
-        return 0;                                                           \
+
+#define BLUSYS_APP_HEADLESS(spec_expr)                                  \
+    int main(void) {                                                    \
+        auto _blusys_spec = (spec_expr);                                \
+        ::blusys::detail::run_headless(_blusys_spec);                   \
+        return 0;                                                       \
     }
 
-#define BLUSYS_APP_MAIN_HEADLESS_PROFILE(spec_expr, profile_expr)           \
-    int main(void) {                                                        \
-        auto _blusys_spec = (spec_expr);                                    \
-        auto _blusys_hl     = (profile_expr);                                \
-        ::blusys::detail::run_headless(_blusys_spec, _blusys_hl);      \
-        return 0;                                                           \
-    }
 #endif

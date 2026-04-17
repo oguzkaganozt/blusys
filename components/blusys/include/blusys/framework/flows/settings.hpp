@@ -3,10 +3,12 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 // Settings screen builder — declarative `setting_item` rows plus a single
-// `on_changed` bridge. Compose in `ui/` or register as a router screen via
-// `settings_screen_config` params.
+// `on_changed` bridge. Compose in `ui/` or register via a settings_flow in
+// spec.flows (preferred — avoids direct screen registration in on_init).
 
 #include "blusys/framework/app/ctx.hpp"
+#include "blusys/framework/flows/flow_base.hpp"
+#include "blusys/framework/ui/composition/screen_registry.hpp"
 #include "lvgl.h"
 
 #include <cstddef>
@@ -66,6 +68,36 @@ struct settings_screen_config {
 // Expects params to point to a settings_screen_config.
 lv_obj_t *settings_screen_create(app_ctx &ctx, const void *params,
                                   lv_group_t **group_out);
+
+// settings_flow — registers a settings screen via spec.flows.
+//
+// The create_fn receives app_ctx at render time and may read product state
+// to populate initial widget values. Lifecycle callbacks (on_show, on_hide)
+// receive the ctx pointer passed to register_screens as user_data.
+//
+// Usage:
+//   static blusys::flows::settings_flow kSettings = []() {
+//       blusys::flows::settings_flow f;
+//       f.route_id  = static_cast<uint32_t>(route::settings);
+//       f.create_fn = &my_create_settings;
+//       return f;
+//   }();
+//   // In app_main.cpp spec: .flows = {&kSettings}, .flow_count = 1
+class settings_flow : public flow_base {
+public:
+    std::uint32_t    route_id  = 0;
+    screen_create_fn create_fn = nullptr;
+    screen_lifecycle lifecycle  = {};
+
+    void start(blusys::app_ctx &ctx) override
+    {
+        if (create_fn != nullptr) {
+            screen_lifecycle lc = lifecycle;
+            if (lc.user_data == nullptr) lc.user_data = &ctx;
+            ctx.fx().nav.register_screen(route_id, create_fn, nullptr, lc);
+        }
+    }
+};
 
 }  // namespace blusys::flows
 

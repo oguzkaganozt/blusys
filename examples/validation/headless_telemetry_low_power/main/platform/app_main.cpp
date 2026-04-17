@@ -60,4 +60,4 @@ const blusys::app_spec<app_state, action> spec{
 
 }  // namespace telemetry_lp::system
 
-BLUSYS_APP_MAIN_HEADLESS(telemetry_lp::system::spec)
+BLUSYS_APP_HEADLESS(telemetry_lp::system::spec)

@@ -503,4 +503,4 @@ const blusys::app_spec<app_state, action> spec{
 
 }  // namespace bluetooth_controller::system
 
-BLUSYS_APP_MAIN_HEADLESS(bluetooth_controller::system::spec)
+BLUSYS_APP_HEADLESS(bluetooth_controller::system::spec)

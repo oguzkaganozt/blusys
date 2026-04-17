@@ -1,8 +1,7 @@
 #include "ui/panels.hpp"
 
 #include "core/app_logic.hpp"
-
-#include "blusys/framework/flows/provisioning_flow.hpp"
+#include "ui/app_ui.hpp"
 
 #include <cstdio>
 
@@ -72,7 +71,7 @@ void sync_all_panels(app_state &state)
     state.shell.sync(state, accent_name(state.accent_index));
     state.home.sync(state);
     state.status.sync(state);
-    blusys::flows::provisioning_screen_update(state.setup_handles, state.provisioning);
+    update_provisioning_ui(state.provisioning);
 }
 
 }  // namespace handheld_starter::ui

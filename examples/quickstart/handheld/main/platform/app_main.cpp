@@ -39,6 +39,11 @@ static blusys::connectivity_capability connectivity{{
 
 static blusys::capability_list_storage capabilities{&storage, &connectivity};
 
+static blusys::flows::flow_base * const kFlows[] = {
+    &ui::kSettingsFlow,
+    &ui::kProvisioningFlow,
+};
+
 static const blusys::app_spec<app_state, action> spec{
     .initial_state = {},
     .update = update,
@@ -47,6 +52,8 @@ static const blusys::app_spec<app_state, action> spec{
     .capabilities = &capabilities,
     .theme = &blusys::presets::expressive_dark(),
     .shell = &kShellConfig,
+    .flows = kFlows,
+    .flow_count = 2,
 };
 
 }  // namespace

@@ -874,4 +874,4 @@ const blusys::app_spec<bt_classic_controller::app_state,
 
 }  // namespace bt_classic_controller::system
 
-BLUSYS_APP_MAIN_HEADLESS(bt_classic_controller::system::spec)
+BLUSYS_APP_HEADLESS(bt_classic_controller::system::spec)

@@ -1,6 +1,7 @@
 #include "ui/app_ui.hpp"
 
 #include "blusys/framework/flows/loading.hpp"
+#include "blusys/framework/flows/provisioning_flow.hpp"
 #include "blusys/framework/flows/settings.hpp"
 #include "blusys/framework/ui/screens/about.hpp"
 #include "blusys/framework/ui/binding/action_widgets.hpp"
@@ -25,6 +26,8 @@ using handheld_starter::overlay;
 using handheld_starter::route;
 
 namespace {
+
+static blusys::flows::provisioning_screen_handles s_setup_handles{};
 
 enum settings_id : std::uint32_t {
     accent = 40,
@@ -64,16 +67,9 @@ void on_status_hide(lv_obj_t * /*screen*/, void *user_data)
     }
 }
 
-void on_setup_hide(lv_obj_t * /*screen*/, void *user_data)
+void on_setup_hide(lv_obj_t * /*screen*/, void * /*user_data*/)
 {
-    auto *ctx = static_cast<blusys::app_ctx *>(user_data);
-    if (ctx == nullptr) {
-        return;
-    }
-    auto *st = ctx->product_state<app_state>();
-    if (st != nullptr) {
-        st->setup_handles = {};
-    }
+    s_setup_handles = {};
 }
 
 void on_setup_show(lv_obj_t * /*screen*/, void *user_data)
@@ -284,7 +280,7 @@ lv_obj_t *create_setup(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t
     };
 
     return blusys::flows::provisioning_screen_create(
-        ctx, config, st->setup_handles, group_out);
+        ctx, config, s_setup_handles, group_out);
 }
 
 lv_obj_t *create_about(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
@@ -313,8 +309,6 @@ void register_all_screens(blusys::app_ctx &ctx)
     static const view::screen_registration kRoutes[] = {
         view::screen_row(route::home, &create_home, nullptr, nullptr, &on_home_hide),
         view::screen_row(route::status, &create_status, nullptr, nullptr, &on_status_hide),
-        view::screen_row(route::settings, &create_settings, nullptr, nullptr, nullptr),
-        view::screen_row(route::setup, &create_setup, nullptr, &on_setup_show, &on_setup_hide),
         view::screen_row(route::about, &create_about, nullptr, &on_about_show, nullptr),
     };
 
@@ -322,6 +316,27 @@ void register_all_screens(blusys::app_ctx &ctx)
 }
 
 }  // namespace
+
+blusys::flows::settings_flow kSettingsFlow = []() {
+    blusys::flows::settings_flow f;
+    f.route_id  = static_cast<std::uint32_t>(route::settings);
+    f.create_fn = create_settings;
+    return f;
+}();
+
+blusys::flows::provisioning_flow kProvisioningFlow = []() {
+    blusys::flows::provisioning_flow f;
+    f.route_id         = static_cast<std::uint32_t>(route::setup);
+    f.create_fn        = create_setup;
+    f.lifecycle.on_show = on_setup_show;
+    f.lifecycle.on_hide = on_setup_hide;
+    return f;
+}();
+
+void update_provisioning_ui(const blusys::connectivity_provisioning_status &status)
+{
+    blusys::flows::provisioning_screen_update(s_setup_handles, status);
+}
 
 void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state)
 {

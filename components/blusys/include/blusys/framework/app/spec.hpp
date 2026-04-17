@@ -12,6 +12,8 @@
 #endif
 
 namespace blusys { struct shell_config; }
+namespace blusys { struct device_profile; }  // full type in platform/profile.hpp
+namespace blusys::flows { class flow_base; } // full type in flows/flow_base.hpp
 
 namespace blusys {
 
@@ -75,6 +77,23 @@ struct app_spec {
     // inside the shell's content area on navigation. nullptr = no
     // shell, screens are standalone (current default behavior).
     const shell_config *shell = nullptr;
+
+    // ---- hardware profile (interactive path only) ----
+    // nullptr = BLUSYS_APP selects auto_profile_interactive() automatically.
+    // Set to a device_profile* (e.g., &blusys::platform::st7735_160x128())
+    // to pin the display profile. On host, lcd.width/height set window size.
+    const device_profile *profile = nullptr;
+
+    // ---- host window title (host SDL builds only) ----
+    // nullptr = "Blusys App". Useful for dashboard apps that want a custom title.
+    const char *host_title = nullptr;
+
+    // ---- spec-selectable flows ----
+    // Array of flow_base* pointers. The framework calls start() on each before
+    // on_init, and stop() on each during deinit (in reverse order).
+    // nullptr = no flows. flow_count must match the array length.
+    flows::flow_base * const *flows = nullptr;
+    std::size_t flow_count = 0;
 #endif
 };
 

@@ -5,6 +5,7 @@
 
 #include "blusys/framework/app/ctx.hpp"
 #include "blusys/framework/app/spec.hpp"
+#include "blusys/framework/flows/flow_base.hpp"
 #include "blusys/framework/capabilities/list.hpp"
 #include "blusys/framework/engine/internal/default_route_sink.hpp"
 #include "blusys/framework/containers.hpp"
@@ -154,6 +155,8 @@ public:
         sync_services_storage(ctx_, services_);
         bind_product_state(ctx_, static_cast<void *>(&state_));
 
+        start_flows();
+
         if (spec_.on_init != nullptr) {
             spec_.on_init(ctx_, ctx_.fx(), state_);
         }
@@ -172,6 +175,7 @@ public:
     void deinit()
     {
         bind_product_state(ctx_, nullptr);
+        stop_flows();
         stop_capabilities();
         framework_runtime_.deinit();
         framework_runtime_.unregister_feedback_sink(&feedback_logging_sink_);
@@ -214,6 +218,34 @@ private:
             spec_.update(ctx_, state_, action);
             ++iterations;
         }
+    }
+
+    void start_flows()
+    {
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+        if (spec_.flows == nullptr) {
+            return;
+        }
+        for (std::size_t i = 0; i < spec_.flow_count; ++i) {
+            if (spec_.flows[i] != nullptr) {
+                spec_.flows[i]->start(ctx_);
+            }
+        }
+#endif
+    }
+
+    void stop_flows()
+    {
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+        if (spec_.flows == nullptr) {
+            return;
+        }
+        for (std::size_t i = spec_.flow_count; i > 0; --i) {
+            if (spec_.flows[i - 1] != nullptr) {
+                spec_.flows[i - 1]->stop();
+            }
+        }
+#endif
     }
 
     void start_capabilities()

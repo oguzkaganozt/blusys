@@ -5,7 +5,6 @@
 
 #include "blusys/framework/app/app.hpp"
 #include "blusys/framework/capabilities/event.hpp"
-#include "blusys/framework/flows/provisioning_flow.hpp"
 
 #include "ui/panels.hpp"
 
@@ -52,8 +51,6 @@ struct app_state {
     ui::ShellChrome shell{};
     ui::HomePanel   home{};
     ui::StatusPanel status{};
-
-    blusys::flows::provisioning_screen_handles setup_handles{};
 };
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event);
