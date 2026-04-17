@@ -13,9 +13,21 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 
+#include "blusys/framework/observe/counter.h"
+#include "blusys/framework/observe/log.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 
 static const char *TAG = "blusys_display";
+
+#define DISPLAY_DOMAIN err_domain_driver_display
+
+static blusys_err_t display_oom(const char *site, size_t bytes)
+{
+    blusys_counter_inc(DISPLAY_DOMAIN, 1);
+    BLUSYS_LOG(BLUSYS_LOG_ERROR, DISPLAY_DOMAIN,
+               "op=open alloc-failed site=%s bytes=%zu", site, bytes);
+    return BLUSYS_ERR(DISPLAY_DOMAIN, BLUSYS_ERR_CODE(BLUSYS_ERR_NO_MEM));
+}
 
 static bool ui_wants_rgb565_spi_byte_swap(blusys_display_panel_kind_t kind)
 {
@@ -253,7 +265,7 @@ blusys_err_t blusys_display_open(const blusys_display_config_t *config,
 
     blusys_display_t *ui = calloc(1, sizeof(*ui));
     if (ui == NULL) {
-        return BLUSYS_ERR_NO_MEM;
+        return display_oom("handle", sizeof(*ui));
     }
     ui->lcd          = config->lcd;
     ui->panel_kind   = config->panel_kind;
@@ -262,8 +274,9 @@ blusys_err_t blusys_display_open(const blusys_display_config_t *config,
 
     ui->done_sem = xSemaphoreCreateBinary();
     if (ui->done_sem == NULL) {
+        blusys_err_t oom = display_oom("done_sem", 0);
         free(ui);
-        return BLUSYS_ERR_NO_MEM;
+        return oom;
     }
 
     /* LVGL core init */
@@ -273,10 +286,11 @@ blusys_err_t blusys_display_open(const blusys_display_config_t *config,
     /* Create display */
     ui->disp = lv_display_create((int32_t)width, (int32_t)height);
     if (ui->disp == NULL) {
+        blusys_err_t oom = display_oom("lv_display", 0);
         lv_deinit();
         vSemaphoreDelete(ui->done_sem);
         free(ui);
-        return BLUSYS_ERR_NO_MEM;
+        return oom;
     }
     lv_display_set_color_format(ui->disp, LV_COLOR_FORMAT_RGB565);
     lv_display_set_user_data(ui->disp, ui);
@@ -311,12 +325,23 @@ blusys_err_t blusys_display_open(const blusys_display_config_t *config,
     }
 
     ui->buf1 = malloc(buf_bytes);
-    ui->buf2 = full_refresh ? NULL : malloc(buf_bytes);
+    if (!full_refresh) {
+        ui->buf2 = malloc(buf_bytes);
+    }
     ui->flush_buf = heap_caps_malloc(flush_buf_bytes,
                                      MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    if (ui->buf1 == NULL ||
-        (!full_refresh && ui->buf2 == NULL) ||
-        (ui->flush_buf == NULL)) {
+
+    const char *oom_site = NULL;
+    size_t       oom_bytes = 0;
+    if (ui->buf1 == NULL) {
+        oom_site = "buf1";          oom_bytes = buf_bytes;
+    } else if (!full_refresh && ui->buf2 == NULL) {
+        oom_site = "buf2";          oom_bytes = buf_bytes;
+    } else if (ui->flush_buf == NULL) {
+        oom_site = "flush_buf_dma"; oom_bytes = flush_buf_bytes;
+    }
+    if (oom_site != NULL) {
+        blusys_err_t err = display_oom(oom_site, oom_bytes);
         free(ui->buf1);
         free(ui->buf2);
         heap_caps_free(ui->flush_buf);
@@ -324,7 +349,7 @@ blusys_err_t blusys_display_open(const blusys_display_config_t *config,
         lv_deinit();
         vSemaphoreDelete(ui->done_sem);
         free(ui);
-        return BLUSYS_ERR_NO_MEM;
+        return err;
     }
     ui->flush_buf_size = flush_buf_bytes;
     lv_display_set_buffers(ui->disp, ui->buf1, ui->buf2,
@@ -355,6 +380,7 @@ blusys_err_t blusys_display_open(const blusys_display_config_t *config,
     BaseType_t ret = xTaskCreate(render_task, "blusys_display", (uint32_t)stack,
                                  ui, (UBaseType_t)prio, &ui->task);
     if (ret != pdPASS) {
+        blusys_err_t err = display_oom("render_task", (size_t)stack);
         free(ui->buf1);
         free(ui->buf2);
         heap_caps_free(ui->flush_buf);
@@ -362,7 +388,7 @@ blusys_err_t blusys_display_open(const blusys_display_config_t *config,
         lv_deinit();
         vSemaphoreDelete(ui->done_sem);
         free(ui);
-        return BLUSYS_ERR_NO_MEM;
+        return err;
     }
 
     s_active_handle = ui;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 
 #include "blusys/framework/app/app.hpp"
 #include "blusys/framework/capabilities/event.hpp"
@@ -56,7 +57,7 @@ struct app_state {
 };
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event);
-bool map_intent(blusys::app_services &svc, blusys::intent intent, action *out);
+std::optional<action> on_event(blusys::event event, app_state &state);
 
 const char *accent_name(std::int32_t index);
 

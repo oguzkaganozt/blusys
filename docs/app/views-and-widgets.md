@@ -7,9 +7,11 @@ The Blusys view layer provides stock widgets and a custom widget contract that k
 Use `page_create()` and `page_load()` to build and activate a screen:
 
 ```cpp
-void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, State &state)
 {
-    (void)svc;
+    (void)ctx;
+    (void)state;
+    (void)fx;
     auto p = blusys::page_create();  // creates screen + content col + focus group
 
     // Populate p.content with widgets ...
@@ -24,7 +26,7 @@ Inside the interaction shell, `page_create_in(shell.content_area, …)` produces
 
 ## Navigation
 
-In `on_init`, register screens with `ctx.services().screen_router()->register_screen(route_id, create_fn, destroy_fn)` (optionally with lifecycle hooks). Move between screens with `ctx.services().navigate_to`, `ctx.services().navigate_push`, `ctx.services().navigate_replace`, and `ctx.services().navigate_back()`. Overlays use `ctx.services().show_overlay` / `hide_overlay`. The framework owns the route queue, stack, transitions, and focus reattachment after each change — product code does not touch `route_sink` or raw `route_command` values except through **`app_services`** (`ctx.services()`).
+In `on_init`, register screens with `fx.nav.screen_router()->register_screen(route_id, create_fn, destroy_fn)` (optionally with lifecycle hooks). Move between screens with `fx.nav.to`, `fx.nav.push`, `fx.nav.replace`, and `fx.nav.back()`. Overlays use `fx.nav.show_overlay` / `fx.nav.hide_overlay`. The framework owns the route queue, stack, transitions, and focus reattachment after each change. Product code uses `app_fx` / `ctx.fx()` for typed navigation and overlay access; it does not touch `route_sink` directly.
 
 ## Stock Widgets
 
@@ -118,14 +120,15 @@ blusys::ui::vu_strip_set_value(vu, static_cast<std::uint8_t>((state.level * 12) 
 
 ## Multi-Screen Navigation
 
-Register screens with `ctx.services().screen_router()` in `on_init`, then navigate:
+Register screens with `fx.nav.screen_router()` in `on_init`, then navigate:
 
 ```cpp
-void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, State &state)
 {
-    (void)svc;
+    (void)ctx;
+    (void)state;
     // Register screens by route ID.
-    ctx.services().screen_router()->register_screen(RouteId::home,
+    fx.nav.screen_router()->register_screen(RouteId::home,
         [](blusys::app_ctx &ctx, const void *, lv_group_t **g) -> lv_obj_t * {
             auto p = blusys::page_create();
             // ... build home screen ...
@@ -134,12 +137,12 @@ void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, State &state)
             return p.screen;
         });
 
-    ctx.services().navigate_to(RouteId::home);  // loads the home screen
+    fx.nav.to(RouteId::home);  // loads the home screen
 }
 
 // Later in update():
-ctx.services().navigate_push(RouteId::settings);  // push settings screen
-ctx.services().navigate_back();                   // return to home
+fx.nav.push(RouteId::settings);  // push settings screen
+fx.nav.back();                   // return to home
 ```
 
 ## Custom Widget Contract
@@ -181,7 +184,7 @@ lv_canvas_set_buffer(canvas, buf, w, h, LV_COLOR_FORMAT_RGB565);
 
 Raw LVGL must not:
 
-- call `lv_screen_load()` directly (use `blusys::page_load()` or `ctx.services().navigate_to()`)
+- call `lv_screen_load()` directly (use `blusys::page_load()` or `fx.nav.to()`)
 - manage UI locks directly (the framework runtime owns the lock)
 - call runtime services directly from widget code
 - manipulate routing or runtime internals

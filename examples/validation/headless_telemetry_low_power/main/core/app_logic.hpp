@@ -4,6 +4,7 @@
 #include "blusys/framework/capabilities/event.hpp"
 
 #include <cstdint>
+#include <optional>
 
 namespace telemetry_lp {
 
@@ -22,5 +23,6 @@ struct app_state {
 };
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event);
+std::optional<action> on_event(blusys::event event, app_state &state);
 
 }  // namespace telemetry_lp

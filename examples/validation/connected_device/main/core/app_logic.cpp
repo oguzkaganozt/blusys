@@ -3,6 +3,8 @@
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/hal/log.h"
 
+#include <optional>
+
 namespace connected_device {
 
 void update(app_ctx &ctx, State &state, const Action &action)
@@ -60,21 +62,31 @@ void update(app_ctx &ctx, State &state, const Action &action)
     }
 }
 
-bool map_intent(blusys::app_services &svc, blusys::intent intent, Action *out)
+std::optional<Action> on_event(blusys::event event, State &state)
 {
-    (void)svc;
-    switch (intent) {
-    case blusys::intent::increment:
-        *out = Action{.tag = Tag::brightness_up};
-        return true;
-    case blusys::intent::decrement:
-        *out = Action{.tag = Tag::brightness_down};
-        return true;
-    case blusys::intent::confirm:
-        *out = Action{.tag = Tag::confirm};
-        return true;
+    (void)state;
+    switch (event.kind) {
+    case blusys::app_event_kind::intent:
+        switch (blusys::event_intent(event)) {
+        case blusys::intent::increment:
+            return Action{.tag = Tag::brightness_up};
+        case blusys::intent::decrement:
+            return Action{.tag = Tag::brightness_down};
+        case blusys::intent::confirm:
+            return Action{.tag = Tag::confirm};
+        default:
+            return std::nullopt;
+        }
+    case blusys::app_event_kind::integration: {
+        blusys::capability_event ce{};
+        if (!blusys::map_integration_event(event.id, event.code, &ce)) {
+            return std::nullopt;
+        }
+        ce.payload = event.payload;
+        return Action{.tag = Tag::capability_event, .cap_event = ce};
+    }
     default:
-        return false;
+        return std::nullopt;
     }
 }
 

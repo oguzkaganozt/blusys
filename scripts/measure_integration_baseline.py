@@ -38,13 +38,12 @@ def count_loc_py(path: Path) -> int:
     return total
 
 
-def count_map_branches(text: str) -> tuple[int, int]:
-    """Rough counts of map_event / map_intent branch keywords inside function bodies."""
-    mi = len(re.findall(r"\bmap_intent\b", text))
-    me = len(re.findall(r"\bmap_event\b", text))
+def count_on_event_branches(text: str) -> tuple[int, int]:
+    """Rough counts of on_event branch keywords inside function bodies."""
+    oe = len(re.findall(r"\bon_event\b", text))
     cases = len(re.findall(r"\bcase\b", text))
     ifs = len(re.findall(r"\bif\s*\(", text))
-    return cases + ifs, mi + me
+    return cases + ifs, oe
 
 
 def analyze_platform_dir(platform_dir: Path) -> None:
@@ -56,12 +55,12 @@ def analyze_platform_dir(platform_dir: Path) -> None:
             if p.suffix in {".cpp", ".hpp"} and p.is_file():
                 chunks.append(p.read_text(encoding="utf-8", errors="replace"))
     combined = "\n".join(chunks)
-    branches, map_refs = count_map_branches(combined)
+    branches, event_refs = count_on_event_branches(combined)
 
     print(f"## {rel}")
     print(f"  platform LOC (.c/.cpp/.h/.hpp): {loc if loc >= 0 else 'missing'}")
     print(f"  heuristic branch weight (case+if): {branches}")
-    print(f"  map_intent/map_event references: {map_refs}")
+    print(f"  on_event references: {event_refs}")
     print()
 
 

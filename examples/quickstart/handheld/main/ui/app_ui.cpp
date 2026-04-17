@@ -35,8 +35,8 @@ enum settings_id : std::uint32_t {
 
 view::page make_page(blusys::app_ctx &ctx, bool scrollable)
 {
-    if (ctx.services().shell() != nullptr) {
-        return view::page_create_in(ctx.services().shell()->content_area, {.scrollable = scrollable});
+    if (ctx.fx().nav.shell() != nullptr) {
+        return view::page_create_in(ctx.fx().nav.shell()->content_area, {.scrollable = scrollable});
     }
     return view::page_create({.scrollable = scrollable});
 }
@@ -80,16 +80,16 @@ void on_setup_hide(lv_obj_t * /*screen*/, void *user_data)
 void on_setup_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app_ctx *>(user_data);
-    if (ctx != nullptr && ctx->services().shell() != nullptr) {
-        view::shell_set_title(*ctx->services().shell(), "Setup");
+    if (ctx != nullptr && ctx->fx().nav.shell() != nullptr) {
+        view::shell_set_title(*ctx->fx().nav.shell(), "Setup");
     }
 }
 
 void on_about_show(lv_obj_t * /*screen*/, void *user_data)
 {
     auto *ctx = static_cast<blusys::app_ctx *>(user_data);
-    if (ctx != nullptr && ctx->services().shell() != nullptr) {
-        view::shell_set_title(*ctx->services().shell(), "About");
+    if (ctx != nullptr && ctx->fx().nav.shell() != nullptr) {
+        view::shell_set_title(*ctx->fx().nav.shell(), "About");
     }
 }
 
@@ -170,7 +170,7 @@ lv_obj_t *create_home(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t 
     if (group_out != nullptr) {
         *group_out = page.group;
     }
-    return ctx.services().shell() != nullptr ? page.content : page.screen;
+    return ctx.fx().nav.shell() != nullptr ? page.content : page.screen;
 }
 
 lv_obj_t *create_status(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
@@ -216,7 +216,7 @@ lv_obj_t *create_status(blusys::app_ctx &ctx, const void * /*params*/, lv_group_
     if (group_out != nullptr) {
         *group_out = page.group;
     }
-    return ctx.services().shell() != nullptr ? page.content : page.screen;
+    return ctx.fx().nav.shell() != nullptr ? page.content : page.screen;
 }
 
 lv_obj_t *create_settings(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
@@ -324,40 +324,41 @@ void register_all_screens(view::screen_router *router, blusys::app_ctx &ctx)
 
 }  // namespace
 
-void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state)
 {
-    (void)svc;
+    (void)fx;
     (void)state;
 
-    if (ctx.services().shell() != nullptr) {
+    if (ctx.fx().nav.shell() != nullptr) {
         const view::shell_tab_item tabs[] = {
             view::shell_tab_row("Ctrl", route::home, "Controller"),
             view::shell_tab_row("Stat", route::status, "Status"),
             view::shell_tab_row("Set", route::settings, "Settings"),
         };
-        view::shell_set_tabs(*ctx.services().shell(), tabs, sizeof(tabs) / sizeof(tabs[0]), &ctx.services());
+        view::shell_set_tabs(*ctx.fx().nav.shell(), tabs, sizeof(tabs) / sizeof(tabs[0]),
+                             ctx.fx().nav.screen_router());
 
-        if (lv_obj_t *surface = view::shell_status_surface(*ctx.services().shell()); surface != nullptr) {
+        if (lv_obj_t *surface = view::shell_status_surface(*ctx.fx().nav.shell()); surface != nullptr) {
             state.shell.badge = view::status_badge(surface, "Setup", blusys::badge_level::warning);
             state.shell.detail =
                 view::label(surface, "Punch  64%", blusys::theme().font_body_sm);
         }
 
-        if (ctx.services().overlay_manager() != nullptr) {
-            view::overlay_create(ctx.services().shell()->root, static_cast<std::uint32_t>(overlay::confirm),
+        if (ctx.fx().nav.overlay_manager() != nullptr) {
+            view::overlay_create(ctx.fx().nav.shell()->root, static_cast<std::uint32_t>(overlay::confirm),
                                  {.text = "Scene committed", .duration_ms = 1200},
-                                 *ctx.services().overlay_manager());
+                                 *ctx.fx().nav.overlay_manager());
         }
     }
 
-    auto *router = ctx.services().screen_router();
+    auto *router = ctx.fx().nav.screen_router();
     if (router == nullptr) {
         return;
     }
 
     register_all_screens(router, ctx);
 
-    ctx.services().navigate_to(route::home);
+    ctx.fx().nav.to(route::home);
 }
 
 }  // namespace handheld_starter::ui

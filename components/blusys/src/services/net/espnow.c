@@ -7,19 +7,18 @@
 
 #if SOC_WIFI_SUPPORTED
 
-#include "esp_event.h"
-#include "esp_netif.h"
 #include "esp_now.h"
 #include "esp_wifi.h"
 
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/global_lock.h"
 #include "blusys/hal/internal/lock.h"
-#include "blusys/hal/internal/nvs_init.h"
+#include "blusys/framework/services/internal/net_bootstrap.h"
 
 #define ESPNOW_MAX_DATA_LEN ESP_NOW_MAX_DATA_LEN  /* 250 bytes */
 
 struct blusys_espnow {
+    blusys_net_bootstrap_t   bootstrap;
     blusys_lock_t            lock;
     blusys_espnow_recv_cb_t  recv_cb;
     void                    *recv_user_ctx;
@@ -97,30 +96,12 @@ blusys_err_t blusys_espnow_open(const blusys_espnow_config_t *config,
     h->send_cb       = config->send_cb;
     h->send_user_ctx = config->send_user_ctx;
 
-    /* NVS required by the WiFi driver for RF calibration data */
-    err = blusys_nvs_ensure_init();
+    err = blusys_net_bootstrap_start_wifi(&h->bootstrap);
     if (err != BLUSYS_OK) {
-        goto fail_nvs;
+        goto fail_bootstrap;
     }
 
-    esp_err_t esp_err = esp_netif_init();
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_netif_init;
-    }
-
-    esp_err = esp_event_loop_create_default();
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_event_loop;
-    }
-
-    wifi_init_config_t wifi_cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_err = esp_wifi_init(&wifi_cfg);
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_wifi_init;
-    }
+    esp_err_t esp_err;
 
     esp_err = esp_wifi_set_mode(WIFI_MODE_STA);
     if (esp_err != ESP_OK) {
@@ -171,13 +152,8 @@ fail_espnow_init:
 fail_wifi_start:
     esp_wifi_stop();
 fail_wifi_mode:
-    esp_wifi_deinit();
-fail_wifi_init:
-    esp_event_loop_delete_default();
-fail_event_loop:
-    esp_netif_deinit();
-fail_netif_init:
-fail_nvs:
+    blusys_net_bootstrap_stop(&h->bootstrap);
+fail_bootstrap:
     blusys_lock_give(&s_espnow_global_lock);
     blusys_lock_deinit(&h->lock);
     free(h);
@@ -197,9 +173,7 @@ blusys_err_t blusys_espnow_close(blusys_espnow_t *handle)
 
     esp_now_deinit();
     esp_wifi_stop();
-    esp_wifi_deinit();
-    esp_event_loop_delete_default();
-    esp_netif_deinit();
+    blusys_net_bootstrap_stop(&handle->bootstrap);
 
     err = blusys_lock_take(&s_espnow_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {

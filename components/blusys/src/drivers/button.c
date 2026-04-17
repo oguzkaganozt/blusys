@@ -6,11 +6,13 @@
 #include "freertos/task.h"
 #include "esp_timer.h"
 
+#include "blusys/hal/internal/callback_lifecycle.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
 #include "blusys/hal/gpio.h"
 
 #define BUTTON_DEFAULT_DEBOUNCE_MS 50u
+#define BUTTON_DOMAIN err_domain_driver_button
 
 struct blusys_button {
     int                        pin;
@@ -28,8 +30,6 @@ struct blusys_button {
     bool                       closing;
 };
 
-/* ── helpers ──────────────────────────────────────────────────────────────── */
-
 static void invoke_callback(blusys_button_t *btn, blusys_button_event_t event)
 {
     blusys_button_callback_t cb;
@@ -38,20 +38,18 @@ static void invoke_callback(blusys_button_t *btn, blusys_button_event_t event)
     portENTER_CRITICAL(&btn->state_lock);
     cb  = btn->callback;
     ctx = btn->user_ctx;
-    if (cb != NULL) {
-        btn->callback_active += 1u;
+    if ((cb == NULL) || !blusys_callback_lifecycle_try_enter(&btn->callback_active, &btn->closing)) {
+        portEXIT_CRITICAL(&btn->state_lock);
+        return;
     }
     portEXIT_CRITICAL(&btn->state_lock);
 
-    if (cb != NULL) {
-        cb(btn, event, ctx);
-        portENTER_CRITICAL(&btn->state_lock);
-        btn->callback_active -= 1u;
-        portEXIT_CRITICAL(&btn->state_lock);
-    }
-}
+    cb(btn, event, ctx);
 
-/* ── timer callbacks (esp_timer task context) ─────────────────────────────── */
+    portENTER_CRITICAL(&btn->state_lock);
+    blusys_callback_lifecycle_leave(&btn->callback_active);
+    portEXIT_CRITICAL(&btn->state_lock);
+}
 
 static void debounce_timer_cb(void *arg)
 {
@@ -60,7 +58,7 @@ static void debounce_timer_cb(void *arg)
     bool new_pressed;
 
     portENTER_CRITICAL(&btn->state_lock);
-    if (btn->closing) {
+    if (blusys_callback_lifecycle_is_closing(&btn->closing)) {
         portEXIT_CRITICAL(&btn->state_lock);
         return;
     }
@@ -99,7 +97,7 @@ static void long_press_timer_cb(void *arg)
     blusys_button_t *btn = arg;
 
     portENTER_CRITICAL(&btn->state_lock);
-    if (btn->closing || !btn->pressed) {
+    if (blusys_callback_lifecycle_is_closing(&btn->closing) || !btn->pressed) {
         portEXIT_CRITICAL(&btn->state_lock);
         return;
     }
@@ -108,24 +106,17 @@ static void long_press_timer_cb(void *arg)
     invoke_callback(btn, BLUSYS_BUTTON_EVENT_LONG_PRESS);
 }
 
-/* ── GPIO ISR callback (ISR context) ─────────────────────────────────────── */
-
 static bool IRAM_ATTR button_gpio_isr_cb(int pin, void *user_ctx)
 {
     blusys_button_t *btn = user_ctx;
 
     (void)pin;
 
-    /* Restart the debounce window on every edge. Both esp_timer_stop() and
-     * esp_timer_start_once() are IRAM_ATTR and use portENTER_CRITICAL_SAFE()
-     * internally, making them safe to call from ISR context. */
     esp_timer_stop(btn->debounce_timer);
     esp_timer_start_once(btn->debounce_timer, (uint64_t)btn->debounce_ms * 1000u);
 
     return false;
 }
-
-/* ── public API ───────────────────────────────────────────────────────────── */
 
 blusys_err_t blusys_button_open(const blusys_button_config_t *config,
                                  blusys_button_t **out_button)
@@ -165,7 +156,7 @@ blusys_err_t blusys_button_open(const blusys_button_config_t *config,
     if (esp_err != ESP_OK) {
         blusys_lock_deinit(&btn->lock);
         free(btn);
-        return blusys_translate_esp_err(esp_err);
+        return blusys_translate_esp_err_in(BUTTON_DOMAIN, esp_err);
     }
 
     if (btn->long_press_ms > 0u) {
@@ -180,7 +171,7 @@ blusys_err_t blusys_button_open(const blusys_button_config_t *config,
             esp_timer_delete(btn->debounce_timer);
             blusys_lock_deinit(&btn->lock);
             free(btn);
-            return blusys_translate_esp_err(esp_err);
+            return blusys_translate_esp_err_in(BUTTON_DOMAIN, esp_err);
         }
     }
 
@@ -229,25 +220,18 @@ blusys_err_t blusys_button_close(blusys_button_t *button)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    /* Clear callback — gpio.c disables the interrupt and waits for any
-     * in-flight ISR before returning, so the debounce timer cannot be
-     * restarted after this point. */
     blusys_gpio_set_callback(button->pin, NULL, NULL);
 
     portENTER_CRITICAL(&button->state_lock);
-    button->closing = true;
+    blusys_callback_lifecycle_set_closing(&button->closing, true);
     portEXIT_CRITICAL(&button->state_lock);
 
-    /* Stop timers — ignore INVALID_STATE (timer already idle). */
     esp_timer_stop(button->debounce_timer);
     if (button->long_press_timer != NULL) {
         esp_timer_stop(button->long_press_timer);
     }
 
-    /* Wait for any callback that was already dispatched to finish. */
-    while (button->callback_active > 0u) {
-        taskYIELD();
-    }
+    blusys_callback_lifecycle_wait_for_idle(&button->callback_active);
 
     esp_timer_delete(button->debounce_timer);
     if (button->long_press_timer != NULL) {
@@ -275,7 +259,7 @@ blusys_err_t blusys_button_set_callback(blusys_button_t *button,
     }
 
     portENTER_CRITICAL(&button->state_lock);
-    if (button->closing) {
+    if (blusys_callback_lifecycle_is_closing(&button->closing)) {
         portEXIT_CRITICAL(&button->state_lock);
         blusys_lock_give(&button->lock);
         return BLUSYS_ERR_INVALID_STATE;
@@ -284,10 +268,7 @@ blusys_err_t blusys_button_set_callback(blusys_button_t *button,
     button->user_ctx  = user_ctx;
     portEXIT_CRITICAL(&button->state_lock);
 
-    /* Wait for any in-flight callback to finish before returning. */
-    while (button->callback_active > 0u) {
-        taskYIELD();
-    }
+    blusys_callback_lifecycle_wait_for_idle(&button->callback_active);
 
     blusys_lock_give(&button->lock);
     return BLUSYS_OK;

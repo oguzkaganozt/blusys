@@ -6,6 +6,7 @@ config USB_PERIPHERAL_LAB_SCENARIO_USB_HOST_BASIC
     bool "usb_host_basic"
 config USB_PERIPHERAL_LAB_SCENARIO_USB_DEVICE_BASIC
     bool "usb_device_basic"
+    select TINYUSB_CDC_ENABLED
 config USB_PERIPHERAL_LAB_SCENARIO_USB_HID_BASIC
     bool "usb_hid_basic"
 endchoice
@@ -51,4 +52,3 @@ menu "usb_hid_basic"
 
     endmenu
 endmenu
-

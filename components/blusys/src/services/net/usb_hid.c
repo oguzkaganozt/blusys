@@ -104,6 +104,11 @@ static blusys_usb_hid_t *s_usb_hid_handle;
 
 BLUSYS_DEFINE_GLOBAL_LOCK(hid);
 
+/* ═══════════════════════════════════════════════════════════════════
+ * USB transport implementation
+ * ═══════════════════════════════════════════════════════════════════ */
+#if HAS_USB_TRANSPORT || HAS_BLE_TRANSPORT
+
 /* ─── Report parsing helper ─────────────────────────────────────── */
 static void dispatch_raw_report(blusys_usb_hid_t *h,
                                 const uint8_t *data, size_t len)
@@ -116,11 +121,11 @@ static void dispatch_raw_report(blusys_usb_hid_t *h,
     memset(&ev, 0, sizeof(ev));
 
     if (len >= HID_KEYBOARD_BOOT_REPORT_LEN) {
-        ev.event                = BLUSYS_USB_HID_EVENT_KEYBOARD_REPORT;
+        ev.event                  = BLUSYS_USB_HID_EVENT_KEYBOARD_REPORT;
         ev.data.keyboard.modifier = data[0];
         memcpy(ev.data.keyboard.keycodes, &data[2], 6);
     } else if (len >= HID_MOUSE_BOOT_REPORT_LEN) {
-        ev.event             = BLUSYS_USB_HID_EVENT_MOUSE_REPORT;
+        ev.event              = BLUSYS_USB_HID_EVENT_MOUSE_REPORT;
         ev.data.mouse.buttons = data[0];
         ev.data.mouse.x       = (int8_t)data[1];
         ev.data.mouse.y       = (int8_t)data[2];
@@ -129,17 +134,14 @@ static void dispatch_raw_report(blusys_usb_hid_t *h,
         }
     } else {
         /* data is valid for the duration of this synchronous callback */
-        ev.event          = BLUSYS_USB_HID_EVENT_RAW_REPORT;
-        ev.data.raw.data  = data;
-        ev.data.raw.len   = len;
+        ev.event         = BLUSYS_USB_HID_EVENT_RAW_REPORT;
+        ev.data.raw.data = data;
+        ev.data.raw.len  = len;
     }
 
     h->callback(h, &ev, h->user_ctx);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
- * USB transport implementation
- * ═══════════════════════════════════════════════════════════════════ */
 #if HAS_USB_TRANSPORT
 
 static void usb_hid_host_device_cb(hid_host_device_handle_t hid_device_handle,
@@ -676,6 +678,8 @@ static blusys_err_t ble_transport_close(blusys_usb_hid_t *h)
 }
 
 #endif /* HAS_BLE_TRANSPORT */
+
+#endif /* HAS_USB_TRANSPORT || HAS_BLE_TRANSPORT */
 
 /* ═══════════════════════════════════════════════════════════════════
  * Public API

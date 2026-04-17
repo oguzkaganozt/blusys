@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <ctime>
 #include <cstring>
+#include <optional>
 
 namespace connected_headless {
 
@@ -63,9 +64,24 @@ void update(blusys::app_ctx &ctx, State &state, const Action &action)
     }
 }
 
-void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
+std::optional<Action> on_event(blusys::event event, State &state)
 {
-    (void)svc;
+    (void)state;
+    if (event.kind != blusys::app_event_kind::integration) {
+        return std::nullopt;
+    }
+
+    blusys::capability_event ce{};
+    if (!blusys::map_integration_event(event.id, event.code, &ce)) {
+        return std::nullopt;
+    }
+    ce.payload = event.payload;
+    return Action{.tag = action_tag::capability_event, .cap_event = ce};
+}
+
+void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, State & /*state*/, std::uint32_t /*now_ms*/)
+{
+    (void)fx;
     ctx.dispatch(Action{.tag = action_tag::periodic_tick});
 }
 

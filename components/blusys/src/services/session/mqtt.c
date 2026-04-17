@@ -15,6 +15,7 @@
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
 #include "blusys/hal/internal/timeout.h"
+#include "blusys/framework/services/internal/session_helper.h"
 
 #define MQTT_CONNECTED_BIT    BIT0
 #define MQTT_DISCONNECTED_BIT BIT1
@@ -22,12 +23,12 @@
 
 struct blusys_mqtt {
     esp_mqtt_client_handle_t  esp_handle;
+    blusys_session_t          session;
     blusys_lock_t             lock;
     blusys_mqtt_message_cb_t  message_cb;
     blusys_mqtt_state_cb_t    state_cb;
     void                     *user_ctx;
     EventGroupHandle_t        event_group;
-    volatile bool             connected;
     int                       timeout_ms;
 };
 
@@ -39,7 +40,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
-        h->connected = true;
+        blusys_session_finish_connect(&h->session, true);
         xEventGroupClearBits(h->event_group, MQTT_DISCONNECTED_BIT | MQTT_ERROR_BIT);
         xEventGroupSetBits(h->event_group, MQTT_CONNECTED_BIT);
         if (h->state_cb != NULL) {
@@ -48,7 +49,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
         break;
 
     case MQTT_EVENT_DISCONNECTED:
-        h->connected = false;
+        blusys_session_note_disconnected(&h->session);
         xEventGroupClearBits(h->event_group, MQTT_CONNECTED_BIT);
         xEventGroupSetBits(h->event_group, MQTT_DISCONNECTED_BIT);
         if (h->state_cb != NULL) {
@@ -111,6 +112,8 @@ blusys_err_t blusys_mqtt_open(const blusys_mqtt_config_t *config, blusys_mqtt_t 
         free(h);
         return BLUSYS_ERR_NO_MEM;
     }
+
+    blusys_session_init(&h->session);
 
     h->message_cb  = config->message_cb;
     h->state_cb    = config->state_cb;
@@ -175,10 +178,13 @@ blusys_err_t blusys_mqtt_close(blusys_mqtt_t *handle)
         return err;
     }
 
-    if (handle->connected) {
+    if (blusys_session_is_connected(&handle->session) ||
+        blusys_session_is_connecting(&handle->session)) {
         esp_mqtt_client_stop(handle->esp_handle);
-        handle->connected = false;
+        blusys_session_note_disconnected(&handle->session);
     }
+
+    blusys_session_finish_disconnect(&handle->session);
 
     esp_mqtt_client_destroy(handle->esp_handle);
     vEventGroupDelete(handle->event_group);
@@ -195,9 +201,20 @@ blusys_err_t blusys_mqtt_connect(blusys_mqtt_t *handle)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
+    if (!blusys_session_request_connect(&handle->session)) {
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
     blusys_err_t err = blusys_lock_take(&handle->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
+        blusys_session_finish_disconnect(&handle->session);
         return err;
+    }
+
+    if (blusys_session_is_closing(&handle->session)) {
+        blusys_lock_give(&handle->lock);
+        blusys_session_finish_disconnect(&handle->session);
+        return BLUSYS_ERR_INVALID_STATE;
     }
 
     xEventGroupClearBits(handle->event_group,
@@ -208,6 +225,8 @@ blusys_err_t blusys_mqtt_connect(blusys_mqtt_t *handle)
     blusys_lock_give(&handle->lock);
 
     if (esp_err != ESP_OK) {
+        blusys_session_finish_connect(&handle->session, false);
+        blusys_session_finish_disconnect(&handle->session);
         return blusys_translate_esp_err(esp_err);
     }
 
@@ -217,11 +236,19 @@ blusys_err_t blusys_mqtt_connect(blusys_mqtt_t *handle)
                                             pdFALSE, pdFALSE, ticks);
 
     if (bits & MQTT_CONNECTED_BIT) {
-        return BLUSYS_OK;
+        if (blusys_session_finish_connect(&handle->session, true)) {
+            return BLUSYS_OK;
+        }
+
+        esp_mqtt_client_stop(handle->esp_handle);
+        blusys_session_finish_disconnect(&handle->session);
+        return BLUSYS_ERR_INVALID_STATE;
     }
 
     /* Connection failed or timed out — stop the client (esp_mqtt_client_stop is thread-safe) */
     esp_mqtt_client_stop(handle->esp_handle);
+    blusys_session_finish_connect(&handle->session, false);
+    blusys_session_finish_disconnect(&handle->session);
 
     return (bits & (MQTT_ERROR_BIT | MQTT_DISCONNECTED_BIT)) ? BLUSYS_ERR_IO : BLUSYS_ERR_TIMEOUT;
 }
@@ -237,15 +264,16 @@ blusys_err_t blusys_mqtt_disconnect(blusys_mqtt_t *handle)
         return err;
     }
 
-    if (!handle->connected) {
+    if (!blusys_session_request_disconnect(&handle->session)) {
         blusys_lock_give(&handle->lock);
         return BLUSYS_OK;
     }
 
     esp_err_t esp_err = esp_mqtt_client_stop(handle->esp_handle);
-    handle->connected = false;
+    blusys_session_note_disconnected(&handle->session);
 
     blusys_lock_give(&handle->lock);
+    blusys_session_finish_disconnect(&handle->session);
     return blusys_translate_esp_err(esp_err);
 }
 
@@ -265,7 +293,7 @@ blusys_err_t blusys_mqtt_publish(blusys_mqtt_t *handle,
         return err;
     }
 
-    if (!handle->connected) {
+    if (!blusys_session_is_connected(&handle->session)) {
         blusys_lock_give(&handle->lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
@@ -294,7 +322,7 @@ blusys_err_t blusys_mqtt_subscribe(blusys_mqtt_t *handle,
         return err;
     }
 
-    if (!handle->connected) {
+    if (!blusys_session_is_connected(&handle->session)) {
         blusys_lock_give(&handle->lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
@@ -316,7 +344,7 @@ blusys_err_t blusys_mqtt_unsubscribe(blusys_mqtt_t *handle, const char *topic)
         return err;
     }
 
-    if (!handle->connected) {
+    if (!blusys_session_is_connected(&handle->session)) {
         blusys_lock_give(&handle->lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
@@ -338,7 +366,7 @@ bool blusys_mqtt_is_connected(blusys_mqtt_t *handle)
         return false;
     }
 
-    bool connected = handle->connected;
+    bool connected = blusys_session_is_connected(&handle->session);
 
     blusys_lock_give(&handle->lock);
     return connected;

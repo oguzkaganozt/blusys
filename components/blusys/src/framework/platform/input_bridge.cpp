@@ -65,7 +65,7 @@ void indev_read_cb(lv_indev_t * /*indev*/, lv_indev_data_t *data)
     data->enc_diff = static_cast<std::int32_t>(diff);
     data->state = pressed ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
 
-    // Post framework intents so the app's map_intent can process encoder
+    // Post framework intents so the app's `on_event` can process encoder
     // input through the standard reducer pipeline. This runs in the LVGL
     // timer task, not in ISR context, so runtime->post_intent is safe.
     if (g_encoder_state.framework_runtime != nullptr) {

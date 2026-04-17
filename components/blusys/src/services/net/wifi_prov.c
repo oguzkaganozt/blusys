@@ -23,9 +23,10 @@
 #include "blusys/hal/internal/bt_stack.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
-#include "blusys/hal/internal/nvs_init.h"
+#include "blusys/framework/services/internal/net_bootstrap.h"
 
 struct blusys_wifi_prov {
+    blusys_net_bootstrap_t        bootstrap;
     blusys_wifi_prov_transport_t  transport;
     blusys_wifi_prov_cb_t         on_event;
     void                         *user_ctx;
@@ -119,50 +120,33 @@ blusys_err_t blusys_wifi_prov_open(const blusys_wifi_prov_config_t *config,
         strncpy(h->service_key, config->service_key, sizeof(h->service_key) - 1);
     }
 
-    err = blusys_nvs_ensure_init();
+    if (config->transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
+        err = blusys_bt_stack_acquire(BLUSYS_BT_STACK_OWNER_WIFI_PROV_BLE);
+        if (err != BLUSYS_OK) {
+            goto fail_bt_owner;
+        }
+    }
+
+    err = blusys_net_bootstrap_start_wifi(&h->bootstrap);
     if (err != BLUSYS_OK) {
-        goto fail_nvs;
+        goto fail_wifi_init;
     }
 
-    esp_err_t esp_err = esp_netif_init();
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_netif_init;
-    }
-
-    esp_err = esp_event_loop_create_default();
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_event_loop;
-    }
-
-    h->sta_netif = esp_netif_create_default_wifi_sta();
+    h->sta_netif = blusys_net_bootstrap_create_wifi_sta();
     if (h->sta_netif == NULL) {
         err = BLUSYS_ERR_INTERNAL;
         goto fail_netif_create;
     }
 
     if (config->transport == BLUSYS_WIFI_PROV_TRANSPORT_SOFTAP) {
-        h->ap_netif = esp_netif_create_default_wifi_ap();
+        h->ap_netif = blusys_net_bootstrap_create_wifi_ap();
         if (h->ap_netif == NULL) {
             err = BLUSYS_ERR_INTERNAL;
-            goto fail_ap_netif;
+            goto fail_netif_cleanup;
         }
     }
 
-    if (config->transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
-        err = blusys_bt_stack_acquire(BLUSYS_BT_STACK_OWNER_WIFI_PROV_BLE);
-        if (err != BLUSYS_OK) {
-            goto fail_ble_owner;
-        }
-    }
-
-    wifi_init_config_t wifi_cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_err = esp_wifi_init(&wifi_cfg);
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_wifi_init;
-    }
+    esp_err_t esp_err;
 
     esp_err = esp_wifi_set_mode(WIFI_MODE_STA);
     if (esp_err != ESP_OK) {
@@ -212,23 +196,23 @@ fail_handler:
     wifi_prov_mgr_deinit();
 fail_wifi_mode:
     esp_wifi_stop();
-    esp_wifi_deinit();
+fail_netif_cleanup:
+    if (h->ap_netif != NULL) {
+        esp_netif_destroy(h->ap_netif);
+    }
+    if (h->sta_netif != NULL) {
+        esp_netif_destroy(h->sta_netif);
+    }
+    blusys_net_bootstrap_stop(&h->bootstrap);
 fail_wifi_init:
     if (config->transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
         blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_WIFI_PROV_BLE);
     }
-fail_ble_owner:
-    if (h->ap_netif != NULL) {
-        esp_netif_destroy(h->ap_netif);
-    }
-fail_ap_netif:
-    esp_netif_destroy(h->sta_netif);
+    goto fail_bootstrap;
 fail_netif_create:
-    esp_event_loop_delete_default();
-fail_event_loop:
-    esp_netif_deinit();
-fail_netif_init:
-fail_nvs:
+    goto fail_netif_cleanup;
+fail_bt_owner:
+fail_bootstrap:
     blusys_lock_deinit(&h->lock);
     free(h);
     return err;
@@ -256,16 +240,15 @@ blusys_err_t blusys_wifi_prov_close(blusys_wifi_prov_t *prov)
                                           prov->prov_handler);
     wifi_prov_mgr_deinit();
     esp_wifi_stop();
-    esp_wifi_deinit();
-    if (prov->transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
-        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_WIFI_PROV_BLE);
-    }
     if (prov->ap_netif != NULL) {
         esp_netif_destroy(prov->ap_netif);
     }
     esp_netif_destroy(prov->sta_netif);
-    esp_event_loop_delete_default();
-    esp_netif_deinit();
+    blusys_net_bootstrap_stop(&prov->bootstrap);
+
+    if (prov->transport == BLUSYS_WIFI_PROV_TRANSPORT_BLE) {
+        blusys_bt_stack_release(BLUSYS_BT_STACK_OWNER_WIFI_PROV_BLE);
+    }
 
     s_prov_handle = NULL;
     blusys_lock_deinit(&prov->lock);

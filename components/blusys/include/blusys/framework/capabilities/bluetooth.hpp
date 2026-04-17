@@ -7,8 +7,7 @@
 #include <atomic>
 
 #ifdef ESP_PLATFORM
-#include "blusys/services/connectivity/ble_gatt.h"
-#include "blusys/services/connectivity/bluetooth.h"
+#include "blusys/framework/services/net.h"
 #endif
 
 namespace blusys { class runtime; }

@@ -1,15 +1,14 @@
 #include "blusys/services/storage/fatfs.h"
 
-#include <dirent.h>
-#include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 
 #include "esp_vfs_fat.h"
 #include "wear_levelling.h"
 
+#include "blusys/framework/services/internal/storage_helpers.h"
+#include "blusys/framework/observe/counter.h"
+#include "blusys/framework/observe/log.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
 
@@ -20,27 +19,14 @@
 #define BLUSYS_FATFS_BASE_PATH_MAX       32
 #define BLUSYS_FATFS_LABEL_MAX           17
 
+#define FATFS_DOMAIN err_domain_storage_fatfs
+
 struct blusys_fatfs {
     char          base_path[BLUSYS_FATFS_BASE_PATH_MAX];
     char          partition_label[BLUSYS_FATFS_LABEL_MAX];
     wl_handle_t   wl_handle;
     blusys_lock_t lock;
 };
-
-static blusys_err_t build_path(const blusys_fatfs_t *h, const char *rel,
-                               char *out, size_t out_size)
-{
-    int n;
-    if (rel == NULL || rel[0] == '\0') {
-        n = snprintf(out, out_size, "%s", h->base_path);
-    } else {
-        n = snprintf(out, out_size, "%s/%s", h->base_path, rel);
-    }
-    if (n < 0 || (size_t)n >= out_size) {
-        return BLUSYS_ERR_INVALID_ARG;
-    }
-    return BLUSYS_OK;
-}
 
 blusys_err_t blusys_fatfs_mount(const blusys_fatfs_config_t *config,
                                 blusys_fatfs_t **out_fatfs)
@@ -51,6 +37,9 @@ blusys_err_t blusys_fatfs_mount(const blusys_fatfs_config_t *config,
 
     blusys_fatfs_t *h = calloc(1, sizeof(*h));
     if (h == NULL) {
+        BLUSYS_LOG(BLUSYS_LOG_ERROR, FATFS_DOMAIN,
+                   "op=mount alloc-failed bytes=%zu", sizeof(*h));
+        blusys_counter_inc(FATFS_DOMAIN, 1);
         return BLUSYS_ERR_NO_MEM;
     }
 
@@ -88,12 +77,18 @@ blusys_err_t blusys_fatfs_mount(const blusys_fatfs_config_t *config,
         &h->wl_handle);
 
     if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+        err = blusys_translate_esp_err_in(FATFS_DOMAIN, esp_err);
+        BLUSYS_LOG(BLUSYS_LOG_ERROR, FATFS_DOMAIN,
+                   "op=mount base=%s label=%s esp_err=0x%x",
+                   h->base_path, h->partition_label, (unsigned)esp_err);
+        blusys_counter_inc(FATFS_DOMAIN, 1);
         blusys_lock_deinit(&h->lock);
         free(h);
         return err;
     }
 
+    BLUSYS_LOG(BLUSYS_LOG_INFO, FATFS_DOMAIN,
+               "mounted base=%s label=%s", h->base_path, h->partition_label);
     *out_fatfs = h;
     return BLUSYS_OK;
 }
@@ -111,7 +106,12 @@ blusys_err_t blusys_fatfs_unmount(blusys_fatfs_t *fatfs)
 
     esp_err_t esp_err = esp_vfs_fat_spiflash_unmount_rw_wl(
         fatfs->base_path, fatfs->wl_handle);
-    err = blusys_translate_esp_err(esp_err);
+    err = blusys_translate_esp_err_in(FATFS_DOMAIN, esp_err);
+    if (err != BLUSYS_OK) {
+        BLUSYS_LOG(BLUSYS_LOG_WARN, FATFS_DOMAIN,
+                   "op=unmount esp_err=0x%x", (unsigned)esp_err);
+        blusys_counter_inc(FATFS_DOMAIN, 1);
+    }
 
     blusys_lock_give(&fatfs->lock);
     blusys_lock_deinit(&fatfs->lock);
@@ -127,30 +127,12 @@ blusys_err_t blusys_fatfs_write(blusys_fatfs_t *fatfs, const char *path,
     }
 
     char full[BLUSYS_FATFS_MAX_PATH];
-    blusys_err_t err = build_path(fatfs, path, full, sizeof(full));
+    blusys_err_t err = blusys_storage_build_path(fatfs->base_path, path, full, sizeof(full), FATFS_DOMAIN);
     if (err != BLUSYS_OK) {
         return err;
     }
 
-    err = blusys_lock_take(&fatfs->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
-    FILE *f = fopen(full, "wb");
-    if (f == NULL) {
-        blusys_lock_give(&fatfs->lock);
-        return BLUSYS_ERR_IO;
-    }
-
-    if (size > 0) {
-        size_t written = fwrite(data, 1, size, f);
-        err = (written == size) ? BLUSYS_OK : BLUSYS_ERR_IO;
-    }
-
-    fclose(f);
-    blusys_lock_give(&fatfs->lock);
-    return err;
+    return blusys_storage_write(&fatfs->lock, FATFS_DOMAIN, full, path, data, size);
 }
 
 blusys_err_t blusys_fatfs_read(blusys_fatfs_t *fatfs, const char *path,
@@ -162,28 +144,12 @@ blusys_err_t blusys_fatfs_read(blusys_fatfs_t *fatfs, const char *path,
     }
 
     char full[BLUSYS_FATFS_MAX_PATH];
-    blusys_err_t err = build_path(fatfs, path, full, sizeof(full));
+    blusys_err_t err = blusys_storage_build_path(fatfs->base_path, path, full, sizeof(full), FATFS_DOMAIN);
     if (err != BLUSYS_OK) {
         return err;
     }
 
-    err = blusys_lock_take(&fatfs->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
-    FILE *f = fopen(full, "rb");
-    if (f == NULL) {
-        blusys_lock_give(&fatfs->lock);
-        return BLUSYS_ERR_IO;
-    }
-
-    *out_bytes_read = fread(buf, 1, buf_size, f);
-    err = ferror(f) ? BLUSYS_ERR_IO : BLUSYS_OK;
-
-    fclose(f);
-    blusys_lock_give(&fatfs->lock);
-    return err;
+    return blusys_storage_read(&fatfs->lock, FATFS_DOMAIN, full, path, buf, buf_size, out_bytes_read);
 }
 
 blusys_err_t blusys_fatfs_append(blusys_fatfs_t *fatfs, const char *path,
@@ -194,30 +160,12 @@ blusys_err_t blusys_fatfs_append(blusys_fatfs_t *fatfs, const char *path,
     }
 
     char full[BLUSYS_FATFS_MAX_PATH];
-    blusys_err_t err = build_path(fatfs, path, full, sizeof(full));
+    blusys_err_t err = blusys_storage_build_path(fatfs->base_path, path, full, sizeof(full), FATFS_DOMAIN);
     if (err != BLUSYS_OK) {
         return err;
     }
 
-    err = blusys_lock_take(&fatfs->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
-    FILE *f = fopen(full, "ab");
-    if (f == NULL) {
-        blusys_lock_give(&fatfs->lock);
-        return BLUSYS_ERR_IO;
-    }
-
-    if (size > 0) {
-        size_t written = fwrite(data, 1, size, f);
-        err = (written == size) ? BLUSYS_OK : BLUSYS_ERR_IO;
-    }
-
-    fclose(f);
-    blusys_lock_give(&fatfs->lock);
-    return err;
+    return blusys_storage_append(&fatfs->lock, FATFS_DOMAIN, full, path, data, size);
 }
 
 blusys_err_t blusys_fatfs_remove(blusys_fatfs_t *fatfs, const char *path)
@@ -227,20 +175,12 @@ blusys_err_t blusys_fatfs_remove(blusys_fatfs_t *fatfs, const char *path)
     }
 
     char full[BLUSYS_FATFS_MAX_PATH];
-    blusys_err_t err = build_path(fatfs, path, full, sizeof(full));
+    blusys_err_t err = blusys_storage_build_path(fatfs->base_path, path, full, sizeof(full), FATFS_DOMAIN);
     if (err != BLUSYS_OK) {
         return err;
     }
 
-    err = blusys_lock_take(&fatfs->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
-    err = (remove(full) == 0) ? BLUSYS_OK : BLUSYS_ERR_IO;
-
-    blusys_lock_give(&fatfs->lock);
-    return err;
+    return blusys_storage_remove(&fatfs->lock, FATFS_DOMAIN, full, path);
 }
 
 blusys_err_t blusys_fatfs_exists(blusys_fatfs_t *fatfs, const char *path,
@@ -251,21 +191,12 @@ blusys_err_t blusys_fatfs_exists(blusys_fatfs_t *fatfs, const char *path,
     }
 
     char full[BLUSYS_FATFS_MAX_PATH];
-    blusys_err_t err = build_path(fatfs, path, full, sizeof(full));
+    blusys_err_t err = blusys_storage_build_path(fatfs->base_path, path, full, sizeof(full), FATFS_DOMAIN);
     if (err != BLUSYS_OK) {
         return err;
     }
 
-    err = blusys_lock_take(&fatfs->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
-    struct stat st;
-    *out_exists = (stat(full, &st) == 0);
-
-    blusys_lock_give(&fatfs->lock);
-    return BLUSYS_OK;
+    return blusys_storage_exists(&fatfs->lock, full, out_exists);
 }
 
 blusys_err_t blusys_fatfs_size(blusys_fatfs_t *fatfs, const char *path,
@@ -276,26 +207,12 @@ blusys_err_t blusys_fatfs_size(blusys_fatfs_t *fatfs, const char *path,
     }
 
     char full[BLUSYS_FATFS_MAX_PATH];
-    blusys_err_t err = build_path(fatfs, path, full, sizeof(full));
+    blusys_err_t err = blusys_storage_build_path(fatfs->base_path, path, full, sizeof(full), FATFS_DOMAIN);
     if (err != BLUSYS_OK) {
         return err;
     }
 
-    err = blusys_lock_take(&fatfs->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
-    struct stat st;
-    if (stat(full, &st) != 0) {
-        blusys_lock_give(&fatfs->lock);
-        return BLUSYS_ERR_IO;
-    }
-
-    *out_size = (size_t)st.st_size;
-
-    blusys_lock_give(&fatfs->lock);
-    return BLUSYS_OK;
+    return blusys_storage_size(&fatfs->lock, FATFS_DOMAIN, full, path, out_size);
 }
 
 blusys_err_t blusys_fatfs_mkdir(blusys_fatfs_t *fatfs, const char *path)
@@ -305,22 +222,12 @@ blusys_err_t blusys_fatfs_mkdir(blusys_fatfs_t *fatfs, const char *path)
     }
 
     char full[BLUSYS_FATFS_MAX_PATH];
-    blusys_err_t err = build_path(fatfs, path, full, sizeof(full));
+    blusys_err_t err = blusys_storage_build_path(fatfs->base_path, path, full, sizeof(full), FATFS_DOMAIN);
     if (err != BLUSYS_OK) {
         return err;
     }
 
-    err = blusys_lock_take(&fatfs->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
-    if (mkdir(full, 0755) != 0) {
-        err = (errno == EEXIST) ? BLUSYS_OK : BLUSYS_ERR_IO;
-    }
-
-    blusys_lock_give(&fatfs->lock);
-    return err;
+    return blusys_storage_mkdir(&fatfs->lock, FATFS_DOMAIN, full, path);
 }
 
 blusys_err_t blusys_fatfs_listdir(blusys_fatfs_t *fatfs, const char *path,
@@ -331,31 +238,11 @@ blusys_err_t blusys_fatfs_listdir(blusys_fatfs_t *fatfs, const char *path,
     }
 
     char full[BLUSYS_FATFS_MAX_PATH];
-    blusys_err_t err = build_path(fatfs, path, full, sizeof(full));
+    blusys_err_t err = blusys_storage_build_path(fatfs->base_path, path, full, sizeof(full), FATFS_DOMAIN);
     if (err != BLUSYS_OK) {
         return err;
     }
 
-    err = blusys_lock_take(&fatfs->lock, BLUSYS_LOCK_WAIT_FOREVER);
-    if (err != BLUSYS_OK) {
-        return err;
-    }
-
-    DIR *dir = opendir(full);
-    if (dir == NULL) {
-        blusys_lock_give(&fatfs->lock);
-        return BLUSYS_ERR_IO;
-    }
-
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-        cb(entry->d_name, user_data);
-    }
-
-    closedir(dir);
-    blusys_lock_give(&fatfs->lock);
-    return BLUSYS_OK;
+    return blusys_storage_listdir(&fatfs->lock, FATFS_DOMAIN, full, path,
+                                  (blusys_storage_listdir_cb_t)cb, user_data);
 }

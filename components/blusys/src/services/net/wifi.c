@@ -22,7 +22,7 @@
 
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
-#include "blusys/hal/internal/nvs_init.h"
+#include "blusys/framework/services/internal/net_bootstrap.h"
 
 #define WIFI_CONNECTED_BIT            BIT0
 #define WIFI_FAIL_BIT                 BIT1
@@ -32,6 +32,7 @@
 
 struct blusys_wifi {
     esp_netif_t                      *netif;
+    blusys_net_bootstrap_t            bootstrap;
     esp_event_handler_instance_t      wifi_handler;
     esp_event_handler_instance_t      ip_handler;
     EventGroupHandle_t                event_group;
@@ -422,35 +423,18 @@ blusys_err_t blusys_wifi_open(const blusys_wifi_sta_config_t *config, blusys_wif
         strncpy(wifi->password, config->password, sizeof(wifi->password) - 1);
     }
 
-    err = blusys_nvs_ensure_init();
+    err = blusys_net_bootstrap_start_wifi(&wifi->bootstrap);
     if (err != BLUSYS_OK) {
-        goto fail_nvs;
+        goto fail_bootstrap;
     }
 
-    esp_err_t esp_err = esp_netif_init();
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_netif_init;
-    }
-
-    esp_err = esp_event_loop_create_default();
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_event_loop;
-    }
-
-    wifi->netif = esp_netif_create_default_wifi_sta();
+    wifi->netif = blusys_net_bootstrap_create_wifi_sta();
     if (wifi->netif == NULL) {
         err = BLUSYS_ERR_INTERNAL;
         goto fail_netif_create;
     }
 
-    wifi_init_config_t wifi_cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_err = esp_wifi_init(&wifi_cfg);
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_wifi_init;
-    }
+    esp_err_t esp_err;
 
     esp_err = esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID,
                                                   wifi_event_handler, wifi, &wifi->wifi_handler);
@@ -499,15 +483,10 @@ fail_set_mode:
 fail_handler_ip:
     esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi->wifi_handler);
 fail_handler_wifi:
-    esp_wifi_deinit();
-fail_wifi_init:
     esp_netif_destroy(wifi->netif);
 fail_netif_create:
-    esp_event_loop_delete_default();
-fail_event_loop:
-    esp_netif_deinit();
-fail_netif_init:
-fail_nvs:
+    blusys_net_bootstrap_stop(&wifi->bootstrap);
+fail_bootstrap:
     vTaskDelete(wifi->reconnect_task);
     vEventGroupDelete(wifi->event_group);
     blusys_lock_deinit(&wifi->lock);
@@ -555,10 +534,8 @@ blusys_err_t blusys_wifi_close(blusys_wifi_t *wifi)
     wifi->connect_in_progress = false;
     emit_simple_event(wifi, BLUSYS_WIFI_EVENT_STOPPED);
 
-    esp_wifi_deinit();
     esp_netif_destroy(wifi->netif);
-    esp_event_loop_delete_default();
-    esp_netif_deinit();
+    blusys_net_bootstrap_stop(&wifi->bootstrap);
 
     vEventGroupDelete(wifi->event_group);
 

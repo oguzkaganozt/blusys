@@ -4,6 +4,7 @@
 #include "blusys/framework/capabilities/event.hpp"
 
 #include <cstdint>
+#include <optional>
 
 #include "lvgl.h"
 
@@ -36,7 +37,6 @@ struct Action {
 };
 
 void update(app_ctx &ctx, State &state, const Action &action);
-
-bool map_intent(blusys::app_services &svc, blusys::intent intent, Action *out);
+std::optional<Action> on_event(blusys::event event, State &state);
 
 }  // namespace connected_device

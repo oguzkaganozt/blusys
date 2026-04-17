@@ -33,6 +33,7 @@ blusys_usb_device_close(dev);
 
 - Using on ESP32 or ESP32-C3 — returns `BLUSYS_ERR_NOT_SUPPORTED`; check `blusys_target_supports(BLUSYS_FEATURE_USB_DEVICE)`
 - Forgetting to add `espressif/esp_tinyusb` to `idf_component.yml` — returns `BLUSYS_ERR_NOT_SUPPORTED` at runtime
+- Enabling CDC mode without `CONFIG_TINYUSB_CDC_ENABLED` — `blusys_usb_device_open()` returns `BLUSYS_ERR_NOT_SUPPORTED`
 - Opening `blusys_usb_device` and `blusys_usb_host` simultaneously — the S3 OTG port is shared
 - Blocking inside the RX callback — the TinyUSB task services all USB traffic; blocking stalls the bus
 
@@ -47,7 +48,7 @@ blusys_usb_device_close(dev);
 On unsupported targets, or when `espressif/esp_tinyusb` is not present in the project's `idf_component.yml`, all functions return `BLUSYS_ERR_NOT_SUPPORTED`.
 
 !!! note "Managed component dependency"
-    Add `espressif/esp_tinyusb: "~0.14.0"` to your project's `main/idf_component.yml`. See `examples/validation/usb_peripheral_lab/main/idf_component.yml` as a reference.
+    Add `espressif/esp_tinyusb: "^2.1.1"` to your project's `main/idf_component.yml`. See `examples/validation/usb_peripheral_lab/main/idf_component.yml` as a reference.
 
 !!! note "Mutual exclusion"
     The ESP32-S3 USB OTG port operates in either host **or** device mode. `blusys_usb_device` and `blusys_usb_host` cannot be open simultaneously.
@@ -111,7 +112,7 @@ blusys_err_t blusys_usb_device_open(const blusys_usb_device_config_t *config,
 
 Installs the TinyUSB driver and initializes the requested device class.
 
-**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG`, `BLUSYS_ERR_INVALID_STATE` if already open, `BLUSYS_ERR_NOT_SUPPORTED` when TinyUSB is unavailable or MSC class requested.
+**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG`, `BLUSYS_ERR_INVALID_STATE` if already open, `BLUSYS_ERR_NOT_SUPPORTED` when TinyUSB is unavailable, CDC is disabled for CDC mode, or MSC class requested.
 
 ---
 

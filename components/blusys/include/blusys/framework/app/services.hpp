@@ -1,7 +1,7 @@
 #pragma once
 
-// Framework-owned routing, UI chrome, and storage filesystem handles.
-// Navigation and overlays are accessed from reducers via `app_ctx::services()`.
+// Legacy framework-owned routing, UI chrome, and storage filesystem handles.
+// Kept as an internal bridge while product code migrates to `app_ctx::fx()`.
 
 #include "blusys/framework/engine/router.hpp"
 

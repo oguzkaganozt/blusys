@@ -11,7 +11,7 @@ license: "MIT"
 ##
 ## dependencies:
 ##   espressif/mdns: ">=1.2.0"
-##   espressif/esp_tinyusb: ">=0.14.0"
-##   espressif/usb_host_hid: ">=1.0.0"
+##   espressif/esp_tinyusb: "^2.1.1"
+##   espressif/usb_host_hid: "^1.2.0"
 ##   espressif/esp_lcd_qemu_rgb: ">=0.1.0"
 ##   lvgl/lvgl: ">=8.3.0,<9.0.0"

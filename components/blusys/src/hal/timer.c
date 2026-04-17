@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "blusys/hal/internal/callback_lifecycle.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
 
@@ -13,6 +14,7 @@
 #include "freertos/task.h"
 
 #define BLUSYS_TIMER_RESOLUTION_HZ 1000000u
+#define TIMER_DOMAIN err_domain_hal_timer
 
 struct blusys_timer {
     uint32_t period_us;
@@ -27,24 +29,6 @@ struct blusys_timer {
 };
 
 static portMUX_TYPE blusys_timer_state_lock = portMUX_INITIALIZER_UNLOCKED;
-
-static bool blusys_timer_callback_active(const blusys_timer_t *timer)
-{
-    bool active;
-
-    portENTER_CRITICAL(&blusys_timer_state_lock);
-    active = timer->callback_active > 0u;
-    portEXIT_CRITICAL(&blusys_timer_state_lock);
-
-    return active;
-}
-
-static void blusys_timer_wait_for_callback_idle(const blusys_timer_t *timer)
-{
-    while (blusys_timer_callback_active(timer)) {
-        taskYIELD();
-    }
-}
 
 static bool blusys_timer_is_started(const blusys_timer_t *timer)
 {
@@ -61,13 +45,6 @@ static void blusys_timer_set_started(blusys_timer_t *timer, bool started)
 {
     portENTER_CRITICAL(&blusys_timer_state_lock);
     timer->started = started;
-    portEXIT_CRITICAL(&blusys_timer_state_lock);
-}
-
-static void blusys_timer_set_closing(blusys_timer_t *timer, bool closing)
-{
-    portENTER_CRITICAL(&blusys_timer_state_lock);
-    timer->closing = closing;
     portEXIT_CRITICAL(&blusys_timer_state_lock);
 }
 
@@ -88,19 +65,20 @@ static bool IRAM_ATTR blusys_timer_on_alarm(gptimer_handle_t gptimer,
     blusys_timer_callback_t callback;
     void *callback_user_ctx;
     bool periodic;
-    bool closing;
     bool should_yield = false;
 
     (void) edata;
 
     portENTER_CRITICAL_ISR(&blusys_timer_state_lock);
-    timer->callback_active += 1u;
+    if (!blusys_callback_lifecycle_try_enter(&timer->callback_active, &timer->closing)) {
+        portEXIT_CRITICAL_ISR(&blusys_timer_state_lock);
+        return false;
+    }
     periodic = timer->periodic;
-    closing = timer->closing;
     if (!periodic) {
         timer->started = false;
     }
-    callback = closing ? NULL : timer->callback;
+    callback = timer->callback;
     callback_user_ctx = timer->callback_user_ctx;
     portEXIT_CRITICAL_ISR(&blusys_timer_state_lock);
 
@@ -112,7 +90,7 @@ static bool IRAM_ATTR blusys_timer_on_alarm(gptimer_handle_t gptimer,
     }
 
     portENTER_CRITICAL_ISR(&blusys_timer_state_lock);
-    timer->callback_active -= 1u;
+    blusys_callback_lifecycle_leave(&timer->callback_active);
     portEXIT_CRITICAL_ISR(&blusys_timer_state_lock);
 
     return should_yield;
@@ -151,7 +129,7 @@ blusys_err_t blusys_timer_open(uint32_t period_us, bool periodic, blusys_timer_t
         .flags.allow_pd = 0u,
     }, &timer->handle);
     if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+        err = blusys_translate_esp_err_in(TIMER_DOMAIN, esp_err);
         goto fail_lock;
     }
 
@@ -161,13 +139,13 @@ blusys_err_t blusys_timer_open(uint32_t period_us, bool periodic, blusys_timer_t
                                                },
                                                timer);
     if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+        err = blusys_translate_esp_err_in(TIMER_DOMAIN, esp_err);
         goto fail_timer;
     }
 
     esp_err = gptimer_enable(timer->handle);
     if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+        err = blusys_translate_esp_err_in(TIMER_DOMAIN, esp_err);
         goto fail_enabled;
     }
 
@@ -175,9 +153,7 @@ blusys_err_t blusys_timer_open(uint32_t period_us, bool periodic, blusys_timer_t
     return BLUSYS_OK;
 
 fail_enabled:
-    if (gptimer_disable(timer->handle) != ESP_OK) {
-        /* Best-effort cleanup before deleting the timer handle. */
-    }
+    (void) gptimer_disable(timer->handle);
 fail_timer:
     gptimer_del_timer(timer->handle);
 fail_lock:
@@ -200,12 +176,14 @@ blusys_err_t blusys_timer_close(blusys_timer_t *timer)
         return err;
     }
 
-    blusys_timer_set_closing(timer, true);
+    portENTER_CRITICAL(&blusys_timer_state_lock);
+    blusys_callback_lifecycle_set_closing(&timer->closing, true);
+    portEXIT_CRITICAL(&blusys_timer_state_lock);
 
     if (blusys_timer_is_started(timer)) {
         esp_err = gptimer_stop(timer->handle);
         if ((esp_err != ESP_OK) && (esp_err != ESP_ERR_INVALID_STATE)) {
-            err = blusys_translate_esp_err(esp_err);
+            err = blusys_translate_esp_err_in(TIMER_DOMAIN, esp_err);
             goto fail;
         }
         blusys_timer_set_started(timer, false);
@@ -213,22 +191,19 @@ blusys_err_t blusys_timer_close(blusys_timer_t *timer)
 
     esp_err = gptimer_disable(timer->handle);
     if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+        err = blusys_translate_esp_err_in(TIMER_DOMAIN, esp_err);
         goto fail;
     }
 
-    /* Release lock before the spin-wait — closing flag prevents concurrent
-       callers from using the handle.  The timer is already disabled so no
-       new ISR callbacks can fire; this wait is only for an in-flight one. */
     blusys_lock_give(&timer->lock);
 
-    blusys_timer_wait_for_callback_idle(timer);
+    blusys_callback_lifecycle_wait_for_idle(&timer->callback_active);
 
     esp_err = gptimer_del_timer(timer->handle);
     if (esp_err != ESP_OK) {
         blusys_lock_deinit(&timer->lock);
         free(timer);
-        return blusys_translate_esp_err(esp_err);
+        return blusys_translate_esp_err_in(TIMER_DOMAIN, esp_err);
     }
 
     blusys_lock_deinit(&timer->lock);
@@ -236,7 +211,9 @@ blusys_err_t blusys_timer_close(blusys_timer_t *timer)
     return BLUSYS_OK;
 
 fail:
-    blusys_timer_set_closing(timer, false);
+    portENTER_CRITICAL(&blusys_timer_state_lock);
+    blusys_callback_lifecycle_set_closing(&timer->closing, false);
+    portEXIT_CRITICAL(&blusys_timer_state_lock);
     blusys_lock_give(&timer->lock);
     return err;
 }
@@ -260,7 +237,7 @@ blusys_err_t blusys_timer_start(blusys_timer_t *timer)
         return BLUSYS_ERR_INVALID_STATE;
     }
 
-    blusys_timer_wait_for_callback_idle(timer);
+    blusys_callback_lifecycle_wait_for_idle(&timer->callback_active);
 
     esp_err = gptimer_set_raw_count(timer->handle, 0u);
     if (esp_err == ESP_OK) {
@@ -272,7 +249,7 @@ blusys_err_t blusys_timer_start(blusys_timer_t *timer)
         }
     }
 
-    err = blusys_translate_esp_err(esp_err);
+    err = blusys_translate_esp_err_in(TIMER_DOMAIN, esp_err);
     if (err == BLUSYS_OK) {
         blusys_timer_set_started(timer, true);
     }
@@ -301,10 +278,10 @@ blusys_err_t blusys_timer_stop(blusys_timer_t *timer)
     }
 
     esp_err = gptimer_stop(timer->handle);
-    err = blusys_translate_esp_err(esp_err);
+    err = blusys_translate_esp_err_in(TIMER_DOMAIN, esp_err);
     if (err == BLUSYS_OK) {
         blusys_timer_set_started(timer, false);
-        blusys_timer_wait_for_callback_idle(timer);
+        blusys_callback_lifecycle_wait_for_idle(&timer->callback_active);
     }
 
     blusys_lock_give(&timer->lock);
@@ -329,7 +306,7 @@ blusys_err_t blusys_timer_set_period(blusys_timer_t *timer, uint32_t period_us)
         return BLUSYS_ERR_INVALID_STATE;
     }
 
-    blusys_timer_wait_for_callback_idle(timer);
+    blusys_callback_lifecycle_wait_for_idle(&timer->callback_active);
     timer->period_us = period_us;
 
     blusys_lock_give(&timer->lock);
@@ -356,7 +333,7 @@ blusys_err_t blusys_timer_set_callback(blusys_timer_t *timer,
         return BLUSYS_ERR_INVALID_STATE;
     }
 
-    blusys_timer_wait_for_callback_idle(timer);
+    blusys_callback_lifecycle_wait_for_idle(&timer->callback_active);
 
     portENTER_CRITICAL(&blusys_timer_state_lock);
     timer->callback = callback;

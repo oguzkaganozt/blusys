@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 
 #include "blusys/framework/app/app.hpp"
 #include "blusys/framework/capabilities/event.hpp"
@@ -51,6 +52,7 @@ struct app_state {
 };
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event);
+std::optional<action> on_event(blusys::event event, app_state &state);
 
 /// Installed by platform/app_main.cpp; reducer talks to the radio only here.
 using hid_send_fn = void (*)(std::uint16_t usage, bool pressed);

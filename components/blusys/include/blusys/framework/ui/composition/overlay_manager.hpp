@@ -15,9 +15,9 @@ namespace blusys {
 // to real LVGL overlay handles. Replaces the earlier logging-only route sink.
 //
 // Products register overlays by ID during on_init. When the reducer calls
-// ctx.services().show_overlay(id) or ctx.services().hide_overlay(id), the route command flows
-// through the framework runtime into this sink, which calls the actual
-// blusys::overlay_show/hide.
+// ctx.fx().nav.show_overlay(id) or ctx.fx().nav.hide_overlay(id), the route
+// command flows through the framework runtime into this sink, which calls the
+// actual blusys::overlay_show/hide.
 
 class overlay_manager final : public blusys::route_sink {
 public:

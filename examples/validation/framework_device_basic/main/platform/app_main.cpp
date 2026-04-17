@@ -10,7 +10,7 @@ static const blusys::app_spec<framework_device_basic::AppState, framework_device
     .update         = framework_device_basic::update,
     .on_init        = framework_device_basic::ui::on_init,
     .on_tick        = nullptr,
-    .map_intent     = framework_device_basic::map_intent,
+    .on_event       = framework_device_basic::on_event,
     .tick_period_ms = 10,
 };
 

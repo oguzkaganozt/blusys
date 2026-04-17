@@ -72,7 +72,7 @@ See [Architecture](architecture.md) for the tier model.
 
 ### Framework product API versioning
 
-Breaking changes to `app_spec`, `app_ctx`, `app_services`, and umbrella `blusys/app/*.hpp` headers are announced alongside the framework tier (changelog / release notes when applicable) and should be accompanied by updates to canonical docs and quickstarts when they touch the recommended product path. For the runtime story (queues, threading, what not to do in `update()`), see [App runtime model](../app/app-runtime-model.md).
+Breaking changes to `app_spec`, `app_ctx`, `app_fx`, and umbrella `blusys/app/*.hpp` headers are announced alongside the framework tier (changelog / release notes when applicable) and should be accompanied by updates to canonical docs and quickstarts when they touch the recommended product path. For the runtime story (queues, threading, what not to do in `update()`), see [App runtime model](../app/app-runtime-model.md).
 
 ### Product application layout (enforced in CI)
 
@@ -85,7 +85,7 @@ For how the **framework** composes LVGL flex, scroll, and the interaction shell 
 ### Product application C++ shape {#product-application-cpp-shape}
 
 - **Reducer center:** domain rules live in `update(ctx, state, action)`; keep navigation and capability sync as explicit actions.
-- **Strong ids:** use `enum class` for routes and overlays in product code; `ctx.services().navigate_to` / `show_overlay` accept those enums.
+- **Strong ids:** use `enum class` for routes and overlays in product code; `ctx.fx().nav.to` / `ctx.fx().nav.show_overlay` accept those enums.
 - **State from factories:** use `ctx.product_state<YourState>()` in screen factories instead of file-scope pointers to `app_state`.
 - **View sync:** prefer `blusys::` bindings and small composites (for example `sync_percent_output`, `sync_line_chart_series`) over calling `blusys::ui::*` setters directly from product code.
 - **Route handles:** group `lv_obj_t*` handles in per-route structs with `clear()` on hide; the screen registry still owns teardown of the widget tree.

@@ -20,10 +20,10 @@ lv_obj_t *about_screen_create(app_ctx &ctx, const void *params,
     const auto &t   = blusys::theme();
 
     page page;
-    const bool in_shell =
-        ctx.services().shell() != nullptr && ctx.services().shell()->content_area != nullptr;
+    auto *shell = ctx.fx().nav.shell();
+    const bool in_shell = shell != nullptr && shell->content_area != nullptr;
     if (in_shell) {
-        page = page_create_in(ctx.services().shell()->content_area, {.scrollable = true});
+        page = page_create_in(shell->content_area, {.scrollable = true});
     } else {
         page = page_create({.scrollable = true});
     }

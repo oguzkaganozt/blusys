@@ -2,8 +2,6 @@
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
-#include "blusys/framework/app/services.hpp"
-
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -13,6 +11,7 @@
 namespace blusys {
 
 class screen_registry;
+class screen_router;
 
 // Shell header configuration.
 struct shell_header_config {
@@ -80,7 +79,7 @@ struct shell {
     shell_tab_item tabs[kMaxTabs] = {};
     std::size_t    tab_count      = 0;
     std::size_t    active_tab     = 0;
-    app_services *svc = nullptr; // bound services for tab navigation
+    screen_router *router = nullptr; // bound router for tab navigation
 };
 
 // Create the shell from config. Does not load it.
@@ -102,9 +101,9 @@ void shell_set_back_visible(shell &s, bool visible);
 lv_obj_t *shell_status_surface(shell &s);
 
 // Register tab items. Must be called before shell_load().
-// The tab bar's on_tab_changed fires svc->navigate_to(route_id).
+// The tab bar's on_tab_changed fires router->submit(route::set_root(route_id)).
 void shell_set_tabs(shell &s, const shell_tab_item *items, std::size_t count,
-                    app_services *svc);
+                    screen_router *router);
 
 // Set the active tab by index (updates visual highlight only).
 void shell_set_active_tab(shell &s, std::size_t index);

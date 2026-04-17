@@ -141,11 +141,9 @@ Normal product code only touches this layer.
 - `spec.hpp` — `app_spec<State, Action>` template: initial state, `update()` reducer,
   lifecycle hooks (`on_init`, `on_tick`), intent and event bridges, capability config, theme
 - `ctx.hpp` — `app_ctx`: dispatch actions, emit feedback, query capability status,
-  `product_state`, connectivity helpers; **`services()`** returns `app_services &` for
-  routing/UI/FS
-- `services.hpp` — `app_services`: navigate (`navigate_to`, `navigate_push`,
-  `navigate_back`), show/hide overlays, `screen_router` / `shell` / stack helpers,
-  ESP `spiffs` / `fatfs` when applicable
+  `product_state`, connectivity helpers; `fx()` returns `app_fx &` for typed
+  navigation/storage
+- `services.hpp` — legacy runtime bridge used by framework wiring only
 - `entry.hpp` — entry macros: `BLUSYS_APP_MAIN_HOST(spec)`,
   `BLUSYS_APP_MAIN_HEADLESS(spec)`, `BLUSYS_APP_MAIN_DEVICE(spec, profile)`
 - `internal/app_runtime.hpp` — runtime engine (internal, driven by the entry macros)

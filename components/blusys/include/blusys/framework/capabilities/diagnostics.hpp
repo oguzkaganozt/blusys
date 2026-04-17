@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #ifdef ESP_PLATFORM
-#include "blusys/services/system/console.h"
+#include "blusys/framework/services/system.h"
 #endif
 
 namespace blusys { class runtime; }

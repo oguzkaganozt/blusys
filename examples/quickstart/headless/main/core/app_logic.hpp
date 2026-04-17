@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 
 #include "blusys/framework/app/app.hpp"
 #include "blusys/framework/capabilities/event.hpp"
@@ -80,6 +81,7 @@ struct app_state {
 // ---- public functions ----
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event);
+std::optional<action> on_event(blusys::event event, app_state &state);
 
 const char *op_state_name(op_state s);
 

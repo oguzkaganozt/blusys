@@ -29,7 +29,7 @@
 #include <vector>
 
 #ifdef ESP_PLATFORM
-#include "blusys/services/protocol/mqtt.h"
+#include "blusys/framework/services/session.h"
 #endif
 
 namespace blusys { class runtime; }

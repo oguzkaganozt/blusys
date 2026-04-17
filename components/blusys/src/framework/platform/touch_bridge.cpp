@@ -72,7 +72,7 @@ void indev_event_cb(lv_event_t *e)
         }
         // Do not post intent::confirm on pointer release. Widgets (buttons, tabs)
         // already handle press/click; a global confirm here runs after LVGL has
-        // delivered those events and races map_intent (e.g. overriding shell tab
+        // delivered those events and races `on_event` (e.g. overriding shell tab
         // navigations). Encoder confirm is posted separately in input_bridge.
         break;
     }

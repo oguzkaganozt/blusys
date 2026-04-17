@@ -2,8 +2,7 @@
 
 #include "blusys/framework/capabilities/capability.hpp"
 
-#include "blusys/services/protocol/mdns.h"
-#include "blusys/services/protocol/local_ctrl.h"
+#include "blusys/framework/services/net.h"
 
 #include <cstddef>
 #include <cstdint>

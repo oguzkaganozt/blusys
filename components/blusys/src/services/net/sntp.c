@@ -71,18 +71,20 @@ blusys_err_t blusys_sntp_open(const blusys_sntp_config_t *config, blusys_sntp_t 
     h->sync_cb  = config->sync_cb;
     h->user_ctx = config->user_ctx;
 
-    esp_sntp_config_t sntp_cfg;
-    if (config->server2) {
-        esp_sntp_config_t tmp = ESP_NETIF_SNTP_DEFAULT_CONFIG_MULTIPLE(2,
-                                    ESP_SNTP_SERVER_LIST(server, config->server2));
-        memcpy(&sntp_cfg, &tmp, sizeof(sntp_cfg));
-    } else {
-        esp_sntp_config_t tmp = ESP_NETIF_SNTP_DEFAULT_CONFIG(server);
-        memcpy(&sntp_cfg, &tmp, sizeof(sntp_cfg));
-    }
-
+    esp_sntp_config_t sntp_cfg = {0};
     sntp_cfg.smooth_sync = config->smooth_sync;
-    sntp_cfg.sync_cb     = config->sync_cb ? sntp_sync_cb : NULL;
+    sntp_cfg.server_from_dhcp = false;
+    sntp_cfg.wait_for_sync = true;
+    sntp_cfg.start = true;
+    sntp_cfg.sync_cb = config->sync_cb ? sntp_sync_cb : NULL;
+    sntp_cfg.renew_servers_after_new_IP = false;
+    sntp_cfg.ip_event_to_renew = IP_EVENT_STA_GOT_IP;
+    sntp_cfg.index_of_first_server = 0;
+    sntp_cfg.num_of_servers = (config->server2 != NULL) ? 2 : 1;
+    sntp_cfg.servers[0] = server;
+    if (config->server2 != NULL) {
+        sntp_cfg.servers[1] = config->server2;
+    }
 
     s_active_handle = h;
 

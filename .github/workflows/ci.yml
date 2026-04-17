@@ -63,6 +63,22 @@ jobs:
       - name: Rule 7 — C++ framework files in namespace blusys
         run: python3 scripts/check-cpp-namespace.py
 
+      # ── Tier 0: P0d refactor guards (ratchet — baseline tightens per phase) ──
+      - name: P0d — no `ctx.services()` locator beyond baseline
+        run: bash scripts/check-no-service-locator.sh
+
+      - name: P0d — no `#ifdef ESP_PLATFORM` above HAL beyond baseline
+        run: bash scripts/check-no-platform-ifdef-above-hal.sh
+
+      - name: P0d — examples import only <blusys.hpp> beyond baseline
+        run: bash scripts/check-public-api.sh
+
+      - name: P0d — capability files follow header + _host + _device shape
+        run: bash scripts/check-capability-shape.sh
+
+      - name: P0d — services only reached via capabilities/runtime/test
+        run: bash scripts/check-service-access.sh
+
   # ── Tier 0: Layering Lint (legacy checks) ─────────────────────────────────
   lint:
     name: "Layering lint"
@@ -172,6 +188,35 @@ jobs:
           chmod +x scripts/scaffold-smoke.sh blusys
           scripts/scaffold-smoke.sh
 
+  # ── Tier 0: Minimal host test (no SDL / no mosquitto / no LVGL) ───────────
+  # P0c's "fast iteration loop" — compiles and runs every headless test under
+  # scripts/host-test/ using only libc / libstdc++ / libm. Much faster than
+  # host-smoke because it skips the SDL2 and libmosquitto toolchains.
+  host-test-minimal:
+    name: "Host test (minimal)"
+    needs: [blusys-layer-invariants]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake
+
+      - name: Configure + build P0c harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S scripts/host-test -B build-host-test -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build-host-test -j
+
+      - name: Run P0c tests
+        shell: bash
+        run: ctest --test-dir build-host-test --output-on-failure
+
   # ── Tier 0: Docs Build ────────────────────────────────────────────────────
   docs:
     name: "Docs build"
@@ -197,7 +242,7 @@ jobs:
   # ── Tier 1: Build Curated Examples ─────────────────────────────────────────
   build:
     name: "Build PR (${{ matrix.target }})"
-    needs: [lint, blusys-layer-invariants, inventory, host-smoke]
+    needs: [lint, blusys-layer-invariants, inventory, host-smoke, host-test-minimal]
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4
@@ -240,7 +285,7 @@ jobs:
 
   display-variants:
     name: "Display variants (${{ matrix.target }})"
-    needs: [lint, blusys-layer-invariants, inventory, host-smoke]
+    needs: [lint, blusys-layer-invariants, inventory, host-smoke, host-test-minimal]
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4

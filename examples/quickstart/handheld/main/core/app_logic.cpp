@@ -7,6 +7,7 @@
 #include "blusys/hal/log.h"
 
 #include <cstdint>
+#include <optional>
 
 namespace handheld_starter {
 
@@ -81,7 +82,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
         break;
 
     case action_tag::confirm:
-        ctx.services().show_overlay(overlay::confirm);
+        ctx.fx().nav.show_overlay(overlay::confirm);
         ctx.emit_feedback(blusys::feedback_channel::audio,
                           blusys::feedback_pattern::confirm);
         BLUSYS_LOGI(kTag, "confirmed level=%ld accent=%s hold=%s",
@@ -91,47 +92,56 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
         break;
 
     case action_tag::show_home:
-        ctx.services().navigate_to(route::home);
+        ctx.fx().nav.to(route::home);
         break;
 
     case action_tag::show_status:
-        ctx.services().navigate_to(route::status);
+        ctx.fx().nav.to(route::status);
         break;
 
     case action_tag::show_settings:
-        ctx.services().navigate_to(route::settings);
+        ctx.fx().nav.to(route::settings);
         break;
 
     case action_tag::open_setup:
-        ctx.services().navigate_push(route::setup);
+        ctx.fx().nav.push(route::setup);
         break;
 
     case action_tag::open_about:
-        ctx.services().navigate_push(route::about);
+        ctx.fx().nav.push(route::about);
         break;
     }
 
     ui::sync_all_panels(state);
 }
 
-bool map_intent(blusys::app_services &svc, blusys::intent intent, action *out)
+std::optional<action> on_event(blusys::event event, app_state &state)
 {
-    (void)svc;
-    switch (intent) {
-    case blusys::intent::increment:
-        *out = action{.tag = action_tag::level_delta, .value = 4};
-        return true;
-    case blusys::intent::decrement:
-        *out = action{.tag = action_tag::level_delta, .value = -4};
-        return true;
-    case blusys::intent::confirm:
-        *out = action{.tag = action_tag::confirm};
-        return true;
-    case blusys::intent::cancel:
-        *out = action{.tag = action_tag::toggle_hold};
-        return true;
+    (void)state;
+    switch (event.kind) {
+    case blusys::app_event_kind::intent:
+        switch (blusys::event_intent(event)) {
+        case blusys::intent::increment:
+            return action{.tag = action_tag::level_delta, .value = 4};
+        case blusys::intent::decrement:
+            return action{.tag = action_tag::level_delta, .value = -4};
+        case blusys::intent::confirm:
+            return action{.tag = action_tag::confirm};
+        case blusys::intent::cancel:
+            return action{.tag = action_tag::toggle_hold};
+        default:
+            return std::nullopt;
+        }
+    case blusys::app_event_kind::integration: {
+        blusys::capability_event ce{};
+        if (!blusys::map_integration_event(event.id, event.code, &ce)) {
+            return std::nullopt;
+        }
+        ce.payload = event.payload;
+        return action{.tag = action_tag::capability_event, .cap_event = ce};
+    }
     default:
-        return false;
+        return std::nullopt;
     }
 }
 

@@ -394,7 +394,7 @@ void display_update(const app_state &state)
 #endif  // CONFIG_BTCTRL_DISPLAY_ENABLED
 
 // on_init / on_tick ───────────────────────────────────────────────────────────
-void on_init_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
+void on_init_device(blusys::app_ctx &ctx, blusys::app_fx & /*fx*/,
                     app_state & /*state*/)
 {
     s_ctx = &ctx;
@@ -427,7 +427,7 @@ void on_init_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
 #endif
 }
 
-void on_tick_device(blusys::app_ctx & /*ctx*/, blusys::app_services & /*svc*/,
+void on_tick_device(blusys::app_ctx & /*ctx*/, blusys::app_fx & /*fx*/,
                     app_state &state, std::uint32_t now_ms)
 {
 #ifdef CONFIG_BTCTRL_SIMULATE_ON_CONNECT
@@ -465,7 +465,7 @@ void led_set(bool on)
     BLUSYS_LOGI(kTag, "[led] %s", on ? "solid (connected)" : "blink (advertising)");
 }
 
-void on_init_host(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
+void on_init_host(blusys::app_ctx &ctx, blusys::app_fx & /*fx*/,
                   app_state & /*state*/)
 {
     s_ctx = &ctx;
@@ -474,7 +474,7 @@ void on_init_host(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
     BLUSYS_LOGI(kTag, "bluetooth controller host stub — simulating encoder turns");
 }
 
-void on_tick_host(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
+void on_tick_host(blusys::app_ctx &ctx, blusys::app_fx & /*fx*/,
                   app_state &state, std::uint32_t now_ms)
 {
     s_ctx = &ctx;
@@ -494,8 +494,7 @@ const blusys::app_spec<app_state, action> spec{
     .on_init       = on_init_host,
     .on_tick       = on_tick_host,
 #endif
-    .capability_event_discriminant =
-        static_cast<std::uint32_t>(action_tag::capability_event),
+    .on_event       = bluetooth_controller::on_event,
     .tick_period_ms = 50,
     .capabilities  = &capabilities,
 };

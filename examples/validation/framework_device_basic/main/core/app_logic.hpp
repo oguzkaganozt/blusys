@@ -3,6 +3,7 @@
 #include "blusys/framework/app/app.hpp"
 
 #include <cstdint>
+#include <optional>
 
 #include "lvgl.h"
 
@@ -32,7 +33,6 @@ struct Action {
 };
 
 void update(app_ctx &ctx, AppState &state, const Action &action);
-
-bool map_intent(blusys::app_services &svc, blusys::intent intent, Action *out);
+std::optional<Action> on_event(blusys::event event, AppState &state);
 
 }  // namespace framework_device_basic

@@ -66,27 +66,33 @@ set(blusys_sources
     src/drivers/seven_seg.c
     src/drivers/display.c
     # --- Services layer ---
-    src/services/connectivity/ble_gatt.c
-    src/services/connectivity/ble_hid_device.c
-    src/services/connectivity/bluetooth.c
-    src/services/connectivity/espnow.c
-    src/services/connectivity/wifi.c
-    src/services/connectivity/wifi_mesh.c
-    src/services/connectivity/wifi_prov.c
-    src/services/connectivity/usb_hid.c
-    src/services/protocol/http_client.c
-    src/services/protocol/http_server.c
-    src/services/protocol/local_ctrl.c
-    src/services/protocol/mdns.c
-    src/services/protocol/mqtt.c
-    src/services/protocol/sntp.c
-    src/services/protocol/ws_client.c
+    src/services/net/ble_gatt.c
+    src/services/net/ble_hid_device.c
+    src/services/net/bluetooth.c
+    src/services/net/espnow.c
+    src/services/net/http_client.c
+    src/services/net/http_server.c
+    src/services/net/local_ctrl.c
+    src/services/net/mdns.c
+    src/services/net/usb_hid.c
+    src/services/net/wifi.c
+    src/services/net/wifi_mesh.c
+    src/services/net/wifi_prov.c
+    src/services/session/mqtt.c
+    src/services/net/sntp.c
+    src/services/session/ws_client.c
     src/services/storage/fatfs.c
     src/services/storage/fs.c
     src/services/system/console.c
     src/services/system/ota.c
     src/services/system/power_mgmt.c
+    # --- Framework internal service helpers ---
+    src/framework/services/internal/net_bootstrap.c
+    src/framework/services/internal/storage_helpers.c
     # --- Framework layer ---
+    src/framework/observe/error_domain.c
+    src/framework/observe/log.c
+    src/framework/observe/counter.c
     src/framework/engine/router.cpp
     src/framework/engine/event_queue.cpp
     src/framework/engine/framework_init.cpp

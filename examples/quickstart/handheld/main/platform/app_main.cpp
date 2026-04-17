@@ -43,9 +43,7 @@ static const blusys::app_spec<app_state, action> spec{
     .initial_state = {},
     .update = update,
     .on_init = ui::on_init,
-    .map_intent = map_intent,
-    .capability_event_discriminant =
-        static_cast<std::uint32_t>(action_tag::capability_event),
+    .on_event = on_event,
     .capabilities = &capabilities,
     .theme = &blusys::presets::expressive_dark(),
     .shell = &kShellConfig,

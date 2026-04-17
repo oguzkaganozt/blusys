@@ -28,6 +28,9 @@ struct app_event {
     const void    *payload = nullptr;
 };
 
+using event_kind = app_event_kind;
+using event      = app_event;
+
 [[nodiscard]] constexpr app_event make_intent_event(intent value,
                                                     std::uint32_t source_id = 0,
                                                     const void *payload = nullptr)
@@ -55,6 +58,11 @@ struct app_event {
 [[nodiscard]] constexpr intent app_event_intent(const app_event &event)
 {
     return static_cast<intent>(event.code);
+}
+
+[[nodiscard]] constexpr intent event_intent(const event &event)
+{
+    return app_event_intent(event);
 }
 
 }  // namespace blusys

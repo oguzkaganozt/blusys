@@ -1,5 +1,6 @@
 #pragma once
 
+#include "blusys/framework/app/fx.hpp"
 #include "blusys/framework/app/services.hpp"
 #include "blusys/framework/capabilities/list.hpp"
 #include "blusys/framework/feedback/feedback.hpp"
@@ -7,6 +8,7 @@
 #include "blusys/hal/error.h"
 
 #include <cassert>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -17,7 +19,7 @@ class app_runtime_base;
 
 class app_ctx {
 public:
-    // ---- routing / UI / FS (framework services; not part of reducer-facing state) ----
+    // ---- routing / UI / FS (legacy bridge; runtime wiring only) ----
 
     [[nodiscard]] app_services &services() noexcept
     {
@@ -27,6 +29,16 @@ public:
     [[nodiscard]] const app_services &services() const noexcept
     {
         return *services_;
+    }
+
+    [[nodiscard]] app_fx &fx() noexcept
+    {
+        return fx_;
+    }
+
+    [[nodiscard]] const app_fx &fx() const noexcept
+    {
+        return fx_;
     }
 
     // ---- feedback ----
@@ -86,13 +98,12 @@ public:
         if (capabilities_ == nullptr) {
             return nullptr;
         }
-        for (std::size_t i = 0; i < capabilities_->count; ++i) {
-            capability_base *c = capabilities_->items[i];
-            if (c != nullptr && c->kind() == T::kind_value) {
-                return static_cast<T *>(c);
-            }
-        }
-        return nullptr;
+        constexpr std::size_t kind_index = capability_kind_index(T::kind_value);
+        static_assert(kind_index < kCapabilityKindCount,
+                      "ctx.get<T>: capability kind out of range");
+
+        capability_base *c = capabilities_by_kind_[kind_index];
+        return c != nullptr ? static_cast<T *>(c) : nullptr;
     }
 
     // Convenience: returns `&capability->status()` or nullptr when the
@@ -116,6 +127,29 @@ public:
 private:
     friend class app_runtime_base;
 
+    void bind_capabilities(capability_list *capabilities) noexcept
+    {
+        capabilities_ = capabilities;
+        capabilities_by_kind_.fill(nullptr);
+
+        if (capabilities == nullptr || capabilities->items == nullptr) {
+            return;
+        }
+
+        for (std::size_t i = 0; i < capabilities->count; ++i) {
+            capability_base *c = capabilities->items[i];
+            if (c == nullptr) {
+                continue;
+            }
+
+            const std::size_t kind_index = capability_kind_index(c->kind());
+            if (kind_index < capabilities_by_kind_.size() &&
+                capabilities_by_kind_[kind_index] == nullptr) {
+                capabilities_by_kind_[kind_index] = c;
+            }
+        }
+    }
+
     std::uint32_t action_queue_drop_count_ = 0;
 
     using dispatch_fn = bool (*)(void *runtime, const void *action);
@@ -125,10 +159,14 @@ private:
     void                 *runtime_ptr_   = nullptr;
     void                 *product_state_ = nullptr;
     app_services         *services_      = nullptr;
+    app_fx                fx_            = {};
 
     // Non-owning view of the product's composed capability list. Set by the
     // runtime during init; drives `get<T>()` / `status_of<T>()`.
     capability_list *capabilities_ = nullptr;
+
+    // Dense O(1) lookup table keyed by capability_kind.
+    std::array<capability_base *, kCapabilityKindCount> capabilities_by_kind_{};
 };
 
 }  // namespace blusys

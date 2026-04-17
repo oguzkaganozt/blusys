@@ -4,6 +4,7 @@
 #include "blusys/framework/capabilities/event.hpp"
 
 #include <cstdint>
+#include <optional>
 
 namespace connected_headless {
 
@@ -25,7 +26,8 @@ struct Action {
 };
 
 void update(blusys::app_ctx &ctx, State &state, const Action &action);
+std::optional<Action> on_event(blusys::event event, State &state);
 
-void on_tick(blusys::app_ctx &ctx,  blusys::app_services &svc, State &state, std::uint32_t now_ms);
+void on_tick(blusys::app_ctx &ctx,  blusys::app_fx &fx, State &state, std::uint32_t now_ms);
 
 }  // namespace connected_headless

@@ -52,8 +52,7 @@ blusys::capability_list_storage capabilities{&connectivity, &telemetry};
 const blusys::app_spec<app_state, action> spec{
     .initial_state = {},
     .update        = update,
-    .capability_event_discriminant =
-        static_cast<std::uint32_t>(action_tag::capability_event),
+    .on_event      = on_event,
     .capabilities  = &capabilities,
 };
 

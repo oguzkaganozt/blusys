@@ -7,7 +7,7 @@
 #include <atomic>
 
 #ifdef ESP_PLATFORM
-#include "blusys/services/connectivity/wifi_prov.h"
+#include "blusys/framework/services/net.h"
 #endif
 
 namespace blusys { class runtime; }

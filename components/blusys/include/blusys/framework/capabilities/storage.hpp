@@ -5,8 +5,7 @@
 #include <cstdint>
 
 #ifdef ESP_PLATFORM
-#include "blusys/services/storage/fatfs.h"
-#include "blusys/services/storage/fs.h"
+#include "blusys/framework/services/storage.h"
 #endif
 
 namespace blusys { class runtime; }

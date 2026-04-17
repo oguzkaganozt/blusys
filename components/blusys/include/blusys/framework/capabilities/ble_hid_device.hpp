@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #ifdef ESP_PLATFORM
-#include "blusys/services/connectivity/ble_hid_device.h"
+#include "blusys/framework/services/net.h"
 #endif
 
 namespace blusys { class runtime; }

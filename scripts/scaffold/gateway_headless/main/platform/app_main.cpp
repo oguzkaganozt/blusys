@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <cstdint>
 
-namespace surface_surface_gateway::system {
+namespace surface_gateway::system {
 
 namespace {
 
@@ -104,9 +104,9 @@ blusys::storage_capability storage{{
 blusys::capability_list_storage capabilities{
     &connectivity, &lan_control, &telemetry, &diagnostics, &ota, &storage};
 
-void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_services &svc, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_fx &fx, app_state &state, std::uint32_t now_ms)
 {
-    (void)svc;
+    (void)fx;
     ++state.sample_count;
     state.active_devices = 1 + static_cast<std::int32_t>(state.sample_count % 3);
     state.agg_throughput = 12.0f + static_cast<float>(state.sample_count % 8);
@@ -126,18 +126,17 @@ void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_services &svc, app_state &st
     }
 }
 
-const blusys::app_spec<app_state, action> spec{
+const blusys::app_spec<surface_gateway::app_state, surface_gateway::action> spec{
     .initial_state  = {},
-    .update         = update,
+    .update         = surface_gateway::update,
     .on_tick        = on_tick,
-    .capability_event_discriminant =
-        static_cast<std::uint32_t>(action_tag::capability_event),
+    .on_event       = surface_gateway::on_event,
     .tick_period_ms = 300,
     .capabilities   = &capabilities,
 };
 
 }  // namespace
 
-}  // namespace surface_surface_gateway::system
+}  // namespace surface_gateway::system
 
 BLUSYS_APP_MAIN_HEADLESS(surface_gateway::system::spec)

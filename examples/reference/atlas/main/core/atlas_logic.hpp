@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 
 #include "blusys/framework/app/app.hpp"
 #include "blusys/framework/capabilities/event.hpp"
@@ -79,9 +80,7 @@ struct app_state {
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event);
 
-// Bridge used by atlas_capability → runtime integration events → reducer.
-// Returns true on successful map; the app_spec::map_event bridge fills
-// `out` with a reducer action.
-bool map_event(blusys::capability_event event, action *out);
+// Unified event hook used by atlas_capability → reducer.
+std::optional<action> on_event(blusys::event event, app_state &state);
 
 }  // namespace atlas_example

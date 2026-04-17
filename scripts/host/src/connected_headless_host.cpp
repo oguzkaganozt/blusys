@@ -11,6 +11,7 @@
 #include "blusys/hal/log.h"
 
 #include <cstdint>
+#include <optional>
 
 namespace {
 
@@ -107,10 +108,25 @@ void update(blusys::app_ctx &ctx, State &state, const Action &action)
 
 // ---- on_tick ----
 
-void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, State & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, State & /*state*/, std::uint32_t /*now_ms*/)
 {
-    (void)svc;
+    (void)fx;
     ctx.dispatch(Action{.tag = action_tag::periodic_tick});
+}
+
+std::optional<Action> on_event(blusys::event event, State &state)
+{
+    (void)state;
+    if (event.kind != blusys::app_event_kind::integration) {
+        return std::nullopt;
+    }
+
+    blusys::capability_event ce{};
+    if (!blusys::map_integration_event(event.id, event.code, &ce)) {
+        return std::nullopt;
+    }
+    ce.payload = event.payload;
+    return Action{.tag = action_tag::capability_event, .cap_event = ce};
 }
 
 // ---- capability configuration ----
@@ -136,8 +152,7 @@ static auto spec = blusys::app_spec<State, Action>{
     .initial_state  = {},
     .update         = update,
     .on_tick        = on_tick,
-    .capability_event_discriminant =
-        static_cast<std::uint32_t>(action_tag::capability_event),
+    .on_event       = on_event,
     .tick_period_ms = 1000,
     .capabilities   = &capabilities,
 };

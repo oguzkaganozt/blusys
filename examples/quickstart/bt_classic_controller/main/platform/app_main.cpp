@@ -671,7 +671,7 @@ void display_update(const bt_classic_controller::app_state &state)
 #endif  // CONFIG_BTCC_DISPLAY_ENABLED
 
 // ── on_init_device ────────────────────────────────────────────────────────────
-void on_init_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
+void on_init_device(blusys::app_ctx &ctx, blusys::app_fx & /*fx*/,
                     bt_classic_controller::app_state & /*state*/)
 {
     s_ctx = &ctx;
@@ -756,7 +756,7 @@ void on_init_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
 }
 
 // ── on_tick_device ────────────────────────────────────────────────────────────
-void on_tick_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
+void on_tick_device(blusys::app_ctx &ctx, blusys::app_fx & /*fx*/,
                     bt_classic_controller::app_state &state,
                     std::uint32_t now_ms)
 {
@@ -837,7 +837,7 @@ void on_tick_device(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
 
 #else  // host stub ──────────────────────────────────────────────────────────
 
-void on_init_host(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
+void on_init_host(blusys::app_ctx &ctx, blusys::app_fx & /*fx*/,
                   bt_classic_controller::app_state & /*state*/)
 {
     s_ctx = &ctx;
@@ -845,7 +845,7 @@ void on_init_host(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
     BLUSYS_LOGI(kTag, "bt_classic_controller host stub — no BT available");
 }
 
-void on_tick_host(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
+void on_tick_host(blusys::app_ctx &ctx, blusys::app_fx & /*fx*/,
                   bt_classic_controller::app_state & /*state*/,
                   std::uint32_t /*now_ms*/)
 {

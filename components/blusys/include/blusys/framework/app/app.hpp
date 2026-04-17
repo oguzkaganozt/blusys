@@ -6,7 +6,7 @@
 //   - app_spec<State, Action>  — define your app
 //   - app_identity             — product name, theme, feedback preset
 //   - app_ctx                  — dispatch (returns whether queued), capability status, feedback
-//   - app_services (via ctx.services()) — routing, overlays, screen_router/shell, ESP FS accessors
+//   - app_fx (via ctx.fx())     — typed navigation/storage surface
 //   - entry macros             — BLUSYS_APP, BLUSYS_APP_INTERACTIVE, BLUSYS_APP_DASHBOARD,
 //                                  BLUSYS_APP_MAIN_* (escape hatches)
 //   - theme presets            — expressive_dark, operational_light, compact_dark, oled
@@ -16,8 +16,8 @@
 //   #include "blusys/framework/platform/profiles/st7735.hpp"
 // Optional layout hints when supporting multiple display sizes:
 //   #include "blusys/framework/platform/layout_surface.hpp"
-// Optional integration helpers (typed map_event, variant actions):
-//   #include 
+// Optional integration helpers (framework events, variant actions):
+//   #include "blusys/framework/capabilities/event.hpp"
 
 #include "blusys/framework/app/spec.hpp"
 #include "blusys/framework/app/identity.hpp"

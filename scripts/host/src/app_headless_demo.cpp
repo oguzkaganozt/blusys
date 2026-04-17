@@ -88,9 +88,9 @@ void update(blusys::app_ctx &ctx, SensorState &state, const Action &action)
 
 // ---- on_tick: simulate sensor readings ----
 
-void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, SensorState &state, std::uint32_t now_ms)
+void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, SensorState &state, std::uint32_t now_ms)
 {
-    (void)svc;
+    (void)fx;
     (void)state;
 
     // Simulate a temperature curve: rises for 10 readings, then drops.
@@ -119,7 +119,6 @@ static const blusys::app_spec<SensorState, Action> spec{
     .update         = update,
     .on_init        = nullptr,
     .on_tick        = on_tick,
-    .map_intent     = nullptr,
     .tick_period_ms = 1000,
 };
 

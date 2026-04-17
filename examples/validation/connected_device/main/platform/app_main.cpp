@@ -19,9 +19,7 @@ static const blusys::app_spec<connected_device::State, connected_device::Action>
     .initial_state = {},
     .update        = connected_device::update,
     .on_init       = connected_device::ui::on_init,
-    .map_intent     = connected_device::map_intent,
-    .capability_event_discriminant =
-        static_cast<std::uint32_t>(connected_device::Tag::capability_event),
+    .on_event      = connected_device::on_event,
     .capabilities   = &capabilities,
 };
 

@@ -7,8 +7,12 @@
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 
+#include "blusys/framework/observe/counter.h"
+#include "blusys/framework/observe/log.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
+
+#define LCD_DOMAIN err_domain_driver_lcd
 
 #include "soc/soc_caps.h"
 #include "driver/gpio.h"
@@ -395,6 +399,9 @@ static esp_err_t blusys_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io_
 
     st7735 = calloc(1, sizeof(*st7735));
     if (st7735 == NULL) {
+        blusys_counter_inc(LCD_DOMAIN, 1);
+        BLUSYS_LOG(BLUSYS_LOG_ERROR, LCD_DOMAIN,
+                   "op=st7735_install alloc-failed bytes=%zu", sizeof(*st7735));
         return ESP_ERR_NO_MEM;
     }
 

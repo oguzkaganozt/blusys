@@ -11,7 +11,10 @@
 #include "freertos/task.h"
 
 #include "tinyusb.h"
-#include "tusb_cdc_acm.h"
+#include "tinyusb_default_config.h"
+#if CONFIG_TINYUSB_CDC_ENABLED
+#include "tinyusb_cdc_acm.h"
+#endif
 #include "class/hid/hid_device.h"
 
 #include "blusys/hal/internal/esp_err_shim.h"
@@ -56,6 +59,37 @@ static blusys_err_t ensure_global_lock(void)
     return BLUSYS_OK;
 }
 
+static void usb_device_event_cb(tinyusb_event_t *event, void *arg)
+{
+    blusys_usb_device_t *h = (blusys_usb_device_t *)arg;
+
+    if (event == NULL || h == NULL || h->event_cb == NULL) {
+        return;
+    }
+
+    switch (event->id) {
+    case TINYUSB_EVENT_ATTACHED:
+        h->event_cb(h, BLUSYS_USB_DEVICE_EVENT_CONNECTED, h->event_user_ctx);
+        break;
+    case TINYUSB_EVENT_DETACHED:
+        h->event_cb(h, BLUSYS_USB_DEVICE_EVENT_DISCONNECTED, h->event_user_ctx);
+        break;
+#ifdef CONFIG_TINYUSB_SUSPEND_CALLBACK
+    case TINYUSB_EVENT_SUSPENDED:
+        h->event_cb(h, BLUSYS_USB_DEVICE_EVENT_SUSPENDED, h->event_user_ctx);
+        break;
+#endif
+#ifdef CONFIG_TINYUSB_RESUME_CALLBACK
+    case TINYUSB_EVENT_RESUMED:
+        h->event_cb(h, BLUSYS_USB_DEVICE_EVENT_RESUMED, h->event_user_ctx);
+        break;
+#endif
+    default:
+        break;
+    }
+}
+
+#if CONFIG_TINYUSB_CDC_ENABLED
 /* CDC ACM receive callback — called from TinyUSB task */
 static void tusb_cdc_rx_cb(int itf, cdcacm_event_t *event)
 {
@@ -83,9 +117,10 @@ static void tusb_cdc_rx_cb(int itf, cdcacm_event_t *event)
         cb(h, buf, rx_len, user_ctx);
     }
 }
+#endif
 
 blusys_err_t blusys_usb_device_open(const blusys_usb_device_config_t *config,
-                                     blusys_usb_device_t **out_dev)
+                                      blusys_usb_device_t **out_dev)
 {
     blusys_err_t err;
     esp_err_t    esp_err;
@@ -129,7 +164,7 @@ blusys_err_t blusys_usb_device_open(const blusys_usb_device_config_t *config,
         return err;
     }
 
-    /* Build device descriptor strings */
+    tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
     const char *str_desc[] = {
         /* 0: Language */    "\x09\x04",
         /* 1: Manufacturer */ config->manufacturer ? config->manufacturer : "Blusys",
@@ -137,13 +172,19 @@ blusys_err_t blusys_usb_device_open(const blusys_usb_device_config_t *config,
         /* 3: Serial */       config->serial       ? config->serial       : "1234567890",
     };
 
-    tinyusb_config_t tusb_cfg = {
-        .device_descriptor      = NULL, /* TinyUSB built-in default descriptor */
-        .string_descriptor      = (const char **)str_desc,
-        .string_descriptor_count = 4,
-        .external_phy           = false,
-        .configuration_descriptor = NULL,
-    };
+    tusb_cfg.descriptor.string = str_desc;
+    tusb_cfg.descriptor.string_count = 4;
+    tusb_cfg.event_cb = usb_device_event_cb;
+    tusb_cfg.event_arg = h;
+
+#if !CONFIG_TINYUSB_CDC_ENABLED
+    if (config->device_class == BLUSYS_USB_DEVICE_CLASS_CDC) {
+        blusys_lock_deinit(&h->lock);
+        blusys_lock_give(&s_dev_global_lock);
+        free(h);
+        return BLUSYS_ERR_NOT_SUPPORTED;
+    }
+#endif
 
     esp_err = tinyusb_driver_install(&tusb_cfg);
     if (esp_err != ESP_OK) {
@@ -154,10 +195,11 @@ blusys_err_t blusys_usb_device_open(const blusys_usb_device_config_t *config,
         return err;
     }
 
+#if CONFIG_TINYUSB_CDC_ENABLED
     if (config->device_class == BLUSYS_USB_DEVICE_CLASS_CDC) {
         tinyusb_config_cdcacm_t acm_cfg = {
-            .usb_dev      = TINYUSB_USBDEV_0,
-            .callback_rx  = tusb_cdc_rx_cb,
+            .cdc_port = TINYUSB_CDC_ACM_0,
+            .callback_rx = tusb_cdc_rx_cb,
             .callback_rx_wanted_char = NULL,
             .callback_line_state_changed = NULL,
             .callback_line_coding_changed = NULL,
@@ -172,6 +214,7 @@ blusys_err_t blusys_usb_device_open(const blusys_usb_device_config_t *config,
             return err;
         }
     }
+#endif
 
     s_usb_device_handle = h;
     blusys_lock_give(&s_dev_global_lock);
@@ -212,7 +255,6 @@ blusys_err_t blusys_usb_device_cdc_write(blusys_usb_device_t *dev,
                                           const void *data, size_t len)
 {
     blusys_err_t err;
-    esp_err_t    esp_err;
 
     if (dev == NULL || data == NULL || len == 0) {
         return BLUSYS_ERR_INVALID_ARG;
@@ -228,6 +270,12 @@ blusys_err_t blusys_usb_device_cdc_write(blusys_usb_device_t *dev,
         return BLUSYS_ERR_INVALID_STATE;
     }
 
+#if !CONFIG_TINYUSB_CDC_ENABLED
+    blusys_lock_give(&dev->lock);
+    return BLUSYS_ERR_NOT_SUPPORTED;
+#else
+    esp_err_t esp_err;
+
     esp_err = tinyusb_cdcacm_write_queue(TINYUSB_CDC_ACM_0, (uint8_t *)data, len);
     if (esp_err == ESP_OK) {
         esp_err = tinyusb_cdcacm_write_flush(TINYUSB_CDC_ACM_0, 0);
@@ -236,6 +284,7 @@ blusys_err_t blusys_usb_device_cdc_write(blusys_usb_device_t *dev,
 
     blusys_lock_give(&dev->lock);
     return err;
+#endif
 }
 
 blusys_err_t blusys_usb_device_cdc_set_rx_callback(
@@ -259,11 +308,17 @@ blusys_err_t blusys_usb_device_cdc_set_rx_callback(
         return BLUSYS_ERR_INVALID_STATE;
     }
 
+#if !CONFIG_TINYUSB_CDC_ENABLED
+    blusys_lock_give(&dev->lock);
+    return BLUSYS_ERR_NOT_SUPPORTED;
+#else
+
     dev->cdc_rx_cb       = callback;
     dev->cdc_rx_user_ctx = user_ctx;
 
     blusys_lock_give(&dev->lock);
     return BLUSYS_OK;
+#endif
 }
 
 blusys_err_t blusys_usb_device_hid_send_report(blusys_usb_device_t *dev,

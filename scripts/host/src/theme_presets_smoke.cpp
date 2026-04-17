@@ -30,10 +30,10 @@ int main()
     if (expressive.feedback_voice == operational.feedback_voice) {
         return 6;
     }
-    if (compact.color_background != expressive.color_background) {
+    if (!lv_color_eq(compact.color_background, expressive.color_background)) {
         return 7;
     }
-    if (compact.color_background == operational.color_background) {
+    if (lv_color_eq(compact.color_background, operational.color_background)) {
         return 8;
     }
 

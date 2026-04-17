@@ -250,7 +250,7 @@ void run_device(const app_spec<State, Action> &spec,
                     }
                     p->runtime->screen_router().focus_scopes().refresh_current();
                     if (p->has_shell) {
-                        auto *sh = p->runtime->ctx().services().shell();
+                        auto *sh = p->runtime->ctx().fx().nav.shell();
                         if (sh != nullptr) {
                             p->runtime->screen_router().sync_shell_chrome(*sh);
                             shell_set_back_visible(

@@ -48,10 +48,10 @@ const char *headless_telemetry_surface_label()
 #endif
 
 #ifndef BLUSYS_FRAMEWORK_HAS_UI
-void on_init_host(blusys::app_ctx & /*ctx*/, blusys::app_services &svc,
+void on_init_host(blusys::app_ctx & /*ctx*/, blusys::app_fx &fx,
                   app_state & /*state*/)
 {
-    (void)svc;
+    (void)fx;
     BLUSYS_LOGI("headless_telemetry",
                 "headless telemetry reference initialized — entering operational loop");
 }
@@ -162,9 +162,9 @@ float drift_sensor(float base, float range, std::uint32_t tick)
 // Lives in integration/ because it needs direct access to the telemetry
 // capability instance for record().
 
-void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_services &svc, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_fx &fx, app_state &state, std::uint32_t now_ms)
 {
-    (void)svc;
+    (void)fx;
     ++state.sample_count;
 
     // Simulate sensor readings.
@@ -201,8 +201,7 @@ const blusys::app_spec<app_state, action> spec{
     .on_init        = on_init_host,
 #endif
     .on_tick        = on_tick,
-    .capability_event_discriminant =
-        static_cast<std::uint32_t>(action_tag::capability_event),
+    .on_event       = on_event,
     .tick_period_ms = 200,
     .capabilities   = &capabilities,
 #ifdef BLUSYS_FRAMEWORK_HAS_UI

@@ -6,9 +6,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "blusys/framework/observe/counter.h"
+#include "blusys/framework/observe/log.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
 #include "blusys/hal/gpio.h"
+
+#define SEVEN_SEG_DOMAIN err_domain_driver_seven_seg
+
+static blusys_err_t seven_seg_oom(const char *site, size_t bytes)
+{
+    blusys_counter_inc(SEVEN_SEG_DOMAIN, 1);
+    BLUSYS_LOG(BLUSYS_LOG_ERROR, SEVEN_SEG_DOMAIN,
+               "op=install alloc-failed site=%s bytes=%zu", site, bytes);
+    return BLUSYS_ERR(SEVEN_SEG_DOMAIN, BLUSYS_ERR_CODE(BLUSYS_ERR_NO_MEM));
+}
 
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
@@ -378,7 +390,7 @@ blusys_err_t blusys_seven_seg_open(const blusys_seven_seg_config_t *config,
 
     blusys_seven_seg_t *display = calloc(1, sizeof(*display));
     if (display == NULL) {
-        return BLUSYS_ERR_NO_MEM;
+        return seven_seg_oom("handle", sizeof(*display));
     }
 
     display->driver      = config->driver;

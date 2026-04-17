@@ -18,13 +18,14 @@
 
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
-#include "blusys/hal/internal/nvs_init.h"
+#include "blusys/framework/services/internal/net_bootstrap.h"
 
 #define MESH_DEFAULT_MAX_LAYER       6
 #define MESH_DEFAULT_MAX_CONNECTIONS 6
 
 struct blusys_wifi_mesh {
     blusys_lock_t                     lock;
+    blusys_net_bootstrap_t            bootstrap;
     esp_netif_t                      *sta_netif;
     esp_netif_t                      *ap_netif;
     esp_event_handler_instance_t      mesh_handler;
@@ -187,35 +188,18 @@ blusys_err_t blusys_wifi_mesh_open(const blusys_wifi_mesh_config_t *config,
     h->on_event = config->on_event;
     h->user_ctx = config->user_ctx;
 
-    err = blusys_nvs_ensure_init();
+    err = blusys_net_bootstrap_start_wifi(&h->bootstrap);
     if (err != BLUSYS_OK) {
-        goto fail_nvs;
+        goto fail_bootstrap;
     }
 
-    esp_err_t esp_err = esp_netif_init();
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_netif_init;
-    }
-
-    esp_err = esp_event_loop_create_default();
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_event_loop;
-    }
-
-    esp_err = esp_netif_create_default_wifi_mesh_netifs(&h->sta_netif, &h->ap_netif);
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+    blusys_err_t net_err = blusys_net_bootstrap_create_mesh_netifs(&h->sta_netif, &h->ap_netif);
+    if (net_err != BLUSYS_OK) {
+        err = net_err;
         goto fail_netif_create;
     }
 
-    wifi_init_config_t wifi_cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_err = esp_wifi_init(&wifi_cfg);
-    if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
-        goto fail_wifi_init;
-    }
+    esp_err_t esp_err;
 
     esp_err = esp_event_handler_instance_register(MESH_EVENT, ESP_EVENT_ANY_ID,
                                                    mesh_event_handler, h,
@@ -301,16 +285,11 @@ fail_mesh_init:
 fail_handler_ip:
     esp_event_handler_instance_unregister(MESH_EVENT, ESP_EVENT_ANY_ID, h->mesh_handler);
 fail_handler_mesh:
-    esp_wifi_deinit();
-fail_wifi_init:
     esp_netif_destroy(h->sta_netif);
     esp_netif_destroy(h->ap_netif);
 fail_netif_create:
-    esp_event_loop_delete_default();
-fail_event_loop:
-    esp_netif_deinit();
-fail_netif_init:
-fail_nvs:
+    blusys_net_bootstrap_stop(&h->bootstrap);
+fail_bootstrap:
     blusys_lock_give(&s_mesh_global_lock);
     blusys_lock_deinit(&h->lock);
     free(h);
@@ -339,13 +318,14 @@ blusys_err_t blusys_wifi_mesh_close(blusys_wifi_mesh_t *handle)
 
     esp_mesh_stop();
     esp_mesh_deinit();
-    esp_wifi_stop();
-    esp_wifi_deinit();
 
-    esp_netif_destroy(handle->sta_netif);
-    esp_netif_destroy(handle->ap_netif);
-    esp_event_loop_delete_default();
-    esp_netif_deinit();
+    if (handle->sta_netif != NULL) {
+        esp_netif_destroy(handle->sta_netif);
+    }
+    if (handle->ap_netif != NULL) {
+        esp_netif_destroy(handle->ap_netif);
+    }
+    blusys_net_bootstrap_stop(&handle->bootstrap);
 
     err = blusys_lock_take(&s_mesh_global_lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {

@@ -71,6 +71,9 @@ endfunction()
 # ── Common framework sources (mode-independent) ─────────────────────────────
 set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_COMPONENT_DIR}/src/hal/error.c
+    ${BLUSYS_COMPONENT_DIR}/src/framework/observe/error_domain.c
+    ${BLUSYS_COMPONENT_DIR}/src/framework/observe/log.c
+    ${BLUSYS_COMPONENT_DIR}/src/framework/observe/counter.c
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/feedback.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/presets.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/internal/logging_sink.cpp
@@ -184,7 +187,17 @@ function(blusys_host_bridge_add_library MODE)
     # Common host sources now include MQTT capability glue, so every host
     # framework library needs libmosquitto on its link line.
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(MOSQUITTO REQUIRED IMPORTED_TARGET libmosquitto)
+    pkg_check_modules(MOSQUITTO QUIET IMPORTED_TARGET libmosquitto)
+    if(NOT MOSQUITTO_FOUND)
+        set(_blusys_pkgconfig_path "$ENV{PKG_CONFIG_PATH}")
+        if(_blusys_pkgconfig_path STREQUAL "")
+            set(_blusys_pkgconfig_path "/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig")
+        else()
+            set(_blusys_pkgconfig_path "/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig:${_blusys_pkgconfig_path}")
+        endif()
+        set(ENV{PKG_CONFIG_PATH} "${_blusys_pkgconfig_path}")
+        pkg_check_modules(MOSQUITTO REQUIRED IMPORTED_TARGET libmosquitto)
+    endif()
 
     if(MODE STREQUAL "interactive")
         list(APPEND _sources ${_BLUSYS_HOST_BRIDGE_INTERACTIVE_SOURCES})

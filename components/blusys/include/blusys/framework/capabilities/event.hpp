@@ -103,7 +103,7 @@ enum class capability_event_tag : std::uint16_t {
     ble_hid_ready,
 
     // `map_integration_event()` had no case; `raw_event_id` / `raw_event_code` hold the
-    // original `app_event` id/code when `app_spec::map_event` is non-null.
+    // original `app_event` id/code for raw integration events.
     integration_passthrough,
 };
 
@@ -116,12 +116,8 @@ struct capability_event {
 };
 
 // Maps a raw integration event (as posted by capabilities) to a canonical event.
-// Returns false when `event_id` is not handled here; the runtime may still deliver
-// `integration_passthrough` to `app_spec::map_event` (see `app_runtime`).
+// Returns false when `event_id` is not handled here.
 [[nodiscard]] bool map_integration_event(std::uint32_t event_id, std::uint32_t event_code,
-                                         capability_event *out) noexcept;
-
-// Sentinel for app_spec::capability_event_discriminant — auto-wrap disabled.
-inline constexpr std::uint32_t k_capability_event_discriminant_unset = 0xFFFFFFFFu;
+                                          capability_event *out) noexcept;
 
 }  // namespace blusys

@@ -3,6 +3,8 @@
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/hal/log.h"
 
+#include <optional>
+
 namespace atlas_example {
 
 namespace {
@@ -44,12 +46,25 @@ const char *op_state_name(op_state s)
     return "unknown";
 }
 
-bool map_event(blusys::capability_event event, action *out)
+std::optional<action> on_event(blusys::event event, app_state &state)
 {
-    if (out == nullptr) return false;
-    out->tag       = action_tag::capability_event;
-    out->cap_event = event;
-    return true;
+    (void)state;
+    if (event.kind != blusys::app_event_kind::integration) {
+        return std::nullopt;
+    }
+
+    blusys::capability_event ce{};
+    if (blusys::map_integration_event(event.id, event.code, &ce)) {
+        ce.payload = event.payload;
+    } else {
+        ce.tag            = blusys::capability_event_tag::integration_passthrough;
+        ce.value          = 0;
+        ce.raw_event_id   = event.id;
+        ce.raw_event_code = event.code;
+        ce.payload        = event.payload;
+    }
+
+    return action{.tag = action_tag::capability_event, .cap_event = ce};
 }
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event)

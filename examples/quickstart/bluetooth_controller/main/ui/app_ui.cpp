@@ -5,7 +5,7 @@
 
 namespace bluetooth_controller::ui {
 
-void on_init(blusys::app_ctx & /*ctx*/, blusys::app_services & /*svc*/, app_state & /*state*/)
+void on_init(blusys::app_ctx & /*ctx*/, blusys::app_fx & /*fx*/, app_state & /*state*/)
 {
     BLUSYS_LOGI("bluetooth_controller", "headless — no UI surface");
 }

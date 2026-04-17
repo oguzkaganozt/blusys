@@ -19,6 +19,7 @@
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
 #include "blusys/hal/internal/timeout.h"
+#include "blusys/framework/services/internal/session_helper.h"
 
 #define WS_RECV_BUF_SIZE   1024
 #define WS_RECV_TASK_STACK 4096
@@ -30,6 +31,7 @@
 struct blusys_ws_client {
     esp_transport_handle_t    tcp_transport;
     esp_transport_handle_t    ws_transport;
+    blusys_session_t          session;
     blusys_lock_t             lock;
     SemaphoreHandle_t         task_done_sem;
     TaskHandle_t              recv_task;
@@ -37,7 +39,6 @@ struct blusys_ws_client {
     blusys_ws_disconnect_cb_t disconnect_cb;
     void                     *user_ctx;
     int                       timeout_ms;
-    volatile bool             connected;
     volatile bool             running;
     char                      host[128];
     int                       port;
@@ -214,10 +215,14 @@ static void ws_recv_task(void *arg)
     /* Only fire disconnect_cb for peer-initiated disconnects (server CLOSE
        frame or network error).  User-initiated disconnect() sets h->running =
        false before closing the transport, so peer_disconnected stays false. */
+    if (peer_disconnected) {
+        blusys_session_note_disconnected(&h->session);
+    }
     if (peer_disconnected && h->disconnect_cb != NULL) {
         h->disconnect_cb(h->user_ctx);
     }
 
+    blusys_session_set_worker_active(&h->session, false);
     xSemaphoreGive(h->task_done_sem);
     vTaskDelete(NULL);
 }
@@ -270,6 +275,8 @@ blusys_err_t blusys_ws_client_open(const blusys_ws_client_config_t *config,
     h->server_cert_pem = config->server_cert_pem;
     h->subprotocol    = config->subprotocol;
 
+    blusys_session_init(&h->session);
+
     *out_handle = h;
     return BLUSYS_OK;
 }
@@ -280,8 +287,8 @@ blusys_err_t blusys_ws_client_close(blusys_ws_client_t *handle)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
-    /* Disconnect if connected — unconditional; disconnect() returns OK immediately
-       if not connected, so no need to check handle->connected without the lock. */
+    /* Disconnect if active — unconditional; disconnect() returns OK immediately
+       if idle, so no need to check the session state without the lock. */
     blusys_ws_client_disconnect(handle);
 
     blusys_lock_deinit(&handle->lock);
@@ -296,13 +303,25 @@ blusys_err_t blusys_ws_client_connect(blusys_ws_client_t *handle)
         return BLUSYS_ERR_INVALID_ARG;
     }
 
+    if (!blusys_session_request_connect(&handle->session)) {
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
     blusys_err_t err = blusys_lock_take(&handle->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
+        blusys_session_finish_disconnect(&handle->session);
         return err;
     }
 
-    if (handle->connected) {
+    if (blusys_session_is_closing(&handle->session)) {
         blusys_lock_give(&handle->lock);
+        blusys_session_finish_disconnect(&handle->session);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    if (blusys_session_is_connected(&handle->session)) {
+        blusys_lock_give(&handle->lock);
+        blusys_session_finish_disconnect(&handle->session);
         return BLUSYS_ERR_INVALID_STATE;
     }
 
@@ -311,6 +330,7 @@ blusys_err_t blusys_ws_client_connect(blusys_ws_client_t *handle)
     blusys_lock_give(&handle->lock);
 
     if (err != BLUSYS_OK) {
+        blusys_session_finish_disconnect(&handle->session);
         return err;
     }
 
@@ -319,6 +339,8 @@ blusys_err_t blusys_ws_client_connect(blusys_ws_client_t *handle)
     int ret = esp_transport_connect(handle->ws_transport, handle->host, handle->port, timeout);
     if (ret != 0) {
         destroy_transports(handle);
+        blusys_session_finish_connect(&handle->session, false);
+        blusys_session_finish_disconnect(&handle->session);
         return BLUSYS_ERR_IO;
     }
 
@@ -326,11 +348,19 @@ blusys_err_t blusys_ws_client_connect(blusys_ws_client_t *handle)
     err = blusys_lock_take(&handle->lock, BLUSYS_LOCK_WAIT_FOREVER);
     if (err != BLUSYS_OK) {
         destroy_transports(handle);
+        blusys_session_finish_disconnect(&handle->session);
         return err;
     }
 
-    handle->connected = true;
-    handle->running   = true;
+    if (!blusys_session_finish_connect(&handle->session, true)) {
+        blusys_lock_give(&handle->lock);
+        esp_transport_close(handle->ws_transport);
+        destroy_transports(handle);
+        blusys_session_finish_disconnect(&handle->session);
+        return BLUSYS_ERR_INVALID_STATE;
+    }
+
+    handle->running = true;
 
     BaseType_t created = xTaskCreate(ws_recv_task, "ws_recv",
                                       WS_RECV_TASK_STACK, handle,
@@ -339,13 +369,16 @@ blusys_err_t blusys_ws_client_connect(blusys_ws_client_t *handle)
     if (created != pdPASS) {
         /* Reset state while still holding the lock so no concurrent caller
            can observe connected=true on a handle with no receive task. */
-        handle->connected = false;
-        handle->running   = false;
+        handle->running = false;
+        blusys_session_note_disconnected(&handle->session);
         blusys_lock_give(&handle->lock);
         esp_transport_close(handle->ws_transport);
         destroy_transports(handle);
+        blusys_session_finish_disconnect(&handle->session);
         return BLUSYS_ERR_NO_MEM;
     }
+
+    blusys_session_set_worker_active(&handle->session, true);
 
     blusys_lock_give(&handle->lock);
     return BLUSYS_OK;
@@ -362,7 +395,9 @@ blusys_err_t blusys_ws_client_disconnect(blusys_ws_client_t *handle)
         return err;
     }
 
-    if (!handle->connected) {
+    bool worker_active = blusys_session_is_worker_active(&handle->session);
+
+    if (!blusys_session_request_disconnect(&handle->session)) {
         blusys_lock_give(&handle->lock);
         return BLUSYS_OK;
     }
@@ -371,18 +406,21 @@ blusys_err_t blusys_ws_client_disconnect(blusys_ws_client_t *handle)
        concurrent send() that captured ws_transport but hasn't called send_raw
        yet will return IO error rather than operating on a closing transport. */
     handle->running   = false;
-    handle->connected = false;
+    blusys_session_note_disconnected(&handle->session);
 
     blusys_lock_give(&handle->lock);
 
     /* Close the transport — interrupts any pending esp_transport_read(). */
     esp_transport_close(handle->ws_transport);
 
-    /* Wait for the receive task to acknowledge shutdown (signals task_done_sem
-       just before calling vTaskDelete). */
-    xSemaphoreTake(handle->task_done_sem, portMAX_DELAY);
+    if (worker_active) {
+        /* Wait for the receive task to acknowledge shutdown (signals task_done_sem
+           just before calling vTaskDelete). */
+        xSemaphoreTake(handle->task_done_sem, portMAX_DELAY);
+    }
 
     destroy_transports(handle);
+    blusys_session_finish_disconnect(&handle->session);
 
     return BLUSYS_OK;
 }
@@ -398,7 +436,7 @@ blusys_err_t blusys_ws_client_send_text(blusys_ws_client_t *handle, const char *
         return err;
     }
 
-    if (!handle->connected) {
+    if (!blusys_session_is_connected(&handle->session)) {
         blusys_lock_give(&handle->lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
@@ -407,9 +445,9 @@ blusys_err_t blusys_ws_client_send_text(blusys_ws_client_t *handle, const char *
        send — consistent with the http_client pattern (lock taken with timeout 0
        to serialise; I/O performed without holding the lock).
        Callers must not call send() concurrently with disconnect() on the same
-       handle; disconnect() sets connected = false under the lock first, so any
-       send() arriving after that will see INVALID_STATE without touching the
-       transport. */
+        handle; disconnect() marks the session closing under the lock first, so
+        any send() arriving after that will see INVALID_STATE without touching
+        the transport. */
     esp_transport_handle_t t = handle->ws_transport;
     int timeout = (handle->timeout_ms == BLUSYS_TIMEOUT_FOREVER) ? -1 : handle->timeout_ms;
 
@@ -433,7 +471,7 @@ blusys_err_t blusys_ws_client_send(blusys_ws_client_t *handle,
         return err;
     }
 
-    if (!handle->connected) {
+    if (!blusys_session_is_connected(&handle->session)) {
         blusys_lock_give(&handle->lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
@@ -459,7 +497,7 @@ bool blusys_ws_client_is_connected(blusys_ws_client_t *handle)
         return false;
     }
 
-    bool connected = handle->connected;
+    bool connected = blusys_session_is_connected(&handle->session);
 
     blusys_lock_give(&handle->lock);
     return connected;

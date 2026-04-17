@@ -4,6 +4,7 @@
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 
+#include <cstddef>
 #include <cstdint>
 
 namespace blusys {
@@ -17,8 +18,7 @@ namespace blusys {
 //   telemetry      0x0600 – 0x06FF
 //   provisioning   0x0700 – 0x07FF
 //   mqtt (host SDL) 0x0800 – 0x08FF
-//   product custom 0x0900 – 0x09FF (map in `capability_event_map.cpp` or handle via
-//                  `app_spec::map_event` as `integration_passthrough` until mapped)
+//   product custom 0x0900 – 0x09FF (handle in `on_event()` or extend the mapper)
 //   lan_control    0x0A00 – 0x0AFF
 //   usb            0x0B00 – 0x0BFF
 //   ble_hid_device 0x0C00 – 0x0CFF
@@ -38,6 +38,13 @@ enum class capability_kind : std::uint8_t {
     ble_hid_device,
     custom,
 };
+
+constexpr std::size_t kCapabilityKindCount = static_cast<std::size_t>(capability_kind::custom) + 1;
+
+constexpr std::size_t capability_kind_index(capability_kind kind) noexcept
+{
+    return static_cast<std::size_t>(kind);
+}
 
 // Common header for every capability status struct. Concrete capabilities
 // inherit via aggregate (C-style) composition so `status.capability_ready`

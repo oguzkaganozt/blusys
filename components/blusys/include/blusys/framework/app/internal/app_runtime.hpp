@@ -13,25 +13,11 @@
 #include "blusys/framework/engine/router.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/framework/feedback/internal/logging_sink.hpp"
+#include "blusys/framework/observe/budget.hpp"
 #include "blusys/hal/log.h"
 
 #include <cstddef>
 #include <cstdint>
-#include <type_traits>
-
-namespace blusys::detail {
-
-template <typename T, typename = void>
-struct action_has_cap_event_member : std::false_type {};
-
-template <typename T>
-struct action_has_cap_event_member<T, std::void_t<decltype(std::declval<T &>().cap_event)>>
-    : std::true_type {};
-
-template <typename T>
-inline constexpr bool action_has_cap_event_member_v = action_has_cap_event_member<T>::value;
-
-}  // namespace blusys::detail
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/framework/ui/composition/screen_router.hpp"
@@ -39,6 +25,8 @@ inline constexpr bool action_has_cap_event_member_v = action_has_cap_event_membe
 #endif
 
 namespace blusys {
+
+class storage_capability;
 
 // ---- non-template base: wires app_ctx internals ----
 
@@ -69,6 +57,18 @@ protected:
         ctx.services_ = svc;
     }
 
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+    static void bind_fx_navigation(app_ctx &ctx, screen_router *router, shell *shell)
+    {
+        ctx.fx_.bind_navigation(router, shell);
+    }
+#endif
+
+    static void bind_fx_storage(app_ctx &ctx, storage_capability *storage)
+    {
+        ctx.fx_.bind_storage(storage);
+    }
+
     static void wire_route_sink(app_services &svc, blusys::route_sink *sink)
     {
         svc.route_sink_ = sink;
@@ -92,13 +92,14 @@ protected:
 
     static void bind_capabilities(app_ctx &ctx, capability_list *capabilities)
     {
-        ctx.capabilities_ = capabilities;
+        ctx.bind_capabilities(capabilities);
     }
 };
 
 // ---- app_runtime: the core bridge template ----
 
-template <typename State, typename Action, std::size_t ActionQueueCap = 16>
+template <typename State, typename Action,
+          std::size_t ActionQueueCap = blusys::budget::action_queue_depth>
 class app_runtime final : public app_runtime_base {
 public:
     using spec_type = app_spec<State, Action>;
@@ -132,6 +133,7 @@ public:
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
         wire_screen_router(services_, &screen_router_);
         screen_router_.bind_ctx(&ctx_);
+        bind_fx_navigation(ctx_, &screen_router_, nullptr);
 #endif
 
         bind_ctx(ctx_, framework_runtime_.feedback_bus_ptr(), &dispatch_trampoline, this);
@@ -140,7 +142,8 @@ public:
         // Create and load the interaction shell if configured.
         if (spec_.shell != nullptr) {
             shell_ = shell_create(*spec_.shell);
-            shell_.svc = &services_;
+            shell_.router = &screen_router_;
+            bind_fx_navigation(ctx_, &screen_router_, &shell_);
             wire_shell(services_, &shell_);
             shell_load(shell_);
 
@@ -152,44 +155,24 @@ public:
             screen_router_.set_screen_changed_callback(
                 [](lv_obj_t * /*screen*/, void *user_ctx) {
                     auto *s = static_cast<shell *>(user_ctx);
-                    if (s == nullptr || s->svc == nullptr) {
+                    if (s == nullptr || s->router == nullptr) {
                         return;
                     }
-                    auto *router = s->svc->screen_router();
-                    if (router == nullptr) {
-                        return;
-                    }
-                    router->sync_shell_chrome(*s);
-                    shell_set_back_visible(*s, router->stack_depth() > 1);
+                    s->router->sync_shell_chrome(*s);
+                    shell_set_back_visible(*s, s->router->stack_depth() > 1);
                 },
                 &shell_);
         }
 #endif
 
         bind_capabilities(ctx_, spec_.capabilities);
+        bind_fx_storage(ctx_, ctx_.get<storage_capability>());
         start_capabilities();
         sync_services_storage(ctx_, services_);
         bind_product_state(ctx_, static_cast<void *>(&state_));
 
-        if (spec_.capabilities != nullptr && spec_.map_event == nullptr) {
-            if constexpr (!detail::action_has_cap_event_member_v<Action>) {
-                BLUSYS_LOGE("blusys_app",
-                            "capabilities require app_spec::map_event when Action has no "
-                            "cap_event field");
-                return BLUSYS_ERR_INVALID_ARG;
-            }
-            if constexpr (detail::action_has_cap_event_member_v<Action>) {
-                if (spec_.capability_event_discriminant == k_capability_event_discriminant_unset) {
-                    BLUSYS_LOGE(
-                        "blusys_app",
-                        "capabilities registered but capability_event_discriminant is unset");
-                    return BLUSYS_ERR_INVALID_ARG;
-                }
-            }
-        }
-
         if (spec_.on_init != nullptr) {
-            spec_.on_init(ctx_, services_, state_);
+            spec_.on_init(ctx_, ctx_.fx(), state_);
         }
 
         return BLUSYS_OK;
@@ -316,68 +299,12 @@ private:
                                      blusys::route_sink * /*routes*/)
     {
         auto *owner = static_cast<app_runtime *>(ctx);
-        if (event.kind == blusys::app_event_kind::intent) {
-            if (owner->spec_.map_intent == nullptr) {
-                return;
+        if (owner->spec_.on_event != nullptr) {
+            if (auto out_action = owner->spec_.on_event(event, owner->state_);
+                out_action.has_value()) {
+                owner->post_action(*out_action);
             }
-            Action action;
-            if (owner->spec_.map_intent(owner->services_,
-                                        blusys::app_event_intent(event),
-                                        &action)) {
-                owner->post_action(action);
-            }
-        } else if (event.kind == blusys::app_event_kind::integration) {
-            capability_event ce{};
-            const bool mapped =
-                map_integration_event(event.id, event.code, &ce);
-            if (mapped) {
-                ce.payload = event.payload;
-            } else {
-                if (owner->spec_.map_event == nullptr) {
-                    if (owner->spec_.capabilities != nullptr) {
-                        BLUSYS_LOGW("blusys_app",
-                                    "unknown integration event id=%lu code=%lu (no map_event)",
-                                    static_cast<unsigned long>(event.id),
-                                    static_cast<unsigned long>(event.code));
-                    }
-                    return;
-                }
-                ce.tag            = capability_event_tag::integration_passthrough;
-                ce.value          = 0;
-                ce.raw_event_id   = event.id;
-                ce.raw_event_code = event.code;
-                ce.payload        = event.payload;
-            }
-
-            if (owner->spec_.map_event != nullptr) {
-                Action out_action{};
-                if (owner->spec_.map_event(ce, &out_action)) {
-                    owner->post_action(out_action);
-                } else {
-                    BLUSYS_LOGD("blusys_app",
-                                "map_event dropped integration event (tag=%u)",
-                                static_cast<unsigned>(ce.tag));
-                }
-                return;
-            }
-
-            if (!mapped || ce.tag == capability_event_tag::integration_passthrough) {
-                return;
-            }
-
-            if (owner->spec_.capability_event_discriminant ==
-                k_capability_event_discriminant_unset) {
-                return;
-            }
-            if constexpr (detail::action_has_cap_event_member_v<Action>) {
-                Action out_action{};
-                using tag_type =
-                    std::remove_const_t<std::remove_reference_t<decltype(out_action.tag)>>;
-                out_action.tag =
-                    static_cast<tag_type>(owner->spec_.capability_event_discriminant);
-                out_action.cap_event = ce;
-                owner->post_action(out_action);
-            }
+            return;
         }
     }
 
@@ -385,7 +312,7 @@ private:
     {
         auto *owner = static_cast<app_runtime *>(ctx);
         if (owner->spec_.on_tick != nullptr) {
-            owner->spec_.on_tick(owner->ctx_, owner->services_, owner->state_, now_ms);
+            owner->spec_.on_tick(owner->ctx_, owner->ctx_.fx(), owner->state_, now_ms);
         }
     }
 

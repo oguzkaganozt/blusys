@@ -4,6 +4,7 @@
 #include "blusys/framework/feedback/feedback.hpp"
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/router.hpp"
+#include "blusys/framework/observe/budget.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -34,7 +35,7 @@ struct runtime_handler {
 
 class runtime {
 public:
-    static constexpr std::size_t kMaxQueuedEvents = 16;
+    static constexpr std::size_t kMaxQueuedEvents = blusys::budget::event_queue_depth;
     static constexpr std::uint32_t kDefaultTickPeriodMs = 10;
 
     runtime() = default;

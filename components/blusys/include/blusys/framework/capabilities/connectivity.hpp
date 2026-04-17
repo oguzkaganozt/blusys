@@ -7,11 +7,7 @@
 #include <atomic>
 
 #ifdef ESP_PLATFORM
-#include "blusys/services/connectivity/wifi.h"
-#include "blusys/services/connectivity/wifi_prov.h"
-#include "blusys/services/protocol/mdns.h"
-#include "blusys/services/protocol/local_ctrl.h"
-#include "blusys/services/protocol/sntp.h"
+#include "blusys/framework/services/net.h"
 #endif
 
 namespace blusys { class runtime; }
@@ -21,7 +17,7 @@ namespace blusys {
 // ---- shared types (always available) ----
 
 // Well-known integration event IDs posted by the connectivity capability.
-// Apps match on these in map_event() to convert into app-specific actions.
+// Apps match on these inside `on_event()` to convert into app-specific actions.
 enum class connectivity_event : std::uint32_t {
     wifi_started              = 0x0100,
     wifi_connecting           = 0x0101,

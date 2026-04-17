@@ -7,6 +7,11 @@
 #include "freertos/task.h"
 #include "blusys/services/connectivity/bluetooth.h"
 
+#ifndef CONFIG_BT_DEVICE_NAME
+#define CONFIG_BT_DEVICE_NAME "blusys-device"
+#endif
+
+#if CONFIG_BT_MODE_SCAN
 static void scan_cb(const blusys_bluetooth_scan_result_t *result, void *user_ctx)
 {
     (void)user_ctx;
@@ -21,6 +26,7 @@ static void scan_cb(const blusys_bluetooth_scan_result_t *result, void *user_ctx
     printf("Found: %-32s  addr=%s  rssi=%d dBm\n",
            result->name[0] ? result->name : "(no name)", addr_str, result->rssi);
 }
+#endif
 
 void run_bluetooth_basic(void)
 {
@@ -31,14 +37,14 @@ void run_bluetooth_basic(void)
 
     blusys_err_t err = blusys_bluetooth_open(&cfg, &bt);
     if (err != BLUSYS_OK) {
-        printf("bluetooth_open failed: %d\n", err);
+        printf("bluetooth_open failed: %lu\n", (unsigned long)err);
         return;
     }
 
 #if CONFIG_BT_MODE_ADVERTISE
     err = blusys_bluetooth_advertise_start(bt);
     if (err != BLUSYS_OK) {
-        printf("advertise_start failed: %d\n", err);
+        printf("advertise_start failed: %lu\n", (unsigned long)err);
         blusys_bluetooth_close(bt);
         return;
     }

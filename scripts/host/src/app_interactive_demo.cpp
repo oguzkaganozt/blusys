@@ -14,6 +14,7 @@
 #include "blusys/hal/log.h"
 
 #include <cstdint>
+#include <optional>
 
 namespace {
 
@@ -21,7 +22,7 @@ constexpr const char *kTag = "volume_app";
 
 namespace view = blusys;
 using blusys::app_ctx;
-using blusys::app_services;
+using blusys::app_fx;
 
 // ---- state ----
 
@@ -76,7 +77,7 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
         break;
 
     case Tag::confirm:
-        ctx.services().show_overlay(1);
+        ctx.fx().nav.show_overlay(1);
         ctx.emit_feedback(blusys::feedback_channel::audio,
                           blusys::feedback_pattern::confirm);
         BLUSYS_LOGI(kTag, "confirmed — volume=%ld", static_cast<long>(state.volume));
@@ -84,34 +85,35 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
     }
 }
 
-// ---- intent-to-action map ----
+// ---- unified event hook ----
 
-bool map_intent(blusys::app_services &svc, blusys::intent intent, Action *out)
+std::optional<Action> on_event(blusys::event event, AppState &state)
 {
-    (void)svc;
-    switch (intent) {
-    case blusys::intent::increment:
-        *out = Action{.tag = Tag::volume_up};
-        return true;
-    case blusys::intent::decrement:
-        *out = Action{.tag = Tag::volume_down};
-        return true;
-    case blusys::intent::confirm:
-        *out = Action{.tag = Tag::confirm};
-        return true;
-    case blusys::intent::cancel:
-        *out = Action{.tag = Tag::toggle_mute};
-        return true;
+    (void)state;
+    switch (event.kind) {
+    case blusys::app_event_kind::intent:
+        switch (blusys::event_intent(event)) {
+        case blusys::intent::increment:
+            return Action{.tag = Tag::volume_up};
+        case blusys::intent::decrement:
+            return Action{.tag = Tag::volume_down};
+        case blusys::intent::confirm:
+            return Action{.tag = Tag::confirm};
+        case blusys::intent::cancel:
+            return Action{.tag = Tag::toggle_mute};
+        default:
+            return std::nullopt;
+        }
     default:
-        return false;
+        return std::nullopt;
     }
 }
 
 // ---- on_init: build the UI ----
 
-void on_init(app_ctx &ctx, app_services &svc, AppState &state)
+void on_init(app_ctx &ctx, app_fx &fx, AppState &state)
 {
-    (void)svc;
+    (void)fx;
     auto p = view::page_create();
 
     view::title(p.content, "Blusys Volume Control");
@@ -137,7 +139,7 @@ void on_init(app_ctx &ctx, app_services &svc, AppState &state)
 
     view::overlay_create(p.screen, 1,
                          {.text = "Settings saved", .duration_ms = 1500},
-                         *ctx.services().overlay_manager());
+                         *ctx.fx().nav.overlay_manager());
 
     view::page_load(p);
 
@@ -154,7 +156,7 @@ static const blusys::app_spec<AppState, Action> spec{
     .update         = update,
     .on_init        = on_init,
     .on_tick        = nullptr,
-    .map_intent     = map_intent,
+    .on_event       = on_event,
     .tick_period_ms = 10,
 };
 

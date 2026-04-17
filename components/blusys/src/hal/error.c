@@ -2,26 +2,29 @@
 
 const char *blusys_err_string(blusys_err_t err)
 {
-    switch (err) {
-    case BLUSYS_OK:
+    /* Render the generic code embedded in the low 16 bits. The domain prefix
+     * is provided separately by the log front-end via
+     * blusys_err_domain_string(), so this string focuses on the code itself. */
+    switch (BLUSYS_ERR_CODE(err)) {
+    case 0: /* OK */
         return "ok";
-    case BLUSYS_ERR_INVALID_ARG:
+    case 1: /* INVALID_ARG */
         return "invalid argument";
-    case BLUSYS_ERR_INVALID_STATE:
+    case 2: /* INVALID_STATE */
         return "invalid state";
-    case BLUSYS_ERR_NOT_SUPPORTED:
+    case 3: /* NOT_SUPPORTED */
         return "not supported";
-    case BLUSYS_ERR_TIMEOUT:
+    case 4: /* TIMEOUT */
         return "timeout";
-    case BLUSYS_ERR_BUSY:
+    case 5: /* BUSY */
         return "busy";
-    case BLUSYS_ERR_NO_MEM:
+    case 6: /* NO_MEM */
         return "out of memory";
-    case BLUSYS_ERR_IO:
+    case 7: /* IO */
         return "io error";
-    case BLUSYS_ERR_NOT_FOUND:
+    case 8: /* NOT_FOUND */
         return "not found";
-    case BLUSYS_ERR_INTERNAL:
+    case 9: /* INTERNAL */
         return "internal error";
     default:
         return "unknown error";

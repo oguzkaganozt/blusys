@@ -54,11 +54,11 @@ template <typename RouteEnum, typename = std::enable_if_t<std::is_enum_v<RouteEn
 // This is the framework-owned route sink used for interactive products.
 // Products compose their navigation in on_init:
 //
-//   ctx.services().screen_router()->register_screen(RouteId::home, &create_home);
-//   ctx.services().navigate_to(RouteId::home);
+//   ctx.fx().nav.screen_router()->register_screen(RouteId::home, &create_home);
+//   ctx.fx().nav.to(RouteId::home);
 //
-//   ctx.services().overlay_manager()->register_overlay(OverlayId::modal, overlay);
-//   ctx.services().show_overlay(OverlayId::modal);
+//   ctx.fx().nav.overlay_manager()->register_overlay(OverlayId::modal, overlay);
+//   ctx.fx().nav.show_overlay(OverlayId::modal);
 //
 // Tab routes (shell tab bar) use navigate_to(route_id) — one stack slot per tab.
 // Pushed flows (modals, wizards) use navigate_push / navigate_back; shell header

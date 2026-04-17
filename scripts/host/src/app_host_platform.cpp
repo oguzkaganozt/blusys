@@ -131,7 +131,7 @@ static void encoder_read_cb(lv_indev_t * /*indev*/, lv_indev_data_t *data)
                          ? LV_INDEV_STATE_PRESSED
                          : LV_INDEV_STATE_RELEASED;
 
-    // Post framework intents so the app's map_intent can process encoder
+    // Post framework intents so the app's `on_event` can process encoder
     // input through the standard reducer pipeline — matching device behavior.
     if (g_runtime != nullptr) {
         if (diff > 0) {

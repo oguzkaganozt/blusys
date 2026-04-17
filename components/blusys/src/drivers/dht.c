@@ -7,8 +7,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "blusys/framework/observe/counter.h"
+#include "blusys/framework/observe/log.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
+
+#define DHT_DOMAIN err_domain_driver_dht
+
+static blusys_err_t dht_oom(const char *site, size_t bytes)
+{
+    blusys_counter_inc(DHT_DOMAIN, 1);
+    BLUSYS_LOG(BLUSYS_LOG_ERROR, DHT_DOMAIN,
+               "op=install alloc-failed site=%s bytes=%zu", site, bytes);
+    return BLUSYS_ERR(DHT_DOMAIN, BLUSYS_ERR_CODE(BLUSYS_ERR_NO_MEM));
+}
 
 #include "driver/gpio.h"
 #include "driver/rmt_common.h"
@@ -188,13 +200,15 @@ blusys_err_t blusys_dht_open(const blusys_dht_config_t *config,
 
     dht = calloc(1, sizeof(*dht));
     if (dht == NULL) {
-        return BLUSYS_ERR_NO_MEM;
+        return dht_oom("handle", sizeof(*dht));
     }
 
     dht->rx_sym_buf = calloc(DHT_RX_BUF_SYMBOLS, sizeof(*dht->rx_sym_buf));
     if (dht->rx_sym_buf == NULL) {
+        blusys_err_t oom =
+            dht_oom("rx_sym_buf", DHT_RX_BUF_SYMBOLS * sizeof(*dht->rx_sym_buf));
         free(dht);
-        return BLUSYS_ERR_NO_MEM;
+        return oom;
     }
 
     dht->type = config->type;

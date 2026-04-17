@@ -1,0 +1,27 @@
+/* blusys/framework/observe/counter.h — monotonic u32 counters per domain.
+ *
+ * One slot per blusys_err_domain_t. Cheap to bump from any context (atomic
+ * add). Diagnostics surfaces (P11) read snapshots; the runtime may reset them
+ * across long tests.
+ */
+
+#ifndef BLUSYS_FRAMEWORK_OBSERVE_COUNTER_H
+#define BLUSYS_FRAMEWORK_OBSERVE_COUNTER_H
+
+#include <stdint.h>
+
+#include "blusys/framework/observe/error_domain.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void     blusys_counter_inc(blusys_err_domain_t domain, uint32_t by);
+uint32_t blusys_counter_get(blusys_err_domain_t domain);
+void     blusys_counter_reset_all(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* BLUSYS_FRAMEWORK_OBSERVE_COUNTER_H */

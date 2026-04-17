@@ -7,6 +7,9 @@
 #ifndef BLUSYS_BLUSYS_H
 #define BLUSYS_BLUSYS_H
 
+/* --- Framework: observe (error domains, structured log, trace, counters) --- */
+#include "blusys/framework/observe/observe.h"
+
 /* --- HAL layer --- */
 #include "blusys/hal/adc.h"
 #include "blusys/hal/dac.h"
@@ -53,29 +56,10 @@
 #include "blusys/drivers/led_strip.h"
 #include "blusys/drivers/seven_seg.h"
 
-/* --- Services layer --- */
-/* connectivity */
-#include "blusys/services/connectivity/ble_gatt.h"
-#include "blusys/services/connectivity/bluetooth.h"
-#include "blusys/services/connectivity/espnow.h"
-#include "blusys/services/connectivity/wifi.h"
-#include "blusys/services/connectivity/wifi_mesh.h"
-#include "blusys/services/connectivity/wifi_prov.h"
-#include "blusys/services/connectivity/usb_hid.h"
-/* protocol */
-#include "blusys/services/protocol/http_client.h"
-#include "blusys/services/protocol/http_server.h"
-#include "blusys/services/protocol/local_ctrl.h"
-#include "blusys/services/protocol/mdns.h"
-#include "blusys/services/protocol/mqtt.h"
-#include "blusys/services/protocol/sntp.h"
-#include "blusys/services/protocol/ws_client.h"
-/* storage */
-#include "blusys/services/storage/fatfs.h"
-#include "blusys/services/storage/fs.h"
-/* system */
-#include "blusys/services/system/console.h"
-#include "blusys/services/system/ota.h"
-#include "blusys/services/system/power_mgmt.h"
+/* --- Services layer (via framework wrappers) --- */
+#include "blusys/framework/services/net.h"
+#include "blusys/framework/services/session.h"
+#include "blusys/framework/services/storage.h"
+#include "blusys/framework/services/system.h"
 
 #endif /* BLUSYS_BLUSYS_H */

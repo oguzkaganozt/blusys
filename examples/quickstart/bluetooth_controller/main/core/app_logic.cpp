@@ -2,6 +2,8 @@
 
 #include "blusys/hal/log.h"
 
+#include <optional>
+
 namespace bluetooth_controller {
 
 namespace {
@@ -80,6 +82,21 @@ ctrl_mode next_mode(ctrl_mode m)
 }
 
 }  // namespace
+
+std::optional<action> on_event(blusys::event event, app_state &state)
+{
+    (void)state;
+    if (event.kind != blusys::app_event_kind::integration) {
+        return std::nullopt;
+    }
+
+    blusys::capability_event ce{};
+    if (!blusys::map_integration_event(event.id, event.code, &ce)) {
+        return std::nullopt;
+    }
+    ce.payload = event.payload;
+    return action{.tag = action_tag::capability_event, .cap_event = ce};
+}
 
 void update(blusys::app_ctx & /*ctx*/, app_state &state, const action &event)
 {

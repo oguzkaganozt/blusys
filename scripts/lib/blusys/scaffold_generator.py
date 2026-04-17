@@ -208,6 +208,7 @@ def render_headless_logic_hpp(namespace_name: str, capabilities: list[str]) -> s
 #include \"blusys/framework/capabilities/event.hpp\"
 
 #include <cstdint>
+#include <optional>
 
 namespace {namespace_name} {{
 
@@ -225,7 +226,8 @@ struct app_state {{
 }};
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event);
-void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state, std::uint32_t now_ms);
+std::optional<action> on_event(blusys::event event, app_state &state);
+void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state, std::uint32_t now_ms);
 
 }}  // namespace {namespace_name}
 """
@@ -235,7 +237,24 @@ def render_headless_logic_cpp(namespace_name: str, capabilities: list[str]) -> s
     switch_body = _headless_update_switch_body(capabilities)
     return f"""#include \"core/app_logic.hpp\"
 
+#include <optional>
+
 namespace {namespace_name} {{
+
+std::optional<action> on_event(blusys::event event, app_state &state)
+{{
+    (void)state;
+    if (event.kind != blusys::app_event_kind::integration) {{
+        return std::nullopt;
+    }}
+
+    blusys::capability_event ce{{}};
+    if (!blusys::map_integration_event(event.id, event.code, &ce)) {{
+        return std::nullopt;
+    }}
+    ce.payload = event.payload;
+    return action{{.tag = action_tag::capability_event, .cap_event = ce}};
+}}
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {{
@@ -248,10 +267,10 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {switch_body}    }}
 }}
 
-void on_tick(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state, std::uint32_t now_ms)
+void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state, std::uint32_t now_ms)
 {{
     (void)ctx;
-    (void)svc;
+    (void)fx;
     (void)now_ms;
     state.tick_count++;
 }}
@@ -266,6 +285,7 @@ def render_ui_logic_hpp(namespace_name: str) -> str:
 #include \"blusys/framework/app/app.hpp\"
 
 #include <cstdint>
+#include <optional>
 
 namespace {namespace_name} {{
 
@@ -284,7 +304,7 @@ struct action {{
 }};
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &action);
-bool map_intent(blusys::app_services &svc, blusys::intent intent, action *out);
+std::optional<action> on_event(blusys::event event, app_state &state);
 
 }}  // namespace {namespace_name}
 """
@@ -296,6 +316,7 @@ def render_ui_logic_cpp(namespace_name: str) -> str:
 #include \"blusys/framework/ui/binding/action_widgets.hpp\"
 
 #include <cstdio>
+#include <optional>
 
 namespace {namespace_name} {{
 
@@ -318,18 +339,20 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
     }}
 }}
 
-bool map_intent(blusys::app_services &svc, blusys::intent intent, action *out)
+std::optional<action> on_event(blusys::event event, app_state &state)
 {{
-    (void)svc;
-    switch (intent) {{
+    (void)state;
+    if (event.kind != blusys::app_event_kind::intent) {{
+        return std::nullopt;
+    }}
+
+    switch (blusys::event_intent(event)) {{
     case blusys::intent::increment:
-        *out = action{{.tag = action_tag::increment}};
-        return true;
+        return action{{.tag = action_tag::increment}};
     case blusys::intent::decrement:
-        *out = action{{.tag = action_tag::decrement}};
-        return true;
+        return action{{.tag = action_tag::decrement}};
     default:
-        return false;
+        return std::nullopt;
     }}
 }}
 
@@ -344,7 +367,7 @@ def render_ui_hpp(namespace_name: str) -> str:
 
 namespace {namespace_name}::ui {{
 
-void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state);
+void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state);
 
 }}  // namespace {namespace_name}::ui
 """
@@ -358,9 +381,9 @@ def render_ui_cpp(namespace_name: str, title: str) -> str:
 
 namespace {namespace_name}::ui {{
 
-void on_init(blusys::app_ctx &ctx, blusys::app_services &svc, app_state &state)
+void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state)
 {{
-    (void)svc;
+    (void)fx;
 
     auto page = blusys::page_create();
     blusys::title(page.content, \"{title}\");
@@ -587,12 +610,16 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
 
     cap_list = ", ".join(capability_refs)
     ui_include = '#include "ui/app_ui.hpp"\n' if interface != "headless" else ""
-    ui_fields = (
-        f"    .on_init = {namespace_name}::ui::on_init,\n    .map_intent = {namespace_name}::map_intent,\n"
-        if interface != "headless"
-        else "    .on_tick = %s::on_tick,\n    .capability_event_discriminant = static_cast<std::uint32_t>(%s::action_tag::capability_event),\n"
-        % (namespace_name, namespace_name)
-    )
+    if interface != "headless":
+        ui_fields = (
+            f"    .on_init = {namespace_name}::ui::on_init,\n"
+            f"    .on_event = {namespace_name}::on_event,\n"
+        )
+    else:
+        ui_fields = (
+            f"    .on_tick = {namespace_name}::on_tick,\n"
+            f"    .on_event = {namespace_name}::on_event,\n"
+        )
     entry = {
         "handheld": f"BLUSYS_APP({namespace_name}::system::spec)",
         "surface": f'BLUSYS_APP_DASHBOARD({namespace_name}::system::spec, "{project_title}")',

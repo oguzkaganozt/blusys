@@ -10,10 +10,23 @@
 
 #include "driver/gpio.h"
 
+#include "blusys/hal/internal/callback_lifecycle.h"
 #include "blusys/drivers/button.h"
+#include "blusys/framework/observe/counter.h"
+#include "blusys/framework/observe/log.h"
 #include "blusys/hal/gpio.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
+
+#define ENCODER_DOMAIN err_domain_driver_encoder
+
+static blusys_err_t encoder_oom(const char *site, size_t bytes)
+{
+    blusys_counter_inc(ENCODER_DOMAIN, 1);
+    BLUSYS_LOG(BLUSYS_LOG_ERROR, ENCODER_DOMAIN,
+               "op=install alloc-failed site=%s bytes=%zu", site, bytes);
+    return BLUSYS_ERR(ENCODER_DOMAIN, BLUSYS_ERR_CODE(BLUSYS_ERR_NO_MEM));
+}
 
 #if SOC_PCNT_SUPPORTED
 #include "driver/pulse_cnt.h"
@@ -49,8 +62,6 @@ struct blusys_encoder {
 #endif
 };
 
-/* ── helpers ──────────────────────────────────────────────────────────────── */
-
 static void invoke_callback(blusys_encoder_t *enc, blusys_encoder_event_t event)
 {
     blusys_encoder_callback_t cb;
@@ -61,28 +72,27 @@ static void invoke_callback(blusys_encoder_t *enc, blusys_encoder_event_t event)
     cb  = enc->callback;
     ctx = enc->user_ctx;
     pos = (int)enc->position;
-    if (cb != NULL) {
-        enc->callback_active += 1u;
+    if ((cb == NULL) || !blusys_callback_lifecycle_try_enter(&enc->callback_active, &enc->closing)) {
+        portEXIT_CRITICAL(&enc->state_lock);
+        return;
     }
     portEXIT_CRITICAL(&enc->state_lock);
 
-    if (cb != NULL) {
-        cb(enc, event, pos, ctx);
-        portENTER_CRITICAL(&enc->state_lock);
-        enc->callback_active -= 1u;
-        portEXIT_CRITICAL(&enc->state_lock);
-    }
+    cb(enc, event, pos, ctx);
+
+    portENTER_CRITICAL(&enc->state_lock);
+    blusys_callback_lifecycle_leave(&enc->callback_active);
+    portEXIT_CRITICAL(&enc->state_lock);
 }
 
-/* ── deferred event timer (task context) ──────────────────────────────────── */
-
+#if SOC_PCNT_SUPPORTED
 static void event_timer_cb(void *arg)
 {
     blusys_encoder_t *enc = arg;
     blusys_encoder_event_t event;
 
     portENTER_CRITICAL(&enc->state_lock);
-    if (enc->closing) {
+    if (blusys_callback_lifecycle_is_closing(&enc->closing)) {
         portEXIT_CRITICAL(&enc->state_lock);
         return;
     }
@@ -91,8 +101,7 @@ static void event_timer_cb(void *arg)
 
     invoke_callback(enc, event);
 }
-
-/* ── button bridge ────────────────────────────────────────────────────────── */
+#endif
 
 static void encoder_button_cb(blusys_button_t *button,
                                blusys_button_event_t event,
@@ -113,8 +122,6 @@ static void encoder_button_cb(blusys_button_t *button,
     invoke_callback(enc, enc_event);
 }
 
-/* ── PCNT path (ESP32 / ESP32-S3) ─────────────────────────────────────────── */
-
 #if SOC_PCNT_SUPPORTED
 
 static bool IRAM_ATTR encoder_pcnt_on_reach(pcnt_unit_handle_t unit,
@@ -126,7 +133,7 @@ static bool IRAM_ATTR encoder_pcnt_on_reach(pcnt_unit_handle_t unit,
     (void)unit;
 
     portENTER_CRITICAL_ISR(&enc->state_lock);
-    if (enc->closing) {
+    if (blusys_callback_lifecycle_is_closing(&enc->closing)) {
         portEXIT_CRITICAL_ISR(&enc->state_lock);
         return false;
     }
@@ -160,7 +167,7 @@ static blusys_err_t encoder_pcnt_init(blusys_encoder_t *enc,
         .flags.accum_count = 0u,
     }, &enc->pcnt_unit);
     if (esp_err != ESP_OK) {
-        return blusys_translate_esp_err(esp_err);
+        return blusys_translate_esp_err_in(ENCODER_DOMAIN, esp_err);
     }
 
     if (glitch_filter_ns > 0u) {
@@ -173,7 +180,6 @@ static blusys_err_t encoder_pcnt_init(blusys_encoder_t *enc,
         }
     }
 
-    /* Channel A: edge on CLK, level on DT */
     esp_err = pcnt_new_channel(enc->pcnt_unit, &(pcnt_chan_config_t) {
         .edge_gpio_num  = enc->clk_pin,
         .level_gpio_num = enc->dt_pin,
@@ -196,7 +202,6 @@ static blusys_err_t encoder_pcnt_init(blusys_encoder_t *enc,
         goto fail_chan_a;
     }
 
-    /* Channel B: edge on DT, level on CLK (cross-wired for 4x resolution) */
     esp_err = pcnt_new_channel(enc->pcnt_unit, &(pcnt_chan_config_t) {
         .edge_gpio_num  = enc->dt_pin,
         .level_gpio_num = enc->clk_pin,
@@ -261,7 +266,7 @@ fail_chan_a:
     pcnt_del_channel(enc->pcnt_chan_a);
 fail_unit:
     pcnt_del_unit(enc->pcnt_unit);
-    return blusys_translate_esp_err(esp_err);
+    return blusys_translate_esp_err_in(ENCODER_DOMAIN, esp_err);
 }
 
 static void encoder_pcnt_deinit(blusys_encoder_t *enc)
@@ -288,7 +293,7 @@ static void gpio_debounce_timer_cb(void *arg)
     bool clk, dt;
 
     portENTER_CRITICAL(&enc->state_lock);
-    if (enc->closing) {
+    if (blusys_callback_lifecycle_is_closing(&enc->closing)) {
         portEXIT_CRITICAL(&enc->state_lock);
         return;
     }
@@ -412,8 +417,6 @@ static void encoder_gpio_deinit(blusys_encoder_t *enc)
 
 #endif /* SOC_PCNT_SUPPORTED */
 
-/* ── public API ───────────────────────────────────────────────────────────── */
-
 blusys_err_t blusys_encoder_open(const blusys_encoder_config_t *config,
                                   blusys_encoder_t **out_encoder)
 {
@@ -432,7 +435,7 @@ blusys_err_t blusys_encoder_open(const blusys_encoder_config_t *config,
 
     enc = calloc(1, sizeof(*enc));
     if (enc == NULL) {
-        return BLUSYS_ERR_NO_MEM;
+        return encoder_oom("handle", sizeof(*enc));
     }
 
     enc->clk_pin          = config->clk_pin;
@@ -448,7 +451,6 @@ blusys_err_t blusys_encoder_open(const blusys_encoder_config_t *config,
         return err;
     }
 
-    /* Event timer: deferred callback dispatch in task context */
     const esp_timer_create_args_t timer_args = {
 #if SOC_PCNT_SUPPORTED
         .callback        = event_timer_cb,
@@ -461,7 +463,7 @@ blusys_err_t blusys_encoder_open(const blusys_encoder_config_t *config,
     };
     esp_err = esp_timer_create(&timer_args, &enc->event_timer);
     if (esp_err != ESP_OK) {
-        err = blusys_translate_esp_err(esp_err);
+        err = blusys_translate_esp_err_in(ENCODER_DOMAIN, esp_err);
         goto fail_lock;
     }
 
@@ -522,7 +524,7 @@ blusys_err_t blusys_encoder_close(blusys_encoder_t *encoder)
     }
 
     portENTER_CRITICAL(&encoder->state_lock);
-    encoder->closing = true;
+    blusys_callback_lifecycle_set_closing(&encoder->closing, true);
     portEXIT_CRITICAL(&encoder->state_lock);
 
     if (encoder->button != NULL) {
@@ -537,9 +539,7 @@ blusys_err_t blusys_encoder_close(blusys_encoder_t *encoder)
 
     esp_timer_stop(encoder->event_timer);
 
-    while (encoder->callback_active > 0u) {
-        taskYIELD();
-    }
+    blusys_callback_lifecycle_wait_for_idle(&encoder->callback_active);
 
     esp_timer_delete(encoder->event_timer);
     blusys_lock_deinit(&encoder->lock);
@@ -563,7 +563,7 @@ blusys_err_t blusys_encoder_set_callback(blusys_encoder_t *encoder,
     }
 
     portENTER_CRITICAL(&encoder->state_lock);
-    if (encoder->closing) {
+    if (blusys_callback_lifecycle_is_closing(&encoder->closing)) {
         portEXIT_CRITICAL(&encoder->state_lock);
         blusys_lock_give(&encoder->lock);
         return BLUSYS_ERR_INVALID_STATE;
@@ -572,9 +572,7 @@ blusys_err_t blusys_encoder_set_callback(blusys_encoder_t *encoder,
     encoder->user_ctx = user_ctx;
     portEXIT_CRITICAL(&encoder->state_lock);
 
-    while (encoder->callback_active > 0u) {
-        taskYIELD();
-    }
+    blusys_callback_lifecycle_wait_for_idle(&encoder->callback_active);
 
     blusys_lock_give(&encoder->lock);
     return BLUSYS_OK;
