@@ -16,7 +16,7 @@ extern "C" {
  * @brief BLE HID (HOGP) peripheral service — consumer-control remote.
  *
  * Registers a standards-compliant HID-over-GATT peripheral: HID Service
- * (0x1812) with a Report Map that declares a 4-bit consumer-control report,
+ * (0x1812) with a Report Map that declares an 8-bit consumer-control report,
  * plus Battery Service (0x180F) and Device Information Service (0x180A).
  * Any modern OS pairs with it natively as a HID media device — no companion
  * app required.
@@ -31,6 +31,10 @@ extern "C" {
  *   bit 1 → Usage 0x00EA (Consumer: Volume Decrement)
  *   bit 2 → Usage 0x00E2 (Consumer: Mute)
  *   bit 3 → Usage 0x00CD (Consumer: Play/Pause)
+ *   bit 4 → Usage 0x00B5 (Consumer: Next Track)
+ *   bit 5 → Usage 0x00B6 (Consumer: Previous Track)
+ *   bit 6 → Usage 0x006F (Consumer: Brightness Up)
+ *   bit 7 → Usage 0x0070 (Consumer: Brightness Down)
  */
 typedef struct blusys_ble_hid_device blusys_ble_hid_device_t;
 
@@ -91,7 +95,8 @@ bool blusys_ble_hid_device_is_ready(const blusys_ble_hid_device_t *handle);
  * Sets (pressed=true) or clears (pressed=false) the bit matching @p usage and
  * sends a notification on the Input Report characteristic. Returns
  * BLUSYS_ERR_INVALID_ARG for an unsupported usage code, BLUSYS_ERR_INVALID_STATE
- * when no client is subscribed.
+ * when no client is connected or the client has not yet subscribed to the
+ * Input Report characteristic (use blusys_ble_hid_device_is_ready() to check).
  */
 blusys_err_t blusys_ble_hid_device_send_consumer(blusys_ble_hid_device_t *handle,
                                                   uint16_t usage, bool pressed);

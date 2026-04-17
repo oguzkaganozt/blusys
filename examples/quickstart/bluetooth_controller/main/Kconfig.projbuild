@@ -2,7 +2,7 @@ menu "Bluetooth Controller example"
 
     config BTCTRL_DEVICE_NAME
         string "BLE advertised name"
-        default "Oxa Controller"
+        default "Blusys Controller"
         help
             Shown in OS Bluetooth pairing UI. Must be ≤29 characters.
 
@@ -26,7 +26,7 @@ menu "Bluetooth Controller example"
 
     config BTCTRL_STATUS_LED_GPIO
         int "Status LED GPIO"
-        default 8
+        default -1
         help
             Drives a status LED. Off before advertising, blinks while
             advertising, solid while a client is connected. -1 disables.

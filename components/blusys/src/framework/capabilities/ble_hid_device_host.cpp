@@ -60,10 +60,14 @@ blusys_err_t ble_hid_device_capability::send_consumer(std::uint16_t usage, bool 
     }
     int bit = -1;
     switch (usage) {
-    case 0x00E9: bit = 0; break;  /* Vol+   */
-    case 0x00EA: bit = 1; break;  /* Vol-   */
-    case 0x00E2: bit = 2; break;  /* Mute   */
-    case 0x00CD: bit = 3; break;  /* Play/P */
+    case 0x00E9: bit = 0; break;  /* Vol+      */
+    case 0x00EA: bit = 1; break;  /* Vol-      */
+    case 0x00E2: bit = 2; break;  /* Mute      */
+    case 0x00CD: bit = 3; break;  /* Play/P    */
+    case 0x00B5: bit = 4; break;  /* Next      */
+    case 0x00B6: bit = 5; break;  /* Prev      */
+    case 0x006F: bit = 6; break;  /* Bright+   */
+    case 0x0070: bit = 7; break;  /* Bright-   */
     default: return BLUSYS_ERR_INVALID_ARG;
     }
     if (pressed) {

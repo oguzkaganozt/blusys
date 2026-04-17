@@ -842,7 +842,7 @@ blusys_err_t blusys_ble_hid_device_send_consumer(blusys_ble_hid_device_t *handle
     }
     blusys_lock_give(&s_hid_global_lock);
 
-    if (handle->closing || !handle->connected) {
+    if (handle->closing || !handle->connected || !handle->input_subscribed) {
         blusys_lock_give(&handle->lock);
         return BLUSYS_ERR_INVALID_STATE;
     }
@@ -892,7 +892,7 @@ blusys_err_t blusys_ble_hid_device_send_report(blusys_ble_hid_device_t *handle,
     }
     blusys_lock_give(&s_hid_global_lock);
 
-    if (handle->closing || !handle->connected) {
+    if (handle->closing || !handle->connected || !handle->input_subscribed) {
         blusys_lock_give(&handle->lock);
         return BLUSYS_ERR_INVALID_STATE;
     }

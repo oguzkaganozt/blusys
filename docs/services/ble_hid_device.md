@@ -38,6 +38,10 @@ The built-in report map declares a **Consumer Control** application collection w
 | 1 | `0x00EA` | Volume Decrement |
 | 2 | `0x00E2` | Mute |
 | 3 | `0x00CD` | Play/Pause |
+| 4 | `0x00B5` | Next Track |
+| 5 | `0x00B6` | Previous Track |
+| 6 | `0x006F` | Brightness Up |
+| 7 | `0x0070` | Brightness Down |
 
 Use `blusys_ble_hid_device_send_consumer()` for edge-triggered updates. For a different report map (full keyboard, mouse, gamepad), use `blusys_ble_hid_device_send_report()` as an escape hatch — you own the payload bytes and the service keeps sending them on the Input Report characteristic.
 
@@ -90,7 +94,7 @@ Just-Works bonding (no passkey), persisted in NVS via the NimBLE default store. 
 | `blusys_ble_hid_device_open` | Acquires BLE controller, registers services, starts advertising. |
 | `blusys_ble_hid_device_close` | Disconnects, releases controller. |
 | `blusys_ble_hid_device_is_connected` | Cheap status query. |
-| `blusys_ble_hid_device_send_consumer` | Edge-triggered consumer-control bit update; `BLUSYS_HID_USAGE_VOLUME_UP/DOWN/MUTE/PLAY_PAUSE`. |
+| `blusys_ble_hid_device_send_consumer` | Edge-triggered consumer-control bit update; `BLUSYS_HID_USAGE_VOLUME_UP/DOWN/MUTE/PLAY_PAUSE/NEXT_TRACK/PREV_TRACK/BRIGHTNESS_UP/BRIGHTNESS_DOWN`. Returns `BLUSYS_ERR_INVALID_STATE` if not connected or not subscribed. |
 | `blusys_ble_hid_device_send_report` | Raw bytes on the Input Report characteristic (for custom report maps). |
 | `blusys_ble_hid_device_set_battery` | Update Battery Level (0–100, notified if client subscribed). |
 
