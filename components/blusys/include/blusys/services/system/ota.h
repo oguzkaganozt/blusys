@@ -20,6 +20,11 @@ typedef struct {
     int         timeout_ms; /* per-operation network timeout; 0 = default (30 000 ms) */
     blusys_ota_progress_cb_t on_progress; /* optional; NULL to ignore */
     void        *progress_ctx;            /* passed to on_progress */
+    /* Optional SHA256 integrity check — 64 ASCII hex chars (lower or upper).
+       When non-NULL, the service reads the staged partition after flash and
+       compares; on mismatch the new partition is invalidated and perform()
+       returns BLUSYS_ERR_INVALID_STATE. NULL skips verification. */
+    const char *expected_sha256;
 } blusys_ota_config_t;
 
 /* Allocate an OTA session handle.

@@ -73,7 +73,7 @@ printf '=== QEMU Test: %s / %s ===\n' "$EXAMPLE_NAME" "$TARGET"
 # ── Step 1: Build ───────────────────────────────────────────────────────────
 
 printf 'Building %s for %s...\n' "$EXAMPLE_NAME" "$TARGET"
-if ! idf.py -C "$EXAMPLE_DIR" -B "$BUILD_DIR" set-target "$TARGET" "${sdkconfig_args[@]}" > /dev/null 2>&1; then
+if ! idf.py -C "$EXAMPLE_DIR" -B "$BUILD_DIR" "${sdkconfig_args[@]}" set-target "$TARGET" > /dev/null 2>&1; then
     # set-target may fail if already set — try building anyway
     true
 fi

@@ -126,6 +126,17 @@ void atlas_capability::on_mqtt_message(const blusys::mqtt_message &msg, void *us
 void atlas_capability::handle_mqtt_message(const blusys::mqtt_message &msg)
 {
     if (std::strcmp(msg.topic, topic_down_command_) == 0) {
+        // Publish an ack immediately on receipt so the backend can advance
+        // its `pending → sent → ack` lifecycle. Reducers that need to
+        // reject a command afterwards should call publish_command_fail()
+        // with the same commandId; Atlas tolerates fail-after-ack.
+        char command_id[64];
+        if (json_extract_str(msg.payload, msg.payload_len, "commandId",
+                             command_id, sizeof(command_id)) > 0) {
+            (void)publish_command_ack(command_id);
+        } else {
+            BLUSYS_LOGW(kTag, "command missing commandId — cannot ack");
+        }
         post_integration_event(
             static_cast<std::uint32_t>(atlas_event::command_received), 0, &msg);
         return;
@@ -140,13 +151,20 @@ void atlas_capability::handle_mqtt_message(const blusys::mqtt_message &msg)
             static_cast<std::uint32_t>(atlas_event::ota_announcement), 0, &msg);
         // Atlas sends {otaJobId, firmwareUrl, targetVersion, checksum}.
         // Drive ota_capability directly — it owns the download + flash,
-        // and will post canonical ota_* events the reducer observes.
+        // and will post canonical ota_* events the reducer observes. The
+        // checksum is forwarded so the service can verify the staged
+        // partition before accepting the new image.
         if (ota_ != nullptr) {
             char url[256];
-            if (json_extract_str(msg.payload, msg.payload_len, "firmwareUrl",
-                                 url, sizeof(url)) > 0) {
-                BLUSYS_LOGI(kTag, "ota dispatch -> %s", url);
-                (void)ota_->request_update(url, nullptr);
+            char sha[72];  // 64 hex + some slack
+            const bool have_url = json_extract_str(msg.payload, msg.payload_len,
+                                                   "firmwareUrl", url, sizeof(url)) > 0;
+            const bool have_sha = json_extract_str(msg.payload, msg.payload_len,
+                                                   "checksum", sha, sizeof(sha)) > 0;
+            if (have_url) {
+                BLUSYS_LOGI(kTag, "ota dispatch -> %s (verify=%s)",
+                            url, have_sha ? "yes" : "no");
+                (void)ota_->request_update(url, nullptr, have_sha ? sha : nullptr);
             } else {
                 BLUSYS_LOGW(kTag, "ota announcement missing firmwareUrl");
             }
@@ -172,6 +190,38 @@ blusys_err_t atlas_capability::publish_event(const char *json, std::size_t len)
 {
     if (mqtt_ == nullptr) return BLUSYS_ERR_INVALID_STATE;
     return mqtt_->publish(topic_up_event_, json, len, 1, /*retain=*/false);
+}
+
+blusys_err_t atlas_capability::publish_command_ack(const char *command_id)
+{
+    if (command_id == nullptr || command_id[0] == '\0') {
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+    char buf[128];
+    const int n = std::snprintf(buf, sizeof(buf),
+        "{\"type\":\"command_ack\",\"commandId\":\"%s\"}", command_id);
+    if (n <= 0) return BLUSYS_ERR_INTERNAL;
+    return publish_event(buf, static_cast<std::size_t>(n));
+}
+
+blusys_err_t atlas_capability::publish_command_fail(const char *command_id,
+                                                     const char *error_message)
+{
+    if (command_id == nullptr || command_id[0] == '\0') {
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+    char buf[256];
+    int n;
+    if (error_message != nullptr && error_message[0] != '\0') {
+        n = std::snprintf(buf, sizeof(buf),
+            "{\"type\":\"command_fail\",\"commandId\":\"%s\",\"errorMessage\":\"%s\"}",
+            command_id, error_message);
+    } else {
+        n = std::snprintf(buf, sizeof(buf),
+            "{\"type\":\"command_fail\",\"commandId\":\"%s\"}", command_id);
+    }
+    if (n <= 0) return BLUSYS_ERR_INTERNAL;
+    return publish_event(buf, static_cast<std::size_t>(n));
 }
 
 }  // namespace atlas_example

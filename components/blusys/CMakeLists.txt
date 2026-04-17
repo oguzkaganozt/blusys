@@ -156,6 +156,7 @@ idf_component_register(
         esp_http_client esp_http_server mqtt esp_https_ota app_update
         bt spiffs wear_levelling esp_pm tcp_transport
         wifi_provisioning protocomm
+        esp_partition mbedtls
         # Framework dependencies
         spi_flash
 )

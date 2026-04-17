@@ -38,13 +38,16 @@ void ota_capability::stop()
 
 blusys_err_t ota_capability::request_update()
 {
-    return request_update(cfg_.firmware_url, cfg_.cert_pem);
+    return request_update(cfg_.firmware_url, cfg_.cert_pem, cfg_.expected_sha256);
 }
 
-blusys_err_t ota_capability::request_update(const char *url, const char * /*cert_pem*/)
+blusys_err_t ota_capability::request_update(const char *url,
+                                            const char * /*cert_pem*/,
+                                            const char *expected_sha256)
 {
-    BLUSYS_LOGI(TAG, "host stub: simulating OTA update (url=%s)",
-                url != nullptr ? url : "<cfg>");
+    BLUSYS_LOGI(TAG, "host stub: simulating OTA update (url=%s, verify=%s)",
+                url != nullptr ? url : "<cfg>",
+                (expected_sha256 != nullptr && expected_sha256[0] != '\0') ? "yes" : "no");
     last_progress_posted_ = 255;
     status_.downloading = true;
     post_event(ota_event::download_started, 0);

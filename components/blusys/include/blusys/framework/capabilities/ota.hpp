@@ -47,6 +47,10 @@ struct ota_config {
     const char *cert_pem       = nullptr;
     int         timeout_ms     = 30000;
     bool        auto_mark_valid = true;
+    // Optional SHA256 over the full firmware image, 64 ASCII hex chars.
+    // nullptr skips verification. When the URL is pushed at runtime, the
+    // runtime-supplied checksum in request_update() takes precedence.
+    const char *expected_sha256 = nullptr;
 };
 
 class ota_capability final : public capability_base {
@@ -72,8 +76,11 @@ public:
     // certificate are handed to the device at runtime, e.g. pushed over
     // MQTT by Atlas OTA announcements. `cert_pem == nullptr` falls back
     // to `cfg_.cert_pem` (often the same broker CA bundle is reused for
-    // HTTPS). Does not mutate `cfg_`.
-    blusys_err_t request_update(const char *url, const char *cert_pem = nullptr);
+    // HTTPS). `expected_sha256` is a 64-char hex digest; nullptr falls
+    // back to `cfg_.expected_sha256`. Does not mutate `cfg_`.
+    blusys_err_t request_update(const char *url,
+                                const char *cert_pem        = nullptr,
+                                const char *expected_sha256 = nullptr);
 
     // Used by the services-layer OTA progress callback (not a general app API).
     void emit_download_progress(std::uint8_t pct);
@@ -101,10 +108,11 @@ private:
 #else  // host stub
 
 struct ota_config {
-    const char *firmware_url   = nullptr;
-    const char *cert_pem       = nullptr;
-    int         timeout_ms     = 30000;
+    const char *firmware_url    = nullptr;
+    const char *cert_pem        = nullptr;
+    int         timeout_ms      = 30000;
     bool        auto_mark_valid = true;
+    const char *expected_sha256 = nullptr;
 };
 
 class ota_capability final : public capability_base {
@@ -123,7 +131,9 @@ public:
     [[nodiscard]] const ota_status &status() const { return status_; }
 
     blusys_err_t request_update();
-    blusys_err_t request_update(const char *url, const char *cert_pem = nullptr);
+    blusys_err_t request_update(const char *url,
+                                const char *cert_pem        = nullptr,
+                                const char *expected_sha256 = nullptr);
 
     void emit_download_progress(std::uint8_t pct);
 

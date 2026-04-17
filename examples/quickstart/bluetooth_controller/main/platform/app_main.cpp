@@ -227,7 +227,11 @@ void enter_deep_sleep()
     BLUSYS_LOGI(kTag,
                 "inactivity timeout — entering deep sleep (wake: CLK GPIO %d low)",
                 kEncoderClkPin);
+#ifdef CONFIG_IDF_TARGET_ESP32C3
     esp_deep_sleep_enable_gpio_wakeup(wake_mask, ESP_GPIO_WAKEUP_GPIO_LOW);
+#else
+    esp_sleep_enable_ext1_wakeup(wake_mask, ESP_EXT1_WAKEUP_ALL_LOW);
+#endif
     blusys_sleep_enter_deep();
 }
 

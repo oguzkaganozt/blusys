@@ -48,6 +48,14 @@ typedef struct {
     blusys_mqtt_message_cb_t  message_cb;      /* called on incoming messages; NULL = no subscription handling */
     blusys_mqtt_state_cb_t    state_cb;        /* called on connected/disconnected/error; NULL = none */
     void                     *user_ctx;        /* passed through to message_cb and state_cb */
+
+    /* Optional MQTT Last-Will-and-Testament. Broker publishes this on
+       ungraceful disconnect. `will_topic == NULL` disables LWT. */
+    const char               *will_topic;       /* NULL = no LWT */
+    const char               *will_payload;     /* may be NULL or empty */
+    size_t                    will_payload_len; /* 0 → strlen(will_payload) if non-NULL, else 0 */
+    blusys_mqtt_qos_t         will_qos;         /* ignored when will_topic == NULL */
+    bool                      will_retain;      /* ignored when will_topic == NULL */
 } blusys_mqtt_config_t;
 
 /* Allocate and initialise an MQTT client.  Does not connect to the broker.

@@ -125,6 +125,18 @@ blusys_err_t blusys_mqtt_open(const blusys_mqtt_config_t *config, blusys_mqtt_t 
         .credentials.client_id           = config->client_id,
     };
 
+    if (config->will_topic != NULL) {
+        size_t will_len = config->will_payload_len;
+        if (will_len == 0 && config->will_payload != NULL) {
+            will_len = strlen(config->will_payload);
+        }
+        esp_cfg.session.last_will.topic   = config->will_topic;
+        esp_cfg.session.last_will.msg     = config->will_payload;
+        esp_cfg.session.last_will.msg_len = (int)will_len;
+        esp_cfg.session.last_will.qos     = (int)config->will_qos;
+        esp_cfg.session.last_will.retain  = config->will_retain ? 1 : 0;
+    }
+
     h->esp_handle = esp_mqtt_client_init(&esp_cfg);
     if (h->esp_handle == NULL) {
         err = BLUSYS_ERR_NO_MEM;

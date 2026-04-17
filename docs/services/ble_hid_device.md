@@ -81,7 +81,7 @@ void app_main(void)
 }
 ```
 
-For a product-level wiring, see the [`bluetooth_controller`](../../examples/quickstart/bluetooth_controller/README.md) quickstart — it uses the `blusys::ble_hid_device_capability` wrapper and three GPIO buttons.
+For a product-level wiring, see the `bluetooth_controller` quickstart — it uses the `blusys::ble_hid_device_capability` wrapper and three GPIO buttons.
 
 ## Pairing
 
