@@ -70,6 +70,49 @@ the Atlas adapter does not re-emit them under a custom ID.
 IDs live inside the reserved **product-custom** band `0x0900–0x09FF`
 (see `blusys/framework/capabilities/capability.hpp`).
 
+## Command dispatch
+
+Commands arrive on `atlas/{id}/down/command` as
+`{"commandId":"...","type":"<snake_case>","payload":{...}}`. The framework
+ack's immediately on receipt, then dispatches to a registered handler.
+
+Default handlers shipped by `atlas_capability`:
+
+| Type              | Behaviour                                                     |
+|-------------------|---------------------------------------------------------------|
+| `ping`            | Publishes `command_result` with `{}`                          |
+| `reboot`          | Schedules `esp_restart()` ~1 s later (after ack has left)     |
+| `factory_reset`   | Erases NVS, then reboots                                      |
+| `get_diagnostics` | Publishes `command_result` with `{firmwareVersion, freeHeap, rssi, uptimeMs, supportedCommands}` |
+
+Products register additional types without touching framework code:
+
+```cpp
+// In atlas_main.cpp after constructing `atlas`:
+atlas.on_command("set_led_color", [](const atlas_command &cmd, void *) {
+    char payload[128];
+    cmd.copy_payload(payload, sizeof(payload));
+    // ... parse payload, drive LEDs ...
+    (void)cmd.result("{\"applied\":true}", 16);
+}, nullptr);
+```
+
+Lifetime: `cmd.payload_json` is borrowed from the inbound MQTT buffer and
+is valid only for the handler call. Use `cmd.copy_payload(dst, dst_sz)`
+when the work must outlive the current drain pass. The registry is
+fixed-capacity (16 slots) with last-write-wins by key; re-registering a
+built-in type silently overrides the default (with a WARN log).
+
+The `supportedCommands` field in `get_diagnostics` output is produced
+from the registry at call-time, giving Atlas a convention for per-device
+capability discovery without any dashboard plumbing changes.
+
+The result channel arrives at the backend as a `command_result` event
+(see `atlas/apps/backend/src/modules/mqtt-router/mqtt-router.service.ts`)
+and is persisted onto `Command.result` / `Command.resultAt`. Result is
+orthogonal to `status` — ack lifecycle and result payload are updated on
+independent paths.
+
 ## Build without provisioning
 
 You can build/flash manually once `main/include/atlas_config.h` has been

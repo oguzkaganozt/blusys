@@ -91,16 +91,11 @@ blusys::ota_config ota_cfg{
 
 blusys::ota_capability ota{ota_cfg};
 
-// ---- Atlas-specific adapter ----
-
-atlas_config atlas_cfg{
-    .device_id        = ATLAS_DEVICE_ID,
-    .firmware_version = CONFIG_ATLAS_FIRMWARE_VERSION,
-};
-
-atlas_capability atlas{atlas_cfg, &mqtt, &ota};
-
 // ---- connectivity (Wi-Fi + SNTP) ----
+//
+// Declared before `atlas` so `atlas_config.connectivity` can point at it.
+// Construction order matters only for pointer validity, not runtime start
+// order — the `capabilities` list below still dictates start/poll sequence.
 
 blusys::connectivity_config conn_cfg{
     .wifi_ssid          = ATLAS_WIFI_SSID,
@@ -118,6 +113,16 @@ blusys::connectivity_config conn_cfg{
 };
 
 blusys::connectivity_capability connectivity{conn_cfg};
+
+// ---- Atlas-specific adapter ----
+
+atlas_config atlas_cfg{
+    .device_id        = ATLAS_DEVICE_ID,
+    .firmware_version = CONFIG_ATLAS_FIRMWARE_VERSION,
+    .connectivity     = &connectivity,
+};
+
+atlas_capability atlas{atlas_cfg, &mqtt, &ota};
 
 // Order matters: capabilities start/poll in list order. Connectivity must
 // come before mqtt (mqtt waits for mark_network_ready) and before atlas
