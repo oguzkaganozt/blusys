@@ -9,7 +9,7 @@
 //   - app_services (via ctx.services()) — routing, overlays, screen_router/shell, ESP FS accessors
 //   - entry macros             — BLUSYS_APP, BLUSYS_APP_INTERACTIVE, BLUSYS_APP_DASHBOARD,
 //                                  BLUSYS_APP_MAIN_* (escape hatches)
-//   - theme presets            — expressive_dark, operational_light, oled
+//   - theme presets            — expressive_dark, operational_light, compact_dark, oled
 //   - feedback presets         — expressive, operational
 //
 // For device targets, also include a profile header:

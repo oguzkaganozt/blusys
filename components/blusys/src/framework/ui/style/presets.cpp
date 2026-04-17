@@ -189,6 +189,63 @@ const blusys::theme_tokens &operational_light()
     return tokens;
 }
 
+const blusys::theme_tokens &compact_dark()
+{
+    static const blusys::theme_tokens tokens = [] {
+        blusys::theme_tokens t = expressive_dark();
+
+        // Compact layout tuned for small color displays.
+        t.design_w = 160;
+        t.design_h = 128;
+
+        t.spacing_xs  = 2;
+        t.spacing_sm  = 4;
+        t.spacing_md  = 8;
+        t.spacing_lg  = 12;
+        t.spacing_xl  = 16;
+        t.spacing_2xl = 24;
+
+        t.touch_target_min = 36;
+
+        t.radius_card   = 8;
+        t.radius_button = 6;
+
+        t.font_body    = blusys::fonts::montserrat_14();
+        t.font_body_sm = blusys::fonts::montserrat_14();
+        t.font_title   = blusys::fonts::montserrat_14();
+        t.font_display = blusys::fonts::montserrat_14();
+        t.font_label   = blusys::fonts::montserrat_14();
+        t.font_mono    = blusys::fonts::montserrat_14();
+
+        t.text_letter_space_body = 1;
+
+        t.anim_duration_fast   = 60;
+        t.anim_duration_normal = 120;
+        t.anim_duration_slow   = 200;
+        t.anim_enabled         = false;
+
+        t.shadow_card_width  = 2;
+        t.shadow_card_ofs_y  = 1;
+        t.shadow_card_spread = 0;
+
+        t.shadow_overlay_width = 4;
+        t.shadow_overlay_ofs_y = 2;
+
+        t.opa_pressed      = LV_OPA_90;
+        t.opa_focused      = LV_OPA_30;
+        t.opa_disabled     = LV_OPA_40;
+        t.opa_backdrop     = LV_OPA_60;
+        t.opa_surface_subtle = LV_OPA_20;
+        t.opa_shadow_soft    = LV_OPA_30;
+        t.focus_ring_width   = 2;
+        t.color_focus_ring   = lv_color_hex(0x3B6FFF);
+
+        t.feedback_voice = blusys::theme_feedback_voice::operational;
+        return t;
+    }();
+    return tokens;
+}
+
 const blusys::theme_tokens &oled()
 {
     static const blusys::theme_tokens tokens{

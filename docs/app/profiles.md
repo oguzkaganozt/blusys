@@ -124,7 +124,7 @@ Many small OLED modules use an SSD1306-compatible controller; some use **SH1106*
 
 `#include "blusys/framework/app/layout_surface.hpp"` — `blusys::layout::classify(device_profile)` returns a small **surface_hints** struct (size class, suggested shell density, spacing/typography levels, theme packaging hint). Use it to tune shell chrome or documentation; it is **not** a responsive layout engine.
 
-**Rotation:** Fix panel orientation with `device_profile` fields (`swap_xy`, mirrors) and HAL; `classify()` uses the **logical** width/height already mapped for the UI. When `BLUSYS_FRAMEWORK_HAS_UI` is defined, `blusys::layout::suggested_theme_density()` maps hints to a `blusys::ui::density` aligned with stock presets (`expressive_dark`, `operational_light`, `oled`).
+**Rotation:** Fix panel orientation with `device_profile` fields (`swap_xy`, mirrors) and HAL; `classify()` uses the **logical** width/height already mapped for the UI. When `BLUSYS_FRAMEWORK_HAS_UI` is defined, `blusys::layout::suggested_theme_density()` maps hints to a `blusys::ui::density` aligned with stock presets (`expressive_dark`, `operational_light`, `compact_dark`, `oled`).
 
 ## Kconfig in reference examples
 

@@ -35,7 +35,7 @@ Dependencies flow downward. Complete each step before starting the next.
 | Step | File | Depends on |
 |------|------|-----------|
 | 1 | `theme.hpp` — add `design_w`/`design_h`, reorder `density` enum, document `density_mode` as derived | — |
-| 2a | `presets.cpp` — add `design_w`/`design_h`, **remove** `density_mode` from all three presets | Step 1 |
+| 2a | `presets.cpp` — add `design_w`/`design_h`, **remove** `density_mode` from all four presets | Step 1 |
 | 2b | `presets.cpp` + `presets.hpp` — implement and declare `for_display()` | Step 2a |
 | 3a | `dashboard_display_dims.hpp` — new file, single-source Kconfig/host → dimensions dispatch | — |
 | 3b | `auto.hpp` — replace host-path literals with macros from Step 3a | Step 3a |
@@ -115,7 +115,7 @@ setting `density_mode` — `for_display()` is the sole authority for that field 
 (see Step 1c). Presets that still set `density_mode` would silently have their value overwritten
 on the production path, making the initializer misleading.
 
-**Common change to all three presets:** remove the `// density — …` comment and the
+**Common change to all four presets:** remove the `// density — …` comment and the
 `.density_mode = blusys::density::…,` line from the designated-initializer list.
 
 ### `expressive_dark()` — ILI9341 reference (320×240)
@@ -137,11 +137,17 @@ on the production path, making the initializer misleading.
 1. **Remove** the `// density — …` comment and `.density_mode = blusys::density::compact,`
    line (currently around line 128).
 2. **Add** after `.feedback_voice = blusys::theme_feedback_voice::operational,`:
-   ```cpp
-           // design resolution
-           .design_w = 160,
-           .design_h = 128,
-   ```
+    ```cpp
+            // design resolution
+            .design_w = 160,
+            .design_h = 128,
+    ```
+
+### `compact_dark()` — dark compact reference (160×128)
+
+1. Start from `expressive_dark()` to keep the dark palette.
+2. Override spacing, radii, font ramp, and motion to match the compact layout used by `operational_light()`.
+3. Keep `feedback_voice = blusys::theme_feedback_voice::operational` so the compact family shares the same feedback voice.
 
 ### `oled()` — SSD1306 reference (128×64)
 
@@ -204,6 +210,9 @@ const blusys::theme_tokens &expressive_dark();
 
 // Operational light — clean, readable, professionally restrained.
 const blusys::theme_tokens &operational_light();
+
+// Compact dark — dark, compact, operationally restrained.
+const blusys::theme_tokens &compact_dark();
 
 // OLED — pure white-on-black, zero radii, ultra-compact.
 const blusys::theme_tokens &oled();

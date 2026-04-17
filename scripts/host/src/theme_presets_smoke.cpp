@@ -12,6 +12,7 @@ int main()
 {
     const auto &expressive = blusys::presets::expressive_dark();
     const auto &operational = blusys::presets::operational_light();
+    const auto &compact = blusys::presets::compact_dark();
 
     if (expressive.design_w == 0 || operational.design_w == 0 ||
         expressive.design_w == operational.design_w) {
@@ -28,6 +29,12 @@ int main()
     }
     if (expressive.feedback_voice == operational.feedback_voice) {
         return 6;
+    }
+    if (compact.color_background != expressive.color_background) {
+        return 7;
+    }
+    if (compact.color_background == operational.color_background) {
+        return 8;
     }
 
     blusys::set_theme(expressive);

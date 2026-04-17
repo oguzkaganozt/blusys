@@ -126,8 +126,9 @@ inline shell_chrome shell_chrome_for(const device_profile &profile)
 
 // Maps packaging hints from classify() to a suggested theme_tokens::density_mode.
 // Aligns with presets::expressive_dark() (comfortable), operational_light()
-// (compact), and presets::oled() (compact). Products can copy this into a
-// custom theme when the display profile changes at integration time.
+// (compact), compact_dark() (compact), and presets::oled() (compact).
+// Products can copy this into a custom theme when the display profile changes
+// at integration time.
 inline blusys::density suggested_theme_density(const surface_hints &h)
 {
     switch (h.theme_hint) {
