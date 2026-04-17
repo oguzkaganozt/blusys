@@ -25,6 +25,10 @@ const blusys::theme_tokens &expressive_dark();
 // Default for industrial/panel interactive products.
 const blusys::theme_tokens &operational_light();
 
+// Compact dark — dark, compact, operationally restrained.
+// Small color-display variant for dense status surfaces.
+const blusys::theme_tokens &compact_dark();
+
 // OLED — pure white-on-black, zero radii, ultra-compact.
 // Display-specific variant for monochrome or OLED panels.
 const blusys::theme_tokens &oled();

@@ -6,7 +6,8 @@
 ## Context
 
 Blusys products ship with a specific display, configured at build time via `device_profile`. The
-framework currently has three hand-tuned presets (`expressive_dark`, `operational_light`, `oled`)
+framework currently has four hand-tuned presets (`expressive_dark`, `operational_light`,
+`compact_dark`, `oled`)
 but nothing wires them to the display automatically. A developer must:
 
 1. Manually call `set_theme(presets::expressive_dark())` for the right preset.
@@ -104,7 +105,3 @@ all of them is a larger change than token scaling with no additional benefit.
 
 **Continuous per-frame transform scaling** — rejected. Embedded targets cannot afford per-frame
 coordinate transformation. The single-pass init-time approach is the correct model.
-
-**Separate `compact_dark()` preset** — deferred. Adding a dark compact preset is desirable but
-orthogonal to the scaling mechanism. The existing `operational_light()` serves compact displays
-adequately; a dark variant can be added without changing the scaling architecture.
