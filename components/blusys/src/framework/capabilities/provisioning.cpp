@@ -1,5 +1,3 @@
-#ifdef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/provisioning.hpp"
 #include "blusys/framework/engine/pending_events.hpp"
 #include "blusys/framework/engine/intent.hpp"
@@ -160,4 +158,3 @@ void provisioning_capability::prov_event_handler(blusys_wifi_prov_event_t event,
 
 }  // namespace blusys
 
-#endif  // ESP_PLATFORM

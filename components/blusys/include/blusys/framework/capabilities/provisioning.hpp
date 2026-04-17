@@ -26,13 +26,12 @@ enum class provisioning_event : std::uint32_t {
     capability_ready         = 0x07FF,
 };
 
-struct provisioning_status {
+struct provisioning_status : capability_status_base {
     bool is_provisioned       = false;
     bool service_running      = false;
     bool credentials_received = false;
     bool provision_success    = false;
     bool provision_failed     = false;
-    bool capability_ready         = false;
     char qr_payload[256]      = {};
 };
 

@@ -111,28 +111,22 @@ set(blusys_sources
     src/framework/platform/app_headless_platform_esp.cpp
     src/framework/app/ctx.cpp
     src/framework/app/services.cpp
-    # --- Framework capabilities ---
+    # --- Framework capabilities (ESP-IDF / device implementations) ---
+    # Host stub implementations (*_host.cpp) are excluded here — the
+    # host CMake bridge (cmake/blusys_host_bridge.cmake) picks them up
+    # for PC builds. mqtt_host keeps its own class on host and is
+    # excluded from the device build entirely.
     src/framework/capabilities/ble_hid_device.cpp
-    src/framework/capabilities/ble_hid_device_host.cpp
     src/framework/capabilities/bluetooth.cpp
-    src/framework/capabilities/bluetooth_host.cpp
     src/framework/capabilities/connectivity.cpp
-    src/framework/capabilities/connectivity_host.cpp
     src/framework/capabilities/diagnostics.cpp
-    src/framework/capabilities/diagnostics_host.cpp
     src/framework/capabilities/lan_control.cpp
-    src/framework/capabilities/lan_control_host.cpp
     src/framework/capabilities/mqtt.cpp
-    src/framework/capabilities/mqtt_host.cpp
     src/framework/capabilities/ota.cpp
-    src/framework/capabilities/ota_host.cpp
     src/framework/capabilities/provisioning.cpp
-    src/framework/capabilities/provisioning_host.cpp
     src/framework/capabilities/storage.cpp
-    src/framework/capabilities/storage_host.cpp
     src/framework/capabilities/telemetry.cpp
     src/framework/capabilities/usb.cpp
-    src/framework/capabilities/usb_host.cpp
 )
 
 # Per-target capability table (HAL)

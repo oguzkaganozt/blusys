@@ -109,7 +109,7 @@ blusys::connectivity_capability connectivity{conn_cfg};
 // Order matters: capabilities start/poll in list order. Connectivity must
 // come before mqtt (mqtt waits for mark_network_ready) and before atlas
 // (atlas waits for mqtt->connected()).
-blusys::capability_list capabilities{&connectivity, &mqtt, &ota, &atlas};
+blusys::capability_list_storage capabilities{&connectivity, &mqtt, &ota, &atlas};
 
 // Periodic tick — plumbs connectivity → mqtt and publishes heartbeat /
 // state. Reducer owns all persistent flags (wifi_*/time_synced/
@@ -117,7 +117,7 @@ blusys::capability_list capabilities{&connectivity, &mqtt, &ota, &atlas};
 void on_tick(blusys::app_ctx &ctx, blusys::app_services & /*svc*/,
              app_state &state, std::uint32_t now_ms)
 {
-    const auto *conn = ctx.connectivity();
+    const auto *conn = ctx.status_of<blusys::connectivity_capability>();
 
     // Gate mqtt broker dial on Wi-Fi + SNTP readiness. mqtt_capability
     // handles retries; we only pass the network-ready edge in.

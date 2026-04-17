@@ -20,10 +20,9 @@ enum class ble_hid_device_event : std::uint32_t {
     capability_ready    = 0x0CFF,
 };
 
-struct ble_hid_device_status {
+struct ble_hid_device_status : capability_status_base {
     bool    advertising      = false;
     bool    client_connected = false;
-    bool    capability_ready = false;
 };
 
 struct ble_hid_device_config {

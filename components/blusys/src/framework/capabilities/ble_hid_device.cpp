@@ -1,5 +1,3 @@
-#ifdef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/ble_hid_device.hpp"
 #include "blusys/framework/engine/pending_events.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
@@ -135,4 +133,3 @@ bool ble_hid_device_capability::is_ready() const
 
 }  // namespace blusys
 
-#endif  // ESP_PLATFORM

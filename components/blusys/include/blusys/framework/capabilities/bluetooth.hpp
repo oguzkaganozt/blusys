@@ -29,12 +29,11 @@ enum class bluetooth_event : std::uint32_t {
     capability_ready           = 0x03FF,
 };
 
-struct bluetooth_status {
+struct bluetooth_status : capability_status_base {
     bool    gap_ready        = false;
     bool    advertising      = false;
     bool    gatt_ready       = false;
     bool    client_connected = false;
-    bool    capability_ready     = false;
     std::uint8_t connected_count = 0;
 };
 

@@ -1,5 +1,3 @@
-#ifndef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/usb.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
@@ -35,4 +33,3 @@ void usb_capability::stop()
 
 }  // namespace blusys
 
-#endif  // !ESP_PLATFORM

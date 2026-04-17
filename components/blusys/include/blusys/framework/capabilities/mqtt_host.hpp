@@ -24,9 +24,8 @@ enum class mqtt_host_event : std::uint32_t {
     capability_ready = 0x08FF,
 };
 
-struct mqtt_host_status {
+struct mqtt_host_status : capability_status_base {
     bool          connected         = false;
-    bool          capability_ready  = false;
     std::uint32_t messages_rx       = 0;
     std::uint32_t publishes_tx      = 0;
     char          last_error[96]    = {};

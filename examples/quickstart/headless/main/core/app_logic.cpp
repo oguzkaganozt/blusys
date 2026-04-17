@@ -1,5 +1,8 @@
 #include "core/app_logic.hpp"
 
+#include "blusys/framework/capabilities/connectivity.hpp"
+#include "blusys/framework/capabilities/diagnostics.hpp"
+#include "blusys/framework/capabilities/telemetry.hpp"
 #include "blusys/hal/log.h"
 
 #include <cstdio>
@@ -75,7 +78,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
             break;
         case CET::wifi_got_ip:
             state.has_ip = true;
-            if (const auto *conn = ctx.connectivity(); conn != nullptr) {
+            if (const auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
                 BLUSYS_LOGI(kTag, "ip acquired: %s", conn->ip_info.ip);
             }
             break;
@@ -106,13 +109,13 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
             break;
 
         case CET::telemetry_delivered:
-            if (const auto *tel = ctx.telemetry(); tel != nullptr) {
+            if (const auto *tel = ctx.status_of<blusys::telemetry_capability>(); tel != nullptr) {
                 state.delivered = tel->total_delivered;
             }
             BLUSYS_LOGI(kTag, "telemetry batch delivered (total=%u)", state.delivered);
             break;
         case CET::telemetry_failed:
-            if (const auto *tel = ctx.telemetry(); tel != nullptr) {
+            if (const auto *tel = ctx.status_of<blusys::telemetry_capability>(); tel != nullptr) {
                 state.delivery_fails = tel->total_failed;
             }
             BLUSYS_LOGW(kTag, "telemetry delivery failed (fails=%u)", state.delivery_fails);
@@ -128,7 +131,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
             break;
 
         case CET::diag_snapshot_ready:
-            if (const auto *diag = ctx.diagnostics(); diag != nullptr) {
+            if (const auto *diag = ctx.status_of<blusys::diagnostics_capability>(); diag != nullptr) {
                 state.free_heap = diag->last_snapshot.free_heap;
                 state.uptime_ms = diag->last_snapshot.uptime_ms;
             }

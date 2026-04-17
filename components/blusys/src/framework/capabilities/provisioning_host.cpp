@@ -1,5 +1,3 @@
-#ifndef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/provisioning.hpp"
 #include "blusys/framework/engine/intent.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
@@ -57,4 +55,3 @@ blusys_err_t provisioning_capability::request_reset()
 
 }  // namespace blusys
 
-#endif  // !ESP_PLATFORM

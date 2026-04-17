@@ -47,7 +47,7 @@ blusys::telemetry_capability telemetry{{
     .flush_interval_ms = 60000,
 }};
 
-blusys::capability_list capabilities{&connectivity, &telemetry};
+blusys::capability_list_storage capabilities{&connectivity, &telemetry};
 
 const blusys::app_spec<app_state, action> spec{
     .initial_state = {},

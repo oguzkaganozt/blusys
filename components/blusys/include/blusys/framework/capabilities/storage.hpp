@@ -22,11 +22,10 @@ enum class storage_event : std::uint32_t {
     capability_ready   = 0x02FF,
 };
 
-// Current storage state, queryable via ctx.storage().
-struct storage_status {
+// Current storage state, queryable via ctx.status_of<storage_capability>().
+struct storage_status : capability_status_base {
     bool spiffs_mounted = false;
     bool fatfs_mounted  = false;
-    bool capability_ready   = false;
 };
 
 // Declarative storage configuration.

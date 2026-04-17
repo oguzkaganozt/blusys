@@ -61,7 +61,7 @@ void update(blusys::app_ctx &ctx, State &state, const Action &action)
             break;
         case CET::wifi_got_ip:
             state.connected = true;
-            if (auto *conn = ctx.connectivity(); conn != nullptr) {
+            if (auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
                 BLUSYS_LOGI(kTag, "Wi-Fi connected, IP: %s", conn->ip_info.ip);
             }
             break;
@@ -126,7 +126,7 @@ blusys::storage_capability stor{{
     .spiffs_base_path = "/fs",
 }};
 
-blusys::capability_list capabilities{&conn, &stor};
+blusys::capability_list_storage capabilities{&conn, &stor};
 
 }  // namespace
 

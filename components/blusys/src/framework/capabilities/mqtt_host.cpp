@@ -1,7 +1,5 @@
 // Host (SDL) MQTT capability — libmosquitto. Linked only from PC host example CMake graphs.
 
-#ifndef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/mqtt_host.hpp"
 
 #include "blusys/framework/engine/intent.hpp"
@@ -359,4 +357,3 @@ blusys_err_t mqtt_host_capability::publish(const char *topic, const void *payloa
 
 }  // namespace blusys
 
-#endif  // !ESP_PLATFORM

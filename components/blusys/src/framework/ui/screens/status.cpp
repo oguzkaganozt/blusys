@@ -1,6 +1,8 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/framework/ui/screens/status.hpp"
+#include "blusys/framework/capabilities/connectivity.hpp"
+#include "blusys/framework/capabilities/diagnostics.hpp"
 #include "blusys/framework/ui/composition/page.hpp"
 #include "blusys/framework/ui/composition/shell.hpp"
 #include "blusys/framework/ui/style/theme.hpp"
@@ -88,12 +90,12 @@ lv_obj_t *status_screen_create(app_ctx &ctx,
 
 void status_screen_update(status_screen_handles &handles, const app_ctx &ctx)
 {
-    const auto *conn = ctx.connectivity();
+    const auto *conn = ctx.status_of<connectivity_capability>();
     if (conn != nullptr) {
         flows::connectivity_panel_update(handles.connectivity, *conn);
     }
 
-    const auto *diag = ctx.diagnostics();
+    const auto *diag = ctx.status_of<diagnostics_capability>();
     if (diag != nullptr) {
         flows::diagnostics_panel_update(handles.diagnostics, diag->last_snapshot);
     }

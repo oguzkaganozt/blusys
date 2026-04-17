@@ -54,7 +54,7 @@ struct connectivity_ip_info {
 };
 #endif
 
-// Current connectivity state, queryable via ctx.connectivity().
+// Current connectivity state, queryable via ctx.status_of<connectivity_capability>().
 struct connectivity_provisioning_status {
     bool is_provisioned       = false;
     bool service_running      = false;
@@ -65,7 +65,7 @@ struct connectivity_provisioning_status {
     char qr_payload[256]      = {};
 };
 
-struct connectivity_status {
+struct connectivity_status : capability_status_base {
     bool wifi_connected     = false;
     bool wifi_connecting    = false;  // initial association or reconnect in progress
     bool wifi_reconnecting  = false;  // driver reported reconnecting after loss
@@ -73,7 +73,6 @@ struct connectivity_status {
     bool time_synced        = false;
     bool mdns_running       = false;
     bool local_ctrl_running = false;
-    bool capability_ready     = false;
     connectivity_ip_info ip_info{};
     std::int8_t wifi_rssi   = 0;
     connectivity_provisioning_status provisioning{};

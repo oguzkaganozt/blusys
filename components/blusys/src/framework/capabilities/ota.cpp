@@ -1,5 +1,3 @@
-#ifdef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/ota.hpp"
 #include "blusys/framework/engine/pending_events.hpp"
 #include "blusys/framework/engine/intent.hpp"
@@ -162,4 +160,3 @@ void ota_capability::emit_download_progress(std::uint8_t pct)
 
 }  // namespace blusys
 
-#endif  // ESP_PLATFORM

@@ -86,14 +86,13 @@ protected:
     }
 #endif
 
-    static void sync_services_storage(app_ctx &ctx, app_services &svc)
-    {
-        svc.set_storage_for_fs(ctx.storage_);
-    }
+    // Defined in ctx.cpp so storage.hpp does not leak into every header
+    // that pulls app_runtime.hpp.
+    static void sync_services_storage(app_ctx &ctx, app_services &svc);
 
-    static void bind_capability_ptrs(app_ctx &ctx, capability_list *capabilities)
+    static void bind_capabilities(app_ctx &ctx, capability_list *capabilities)
     {
-        app_ctx::bind_capability_pointers_from_list(ctx, capabilities);
+        ctx.capabilities_ = capabilities;
     }
 };
 
@@ -167,8 +166,8 @@ public:
         }
 #endif
 
+        bind_capabilities(ctx_, spec_.capabilities);
         start_capabilities();
-        bind_capability_ptrs(ctx_, spec_.capabilities);
         sync_services_storage(ctx_, services_);
         bind_product_state(ctx_, static_cast<void *>(&state_));
 

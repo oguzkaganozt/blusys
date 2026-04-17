@@ -13,7 +13,7 @@ static blusys::connectivity_capability conn{{
     .mdns_hostname = "blusys-device",
 }};
 
-static blusys::capability_list capabilities{&conn};
+static blusys::capability_list_storage capabilities{&conn};
 
 static const blusys::app_spec<connected_device::State, connected_device::Action> spec{
     .initial_state = {},

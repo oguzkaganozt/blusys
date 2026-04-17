@@ -1,5 +1,6 @@
 #include "core/atlas_logic.hpp"
 
+#include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/hal/log.h"
 
 namespace atlas_example {
@@ -67,7 +68,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
         break;
     case CET::wifi_got_ip:
         state.has_ip = true;
-        if (const auto *conn = ctx.connectivity(); conn != nullptr) {
+        if (const auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
             BLUSYS_LOGI(kTag, "ip=%s rssi=%d", conn->ip_info.ip, conn->wifi_rssi);
         }
         break;

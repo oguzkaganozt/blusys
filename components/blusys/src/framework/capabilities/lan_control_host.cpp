@@ -1,5 +1,3 @@
-#ifndef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/lan_control.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
@@ -48,4 +46,3 @@ void lan_control_capability::stop()
 
 }  // namespace blusys
 
-#endif  // !ESP_PLATFORM

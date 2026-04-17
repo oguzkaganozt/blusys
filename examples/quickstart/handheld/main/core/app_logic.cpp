@@ -2,6 +2,8 @@
 
 #include "blusys_examples/clamp_percent.hpp"
 
+#include "blusys/framework/capabilities/connectivity.hpp"
+#include "blusys/framework/capabilities/storage.hpp"
 #include "blusys/hal/log.h"
 
 #include <cstdint>
@@ -36,7 +38,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
     case action_tag::capability_event:
         switch (event.cap_event.tag) {
         case CET::storage_ready:
-            if (const auto *storage = ctx.storage(); storage != nullptr) {
+            if (const auto *storage = ctx.status_of<blusys::storage_capability>(); storage != nullptr) {
                 state.storage_ready = storage->capability_ready;
             }
             break;
@@ -47,7 +49,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
         case CET::prov_already_done:
         case CET::prov_reset_complete:
         case CET::provisioning_ready:
-            if (const auto *conn = ctx.connectivity(); conn != nullptr) {
+            if (const auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
                 state.provisioning = conn->provisioning;
             }
             break;

@@ -146,7 +146,7 @@ blusys::storage_capability storage{{
     .spiffs_base_path = "/app",
 }};
 
-blusys::capability_list capabilities{
+blusys::capability_list_storage capabilities{
     &connectivity, &lan_control, &telemetry, &diagnostics, &ota, &storage};
 
 // ---- sensor helpers ----

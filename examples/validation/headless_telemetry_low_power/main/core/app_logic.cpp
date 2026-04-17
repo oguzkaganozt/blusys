@@ -1,5 +1,7 @@
 #include "core/app_logic.hpp"
 
+#include "blusys/framework/capabilities/connectivity.hpp"
+#include "blusys/framework/capabilities/telemetry.hpp"
 #include "blusys/hal/log.h"
 
 namespace telemetry_lp {
@@ -10,10 +12,10 @@ constexpr const char *kTag = "htlm_lp";
 
 void sync_status(blusys::app_ctx &ctx, app_state &state)
 {
-    if (const auto *c = ctx.connectivity(); c != nullptr) {
+    if (const auto *c = ctx.status_of<blusys::connectivity_capability>(); c != nullptr) {
         state.connectivity_ready = c->capability_ready;
     }
-    if (const auto *t = ctx.telemetry(); t != nullptr) {
+    if (const auto *t = ctx.status_of<blusys::telemetry_capability>(); t != nullptr) {
         state.telemetry_ready = t->capability_ready;
     }
 }

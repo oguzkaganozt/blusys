@@ -18,10 +18,9 @@ enum class lan_control_event : std::uint32_t {
     capability_ready = 0x0AFF,
 };
 
-struct lan_control_status {
+struct lan_control_status : capability_status_base {
     bool http_listening  = false;
     bool mdns_announced  = false;
-    bool capability_ready = false;
 };
 
 struct lan_control_config {

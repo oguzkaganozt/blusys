@@ -1,5 +1,3 @@
-#ifdef ESP_PLATFORM
-
 #include "blusys/framework/capabilities/usb.hpp"
 #include "blusys/framework/engine/event_queue.hpp"
 #include "blusys/hal/log.h"
@@ -187,4 +185,3 @@ blusys_usb_device_class_t usb_capability::selected_device_class() const
 
 }  // namespace blusys
 
-#endif  // ESP_PLATFORM

@@ -72,7 +72,7 @@ blusys::ble_hid_device_capability hid_device{{
     .initial_battery_pct = 100,
 }};
 
-blusys::capability_list capabilities{&hid_device};
+blusys::capability_list_storage capabilities{&hid_device};
 
 // ── Dispatch plumbing ────────────────────────────────────────────────────────
 blusys::app_ctx *s_ctx = nullptr;
