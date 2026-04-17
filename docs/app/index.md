@@ -49,6 +49,9 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 - [Capability Composition](capability-composition.md) --- how capabilities fit together in `platform/`
 - [Capabilities](capabilities.md) --- connectivity, storage
 - [Authoring a capability](capability-authoring.md) --- contract, reserved event IDs, reference implementation
+- [Adding a capability](adding-a-capability.md) --- step-by-step: header → device impl → host stub → register
+- [Adding a flow](adding-a-flow.md) --- stock flows, spec wiring, writing custom flows
+- [Memory and budgets](memory-and-budgets.md) --- queue depths, stack sizes, device heap floor, OOM policy
 - [Profiles](profiles.md) --- host, headless, and device platform profiles
 - [Validation and host loop](validation-host-loop.md) --- host smokes, scaffold checks, CI mapping (see README **Product foundations** → **Validation**)
 - [Device, host & QEMU CLI](cli-host-qemu.md) --- `blusys build` targets (`host`, `qemu*`), `blusys qemu` modes (`--graphics` / `--serial-only`)

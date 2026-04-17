@@ -4,9 +4,8 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "blusys/blusys.h"
 
-#include "blusys/services/system/power_mgmt.h"
-#include "blusys/target.h"
 
 #define PM_MAX_FREQ_MHZ 80
 #define PM_MIN_FREQ_MHZ 10

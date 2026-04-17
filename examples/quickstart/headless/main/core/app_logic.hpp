@@ -2,9 +2,8 @@
 
 #include <cstdint>
 #include <optional>
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/app/app.hpp"
-#include "blusys/framework/capabilities/event.hpp"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "lvgl.h"

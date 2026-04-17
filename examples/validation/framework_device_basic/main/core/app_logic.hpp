@@ -1,6 +1,6 @@
 #pragma once
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/app/app.hpp"
 
 #include <cstdint>
 #include <optional>

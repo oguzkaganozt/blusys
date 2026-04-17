@@ -1,8 +1,7 @@
 #if CONFIG_NETWORK_SERVICES_SCENARIO_SNTP
 #include <stdio.h>
 #include <time.h>
-#include "blusys/services/connectivity/wifi.h"
-#include "blusys/services/protocol/sntp.h"
+#include "blusys/blusys.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 

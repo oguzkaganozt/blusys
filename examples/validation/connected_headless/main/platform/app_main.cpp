@@ -1,10 +1,8 @@
 // Connected headless — capabilities, app_spec, entry (see core/ for reducer).
 
 #include "core/app_logic.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/capabilities/storage.hpp"
-#include "blusys/hal/log.h"
 
 #include <cstdio>
 

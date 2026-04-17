@@ -1,7 +1,7 @@
 #pragma once
 
-// Framework-layer umbrella — for framework self-composition and internal use.
-// Product code includes specific headers or blusys/blusys.hpp.
+// Framework-layer umbrella — pulled in by blusys/blusys.hpp.
+// App authors should include only blusys/blusys.hpp.
 
 #include "blusys/framework/app/app.hpp"
 #include "blusys/framework/capabilities/capabilities.hpp"
@@ -14,8 +14,10 @@
 #include "blusys/framework/callbacks.hpp"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
+#include "blusys/framework/platform/platform.hpp"
 #include "blusys/framework/ui/composition/view.hpp"
 #include "blusys/framework/ui/widgets.hpp"
 #include "blusys/framework/ui/primitives.hpp"
 #include "blusys/framework/ui/style/theme.hpp"
+#include "blusys/framework/ui/screens/screens.hpp"
 #endif

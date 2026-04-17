@@ -1,7 +1,6 @@
 #if CONFIG_NETWORK_SERVICES_SCENARIO_MDNS
 #include <stdio.h>
-#include "blusys/services/connectivity/wifi.h"
-#include "blusys/services/protocol/mdns.h"
+#include "blusys/blusys.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"

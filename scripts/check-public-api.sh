@@ -10,7 +10,7 @@
 
 set -euo pipefail
 
-BASELINE_MAX=130   # P9 drives this to 0.
+BASELINE_MAX=0
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
@@ -32,9 +32,6 @@ if [ "$hits" -gt "$BASELINE_MAX" ]; then
     exit 1
 fi
 
-if [ "$hits" -lt "$BASELINE_MAX" ]; then
-    echo "check-public-api: note — hits=$hits, baseline=$BASELINE_MAX. Tighten BASELINE_MAX to $hits." >&2
-fi
 
 echo "check-public-api: OK — hits=$hits (baseline max $BASELINE_MAX)"
 exit 0

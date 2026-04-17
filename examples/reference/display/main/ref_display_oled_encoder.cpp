@@ -25,10 +25,8 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include "blusys/blusys.hpp"
 
-#include "blusys/blusys.h"
-#include "blusys/blusys.h"
-#include "blusys/drivers/encoder.h"
 #include "lvgl.h"
 
 #include "freertos/FreeRTOS.h"

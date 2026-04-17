@@ -12,22 +12,17 @@
 //   • Deep sleep after inactivity timeout, wake on encoder CLK edge
 
 #include "core/app_logic.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/app/app.hpp"
-#include "blusys/framework/capabilities/ble_hid_device.hpp"
-#include "blusys/hal/log.h"
 #include "blusys_examples/bt_controller_hw.hpp"
 
 #ifdef ESP_PLATFORM
 #include "sdkconfig.h"
-#include "blusys/hal/sleep.h"
 #include "esp_sleep.h"
 #include "esp_timer.h"
 #endif
 
 #if defined(ESP_PLATFORM) && defined(CONFIG_BTCTRL_DISPLAY_ENABLED)
-#include "blusys/drivers/lcd.h"
-#include "blusys/drivers/display.h"
 #include "lvgl.h"
 #endif
 

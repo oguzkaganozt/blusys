@@ -1,7 +1,6 @@
 #include "core/atlas_logic.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/hal/log.h"
 
 #include <optional>
 

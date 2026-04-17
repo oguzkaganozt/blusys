@@ -1,7 +1,6 @@
 #include "core/app_logic.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/hal/log.h"
 
 #include <optional>
 

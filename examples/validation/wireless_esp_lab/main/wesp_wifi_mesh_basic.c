@@ -7,8 +7,8 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "blusys/blusys.h"
 
-#include "blusys/services/connectivity/wifi_mesh.h"
 
 static const char *event_name(blusys_wifi_mesh_event_t event)
 {

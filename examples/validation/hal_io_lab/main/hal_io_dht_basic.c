@@ -9,7 +9,6 @@
 #include "freertos/task.h"
 
 #include "blusys/blusys.h"
-#include "blusys/drivers/dht.h"
 
 #define DHT_PIN  CONFIG_BLUSYS_DHT_BASIC_PIN
 

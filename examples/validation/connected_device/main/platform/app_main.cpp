@@ -1,8 +1,7 @@
 #include "core/app_logic.hpp"
 #include "ui/app_ui.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/platform/profiles/st7735.hpp"
 
 namespace {
 

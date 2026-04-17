@@ -10,12 +10,8 @@
 
 #include "core/atlas_logic.hpp"
 #include "platform/atlas_capability.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/app/app.hpp"
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/capabilities/list.hpp"
-#include "blusys/hal/log.h"
-#include "blusys/hal/system.h"
 
 #if defined(__has_include)
 #  if __has_include("atlas_config.h")

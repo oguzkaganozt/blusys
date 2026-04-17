@@ -1,11 +1,6 @@
 #include "ui/app_ui.hpp"
+#include "blusys/blusys.hpp"
 
-#include "blusys/framework/flows/loading.hpp"
-#include "blusys/framework/flows/provisioning_flow.hpp"
-#include "blusys/framework/flows/settings.hpp"
-#include "blusys/framework/ui/screens/about.hpp"
-#include "blusys/framework/ui/binding/action_widgets.hpp"
-#include "blusys/framework/ui/primitives/key_value.hpp"
 #include <cstdint>
 
 namespace handheld_starter::system {
