@@ -90,6 +90,15 @@ struct mqtt_config {
     // Reconnect backoff.
     std::uint32_t reconnect_min_ms = 2000;
     std::uint32_t reconnect_max_ms = 60000;
+
+    // Optional MQTT Last-Will-and-Testament. Broker publishes the will
+    // payload if the device disconnects ungracefully. Set `will_topic`
+    // to a non-null pointer to enable; leave NULL to disable.
+    const char   *will_topic       = nullptr;
+    const char   *will_payload     = nullptr;   // may be NULL for zero-length
+    std::size_t   will_payload_len = 0;          // 0 → strlen(will_payload)
+    int           will_qos         = 1;
+    bool          will_retain      = false;
 };
 
 class mqtt_capability final : public capability_base {

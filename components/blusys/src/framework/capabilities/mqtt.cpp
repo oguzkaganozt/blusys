@@ -131,6 +131,11 @@ blusys_err_t mqtt_capability::open_broker()
     mc.message_cb      = &mqtt_capability::mqtt_cb;
     mc.state_cb        = &mqtt_capability::state_cb;
     mc.user_ctx        = this;
+    mc.will_topic       = cfg_.will_topic;
+    mc.will_payload     = cfg_.will_payload;
+    mc.will_payload_len = cfg_.will_payload_len;
+    mc.will_qos         = static_cast<blusys_mqtt_qos_t>(cfg_.will_qos);
+    mc.will_retain      = cfg_.will_retain;
 
     blusys_mqtt_t *handle = nullptr;
     blusys_err_t err = blusys_mqtt_open(&mc, &handle);

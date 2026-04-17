@@ -103,10 +103,12 @@ void ota_capability::stop()
 
 blusys_err_t ota_capability::request_update()
 {
-    return request_update(cfg_.firmware_url, cfg_.cert_pem);
+    return request_update(cfg_.firmware_url, cfg_.cert_pem, cfg_.expected_sha256);
 }
 
-blusys_err_t ota_capability::request_update(const char *url, const char *cert_pem)
+blusys_err_t ota_capability::request_update(const char *url,
+                                            const char *cert_pem,
+                                            const char *expected_sha256)
 {
     if (url == nullptr || url[0] == '\0') {
         BLUSYS_LOGE(TAG, "request_update: url is required");
@@ -118,11 +120,13 @@ blusys_err_t ota_capability::request_update(const char *url, const char *cert_pe
     pending_flags_.fetch_or(kPendingDownloadStarted, std::memory_order_release);
 
     blusys_ota_config_t ota_cfg{};
-    ota_cfg.url           = url;
-    ota_cfg.cert_pem      = cert_pem != nullptr ? cert_pem : cfg_.cert_pem;
-    ota_cfg.timeout_ms    = cfg_.timeout_ms;
-    ota_cfg.on_progress   = blusys_ota_c_progress;
-    ota_cfg.progress_ctx  = this;
+    ota_cfg.url             = url;
+    ota_cfg.cert_pem        = cert_pem != nullptr ? cert_pem : cfg_.cert_pem;
+    ota_cfg.timeout_ms      = cfg_.timeout_ms;
+    ota_cfg.on_progress     = blusys_ota_c_progress;
+    ota_cfg.progress_ctx    = this;
+    ota_cfg.expected_sha256 = expected_sha256 != nullptr ? expected_sha256
+                                                         : cfg_.expected_sha256;
 
     blusys_ota_t *handle = nullptr;
     blusys_err_t err = blusys_ota_open(&ota_cfg, &handle);
