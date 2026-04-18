@@ -29,9 +29,10 @@ theme_tokens make_default_theme()
         .color_outline          = lv_color_hex(0x3A3F4B),
         .color_outline_variant  = lv_color_hex(0x2A2E38),
 
-        // density
         .density_mode = density::normal,
+        .orientation  = display_orientation::landscape,
 
+        // density
         .feedback_voice = theme_feedback_voice::expressive,
 
         // spacing

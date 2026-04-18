@@ -6,6 +6,8 @@
 #include "blusys/framework/app/ctx.hpp"
 #include "blusys/framework/app/spec.hpp"
 #include "blusys/framework/capabilities/persistence.hpp"
+#include "blusys/framework/capabilities/diagnostics.hpp"
+#include "blusys/framework/capabilities/build_info.hpp"
 #include "blusys/framework/flows/flow_base.hpp"
 #include "blusys/framework/capabilities/list.hpp"
 #include "blusys/framework/engine/internal/default_route_sink.hpp"
@@ -31,6 +33,8 @@ namespace blusys {
 
 class storage_capability;
 class persistence_capability;
+class diagnostics_capability;
+class build_info_capability;
 
 // ---- non-template base: wires app_ctx internals ----
 
@@ -76,6 +80,16 @@ protected:
     static void bind_fx_persistence(app_ctx &ctx, persistence_capability *persistence)
     {
         ctx.fx_.bind_persistence(persistence);
+    }
+
+    static void bind_fx_diagnostics(app_ctx &ctx, diagnostics_capability *diagnostics)
+    {
+        ctx.fx_.bind_diagnostics(diagnostics);
+    }
+
+    static void bind_fx_build(app_ctx &ctx, build_info_capability *build)
+    {
+        ctx.fx_.bind_build(build);
     }
 
     static void wire_route_sink(app_services &svc, blusys::route_sink *sink)
@@ -157,6 +171,8 @@ public:
 #endif
 
         bind_capabilities(ctx_, spec_.capabilities);
+        bind_fx_diagnostics(ctx_, ctx_.get<diagnostics_capability>());
+        bind_fx_build(ctx_, ctx_.get<build_info_capability>());
         bind_fx_storage(ctx_, ctx_.get<storage_capability>());
         bind_fx_persistence(ctx_, ctx_.get<persistence_capability>());
         start_capabilities();

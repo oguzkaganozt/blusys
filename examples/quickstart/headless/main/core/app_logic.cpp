@@ -144,7 +144,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
             break;
 
         case CET::diag_snapshot_ready:
-            if (const auto *diag = ctx.status_of<blusys::diagnostics_capability>(); diag != nullptr) {
+            if (const auto *diag = ctx.fx().diag.status(); diag != nullptr) {
                 state.free_heap = diag->last_snapshot.free_heap;
                 state.uptime_ms = diag->last_snapshot.uptime_ms;
             }

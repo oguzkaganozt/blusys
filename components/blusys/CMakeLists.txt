@@ -14,6 +14,26 @@ cmake_minimum_required(VERSION 3.16)
 # managed components (LVGL, tinyusb, etc.) before idf_component_register.
 idf_build_get_property(build_components BUILD_COMPONENTS)
 
+execute_process(
+    COMMAND git -C "${CMAKE_CURRENT_LIST_DIR}/../.." rev-parse --short=12 HEAD
+    OUTPUT_VARIABLE BLUSYS_GIT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+if(NOT BLUSYS_GIT_COMMIT)
+    set(BLUSYS_GIT_COMMIT "unknown")
+endif()
+
+execute_process(
+    COMMAND hostname
+    OUTPUT_VARIABLE BLUSYS_BUILD_HOST
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+if(NOT BLUSYS_BUILD_HOST)
+    set(BLUSYS_BUILD_HOST "unknown")
+endif()
+
 # ---------------------------------------------------------------------------
 # Sources
 # ---------------------------------------------------------------------------
@@ -93,6 +113,7 @@ set(blusys_sources
     src/framework/observe/error_domain.c
     src/framework/observe/log.c
     src/framework/observe/counter.c
+    src/framework/observe/snapshot.c
     src/framework/engine/router.cpp
     src/framework/engine/event_queue.cpp
     src/framework/engine/framework_init.cpp
@@ -123,6 +144,7 @@ set(blusys_sources
     # for PC builds. mqtt_host keeps its own class on host and is
     # excluded from the device build entirely.
     src/framework/capabilities/ble_hid_device_device.cpp
+    src/framework/capabilities/build_info_device.cpp
     src/framework/capabilities/bluetooth_device.cpp
     src/framework/capabilities/connectivity_device.cpp
     src/framework/capabilities/diagnostics_device.cpp
@@ -184,6 +206,10 @@ if(blusys_sources)
             -Wall
             -Wextra
         >
+    )
+    target_compile_definitions(${COMPONENT_LIB} PUBLIC
+        BLUSYS_BUILD_HOST="${BLUSYS_BUILD_HOST}"
+        BLUSYS_BUILD_COMMIT="${BLUSYS_GIT_COMMIT}"
     )
 endif()
 

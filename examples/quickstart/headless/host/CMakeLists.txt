@@ -19,6 +19,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 
 blusys_host_bridge_add_library(headless)
+blusys_host_bridge_resolve_build_version(BLUSYS_GIT_VERSION)
 
 add_executable(headless_telemetry_host
     "${CMAKE_CURRENT_LIST_DIR}/../main/core/app_logic.cpp"
@@ -32,3 +33,13 @@ target_link_libraries(headless_telemetry_host PRIVATE
     blusys_framework_core_host PkgConfig::SDL2 m
 )
 blusys_host_bridge_apply_exe_compile_options(headless_telemetry_host)
+target_compile_definitions(headless_telemetry_host PRIVATE
+    BLUSYS_APP_BUILD_VERSION="${BLUSYS_GIT_VERSION}")
+
+add_executable(observability_snapshot_smoke
+    "${CMAKE_CURRENT_LIST_DIR}/../main/core/observability_snapshot_smoke.cpp"
+)
+target_link_libraries(observability_snapshot_smoke PRIVATE
+    blusys_framework_core_host PkgConfig::SDL2 m
+)
+blusys_host_bridge_apply_exe_compile_options(observability_snapshot_smoke)

@@ -1,0 +1,67 @@
+#pragma once
+
+#include "blusys/framework/capabilities/capability.hpp"
+#include "blusys/framework/platform/build.hpp"
+
+namespace blusys {
+
+#ifndef BLUSYS_BUILD_HOST
+#define BLUSYS_BUILD_HOST "unknown"
+#endif
+
+#ifndef BLUSYS_BUILD_COMMIT
+#define BLUSYS_BUILD_COMMIT "unknown"
+#endif
+
+#ifndef BLUSYS_BUILD_FEATURE_FLAGS
+#if defined(ESP_PLATFORM)
+#if defined(BLUSYS_FRAMEWORK_HAS_UI)
+#define BLUSYS_BUILD_FEATURE_FLAGS "platform=device,ui=1"
+#else
+#define BLUSYS_BUILD_FEATURE_FLAGS "platform=device,ui=0"
+#endif
+#else
+#if defined(BLUSYS_FRAMEWORK_HAS_UI)
+#define BLUSYS_BUILD_FEATURE_FLAGS "platform=host,ui=1"
+#else
+#define BLUSYS_BUILD_FEATURE_FLAGS "platform=host,ui=0"
+#endif
+#endif
+#endif
+
+struct build_info_status : capability_status_base {
+    const char *firmware_version = nullptr;
+    const char *build_host       = nullptr;
+    const char *commit_hash      = nullptr;
+    const char *feature_flags    = nullptr;
+};
+
+inline build_info_status make_build_info_status()
+{
+    build_info_status status{};
+    status.firmware_version = platform::version_string();
+    status.build_host       = BLUSYS_BUILD_HOST;
+    status.commit_hash      = BLUSYS_BUILD_COMMIT;
+    status.feature_flags    = BLUSYS_BUILD_FEATURE_FLAGS;
+    return status;
+}
+
+class build_info_capability final : public capability_base {
+public:
+    static constexpr capability_kind kind_value = capability_kind::build_info;
+
+    build_info_capability();
+    ~build_info_capability() override;
+
+    capability_kind kind() const override { return kind_value; }
+    blusys_err_t start(runtime &rt) override;
+    void poll(std::uint32_t now_ms) override;
+    void stop() override;
+
+    const build_info_status &status() const { return status_; }
+
+private:
+    build_info_status status_{};
+};
+
+}  // namespace blusys

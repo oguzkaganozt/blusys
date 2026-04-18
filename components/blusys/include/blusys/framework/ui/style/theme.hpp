@@ -50,10 +50,10 @@ struct theme_tokens {
     lv_color_t color_outline;
     lv_color_t color_outline_variant;
 
-    // ---- display context (both fields computed by presets::for_display()) ----
-    // Preset initializers do not set these; direct callers that bypass
-    // for_display() receive the zero-init values (density::normal,
-    // display_orientation::landscape). See ADR 0003.
+    // ---- display context (for_display() rewrites both from actual dims) ----
+    // Base presets seed these to the zero-init defaults so aggregate
+    // initializers stay warning-free and direct callers still get
+    // density::normal / display_orientation::landscape.
     density            density_mode;
     display_orientation orientation;
 

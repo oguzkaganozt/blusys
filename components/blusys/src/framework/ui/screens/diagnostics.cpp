@@ -30,7 +30,11 @@ lv_obj_t *diagnostics_screen_create(app_ctx &ctx, const void *params,
     lv_obj_set_width(title, LV_PCT(100));
 
     // Diagnostics panel.
-    flows::diagnostics_panel_create(page.content);
+    flows::diagnostics_panel_handles handles{};
+    flows::diagnostics_panel_create(page.content, &handles);
+    if (const auto *diag = ctx.fx().diag.status(); diag != nullptr) {
+        flows::diagnostics_panel_update(handles, *diag);
+    }
 
     bool show_restart = (cfg == nullptr) || cfg->show_restart_button;
 

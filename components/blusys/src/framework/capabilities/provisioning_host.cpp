@@ -12,7 +12,7 @@ namespace blusys {
 struct provisioning_capability::impl {};
 
 provisioning_capability::provisioning_capability(const provisioning_config &cfg)
-    : cfg_(cfg), impl_(new impl{})
+    : impl_(new impl{}), cfg_(cfg)
 {
 }
 

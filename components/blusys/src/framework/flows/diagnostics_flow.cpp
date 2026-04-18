@@ -48,13 +48,30 @@ lv_obj_t *diagnostics_panel_create(lv_obj_t *parent,
         if (handles != nullptr) { handles->flash_kv = flash; }
     }
 
+    if (config.show_observability) {
+        lv_obj_t *logs = blusys::key_value_create(panel, {.key = "Log ring", .value = "\xe2\x80\x94"});
+        lv_obj_t *counters = blusys::key_value_create(panel, {.key = "Counters", .value = "\xe2\x80\x94"});
+        lv_obj_t *last_error = blusys::key_value_create(panel, {.key = "Last error", .value = "\xe2\x80\x94"});
+        if (handles != nullptr) {
+            handles->logs_kv = logs;
+            handles->counters_kv = counters;
+            handles->error_kv = last_error;
+        }
+    }
+
+    if (config.show_crash_dump) {
+        lv_obj_t *crash = blusys::key_value_create(panel, {.key = "Crash dump", .value = "\xe2\x80\x94"});
+        if (handles != nullptr) { handles->crash_kv = crash; }
+    }
+
     return panel;
 }
 
 void diagnostics_panel_update(diagnostics_panel_handles &handles,
-                               const diagnostics_snapshot &snapshot)
+                               const diagnostics_status &status)
 {
-    char buf[32];
+    char buf[256];
+    const diagnostics_snapshot &snapshot = status.last_snapshot;
 
     if (handles.heap_kv != nullptr) {
         std::snprintf(buf, sizeof(buf), "%lu B",
@@ -100,6 +117,48 @@ void diagnostics_panel_update(diagnostics_panel_handles &handles,
                           static_cast<unsigned long>(snapshot.flash_size / 1024));
         }
         blusys::key_value_set_value(handles.flash_kv, buf);
+    }
+
+    if (handles.logs_kv != nullptr) {
+        std::snprintf(buf, sizeof(buf), "%u", static_cast<unsigned>(status.observability.log_count));
+        blusys::key_value_set_value(handles.logs_kv, buf);
+    }
+
+    if (handles.counters_kv != nullptr) {
+        std::uint64_t total = 0;
+        for (int i = 0; i < (int)err_domain_count; ++i) {
+            total += status.observability.counters.values[i];
+        }
+        std::snprintf(buf, sizeof(buf), "%llu total",
+                      static_cast<unsigned long long>(total));
+        blusys::key_value_set_value(handles.counters_kv, buf);
+    }
+
+    if (handles.error_kv != nullptr) {
+        const blusys_observe_last_error_t *best = nullptr;
+        for (int i = 0; i < (int)err_domain_count; ++i) {
+            const auto &candidate = status.observability.last_errors[i];
+            if (candidate.valid && (best == nullptr || candidate.sequence > best->sequence)) {
+                best = &candidate;
+            }
+        }
+        if (best != nullptr) {
+            std::snprintf(buf, sizeof(buf), "%s: %s",
+                          blusys_err_domain_string(best->domain), best->text);
+        } else {
+            std::snprintf(buf, sizeof(buf), "none");
+        }
+        blusys::key_value_set_value(handles.error_kv, buf);
+    }
+
+    if (handles.crash_kv != nullptr) {
+        if (status.crash_dump_ready) {
+            std::snprintf(buf, sizeof(buf), "%u log lines",
+                          static_cast<unsigned>(status.crash_dump.log_count));
+        } else {
+            std::snprintf(buf, sizeof(buf), "none");
+        }
+        blusys::key_value_set_value(handles.crash_kv, buf);
     }
 }
 

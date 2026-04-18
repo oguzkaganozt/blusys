@@ -10,8 +10,10 @@
  */
 
 #include "blusys/framework/observe/log.h"
+#include "blusys/framework/observe/snapshot.h"
 
 #include <stdio.h>
+#include <string.h>
 
 static blusys_log_level_t g_min_level = BLUSYS_LOG_INFO;
 
@@ -45,10 +47,18 @@ void blusys_log_v(blusys_log_level_t  level,
     if (level > g_min_level) {
         return;
     }
+    char message[BLUSYS_OBSERVE_LINE_MAX] = {0};
+    char rendered[BLUSYS_OBSERVE_LINE_MAX + 16] = {0};
+    vsnprintf(message, sizeof(message), fmt, ap);
+    snprintf(rendered, sizeof(rendered), "[%c][%s] %s",
+             level_letter(level), blusys_err_domain_string(domain), message);
+
     FILE *out = (level <= BLUSYS_LOG_WARN) ? stderr : stdout;
-    fprintf(out, "[%c][%s] ", level_letter(level), blusys_err_domain_string(domain));
-    vfprintf(out, fmt, ap);
+    fputs(rendered, out);
     fputc('\n', out);
+
+    blusys_counter_inc(domain, 1u);
+    blusys_observe_record_log(level, domain, rendered);
 }
 
 void blusys_log(blusys_log_level_t  level,

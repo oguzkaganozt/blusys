@@ -6,7 +6,7 @@
 //   - app_spec<State, Action>  — define your app
 //   - app_identity             — product name, theme, feedback preset
 //   - app_ctx                  — dispatch (returns whether queued), capability status, feedback
-//   - app_fx (via ctx.fx())     — typed navigation/storage/settings surface
+//   - app_fx (via ctx.fx())     — typed navigation/storage/settings/diag/build surface
 //   - entry macros             — BLUSYS_APP, BLUSYS_APP_INTERACTIVE, BLUSYS_APP_DASHBOARD,
 //                                  BLUSYS_APP_MAIN_* (escape hatches)
 //   - theme presets            — expressive_dark, operational_light, compact_dark, oled
@@ -29,6 +29,7 @@
 #include "blusys/framework/capabilities/bluetooth.hpp"
 #include "blusys/framework/capabilities/ota.hpp"
 #include "blusys/framework/capabilities/diagnostics.hpp"
+#include "blusys/framework/capabilities/build_info.hpp"
 #include "blusys/framework/capabilities/telemetry.hpp"
 #include "blusys/framework/capabilities/lan_control.hpp"
 #include "blusys/framework/capabilities/mqtt.hpp"

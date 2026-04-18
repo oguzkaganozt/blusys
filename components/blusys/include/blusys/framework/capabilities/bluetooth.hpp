@@ -1,6 +1,7 @@
 #pragma once
 
 #include "blusys/framework/capabilities/capability.hpp"
+#include "blusys/services/connectivity/ble_gatt.h"
 
 #include <atomic>
 #include <cstddef>
@@ -10,12 +11,6 @@
 // The concrete struct/typedef definitions live in the device service headers.
 struct blusys_bluetooth;
 typedef struct blusys_bluetooth blusys_bluetooth_t;
-struct blusys_ble_gatt;
-typedef struct blusys_ble_gatt blusys_ble_gatt_t;
-struct blusys_ble_gatt_svc_def_t;
-using blusys_ble_gatt_conn_cb_t = void (*)(std::uint16_t conn_handle,
-                                           bool connected,
-                                           void *user_ctx);
 
 namespace blusys { class runtime; }
 

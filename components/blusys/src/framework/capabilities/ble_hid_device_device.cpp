@@ -25,7 +25,7 @@ struct ble_hid_device_capability::impl {
 };
 
 ble_hid_device_capability::ble_hid_device_capability(const ble_hid_device_config &cfg)
-    : cfg_(cfg), impl_(new impl{})
+    : impl_(new impl{}), cfg_(cfg)
 {
 }
 

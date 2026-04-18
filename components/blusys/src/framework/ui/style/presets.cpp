@@ -35,6 +35,9 @@ const blusys::theme_tokens &expressive_dark()
         .color_outline          = lv_color_hex(0x2D3240),
         .color_outline_variant  = lv_color_hex(0x1E222E),
 
+        .density_mode = blusys::density::normal,
+        .orientation  = blusys::display_orientation::landscape,
+
         .feedback_voice = blusys::theme_feedback_voice::expressive,
 
         // design resolution — ILI9341 320×240 reference
@@ -124,6 +127,9 @@ const blusys::theme_tokens &operational_light()
         .color_surface_elevated = lv_color_hex(0xFFFFFF),
         .color_outline          = lv_color_hex(0xD1D5DB),
         .color_outline_variant  = lv_color_hex(0xE5E7EB),
+
+        .density_mode = blusys::density::normal,
+        .orientation  = blusys::display_orientation::landscape,
 
         .feedback_voice = blusys::theme_feedback_voice::operational,
 
@@ -271,6 +277,9 @@ const blusys::theme_tokens &oled()
         .color_surface_elevated = lv_color_hex(0x0A0A0A),
         .color_outline          = lv_color_hex(0x444444),
         .color_outline_variant  = lv_color_hex(0x333333),
+
+        .density_mode = blusys::density::normal,
+        .orientation  = blusys::display_orientation::landscape,
 
         .feedback_voice = blusys::theme_feedback_voice::operational,
 
@@ -447,8 +456,8 @@ blusys::theme_tokens for_display(const blusys::theme_tokens &base,
     t.font_mono    = scale_font(base.font_mono,    ratio);
 
     // --- density_mode and orientation from scale ---
-    // This is the sole production writer of both fields. Presets intentionally
-    // do not set them (see Step 2a); they are authored here from actual dims.
+    // Base presets seed these to the zero-init defaults. This pass rewrites
+    // them from actual dims so callers always get display-specific values.
     // compact:     scale < 0.6  (drives shell chrome collapse in shell_create)
     // normal:      0.6 ≤ scale ≤ 1.2
     // comfortable: scale > 1.2  (theme designed for a smaller display, shown on a larger one)

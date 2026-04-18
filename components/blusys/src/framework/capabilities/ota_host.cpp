@@ -10,7 +10,7 @@ namespace blusys {
 struct ota_capability::impl {};
 
 ota_capability::ota_capability(const ota_config &cfg)
-    : cfg_(cfg), impl_(new impl{})
+    : impl_(new impl{}), cfg_(cfg)
 {
 }
 
@@ -92,4 +92,3 @@ void ota_capability::emit_download_progress(std::uint8_t pct)
 }
 
 }  // namespace blusys
-

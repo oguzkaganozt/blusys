@@ -37,7 +37,8 @@ extern "C" {
 
 static inline blusys_lcd_config_t blusys_st7735_default_config(void)
 {
-    blusys_lcd_config_t cfg = {(blusys_lcd_driver_t)0};
+    blusys_lcd_config_t cfg;
+    memset(&cfg, 0, sizeof(cfg));
     cfg.driver         = BLUSYS_LCD_DRIVER_ST7735;
     cfg.width          = BLUSYS_ST7735_WIDTH;
     cfg.height         = BLUSYS_ST7735_HEIGHT;

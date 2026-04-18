@@ -1,6 +1,7 @@
 #pragma once
 
 #include "blusys/framework/capabilities/capability.hpp"
+#include "blusys/services/protocol/local_ctrl.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -9,13 +10,7 @@
 struct blusys_wifi;          typedef struct blusys_wifi          blusys_wifi_t;
 struct blusys_sntp;          typedef struct blusys_sntp          blusys_sntp_t;
 struct blusys_mdns;          typedef struct blusys_mdns          blusys_mdns_t;
-struct blusys_local_ctrl;    typedef struct blusys_local_ctrl    blusys_local_ctrl_t;
 struct blusys_wifi_prov;     typedef struct blusys_wifi_prov     blusys_wifi_prov_t;
-
-// Forward declarations for config types that use service-layer structs.
-struct blusys_local_ctrl_action_t;
-using blusys_local_ctrl_status_cb_t =
-    blusys_err_t (*)(char *json_buf, std::size_t json_buf_size, void *user_ctx);
 
 namespace blusys { class runtime; }
 

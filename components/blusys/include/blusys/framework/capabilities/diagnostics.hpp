@@ -1,6 +1,7 @@
 #pragma once
 
 #include "blusys/framework/capabilities/capability.hpp"
+#include "blusys/framework/observe/snapshot.h"
 
 #include <cstdint>
 
@@ -29,6 +30,11 @@ struct diagnostics_snapshot {
 struct diagnostics_status : capability_status_base {
     bool console_running = false;
     diagnostics_snapshot last_snapshot{};
+    // Live observability snapshot: log ring, counters, and last-error state.
+    blusys_observe_snapshot_t observability{};
+    // Restored crash dump from the previous boot/shutdown capture, if any.
+    bool crash_dump_ready = false;
+    blusys_observe_snapshot_t crash_dump{};
 };
 
 // ---- configuration (platform-independent) ----
@@ -58,7 +64,12 @@ public:
     [[nodiscard]] const diagnostics_status &status() const { return status_; }
 
 private:
+    friend void diagnostics_shutdown_handler();
+
     void collect_snapshot();
+    void capture_observability();
+    void load_crash_dump();
+    void persist_crash_dump();
     void post_event(diagnostics_event ev)
     {
         post_integration_event(static_cast<std::uint32_t>(ev));

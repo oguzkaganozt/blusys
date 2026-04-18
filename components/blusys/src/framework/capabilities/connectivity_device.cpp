@@ -44,7 +44,7 @@ struct connectivity_capability::impl {
 };
 
 connectivity_capability::connectivity_capability(const connectivity_config &cfg)
-    : cfg_(cfg), impl_(new impl{})
+    : impl_(new impl{}), cfg_(cfg)
 {
 }
 

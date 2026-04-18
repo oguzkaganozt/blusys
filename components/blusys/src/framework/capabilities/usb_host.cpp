@@ -11,7 +11,7 @@ struct usb_capability::impl {
 };
 
 usb_capability::usb_capability(const usb_config &cfg)
-    : cfg_(cfg), impl_(new impl{})
+    : impl_(new impl{}), cfg_(cfg)
 {
 }
 

@@ -12,7 +12,7 @@ struct bluetooth_capability::impl {
 };
 
 bluetooth_capability::bluetooth_capability(const bluetooth_config &cfg)
-    : cfg_(cfg), impl_(new impl{})
+    : impl_(new impl{}), cfg_(cfg)
 {
 }
 

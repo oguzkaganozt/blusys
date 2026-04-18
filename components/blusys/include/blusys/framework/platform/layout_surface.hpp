@@ -16,6 +16,10 @@
 
 #include "blusys/framework/platform/profile.hpp"
 
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+#include "blusys/framework/ui/style/theme.hpp"
+#endif
+
 #include <cstdint>
 
 namespace blusys::layout {
@@ -121,8 +125,6 @@ inline shell_chrome shell_chrome_for(const device_profile &profile)
 }
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-
-#include "blusys/framework/ui/style/theme.hpp"
 
 // Maps packaging hints from classify() to a suggested theme_tokens::density_mode.
 // Aligns with presets::expressive_dark() (comfortable), operational_light()

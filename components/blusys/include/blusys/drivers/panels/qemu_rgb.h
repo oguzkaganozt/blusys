@@ -20,7 +20,8 @@ extern "C" {
 
 static inline blusys_lcd_config_t blusys_qemu_rgb_default_config(void)
 {
-    blusys_lcd_config_t cfg = {(blusys_lcd_driver_t)0};
+    blusys_lcd_config_t cfg;
+    memset(&cfg, 0, sizeof(cfg));
     cfg.driver         = BLUSYS_LCD_DRIVER_QEMU_RGB;
     cfg.width          = BLUSYS_QEMU_RGB_WIDTH;
     cfg.height         = BLUSYS_QEMU_RGB_HEIGHT;

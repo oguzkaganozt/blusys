@@ -39,6 +39,7 @@ enum class capability_kind : std::uint8_t {
     lan_control,
     usb,
     ble_hid_device,
+    build_info,
     persistence,
     custom,
 };

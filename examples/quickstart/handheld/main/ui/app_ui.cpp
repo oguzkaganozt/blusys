@@ -280,15 +280,20 @@ lv_obj_t *create_setup(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t
 
 lv_obj_t *create_about(blusys::app_ctx &ctx, const void * /*params*/, lv_group_t **group_out)
 {
+    const auto *build = ctx.fx().build.status();
     const blusys::screens::about_extra_field extras[] = {
         {.key = "Interface", .value = "handheld"},
         {.key = "Profile", .value = handheld_starter::system::controller_profile_label_for_build()},
         {.key = "Identity", .value = "expressive_dark"},
+        {.key = "Build host", .value = build != nullptr ? build->build_host : "unknown"},
+        {.key = "Commit", .value = build != nullptr ? build->commit_hash : "unknown"},
+        {.key = "Features", .value = build != nullptr ? build->feature_flags : "unknown"},
     };
 
     const blusys::screens::about_screen_config config{
         .product_name = "Pulse Controller",
-        .firmware_version = handheld_starter::system::controller_build_version_for_build(),
+        .firmware_version = build != nullptr ? build->firmware_version
+                                             : handheld_starter::system::controller_build_version_for_build(),
         .hardware_version = handheld_starter::system::controller_hardware_label_for_build(),
         .serial_number = "CTRL-0001",
         .build_date = __DATE__,

@@ -2,6 +2,7 @@
 #define BLUSYS_LCD_H
 
 #include <stdbool.h>
+#include <string.h>
 #include <stdint.h>
 
 #include "blusys/hal/error.h"

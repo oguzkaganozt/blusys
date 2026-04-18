@@ -6,8 +6,6 @@
 
 #include <cstring>
 
-static const char *TAG = "blusys_persist";
-
 // NVS namespace for storing per-capability schema versions.
 static constexpr const char* kMetaNs = "blusys.meta";
 
@@ -105,7 +103,8 @@ void persistence_capability::run_migrations(const capability_list& list)
             blusys_nvs_set_u32(meta, ns, current);
             blusys_nvs_commit(meta);
             BLUSYS_LOG(BLUSYS_LOG_INFO, err_domain_persistence,
-                       "schema v%u registered: %s", current, ns);
+                       "schema v%lu registered: %s",
+                       static_cast<unsigned long>(current), ns);
             continue;
         }
         if (verr != BLUSYS_OK) {
@@ -120,7 +119,9 @@ void persistence_capability::run_migrations(const capability_list& list)
         }
 
         BLUSYS_LOG(BLUSYS_LOG_INFO, err_domain_persistence,
-                   "migrating %s: v%u → v%u", ns, stored, current);
+                   "migrating %s: v%lu → v%lu", ns,
+                   static_cast<unsigned long>(stored),
+                   static_cast<unsigned long>(current));
 
         blusys_nvs_t* cap_nvs = nullptr;
         err = blusys_nvs_open(ns, BLUSYS_NVS_READWRITE, &cap_nvs);
@@ -138,8 +139,10 @@ void persistence_capability::run_migrations(const capability_list& list)
 
         if (merr != BLUSYS_OK) {
             BLUSYS_LOG(BLUSYS_LOG_ERROR, err_domain_persistence,
-                       "migration failed for %s (v%u→v%u): %d", ns, stored,
-                       current, static_cast<int>(merr));
+                       "migration failed for %s (v%lu→v%lu): %d", ns,
+                       static_cast<unsigned long>(stored),
+                       static_cast<unsigned long>(current),
+                       static_cast<int>(merr));
             post_event(persistence_event::migration_failed,
                        static_cast<std::uint32_t>(merr));
         } else {
@@ -148,7 +151,8 @@ void persistence_capability::run_migrations(const capability_list& list)
             ++status_.migrations_run;
             post_event(persistence_event::migration_done);
             BLUSYS_LOG(BLUSYS_LOG_INFO, err_domain_persistence,
-                       "migration done: %s v%u", ns, current);
+                       "migration done: %s v%lu", ns,
+                       static_cast<unsigned long>(current));
         }
     }
 

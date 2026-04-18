@@ -11,7 +11,7 @@ struct lan_control_capability::impl {
 };
 
 lan_control_capability::lan_control_capability(const lan_control_config &cfg)
-    : cfg_(cfg), impl_(new impl{})
+    : impl_(new impl{}), cfg_(cfg)
 {
 }
 

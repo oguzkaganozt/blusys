@@ -1,19 +1,15 @@
 #pragma once
 
 #include "blusys/framework/capabilities/capability.hpp"
+#include "blusys/services/protocol/local_ctrl.h"
 
 #include <cstddef>
 #include <cstdint>
 
 // Forward declarations for device-side LAN control and mDNS handles/types.
 // Concrete definitions live in the device service headers.
-struct blusys_local_ctrl;
-typedef struct blusys_local_ctrl blusys_local_ctrl_t;
 struct blusys_mdns;
 typedef struct blusys_mdns blusys_mdns_t;
-struct blusys_local_ctrl_action_t;
-using blusys_local_ctrl_status_cb_t =
-    blusys_err_t (*)(char *json_buf, std::size_t json_buf_size, void *user_ctx);
 
 namespace blusys { class runtime; }
 

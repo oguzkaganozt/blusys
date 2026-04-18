@@ -7,6 +7,7 @@
 
 #include "blusys/framework/observe/counter.h"
 
+#include <stddef.h>
 #include <stdatomic.h>
 
 static _Atomic uint32_t g_counters[err_domain_count];
@@ -25,6 +26,26 @@ uint32_t blusys_counter_get(blusys_err_domain_t domain)
         return 0;
     }
     return atomic_load_explicit(&g_counters[domain], memory_order_relaxed);
+}
+
+void blusys_counter_snapshot(blusys_counter_snapshot_t *out)
+{
+    if (out == NULL) {
+        return;
+    }
+    for (int i = 0; i < (int)err_domain_count; ++i) {
+        out->values[i] = atomic_load_explicit(&g_counters[i], memory_order_relaxed);
+    }
+}
+
+void blusys_counter_restore(const blusys_counter_snapshot_t *in)
+{
+    if (in == NULL) {
+        return;
+    }
+    for (int i = 0; i < (int)err_domain_count; ++i) {
+        atomic_store_explicit(&g_counters[i], in->values[i], memory_order_relaxed);
+    }
 }
 
 void blusys_counter_reset_all(void)

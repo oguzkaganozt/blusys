@@ -1,24 +1,63 @@
 #include "blusys/framework/capabilities/diagnostics.hpp"
-#include "blusys/framework/engine/intent.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
-#include "blusys/hal/log.h"
+#include "blusys/framework/observe/log.h"
+#include "blusys/framework/observe/snapshot.h"
 
 #include <cstring>
 
-static const char *TAG = "blusys_diag";
-
 namespace blusys {
+
+namespace {
+
+struct crash_dump_record {
+    std::uint32_t magic   = 0;
+    std::uint32_t version = 0;
+    blusys_observe_snapshot_t snapshot{};
+};
+
+constexpr std::uint32_t kCrashDumpMagic   = 0x42444947u;  // BDIG
+constexpr std::uint32_t kCrashDumpVersion = 1u;
+
+crash_dump_record g_host_crash_dump{};
+bool              g_host_crash_dump_valid = false;
+
+}  // namespace
 
 struct diagnostics_capability::impl {};
 
 diagnostics_capability::diagnostics_capability(const diagnostics_config &cfg)
-    : cfg_(cfg), impl_(new impl{})
+    : impl_(new impl{}), cfg_(cfg)
 {
 }
 
 diagnostics_capability::~diagnostics_capability()
 {
     delete impl_;
+}
+
+void diagnostics_capability::capture_observability()
+{
+    blusys_observe_snapshot(&status_.observability);
+}
+
+void diagnostics_capability::load_crash_dump()
+{
+    if (!g_host_crash_dump_valid || g_host_crash_dump.magic != kCrashDumpMagic ||
+        g_host_crash_dump.version != kCrashDumpVersion) {
+        status_.crash_dump_ready = false;
+        return;
+    }
+
+    status_.crash_dump = g_host_crash_dump.snapshot;
+    status_.crash_dump_ready = true;
+}
+
+void diagnostics_capability::persist_crash_dump()
+{
+    capture_observability();
+    g_host_crash_dump.magic   = kCrashDumpMagic;
+    g_host_crash_dump.version = kCrashDumpVersion;
+    g_host_crash_dump.snapshot = status_.observability;
+    g_host_crash_dump_valid = true;
 }
 
 void diagnostics_capability::collect_snapshot() {}
@@ -39,12 +78,19 @@ blusys_err_t diagnostics_capability::start(blusys::runtime &rt)
     s.chip_cores = 4;
     s.flash_size = 4 * 1024 * 1024;
 
-    BLUSYS_LOGI(TAG, "host stub: diagnostics ready (simulated)");
+    load_crash_dump();
+    status_.capability_ready = true;
+
+    BLUSYS_LOG(BLUSYS_LOG_INFO, err_domain_framework_observe,
+               "host stub: diagnostics ready (simulated)");
+    capture_observability();
     return BLUSYS_OK;
 }
 
 void diagnostics_capability::poll(std::uint32_t now_ms)
 {
+    capture_observability();
+
     if (first_poll_) {
         first_poll_ = false;
         last_snapshot_ms_ = now_ms;
@@ -64,9 +110,9 @@ void diagnostics_capability::poll(std::uint32_t now_ms)
 
 void diagnostics_capability::stop()
 {
+    persist_crash_dump();
     status_ = {};
     rt_ = nullptr;
 }
 
 }  // namespace blusys
-

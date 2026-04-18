@@ -9,6 +9,7 @@
 #include "blusys/framework/capabilities/ble_hid_device.hpp"
 #include "blusys/framework/capabilities/mqtt.hpp"
 #include "blusys/framework/capabilities/ota.hpp"
+#include "blusys/framework/capabilities/build_info.hpp"
 #include "blusys/framework/capabilities/diagnostics.hpp"
 #include "blusys/framework/capabilities/telemetry.hpp"
 #include "blusys/framework/capabilities/lan_control.hpp"

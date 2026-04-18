@@ -74,6 +74,7 @@ set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_COMPONENT_DIR}/src/framework/observe/error_domain.c
     ${BLUSYS_COMPONENT_DIR}/src/framework/observe/log.c
     ${BLUSYS_COMPONENT_DIR}/src/framework/observe/counter.c
+    ${BLUSYS_COMPONENT_DIR}/src/framework/observe/snapshot.c
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/feedback.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/presets.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/internal/logging_sink.cpp
@@ -84,6 +85,7 @@ set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_COMPONENT_DIR}/src/framework/app/services.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/capability_event_map.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/ble_hid_device_host.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/build_info_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/connectivity_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/storage_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/bluetooth_host.cpp
@@ -219,6 +221,51 @@ function(blusys_host_bridge_add_library MODE)
         $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
         -Wall
         -Wextra
+    )
+
+    execute_process(
+        COMMAND git -C "${BLUSYS_PATH}" rev-parse --short=12 HEAD
+        OUTPUT_VARIABLE _blusys_build_commit
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(NOT _blusys_build_commit)
+        set(_blusys_build_commit "unknown")
+    endif()
+
+    execute_process(
+        COMMAND hostname
+        OUTPUT_VARIABLE _blusys_build_host
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(NOT _blusys_build_host)
+        set(_blusys_build_host "unknown")
+    endif()
+
+    execute_process(
+        COMMAND git -C "${BLUSYS_PATH}" describe --tags --dirty --always
+        OUTPUT_VARIABLE _blusys_build_version
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(NOT _blusys_build_version)
+        set(_blusys_build_version "host-build")
+    endif()
+
+    if(MODE STREQUAL "interactive")
+        set(_blusys_build_feature_ui 1)
+        set(_blusys_build_platform host)
+    else()
+        set(_blusys_build_feature_ui 0)
+        set(_blusys_build_platform host)
+    endif()
+
+    target_compile_definitions(${lib_name} PUBLIC
+        BLUSYS_APP_BUILD_VERSION="${_blusys_build_version}"
+        BLUSYS_BUILD_HOST="${_blusys_build_host}"
+        BLUSYS_BUILD_COMMIT="${_blusys_build_commit}"
+        BLUSYS_BUILD_FEATURE_FLAGS="platform=${_blusys_build_platform},ui=${_blusys_build_feature_ui}"
     )
 
     if(MODE STREQUAL "interactive")

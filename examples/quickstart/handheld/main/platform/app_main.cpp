@@ -35,7 +35,9 @@ static blusys::connectivity_capability connectivity{{
     .prov_pop = "123456",
 }};
 
-static blusys::capability_list_storage capabilities{&persistence, &storage, &connectivity};
+static blusys::build_info_capability build_info{};
+
+static blusys::capability_list_storage capabilities{&persistence, &storage, &connectivity, &build_info};
 
 static blusys::flows::flow_base * const kFlows[] = {
     &ui::kSettingsFlow,

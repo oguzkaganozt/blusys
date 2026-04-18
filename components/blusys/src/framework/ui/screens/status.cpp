@@ -61,6 +61,11 @@ lv_obj_t *status_screen_create_impl(app_ctx &ctx,
 
         flows::diagnostics_panel_create(page.content,
             handles != nullptr ? &handles->diagnostics : nullptr);
+        if (handles != nullptr) {
+            if (const auto *diag = ctx.fx().diag.status(); diag != nullptr) {
+                flows::diagnostics_panel_update(handles->diagnostics, *diag);
+            }
+        }
     }
 
     if (group_out != nullptr) {
@@ -93,9 +98,9 @@ void status_screen_update(status_screen_handles &handles, const app_ctx &ctx)
         flows::connectivity_panel_update(handles.connectivity, *conn);
     }
 
-    const auto *diag = ctx.status_of<diagnostics_capability>();
+    const auto *diag = ctx.fx().diag.status();
     if (diag != nullptr) {
-        flows::diagnostics_panel_update(handles.diagnostics, diag->last_snapshot);
+        flows::diagnostics_panel_update(handles.diagnostics, *diag);
     }
 }
 

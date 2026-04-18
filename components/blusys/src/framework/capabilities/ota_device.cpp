@@ -26,11 +26,11 @@ constexpr std::uint32_t kPendingDownloadStarted = 1 << 5;
 }  // namespace
 
 struct ota_capability::impl {
-    std::atomic<std::uint32_t> impl_->pending_flags_{kPendingNone};
+    std::atomic<std::uint32_t> pending_flags_{kPendingNone};
 };
 
 ota_capability::ota_capability(const ota_config &cfg)
-    : cfg_(cfg), impl_(new impl{})
+    : impl_(new impl{}), cfg_(cfg)
 {
 }
 
@@ -187,4 +187,3 @@ void ota_capability::emit_download_progress(std::uint8_t pct)
 }
 
 }  // namespace blusys
-

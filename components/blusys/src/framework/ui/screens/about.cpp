@@ -76,7 +76,7 @@ lv_obj_t *about_screen_create(app_ctx &ctx, const void *params,
         }
 
         if (cfg->fill_diagnostics_from_ctx) {
-            const auto *diag = ctx.status_of<diagnostics_capability>();
+            const auto *diag = ctx.fx().diag.status();
             if (diag != nullptr && diag->capability_ready) {
                 const auto &sn = diag->last_snapshot;
                 char buf[48];

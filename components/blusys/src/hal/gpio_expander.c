@@ -50,18 +50,6 @@ static blusys_err_t mcp23s17_write2(blusys_gpio_expander_t *e, uint8_t reg, uint
     return blusys_spi_transfer(e->spi, tx, NULL, sizeof(tx));
 }
 
-/* Read a single register: [opcode_rd, reg, 0x00] → rx[2] */
-static blusys_err_t mcp23s17_read(blusys_gpio_expander_t *e, uint8_t reg, uint8_t *out)
-{
-    uint8_t tx[3] = { MCP23S17_OPCODE_READ(e->hw_addr), reg, 0x00u };
-    uint8_t rx[3] = { 0 };
-    blusys_err_t err = blusys_spi_transfer(e->spi, tx, rx, sizeof(tx));
-    if (err == BLUSYS_OK) {
-        *out = rx[2];
-    }
-    return err;
-}
-
 /* Sequential read of two registers: [opcode_rd, reg, 0x00, 0x00] → rx[2], rx[3] */
 static blusys_err_t mcp23s17_read2(blusys_gpio_expander_t *e, uint8_t reg, uint8_t *d0, uint8_t *d1)
 {

@@ -2,7 +2,10 @@
 
 #include "blusys/framework/capabilities/storage.hpp"
 #include "blusys/framework/capabilities/persistence.hpp"
+#include "blusys/framework/capabilities/diagnostics.hpp"
+#include "blusys/framework/capabilities/build_info.hpp"
 #include "blusys/framework/engine/router.hpp"
+#include "blusys/framework/observe/snapshot.h"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/framework/ui/controller/navigation_controller.hpp"
@@ -16,6 +19,8 @@ namespace blusys {
 
 class app_runtime_base;
 class navigation_controller;
+class diagnostics_capability;
+class build_info_capability;
 
 #ifndef ESP_PLATFORM
 struct blusys_fs;
@@ -24,7 +29,7 @@ struct blusys_fatfs;
 typedef struct blusys_fatfs blusys_fatfs_t;
 #endif
 
-// Typed effect bridge for navigation and storage.
+// Typed effect bridge for navigation, storage, diagnostics, and build info.
 //
 // nav provides the full navigation and registration surface; product code
 // never needs to reach the underlying screen_router, overlay_manager,
@@ -347,9 +352,102 @@ public:
         persistence_capability* persistence_ = nullptr;
     };
 
+    class diagnostics_fx {
+    public:
+        [[nodiscard]] const diagnostics_status *status() const
+        {
+            return diagnostics_ != nullptr ? &diagnostics_->status() : nullptr;
+        }
+
+        [[nodiscard]] const diagnostics_snapshot *snapshot() const
+        {
+            const auto *s = status();
+            return s != nullptr ? &s->last_snapshot : nullptr;
+        }
+
+        [[nodiscard]] const blusys_observe_snapshot_t *observability() const
+        {
+            const auto *s = status();
+            return s != nullptr ? &s->observability : nullptr;
+        }
+
+        [[nodiscard]] const blusys_observe_snapshot_t *crash_dump() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->crash_dump_ready ? &s->crash_dump : nullptr;
+        }
+
+        [[nodiscard]] const blusys_observe_last_error_t *last_error(blusys_err_domain_t domain) const
+        {
+            const auto *s = status();
+            if (s == nullptr || (unsigned)domain >= (unsigned)err_domain_count) {
+                return nullptr;
+            }
+            const auto &e = s->observability.last_errors[domain];
+            return e.valid ? &e : nullptr;
+        }
+
+        [[nodiscard]] std::uint32_t counter(blusys_err_domain_t domain) const
+        {
+            const auto *s = status();
+            if (s == nullptr || (unsigned)domain >= (unsigned)err_domain_count) {
+                return 0;
+            }
+            return s->observability.counters.values[domain];
+        }
+
+    private:
+        friend class app_fx;
+
+        void bind(diagnostics_capability *diag) noexcept { diagnostics_ = diag; }
+
+        diagnostics_capability *diagnostics_ = nullptr;
+    };
+
+    class build_fx {
+    public:
+        [[nodiscard]] const build_info_status *status() const
+        {
+            return build_ != nullptr ? &build_->status() : nullptr;
+        }
+
+        [[nodiscard]] const char *firmware_version() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->firmware_version != nullptr ? s->firmware_version : "unknown";
+        }
+
+        [[nodiscard]] const char *build_host() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->build_host != nullptr ? s->build_host : "unknown";
+        }
+
+        [[nodiscard]] const char *commit_hash() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->commit_hash != nullptr ? s->commit_hash : "unknown";
+        }
+
+        [[nodiscard]] const char *feature_flags() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->feature_flags != nullptr ? s->feature_flags : "unknown";
+        }
+
+    private:
+        friend class app_fx;
+
+        void bind(build_info_capability *build) noexcept { build_ = build; }
+
+        build_info_capability *build_ = nullptr;
+    };
+
     nav_fx nav;
     storage_fx storage;
     settings_fx settings;
+    diagnostics_fx diag;
+    build_fx build;
 
 private:
     friend class app_runtime_base;
@@ -367,6 +465,16 @@ private:
     void bind_persistence(persistence_capability *persistence_cap) noexcept
     {
         settings.bind(persistence_cap);
+    }
+
+    void bind_diagnostics(diagnostics_capability *diag_cap) noexcept
+    {
+        diag.bind(diag_cap);
+    }
+
+    void bind_build(build_info_capability *build_cap) noexcept
+    {
+        build.bind(build_cap);
     }
 };
 
