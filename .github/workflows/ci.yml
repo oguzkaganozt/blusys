@@ -156,6 +156,8 @@ jobs:
           export BLUSYS_PATH="${GITHUB_WORKSPACE}"
           cmake -S examples/quickstart/headless/host -B examples/quickstart/headless/build-host-ci
           cmake --build examples/quickstart/headless/build-host-ci -j
+          cmake -S examples/external/host -B examples/external/build-host-ci
+          cmake --build examples/external/build-host-ci -j
 
       - name: Run host smoke binaries
         shell: bash

@@ -54,6 +54,20 @@ run_host() {
     printf 'scaffold-smoke: host-build ok %s\n' "$name"
 }
 
+# Tests scripts/scaffold/new-capability.sh. Scaffolded host.cpp and device.cpp
+# share an identical impl body (same template), so one syntax check covers both.
+run_capability_scaffold() {
+    local name="$1"
+    local probe_root="$TMP/cap_scaffold_$name"
+    mkdir -p "$probe_root"
+    "$ROOT/scripts/scaffold/new-capability.sh" "$name" "$probe_root"
+    "${CXX:-g++}" -fsyntax-only -std=c++20 \
+        -I"$ROOT/components/blusys/include" \
+        -I"$probe_root/include" \
+        "$probe_root/src/framework/capabilities/${name}_host.cpp"
+    printf 'scaffold-smoke: capability-scaffold ok %s\n' "$name"
+}
+
 # Interface/capability/policy matrix
 run_create hh --interface handheld .
 run_create hs --interface handheld --with storage .
@@ -67,5 +81,7 @@ run_create hp --interface headless --with connectivity,telemetry --policy low_po
 for name in hh hs hb sd ht hl hu hp; do
     run_host "$name"
 done
+
+run_capability_scaffold cap_smoke_probe
 
 printf '\nscaffold-smoke: all passed (%s)\n' "$TMP"
