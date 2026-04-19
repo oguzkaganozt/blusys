@@ -52,18 +52,11 @@ std::optional<action> on_event(blusys::event event, app_state &state)
         return std::nullopt;
     }
 
-    blusys::capability_event ce{};
-    if (blusys::map_integration_event(event.id, event.kind, &ce)) {
-        ce.payload = event.payload;
-    } else {
-        ce.tag            = blusys::capability_event_tag::integration_passthrough;
-        ce.value          = 0;
-        ce.raw_event_id   = event.id;
-        ce.raw_event_code = event.kind;
-        ce.payload        = event.payload;
+    const auto *ce = blusys::event_capability(event);
+    if (ce == nullptr) {
+        return std::nullopt;
     }
-
-    return action{.tag = action_tag::capability_event, .cap_event = ce};
+    return action{.tag = action_tag::capability_event, .cap_event = *ce};
 }
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event)
@@ -82,7 +75,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
         break;
     case CET::wifi_got_ip:
         state.has_ip = true;
-        if (const auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
+        if (const auto *conn = ctx.fx().connectivity.status(); conn != nullptr) {
             BLUSYS_LOGI(kTag, "ip=%s rssi=%d", conn->ip_info.ip, conn->wifi_rssi);
         }
         break;

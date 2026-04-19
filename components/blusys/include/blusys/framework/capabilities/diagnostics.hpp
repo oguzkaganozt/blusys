@@ -63,6 +63,57 @@ public:
 
     [[nodiscard]] const diagnostics_status &status() const { return status_; }
 
+    struct effects {
+        diagnostics_capability *self = nullptr;
+
+        [[nodiscard]] const diagnostics_status *status() const
+        {
+            return self != nullptr ? &self->status() : nullptr;
+        }
+
+        [[nodiscard]] const diagnostics_snapshot *snapshot() const
+        {
+            const auto *s = status();
+            return s != nullptr ? &s->last_snapshot : nullptr;
+        }
+
+        [[nodiscard]] const blusys_observe_snapshot_t *observability() const
+        {
+            const auto *s = status();
+            return s != nullptr ? &s->observability : nullptr;
+        }
+
+        [[nodiscard]] const blusys_observe_snapshot_t *crash_dump() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->crash_dump_ready ? &s->crash_dump : nullptr;
+        }
+
+        [[nodiscard]] const blusys_observe_last_error_t *last_error(blusys_err_domain_t domain) const
+        {
+            const auto *s = status();
+            if (s == nullptr || (unsigned)domain >= (unsigned)err_domain_count) {
+                return nullptr;
+            }
+            const auto &e = s->observability.last_errors[domain];
+            return e.valid ? &e : nullptr;
+        }
+
+        [[nodiscard]] std::uint32_t counter(blusys_err_domain_t domain) const
+        {
+            const auto *s = status();
+            if (s == nullptr || (unsigned)domain >= (unsigned)err_domain_count) {
+                return 0;
+            }
+            return s->observability.counters.values[domain];
+        }
+
+        void bind(diagnostics_capability *diag) noexcept
+        {
+            self = diag;
+        }
+    };
+
 private:
     friend void diagnostics_shutdown_handler();
 

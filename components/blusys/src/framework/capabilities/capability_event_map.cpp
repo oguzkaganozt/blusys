@@ -24,6 +24,8 @@ bool map_integration_event(std::uint32_t event_id, std::uint32_t event_code,
 
     *out = capability_event{};
     out->tag = it->tag;
+    out->raw_event_id = event_id;
+    out->raw_event_code = event_code;
     if (it->carry_code_as_value) {
         out->value = static_cast<std::int32_t>(event_code);
     }

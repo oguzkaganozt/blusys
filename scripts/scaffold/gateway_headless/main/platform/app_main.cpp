@@ -106,14 +106,13 @@ blusys::capability_list_storage capabilities{
 
 void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_fx &fx, app_state &state, std::uint32_t now_ms)
 {
-    (void)fx;
     ++state.sample_count;
     state.active_devices = 1 + static_cast<std::int32_t>(state.sample_count % 3);
     state.agg_throughput = 12.0f + static_cast<float>(state.sample_count % 8);
 
     if (state.phase == op_state::operational) {
-        telemetry.record("active_devices", static_cast<float>(state.active_devices), now_ms);
-        telemetry.record("throughput", state.agg_throughput, now_ms);
+        fx.telemetry.record("active_devices", static_cast<float>(state.active_devices), now_ms);
+        fx.telemetry.record("throughput", state.agg_throughput, now_ms);
     }
 
     if (state.sample_count % 30 == 0) {

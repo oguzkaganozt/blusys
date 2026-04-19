@@ -12,10 +12,10 @@ constexpr const char *kTag = "htlm_lp";
 
 void sync_status(blusys::app_ctx &ctx, app_state &state)
 {
-    if (const auto *c = ctx.status_of<blusys::connectivity_capability>(); c != nullptr) {
+    if (const auto *c = ctx.fx().connectivity.status(); c != nullptr) {
         state.connectivity_ready = c->capability_ready;
     }
-    if (const auto *t = ctx.status_of<blusys::telemetry_capability>(); t != nullptr) {
+    if (const auto *t = ctx.fx().telemetry.status(); t != nullptr) {
         state.telemetry_ready = t->capability_ready;
     }
 }
@@ -51,12 +51,11 @@ std::optional<action> on_event(blusys::event event, app_state &state)
         return std::nullopt;
     }
 
-    blusys::capability_event ce{};
-    if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
+    const auto *ce = blusys::event_capability(event);
+    if (ce == nullptr) {
         return std::nullopt;
     }
-    ce.payload = event.payload;
-    return action{.tag = action_tag::capability_event, .cap_event = ce};
+    return action{.tag = action_tag::capability_event, .cap_event = *ce};
 }
 
 }  // namespace telemetry_lp

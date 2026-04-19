@@ -106,11 +106,6 @@ public:
         return c != nullptr ? &c->status() : nullptr;
     }
 
-    // ---- capability requests (integration calls from intent bridges) ----
-    // These forward to the composed capability when present; otherwise return
-    // BLUSYS_ERR_INVALID_STATE.
-    blusys_err_t request_connectivity_reconnect();
-
 private:
     friend class app_runtime_base;
 

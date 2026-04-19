@@ -6,7 +6,7 @@
 //   - app_spec<State, Action>  — define your app
 //   - app_identity             — product name, theme, feedback preset
 //   - app_ctx                  — dispatch (returns whether queued), capability status, feedback
-//   - app_fx (via ctx.fx())     — typed navigation/storage/settings/diag/build surface
+//   - app_fx (via ctx.fx())     — typed navigation/connectivity/storage/telemetry/settings/diag/build surface
 //   - entry macros             — BLUSYS_APP, BLUSYS_APP_HEADLESS
 //   - theme presets            — expressive_dark, operational_light, compact_dark, oled
 //   - feedback presets         — expressive, operational

@@ -48,6 +48,44 @@ public:
 
     const build_info_status &status() const { return status_; }
 
+    struct effects {
+        build_info_capability *self = nullptr;
+
+        [[nodiscard]] const build_info_status *status() const
+        {
+            return self != nullptr ? &self->status() : nullptr;
+        }
+
+        [[nodiscard]] const char *firmware_version() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->firmware_version != nullptr ? s->firmware_version : "unknown";
+        }
+
+        [[nodiscard]] const char *build_host() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->build_host != nullptr ? s->build_host : "unknown";
+        }
+
+        [[nodiscard]] const char *commit_hash() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->commit_hash != nullptr ? s->commit_hash : "unknown";
+        }
+
+        [[nodiscard]] const char *feature_flags() const
+        {
+            const auto *s = status();
+            return s != nullptr && s->feature_flags != nullptr ? s->feature_flags : "unknown";
+        }
+
+        void bind(build_info_capability *build) noexcept
+        {
+            self = build;
+        }
+    };
+
 private:
     build_info_status status_{};
 };

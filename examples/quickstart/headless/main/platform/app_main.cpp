@@ -153,12 +153,10 @@ float drift_sensor(float base, float range, std::uint32_t tick)
 }
 
 // ---- on_tick: sensor sampling and telemetry recording ----
-// Lives in integration/ because it needs direct access to the telemetry
-// capability instance for record().
+// Lives in integration/ because it needs the typed telemetry effect surface.
 
 void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_fx &fx, app_state &state, std::uint32_t now_ms)
 {
-    (void)fx;
     ++state.sample_count;
 
     // Simulate sensor readings.
@@ -167,8 +165,8 @@ void on_tick(blusys::app_ctx & /*ctx*/, blusys::app_fx &fx, app_state &state, st
 
     // Record telemetry when in reporting phase.
     if (state.phase == op_state::reporting) {
-        telemetry.record("temperature", state.temperature, now_ms);
-        telemetry.record("humidity", state.humidity, now_ms);
+        fx.telemetry.record("temperature", state.temperature, now_ms);
+        fx.telemetry.record("humidity", state.humidity, now_ms);
     }
 
     // Periodic heartbeat log.

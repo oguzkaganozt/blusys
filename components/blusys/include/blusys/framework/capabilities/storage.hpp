@@ -61,6 +61,30 @@ public:
     [[nodiscard]] blusys_fs_t    *spiffs() const;
     [[nodiscard]] blusys_fatfs_t *fatfs()  const;
 
+    struct effects {
+        storage_capability *self = nullptr;
+
+        [[nodiscard]] const storage_status *status() const
+        {
+            return self != nullptr ? &self->status() : nullptr;
+        }
+
+        [[nodiscard]] blusys_fs_t *spiffs() const
+        {
+            return self != nullptr ? self->spiffs() : nullptr;
+        }
+
+        [[nodiscard]] blusys_fatfs_t *fatfs() const
+        {
+            return self != nullptr ? self->fatfs() : nullptr;
+        }
+
+        void bind(storage_capability *storage) noexcept
+        {
+            self = storage;
+        }
+    };
+
 private:
     void post_event(storage_event ev)
     {

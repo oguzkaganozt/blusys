@@ -1,17 +1,15 @@
 /* src/framework/test/test_stubs.cpp — weak stubs for capability-shaped
- * symbols that app_ctx and app_runtime reference through the current
- * service-locator path.
+ * symbols that test binaries may reference without linking the real
+ * *_host.cpp capability translation units.
  *
  * Tests link their own mocks (see mocks/mock_capability.hpp); they do NOT
- * pull in the real *_host.cpp capability translation units. That leaves a
- * handful of symbols (`connectivity_capability::request_reconnect`, …)
- * referenced by ctx.cpp through `get<T>()` calls whose type-specific
- * instantiations are emitted unconditionally.
+ * pull in the real capability implementations. That leaves a handful of
+ * symbols (`connectivity_capability::request_reconnect`, …) that some
+ * framework helpers still reference unconditionally.
  *
  * This file provides inert implementations: they satisfy the linker and
- * return a failure code if ever called. P3's typed effects remove this
- * coupling entirely, at which point this file gets deleted along with the
- * service locator.
+ * return a failure code if ever called. As the typed-effect cleanup grows,
+ * this file shrinks and can eventually disappear.
  */
 
 #include "blusys/framework/capabilities/connectivity.hpp"

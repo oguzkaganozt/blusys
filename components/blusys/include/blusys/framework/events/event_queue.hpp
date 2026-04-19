@@ -20,7 +20,9 @@ struct runtime_handler {
     /// Optional; called during `runtime::init` after feedback bus is ready.
     blusys_err_t (*on_init)(void *context, feedback_bus *feedback) = nullptr;
 
-    /// Required; processes one dequeued framework event.
+    /// Required; processes one dequeued framework event. Integration events are
+    /// normalized into canonical capability tags plus capability_event payloads
+    /// before this callback runs.
     void (*handle_event)(void *context,
                          const app_event &event,
                          feedback_bus *feedback,

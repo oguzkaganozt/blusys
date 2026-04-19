@@ -77,12 +77,11 @@ std::optional<Action> on_event(blusys::event event, State &state)
         return std::nullopt;
     }
 
-    blusys::capability_event ce{};
-    if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
+    const auto *ce = blusys::event_capability(event);
+    if (ce == nullptr) {
         return std::nullopt;
     }
-    ce.payload = event.payload;
-    return Action{.tag = ACTION_CAP_EVENT, .cap_event = ce};
+    return Action{.tag = ACTION_CAP_EVENT, .cap_event = *ce};
 }
 
 /* ── timer callback (stateless lambda can't capture) ─────────────────── */

@@ -211,7 +211,7 @@ static void demo_on_event(void *ctx,
         return;
     }
 
-    switch (blusys::app_event_intent(event)) {
+    switch (static_cast<blusys::intent>(event.kind)) {
     case blusys::intent::increment: {
         const int32_t cur = blusys::slider_get_value(h->state->slider);
         blusys::slider_set_value(h->state->slider, clamp_slider(cur + kSliderStep));

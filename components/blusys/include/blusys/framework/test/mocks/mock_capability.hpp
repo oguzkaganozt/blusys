@@ -33,6 +33,7 @@ struct mock_diagnostics_status : capability_status_base {
 struct mock_telemetry_status : capability_status_base {
     std::uint32_t buffered_count   = 0;
     std::uint32_t total_delivered  = 0;
+    std::uint32_t total_failed     = 0;
 };
 
 template <blusys::capability_kind Kind, typename Status>

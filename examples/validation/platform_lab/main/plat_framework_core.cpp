@@ -56,7 +56,7 @@ static void core_demo_on_event(void * /*ctx*/,
         return;
     }
 
-    switch (blusys::app_event_intent(event)) {
+    switch (static_cast<blusys::intent>(event.kind)) {
     case blusys::intent::press:
         blusys::route_dispatch(routes, blusys::route::set_root(1));
         blusys::feedback_dispatch(fb, {

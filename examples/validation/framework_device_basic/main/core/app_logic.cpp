@@ -48,7 +48,7 @@ std::optional<Action> on_event(blusys::event event, AppState &state)
     (void)state;
     switch (event.source) {
     case blusys::event_source::intent:
-        switch (blusys::event_intent(event)) {
+        switch (static_cast<blusys::intent>(event.kind)) {
         case blusys::intent::increment:
             return Action{.tag = Tag::volume_up};
         case blusys::intent::decrement:

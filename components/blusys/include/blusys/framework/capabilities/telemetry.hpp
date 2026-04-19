@@ -63,6 +63,26 @@ public:
 
     [[nodiscard]] const telemetry_status &status() const { return status_; }
 
+    struct effects {
+        telemetry_capability *self = nullptr;
+
+        [[nodiscard]] const telemetry_status *status() const
+        {
+            return self != nullptr ? &self->status() : nullptr;
+        }
+
+        bool record(const char *name, float value,
+                    std::uint32_t timestamp_ms = 0)
+        {
+            return self != nullptr ? self->record(name, value, timestamp_ms) : false;
+        }
+
+        void bind(telemetry_capability *telemetry) noexcept
+        {
+            self = telemetry;
+        }
+    };
+
     // Record a metric into the buffer. Returns false if the buffer is full.
     bool record(const char *name, float value, std::uint32_t timestamp_ms = 0);
 

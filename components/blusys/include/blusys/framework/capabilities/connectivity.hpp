@@ -1,7 +1,7 @@
 #pragma once
 
 #include "blusys/framework/capabilities/capability.hpp"
-#include "blusys/services/protocol/local_ctrl.h"
+#include "blusys/services/protocol/local_ctrl_fwd.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -126,6 +126,25 @@ public:
     [[nodiscard]] const connectivity_status &status() const { return status_; }
 
     blusys_err_t request_reconnect();
+
+    struct effects {
+        connectivity_capability *self = nullptr;
+
+        [[nodiscard]] const connectivity_status *status() const
+        {
+            return self != nullptr ? &self->status() : nullptr;
+        }
+
+        blusys_err_t request_reconnect()
+        {
+            return self != nullptr ? self->request_reconnect() : BLUSYS_ERR_INVALID_STATE;
+        }
+
+        void bind(connectivity_capability *conn) noexcept
+        {
+            self = conn;
+        }
+    };
 
 private:
     // Device-side event handlers; int used for event type to avoid device enums in header.

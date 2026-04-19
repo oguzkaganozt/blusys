@@ -1,6 +1,8 @@
 #pragma once
 
+#include "blusys/framework/capabilities/connectivity.hpp"
 #include "blusys/framework/capabilities/storage.hpp"
+#include "blusys/framework/capabilities/telemetry.hpp"
 #include "blusys/framework/capabilities/persistence.hpp"
 #include "blusys/framework/capabilities/diagnostics.hpp"
 #include "blusys/framework/capabilities/build_info.hpp"
@@ -22,7 +24,8 @@ class navigation_controller;
 class diagnostics_capability;
 class build_info_capability;
 
-// Typed effect bridge for navigation, storage, diagnostics, and build info.
+// Typed effect bridge for navigation plus capability-owned connectivity/
+// storage/telemetry/settings/diagnostics/build namespaces.
 //
 // nav provides the full navigation and registration surface; product code
 // never needs to reach the underlying screen_router, overlay_manager,
@@ -228,197 +231,17 @@ public:
         ::blusys::navigation_controller *ctrl_ = nullptr;
     };
 
-    class storage_fx {
-    public:
-        [[nodiscard]] blusys_fs_t *spiffs() const
-        {
-            return storage_ != nullptr ? storage_->spiffs() : nullptr;
-        }
-
-        [[nodiscard]] blusys_fatfs_t *fatfs() const
-        {
-            return storage_ != nullptr ? storage_->fatfs() : nullptr;
-        }
-
-    private:
-        friend class app_fx;
-
-        void bind(storage_capability *storage) noexcept { storage_ = storage; }
-
-        storage_capability *storage_ = nullptr;
-    };
-
-    // Typed settings surface backed by persistence_capability.
-    // Returns BLUSYS_ERR_INVALID_STATE if no persistence_capability is composed.
-    class settings_fx {
-    public:
-        [[nodiscard]] bool is_ready() const
-        {
-            return persistence_ != nullptr && persistence_->status().nvs_ready;
-        }
-
-        blusys_err_t get_u32(const char* key, std::uint32_t* out) const
-        {
-            return persistence_ != nullptr
-                ? persistence_->app_get_u32(key, out)
-                : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t set_u32(const char* key, std::uint32_t value)
-        {
-            return persistence_ != nullptr
-                ? persistence_->app_set_u32(key, value)
-                : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t get_i32(const char* key, std::int32_t* out) const
-        {
-            return persistence_ != nullptr
-                ? persistence_->app_get_i32(key, out)
-                : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t set_i32(const char* key, std::int32_t value)
-        {
-            return persistence_ != nullptr
-                ? persistence_->app_set_i32(key, value)
-                : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t get_str(const char* key, char* out, std::size_t* len) const
-        {
-            return persistence_ != nullptr
-                ? persistence_->app_get_str(key, out, len)
-                : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t set_str(const char* key, const char* value)
-        {
-            return persistence_ != nullptr
-                ? persistence_->app_set_str(key, value)
-                : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t get_blob(const char* key, void* out, std::size_t* len) const
-        {
-            return persistence_ != nullptr
-                ? persistence_->app_get_blob(key, out, len)
-                : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t set_blob(const char* key, const void* value, std::size_t len)
-        {
-            return persistence_ != nullptr
-                ? persistence_->app_set_blob(key, value, len)
-                : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t erase(const char* key)
-        {
-            return persistence_ != nullptr
-                ? persistence_->app_erase(key)
-                : BLUSYS_ERR_INVALID_STATE;
-        }
-
-    private:
-        friend class app_fx;
-        void bind(persistence_capability* p) noexcept { persistence_ = p; }
-        persistence_capability* persistence_ = nullptr;
-    };
-
-    class diagnostics_fx {
-    public:
-        [[nodiscard]] const diagnostics_status *status() const
-        {
-            return diagnostics_ != nullptr ? &diagnostics_->status() : nullptr;
-        }
-
-        [[nodiscard]] const diagnostics_snapshot *snapshot() const
-        {
-            const auto *s = status();
-            return s != nullptr ? &s->last_snapshot : nullptr;
-        }
-
-        [[nodiscard]] const blusys_observe_snapshot_t *observability() const
-        {
-            const auto *s = status();
-            return s != nullptr ? &s->observability : nullptr;
-        }
-
-        [[nodiscard]] const blusys_observe_snapshot_t *crash_dump() const
-        {
-            const auto *s = status();
-            return s != nullptr && s->crash_dump_ready ? &s->crash_dump : nullptr;
-        }
-
-        [[nodiscard]] const blusys_observe_last_error_t *last_error(blusys_err_domain_t domain) const
-        {
-            const auto *s = status();
-            if (s == nullptr || (unsigned)domain >= (unsigned)err_domain_count) {
-                return nullptr;
-            }
-            const auto &e = s->observability.last_errors[domain];
-            return e.valid ? &e : nullptr;
-        }
-
-        [[nodiscard]] std::uint32_t counter(blusys_err_domain_t domain) const
-        {
-            const auto *s = status();
-            if (s == nullptr || (unsigned)domain >= (unsigned)err_domain_count) {
-                return 0;
-            }
-            return s->observability.counters.values[domain];
-        }
-
-    private:
-        friend class app_fx;
-
-        void bind(diagnostics_capability *diag) noexcept { diagnostics_ = diag; }
-
-        diagnostics_capability *diagnostics_ = nullptr;
-    };
-
-    class build_fx {
-    public:
-        [[nodiscard]] const build_info_status *status() const
-        {
-            return build_ != nullptr ? &build_->status() : nullptr;
-        }
-
-        [[nodiscard]] const char *firmware_version() const
-        {
-            const auto *s = status();
-            return s != nullptr && s->firmware_version != nullptr ? s->firmware_version : "unknown";
-        }
-
-        [[nodiscard]] const char *build_host() const
-        {
-            const auto *s = status();
-            return s != nullptr && s->build_host != nullptr ? s->build_host : "unknown";
-        }
-
-        [[nodiscard]] const char *commit_hash() const
-        {
-            const auto *s = status();
-            return s != nullptr && s->commit_hash != nullptr ? s->commit_hash : "unknown";
-        }
-
-        [[nodiscard]] const char *feature_flags() const
-        {
-            const auto *s = status();
-            return s != nullptr && s->feature_flags != nullptr ? s->feature_flags : "unknown";
-        }
-
-    private:
-        friend class app_fx;
-
-        void bind(build_info_capability *build) noexcept { build_ = build; }
-
-        build_info_capability *build_ = nullptr;
-    };
+    using connectivity_fx = connectivity_capability::effects;
+    using storage_fx      = storage_capability::effects;
+    using telemetry_fx    = telemetry_capability::effects;
+    using settings_fx     = persistence_capability::effects;
+    using diagnostics_fx  = diagnostics_capability::effects;
+    using build_fx        = build_info_capability::effects;
 
     nav_fx nav;
+    connectivity_fx connectivity;
     storage_fx storage;
+    telemetry_fx telemetry;
     settings_fx settings;
     diagnostics_fx diag;
     build_fx build;
@@ -431,9 +254,19 @@ private:
         nav.bind(ctrl);
     }
 
+    void bind_connectivity(connectivity_capability *conn_cap) noexcept
+    {
+        connectivity.bind(conn_cap);
+    }
+
     void bind_storage(storage_capability *storage_cap) noexcept
     {
         storage.bind(storage_cap);
+    }
+
+    void bind_telemetry(telemetry_capability *telemetry_cap) noexcept
+    {
+        telemetry.bind(telemetry_cap);
     }
 
     void bind_persistence(persistence_capability *persistence_cap) noexcept

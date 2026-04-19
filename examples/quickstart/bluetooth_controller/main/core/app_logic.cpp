@@ -90,12 +90,11 @@ std::optional<action> on_event(blusys::event event, app_state &state)
         return std::nullopt;
     }
 
-    blusys::capability_event ce{};
-    if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
+    const auto *ce = blusys::event_capability(event);
+    if (ce == nullptr) {
         return std::nullopt;
     }
-    ce.payload = event.payload;
-    return action{.tag = action_tag::capability_event, .cap_event = ce};
+    return action{.tag = action_tag::capability_event, .cap_event = *ce};
 }
 
 void update(blusys::app_ctx & /*ctx*/, app_state &state, const action &event)

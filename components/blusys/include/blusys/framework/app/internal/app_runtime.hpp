@@ -5,6 +5,8 @@
 
 #include "blusys/framework/app/ctx.hpp"
 #include "blusys/framework/app/spec.hpp"
+#include "blusys/framework/capabilities/connectivity.hpp"
+#include "blusys/framework/capabilities/telemetry.hpp"
 #include "blusys/framework/capabilities/persistence.hpp"
 #include "blusys/framework/capabilities/diagnostics.hpp"
 #include "blusys/framework/capabilities/build_info.hpp"
@@ -32,6 +34,8 @@
 namespace blusys {
 
 class storage_capability;
+class connectivity_capability;
+class telemetry_capability;
 class persistence_capability;
 class diagnostics_capability;
 class build_info_capability;
@@ -67,9 +71,19 @@ protected:
     }
 #endif
 
+    static void bind_fx_connectivity(app_ctx &ctx, connectivity_capability *connectivity)
+    {
+        ctx.fx_.bind_connectivity(connectivity);
+    }
+
     static void bind_fx_storage(app_ctx &ctx, storage_capability *storage)
     {
         ctx.fx_.bind_storage(storage);
+    }
+
+    static void bind_fx_telemetry(app_ctx &ctx, telemetry_capability *telemetry)
+    {
+        ctx.fx_.bind_telemetry(telemetry);
     }
 
     static void bind_fx_persistence(app_ctx &ctx, persistence_capability *persistence)
@@ -140,9 +154,11 @@ public:
 #endif
 
         bind_capabilities(ctx_, spec_.capabilities);
+        bind_fx_connectivity(ctx_, ctx_.get<connectivity_capability>());
         bind_fx_diagnostics(ctx_, ctx_.get<diagnostics_capability>());
         bind_fx_build(ctx_, ctx_.get<build_info_capability>());
         bind_fx_storage(ctx_, ctx_.get<storage_capability>());
+        bind_fx_telemetry(ctx_, ctx_.get<telemetry_capability>());
         bind_fx_persistence(ctx_, ctx_.get<persistence_capability>());
         start_capabilities();
         bind_product_state(ctx_, static_cast<void *>(&state_));

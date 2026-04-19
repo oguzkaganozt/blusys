@@ -1,5 +1,7 @@
 #include "blusys/framework/events/event_queue.hpp"
 
+#include "blusys/framework/capabilities/event.hpp"
+
 #include "blusys/hal/log.h"
 
 namespace blusys {
@@ -99,7 +101,21 @@ void runtime::step(std::uint32_t now_ms)
 
     app_event event;
     while (event_queue_.pop_front(&event)) {
-        handler_.handle_event(handler_.context, event, &feedback_bus_, output_route_sink_);
+        app_event dispatch_event = event;
+        capability_event translated{};
+
+        if (event.source == event_source::integration) {
+            if (!map_integration_event(event.id, event.kind, &translated)) {
+                translated.tag = capability_event_tag::integration_passthrough;
+            }
+            translated.raw_event_id   = event.id;
+            translated.raw_event_code = event.kind;
+            translated.payload        = event.payload;
+            dispatch_event.kind       = static_cast<std::uint32_t>(translated.tag);
+            dispatch_event.payload    = &translated;
+        }
+
+        handler_.handle_event(handler_.context, dispatch_event, &feedback_bus_, output_route_sink_);
     }
 
     if (!tick_started_ || (now_ms - last_tick_ms_) >= tick_period_ms_) {

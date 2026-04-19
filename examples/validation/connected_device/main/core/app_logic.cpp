@@ -16,7 +16,7 @@ void update(app_ctx &ctx, State &state, const Action &action)
         case CET::wifi_got_ip:
             state.connected = true;
             view_ns::set_text(state.status_lbl, "Connected");
-            if (auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
+            if (auto *conn = ctx.fx().connectivity.status(); conn != nullptr) {
                 view_ns::set_text(state.ip_lbl, conn->ip_info.ip);
             }
             break;
@@ -66,7 +66,7 @@ std::optional<Action> on_event(blusys::event event, State &state)
     (void)state;
     switch (event.source) {
     case blusys::event_source::intent:
-        switch (blusys::event_intent(event)) {
+        switch (static_cast<blusys::intent>(event.kind)) {
         case blusys::intent::increment:
             return Action{.tag = Tag::brightness_up};
         case blusys::intent::decrement:
@@ -77,12 +77,11 @@ std::optional<Action> on_event(blusys::event event, State &state)
             return std::nullopt;
         }
     case blusys::event_source::integration: {
-        blusys::capability_event ce{};
-        if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
+        const auto *ce = blusys::event_capability(event);
+        if (ce == nullptr) {
             return std::nullopt;
         }
-        ce.payload = event.payload;
-        return Action{.tag = Tag::capability_event, .cap_event = ce};
+        return Action{.tag = Tag::capability_event, .cap_event = *ce};
     }
     default:
         return std::nullopt;

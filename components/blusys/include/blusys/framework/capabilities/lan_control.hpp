@@ -1,7 +1,7 @@
 #pragma once
 
 #include "blusys/framework/capabilities/capability.hpp"
-#include "blusys/services/protocol/local_ctrl.h"
+#include "blusys/services/protocol/local_ctrl_fwd.h"
 
 #include <cstddef>
 #include <cstdint>

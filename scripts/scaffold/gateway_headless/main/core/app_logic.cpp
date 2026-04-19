@@ -50,12 +50,11 @@ std::optional<action> on_event(blusys::event event, app_state &state)
         return std::nullopt;
     }
 
-    blusys::capability_event ce{};
-    if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
+    const auto *ce = blusys::event_capability(event);
+    if (ce == nullptr) {
         return std::nullopt;
     }
-    ce.payload = event.payload;
-    return action{.tag = action_tag::capability_event, .cap_event = ce};
+    return action{.tag = action_tag::capability_event, .cap_event = *ce};
 }
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event)
@@ -122,14 +121,14 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
         BLUSYS_LOGI(kTag, "telemetry ready");
         break;
     case CET::telemetry_delivered:
-        if (const auto *tel = ctx.status_of<blusys::telemetry_capability>(); tel != nullptr) {
+        if (const auto *tel = ctx.fx().telemetry.status(); tel != nullptr) {
             state.delivered = tel->total_delivered;
         }
         BLUSYS_LOGI(kTag, "telemetry delivered=%u",
                     static_cast<unsigned>(state.delivered));
         break;
     case CET::telemetry_failed:
-        if (const auto *tel = ctx.status_of<blusys::telemetry_capability>(); tel != nullptr) {
+        if (const auto *tel = ctx.fx().telemetry.status(); tel != nullptr) {
             state.delivery_fails = tel->total_failed;
         }
         BLUSYS_LOGW(kTag, "telemetry failed=%u",

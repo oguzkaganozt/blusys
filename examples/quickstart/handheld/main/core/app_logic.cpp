@@ -37,7 +37,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
     case action_tag::capability_event:
         switch (event.cap_event.tag) {
         case CET::storage_ready:
-            if (const auto *storage = ctx.status_of<blusys::storage_capability>(); storage != nullptr) {
+            if (const auto *storage = ctx.fx().storage.status(); storage != nullptr) {
                 state.storage_ready = storage->capability_ready;
             }
             break;
@@ -48,7 +48,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
         case CET::prov_already_done:
         case CET::prov_reset_complete:
         case CET::provisioning_ready:
-            if (const auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
+            if (const auto *conn = ctx.fx().connectivity.status(); conn != nullptr) {
                 state.provisioning = conn->provisioning;
             }
             break;
@@ -118,7 +118,7 @@ std::optional<action> on_event(blusys::event event, app_state &state)
     (void)state;
     switch (event.source) {
     case blusys::event_source::intent:
-        switch (blusys::event_intent(event)) {
+        switch (static_cast<blusys::intent>(event.kind)) {
         case blusys::intent::increment:
             return action{.tag = action_tag::level_delta, .value = 4};
         case blusys::intent::decrement:
@@ -131,12 +131,11 @@ std::optional<action> on_event(blusys::event event, app_state &state)
             return std::nullopt;
         }
     case blusys::event_source::integration: {
-        blusys::capability_event ce{};
-        if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
+        const auto *ce = blusys::event_capability(event);
+        if (ce == nullptr) {
             return std::nullopt;
         }
-        ce.payload = event.payload;
-        return action{.tag = action_tag::capability_event, .cap_event = ce};
+        return action{.tag = action_tag::capability_event, .cap_event = *ce};
     }
     default:
         return std::nullopt;

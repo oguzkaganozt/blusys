@@ -64,12 +64,11 @@ std::optional<action> on_event(blusys::event event, app_state &state)
         return std::nullopt;
     }
 
-    blusys::capability_event ce{};
-    if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
+    const auto *ce = blusys::event_capability(event);
+    if (ce == nullptr) {
         return std::nullopt;
     }
-    ce.payload = event.payload;
-    return action{.tag = action_tag::capability_event, .cap_event = ce};
+    return action{.tag = action_tag::capability_event, .cap_event = *ce};
 }
 
 void update(blusys::app_ctx &ctx, app_state &state, const action &event)
@@ -91,7 +90,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
             break;
         case CET::wifi_got_ip:
             state.has_ip = true;
-            if (const auto *conn = ctx.status_of<blusys::connectivity_capability>(); conn != nullptr) {
+            if (const auto *conn = ctx.fx().connectivity.status(); conn != nullptr) {
                 BLUSYS_LOGI(kTag, "ip acquired: %s", conn->ip_info.ip);
             }
             break;
@@ -122,13 +121,13 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
             break;
 
         case CET::telemetry_delivered:
-            if (const auto *tel = ctx.status_of<blusys::telemetry_capability>(); tel != nullptr) {
+            if (const auto *tel = ctx.fx().telemetry.status(); tel != nullptr) {
                 state.delivered = tel->total_delivered;
             }
             BLUSYS_LOGI(kTag, "telemetry batch delivered (total=%u)", state.delivered);
             break;
         case CET::telemetry_failed:
-            if (const auto *tel = ctx.status_of<blusys::telemetry_capability>(); tel != nullptr) {
+            if (const auto *tel = ctx.fx().telemetry.status(); tel != nullptr) {
                 state.delivery_fails = tel->total_failed;
             }
             BLUSYS_LOGW(kTag, "telemetry delivery failed (fails=%u)", state.delivery_fails);

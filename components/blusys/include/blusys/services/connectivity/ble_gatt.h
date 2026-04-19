@@ -1,11 +1,7 @@
 #ifndef BLUSYS_BLE_GATT_H
 #define BLUSYS_BLE_GATT_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
-#include "blusys/hal/error.h"
+#include "blusys/services/connectivity/ble_gatt_fwd.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,8 +10,6 @@ extern "C" {
 /**
  * @brief Opaque BLE GATT server handle.
  */
-typedef struct blusys_ble_gatt blusys_ble_gatt_t;
-
 /** Characteristic can be read by a connected client. */
 #define BLUSYS_BLE_GATT_CHR_F_READ    (1u << 0)
 /** Characteristic can be written by a connected client. */
@@ -30,9 +24,9 @@ typedef struct blusys_ble_gatt blusys_ble_gatt_t;
  * actual length. Return 0 on success or an ATT error code on failure.
  */
 typedef int (*blusys_ble_gatt_read_cb_t)(uint16_t conn_handle,
-                                          const uint8_t uuid[16],
-                                          uint8_t *out_data, size_t max_len,
-                                          size_t *out_len, void *user_ctx);
+                                         const uint8_t uuid[16],
+                                         uint8_t *out_data, size_t max_len,
+                                         size_t *out_len, void *user_ctx);
 
 /**
  * @brief Called when a connected client writes a characteristic.
@@ -40,9 +34,9 @@ typedef int (*blusys_ble_gatt_read_cb_t)(uint16_t conn_handle,
  * Return 0 on success or an ATT error code on failure.
  */
 typedef int (*blusys_ble_gatt_write_cb_t)(uint16_t conn_handle,
-                                           const uint8_t uuid[16],
-                                           const uint8_t *data, size_t len,
-                                           void *user_ctx);
+                                          const uint8_t uuid[16],
+                                          const uint8_t *data, size_t len,
+                                          void *user_ctx);
 
 /**
  * @brief Called when a BLE client connects or disconnects.
@@ -50,45 +44,42 @@ typedef int (*blusys_ble_gatt_write_cb_t)(uint16_t conn_handle,
  * @p conn_handle identifies the connection and may be used with
  * @ref blusys_ble_gatt_notify. On disconnect @p connected is false.
  */
-typedef void (*blusys_ble_gatt_conn_cb_t)(uint16_t conn_handle, bool connected,
-                                           void *user_ctx);
-
 /**
  * @brief Characteristic definition.
  *
  * Embed one of these per characteristic in a @ref blusys_ble_gatt_svc_def_t.
  * The struct must remain valid for the lifetime of the GATT handle.
  */
-typedef struct {
+struct blusys_ble_gatt_chr_def {
     uint8_t                      uuid[16];        /**< 128-bit UUID, little-endian byte order. */
     uint32_t                     flags;            /**< @ref BLUSYS_BLE_GATT_CHR_F_* bitmask. */
     blusys_ble_gatt_read_cb_t    read_cb;          /**< Required when BLUSYS_BLE_GATT_CHR_F_READ is set. */
     blusys_ble_gatt_write_cb_t   write_cb;         /**< Required when BLUSYS_BLE_GATT_CHR_F_WRITE is set. */
     void                        *user_ctx;         /**< Passed to read_cb / write_cb as-is. */
     uint16_t                    *val_handle_out;   /**< Filled by blusys_ble_gatt_open(); required when BLUSYS_BLE_GATT_CHR_F_NOTIFY is set. */
-} blusys_ble_gatt_chr_def_t;
+};
 
 /**
  * @brief Service definition.
  *
  * Groups one or more characteristics under a single primary service UUID.
  */
-typedef struct {
+struct blusys_ble_gatt_svc_def {
     uint8_t                           uuid[16];         /**< 128-bit service UUID, little-endian. */
     const blusys_ble_gatt_chr_def_t  *characteristics;  /**< Array of chr_count characteristic definitions. */
     size_t                            chr_count;         /**< Number of entries in @p characteristics. */
-} blusys_ble_gatt_svc_def_t;
+};
 
 /**
  * @brief Configuration passed to @ref blusys_ble_gatt_open.
  */
-typedef struct {
+struct blusys_ble_gatt_config {
     const char                       *device_name;      /**< BLE advertised device name (max 29 bytes; longer names are rejected). */
     const blusys_ble_gatt_svc_def_t  *services;         /**< Array of svc_count service definitions. */
     size_t                            svc_count;         /**< Number of entries in @p services. */
     blusys_ble_gatt_conn_cb_t         conn_cb;          /**< Optional connection/disconnection callback. */
     void                             *conn_user_ctx;     /**< Passed to conn_cb as-is. */
-} blusys_ble_gatt_config_t;
+};
 
 /**
  * @brief Initialize and start a BLE GATT server.

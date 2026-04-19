@@ -1,7 +1,6 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/framework/flows/connectivity_flow.hpp"
-#include "blusys/framework/app/ctx.hpp"
 #include "blusys/framework/ui/style/theme.hpp"
 #include "blusys/framework/ui/primitives/status_badge.hpp"
 #include "blusys/framework/ui/primitives/key_value.hpp"
@@ -108,27 +107,25 @@ void connectivity_panel_update(connectivity_panel_handles &handles,
 
 namespace {
 
-blusys::app_ctx *g_reconnect_ctx = nullptr;
-
-void on_reconnect_press(void * /*user_data*/)
+void on_reconnect_press(void *user_data)
 {
-    if (g_reconnect_ctx != nullptr) {
-        g_reconnect_ctx->request_connectivity_reconnect();
+    if (user_data != nullptr) {
+        auto *fx = static_cast<blusys::app_fx::connectivity_fx *>(user_data);
+        fx->request_reconnect();
     }
 }
 
 }  // namespace
 
-lv_obj_t *connectivity_reconnect_button_create(lv_obj_t *parent, blusys::app_ctx &ctx,
-                                                const char *label)
+lv_obj_t *connectivity_reconnect_button_create(lv_obj_t *parent,
+                                               blusys::app_fx::connectivity_fx &fx,
+                                               const char *label)
 {
-    g_reconnect_ctx = &ctx;
-
     blusys::button_config btn{};
     btn.label     = (label != nullptr) ? label : "Reconnect";
     btn.variant   = blusys::button_variant::secondary;
     btn.on_press  = on_reconnect_press;
-    btn.user_data = nullptr;
+    btn.user_data = &fx;
     return blusys::button_create(parent, btn);
 }
 

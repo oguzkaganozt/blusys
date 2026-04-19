@@ -93,7 +93,7 @@ lv_obj_t *status_screen_create(app_ctx &ctx,
 
 void status_screen_update(status_screen_handles &handles, const app_ctx &ctx)
 {
-    const auto *conn = ctx.status_of<connectivity_capability>();
+    const auto *conn = ctx.fx().connectivity.status();
     if (conn != nullptr) {
         flows::connectivity_panel_update(handles.connectivity, *conn);
     }

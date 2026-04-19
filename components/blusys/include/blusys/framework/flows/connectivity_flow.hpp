@@ -2,12 +2,9 @@
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
+#include "blusys/framework/app/fx.hpp"
 #include "blusys/framework/capabilities/connectivity.hpp"
 #include "lvgl.h"
-
-namespace blusys {
-class app_ctx;
-}
 
 namespace blusys::flows {
 
@@ -35,10 +32,10 @@ lv_obj_t *connectivity_panel_create(lv_obj_t *parent,
 void connectivity_panel_update(connectivity_panel_handles &handles,
                                 const connectivity_status &status);
 
-// Primary action wired to `app_ctx::request_connectivity_reconnect()`.
-// Uses a single static bridge — only one reconnect control per screen tree.
-lv_obj_t *connectivity_reconnect_button_create(lv_obj_t *parent, blusys::app_ctx &ctx,
-                                                const char *label = "Reconnect");
+// Primary action wired to `fx.request_reconnect()`.
+lv_obj_t *connectivity_reconnect_button_create(lv_obj_t *parent,
+                                               blusys::app_fx::connectivity_fx &fx,
+                                               const char *label = "Reconnect");
 
 }  // namespace blusys::flows
 

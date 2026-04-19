@@ -1,12 +1,15 @@
 #pragma once
 
+#include "blusys/framework/events/event.hpp"
+
 #include <cstdint>
 
 namespace blusys {
 
 // Canonical capability integration events — one tag space for all subsystems.
-// Populated by the framework from raw integration event IDs; reducers typically
-// handle these inside `action_tag::capability_event` via `action.cap_event`.
+// The runtime translates raw integration events into this shape before the
+// reducer hook runs; reducers typically handle these inside
+// `action_tag::capability_event` via `action.cap_event`.
 //
 // Comments like "connectivity (0x01xx band)" refer to the **reserved raw event ID
 // ranges** posted by capabilities (see `capability.hpp`). `capability_event_tag`
@@ -102,8 +105,8 @@ enum class capability_event_tag : std::uint16_t {
     ble_hid_client_disconnected,
     ble_hid_ready,
 
-    // `map_integration_event()` had no case; `raw_event_id` / `raw_event_code` hold the
-    // original `app_event` id/code for raw integration events.
+    // Used when the runtime has no canonical mapping for a raw integration
+    // event. `raw_event_id` / `raw_event_code` preserve the original event.
     integration_passthrough,
 };
 
@@ -115,9 +118,18 @@ struct capability_event {
     const void          *payload        = nullptr;
 };
 
-// Maps a raw integration event (as posted by capabilities) to a canonical event.
+// Maps a raw integration event (as posted by capabilities) to a canonical
+// event. Runtime uses this while normalizing events before reducer dispatch.
 // Returns false when `event_id` is not handled here.
 [[nodiscard]] bool map_integration_event(std::uint32_t event_id, std::uint32_t event_code,
                                           capability_event *out) noexcept;
+
+// Accessor for the translated capability payload attached by the runtime.
+[[nodiscard]] constexpr const capability_event *event_capability(const blusys::event &event)
+{
+    return event.source == event_source::integration
+               ? static_cast<const capability_event *>(event.payload)
+               : nullptr;
+}
 
 }  // namespace blusys

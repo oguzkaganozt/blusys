@@ -1,7 +1,7 @@
 #pragma once
 
 #include "blusys/framework/capabilities/capability.hpp"
-#include "blusys/services/connectivity/ble_gatt.h"
+#include "blusys/services/connectivity/ble_gatt_fwd.h"
 
 #include <atomic>
 #include <cstddef>

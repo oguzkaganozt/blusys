@@ -31,8 +31,10 @@ struct capability_list;  // forward declaration — include capability_list.hpp 
 //   8. identity           — theme + feedback preset
 //   9. theme / shell      — interactive only (when BLUSYS_FRAMEWORK_HAS_UI)
 //
-// Optional `on_event` is the phase 4 path. It receives the framework event stream
-// and may return an Action to dispatch.
+// Optional `on_event` is the phase 4 path. It receives the normalized
+// framework event stream (intents as event kinds; integration events as
+// canonical capability tags plus translated capability_event pointers) and may
+// return an Action to dispatch.
 //
 // Alternative action models: you may use `std::variant<...>` as `Action` if every
 // alternative is dispatchable from `ctx.dispatch`. Use

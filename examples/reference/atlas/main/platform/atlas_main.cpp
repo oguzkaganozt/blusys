@@ -131,7 +131,7 @@ blusys::capability_list_storage capabilities{&connectivity, &mqtt, &ota, &atlas}
 void on_tick(blusys::app_ctx &ctx, blusys::app_fx & /*fx*/,
               app_state &state, std::uint32_t now_ms)
 {
-    const auto *conn = ctx.status_of<blusys::connectivity_capability>();
+    const auto *conn = fx.connectivity.status();
 
     // Gate mqtt broker dial on Wi-Fi + SNTP readiness. mqtt_capability
     // handles retries; we only pass the network-ready edge in.
