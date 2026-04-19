@@ -6,7 +6,10 @@
 
 #include "soc/soc_caps.h"
 
-#if SOC_WIFI_SUPPORTED
+#if !(SOC_WIFI_SUPPORTED)
+#error "blusys_wifi_prov requires SOC_WIFI_SUPPORTED"
+#endif
+
 
 #include "sdkconfig.h"
 
@@ -350,48 +353,3 @@ blusys_err_t blusys_wifi_prov_reset(void)
     return blusys_translate_esp_err(esp_err);
 }
 
-#else /* !SOC_WIFI_SUPPORTED */
-
-blusys_err_t blusys_wifi_prov_open(const blusys_wifi_prov_config_t *config,
-                                   blusys_wifi_prov_t **out_prov)
-{
-    (void)config; (void)out_prov;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_prov_close(blusys_wifi_prov_t *prov)
-{
-    (void)prov;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_prov_start(blusys_wifi_prov_t *prov)
-{
-    (void)prov;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_prov_stop(blusys_wifi_prov_t *prov)
-{
-    (void)prov;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_prov_get_qr_payload(blusys_wifi_prov_t *prov,
-                                              char *buf, size_t buf_size)
-{
-    (void)prov; (void)buf; (void)buf_size;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-bool blusys_wifi_prov_is_provisioned(void)
-{
-    return false;
-}
-
-blusys_err_t blusys_wifi_prov_reset(void)
-{
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-#endif /* SOC_WIFI_SUPPORTED */

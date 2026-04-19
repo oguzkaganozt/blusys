@@ -60,12 +60,12 @@ const char *op_state_name(op_state s)
 std::optional<action> on_event(blusys::event event, app_state &state)
 {
     (void)state;
-    if (event.kind != blusys::app_event_kind::integration) {
+    if (event.source != blusys::event_source::integration) {
         return std::nullopt;
     }
 
     blusys::capability_event ce{};
-    if (!blusys::map_integration_event(event.id, event.code, &ce)) {
+    if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
         return std::nullopt;
     }
     ce.payload = event.payload;

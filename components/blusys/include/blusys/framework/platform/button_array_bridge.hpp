@@ -10,12 +10,12 @@
 // Product code never touches this directly — the device entry path
 // creates the bridge when the device_profile has button_count > 0.
 
-#if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM)
+#if defined(BLUSYS_FRAMEWORK_HAS_UI)
 
 #include "blusys/drivers/button.h"
 #include "blusys/hal/error.h"
-#include "blusys/framework/engine/intent.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 
 #include <cstddef>
 
@@ -49,4 +49,4 @@ void button_array_close(button_array_bridge *bridge);
 
 }  // namespace blusys
 
-#endif  // BLUSYS_FRAMEWORK_HAS_UI && ESP_PLATFORM
+#endif  // BLUSYS_FRAMEWORK_HAS_UI

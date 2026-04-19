@@ -1,7 +1,7 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/framework/platform/touch_bridge.hpp"
-#include "blusys/framework/engine/intent.hpp"
+#include "blusys/framework/events/event.hpp"
 #include "blusys/hal/log.h"
 
 #include <cstdlib>

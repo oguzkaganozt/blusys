@@ -1,8 +1,8 @@
 #pragma once
 
 #include "blusys/hal/error.h"
-#include "blusys/framework/engine/intent.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -41,6 +41,7 @@ enum class capability_kind : std::uint8_t {
     ble_hid_device,
     build_info,
     persistence,
+    example_sensor,  // canonical template for "add a new capability"
     custom,
 };
 

@@ -5,6 +5,7 @@
 
 #include "sdkconfig.h"
 
+
 #if defined(CONFIG_BT_NIMBLE_ENABLED)
 
 #include "freertos/FreeRTOS.h"
@@ -700,33 +701,4 @@ blusys_err_t blusys_ble_gatt_notify(blusys_ble_gatt_t *handle,
     return rc == 0 ? BLUSYS_OK : BLUSYS_ERR_INTERNAL;
 }
 
-#else /* !CONFIG_BT_NIMBLE_ENABLED */
-
-blusys_err_t blusys_ble_gatt_open(const blusys_ble_gatt_config_t *config,
-                                   blusys_ble_gatt_t **out_handle)
-{
-    (void)config;
-    (void)out_handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ble_gatt_close(blusys_ble_gatt_t *handle)
-{
-    (void)handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ble_gatt_notify(blusys_ble_gatt_t *handle,
-                                     uint16_t conn_handle,
-                                     uint16_t chr_val_handle,
-                                     const void *data, size_t len)
-{
-    (void)handle;
-    (void)conn_handle;
-    (void)chr_val_handle;
-    (void)data;
-    (void)len;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-#endif /* CONFIG_BT_NIMBLE_ENABLED */
+#endif  /* CONFIG_BT_NIMBLE_ENABLED */

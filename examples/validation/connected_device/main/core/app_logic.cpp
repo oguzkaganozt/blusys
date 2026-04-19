@@ -64,8 +64,8 @@ void update(app_ctx &ctx, State &state, const Action &action)
 std::optional<Action> on_event(blusys::event event, State &state)
 {
     (void)state;
-    switch (event.kind) {
-    case blusys::app_event_kind::intent:
+    switch (event.source) {
+    case blusys::event_source::intent:
         switch (blusys::event_intent(event)) {
         case blusys::intent::increment:
             return Action{.tag = Tag::brightness_up};
@@ -76,9 +76,9 @@ std::optional<Action> on_event(blusys::event event, State &state)
         default:
             return std::nullopt;
         }
-    case blusys::app_event_kind::integration: {
+    case blusys::event_source::integration: {
         blusys::capability_event ce{};
-        if (!blusys::map_integration_event(event.id, event.code, &ce)) {
+        if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
             return std::nullopt;
         }
         ce.payload = event.payload;

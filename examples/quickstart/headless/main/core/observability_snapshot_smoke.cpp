@@ -1,4 +1,4 @@
-#include "blusys/framework/observe/observe.h"
+#include <blusys/blusys.h>
 
 #include <cstring>
 

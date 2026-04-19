@@ -3,7 +3,7 @@
 // Legacy framework-owned routing, UI chrome, and storage filesystem handles.
 // Kept as an internal bridge while product code migrates to `app_ctx::fx()`.
 
-#include "blusys/framework/engine/router.hpp"
+#include "blusys/framework/events/router.hpp"
 
 #include <cstddef>
 #include <cstdint>

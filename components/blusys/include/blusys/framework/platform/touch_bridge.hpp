@@ -18,7 +18,7 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/hal/error.h"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 
 #include "lvgl.h"
 

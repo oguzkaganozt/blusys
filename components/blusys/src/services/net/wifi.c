@@ -8,7 +8,10 @@
 
 #include "soc/soc_caps.h"
 
-#if SOC_WIFI_SUPPORTED
+#if !(SOC_WIFI_SUPPORTED)
+#error "blusys_wifi requires SOC_WIFI_SUPPORTED"
+#endif
+
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -711,57 +714,3 @@ bool blusys_wifi_is_connected(blusys_wifi_t *wifi)
     return connected;
 }
 
-#else /* !SOC_WIFI_SUPPORTED */
-
-blusys_err_t blusys_wifi_open(const blusys_wifi_sta_config_t *config, blusys_wifi_t **out_wifi)
-{
-    (void) config;
-    (void) out_wifi;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_close(blusys_wifi_t *wifi)
-{
-    (void) wifi;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_connect(blusys_wifi_t *wifi, int timeout_ms)
-{
-    (void) wifi;
-    (void) timeout_ms;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_disconnect(blusys_wifi_t *wifi)
-{
-    (void) wifi;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_get_ip_info(blusys_wifi_t *wifi, blusys_wifi_ip_info_t *out_info)
-{
-    (void) wifi;
-    (void) out_info;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_wifi_disconnect_reason_t blusys_wifi_get_last_disconnect_reason(blusys_wifi_t *wifi)
-{
-    (void) wifi;
-    return BLUSYS_WIFI_DISCONNECT_REASON_UNKNOWN;
-}
-
-int blusys_wifi_get_last_disconnect_reason_raw(blusys_wifi_t *wifi)
-{
-    (void) wifi;
-    return 0;
-}
-
-bool blusys_wifi_is_connected(blusys_wifi_t *wifi)
-{
-    (void) wifi;
-    return false;
-}
-
-#endif /* SOC_WIFI_SUPPORTED */

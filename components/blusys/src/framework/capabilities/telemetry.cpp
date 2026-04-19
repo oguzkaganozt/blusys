@@ -2,8 +2,8 @@
 // Transport is product-owned via the delivery callback.
 
 #include "blusys/framework/capabilities/telemetry.hpp"
-#include "blusys/framework/engine/intent.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 #include "blusys/hal/log.h"
 
 static const char *TAG = "blusys_telem";

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "blusys/framework/engine/router.hpp"
+#include "blusys/framework/events/router.hpp"
 #include "blusys/hal/log.h"
 
 namespace blusys::detail {

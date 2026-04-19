@@ -1,4 +1,4 @@
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 
 #include "blusys/hal/log.h"
 

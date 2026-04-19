@@ -102,7 +102,7 @@ std::optional<Action> on_event(blusys::event e, State &state)
 {
     (void)state;
     switch (e.kind) {
-    case blusys::app_event_kind::intent:
+    case blusys::event_source::intent:
         switch (blusys::event_intent(e)) {
         case blusys::intent::increment:
             return Action::increment;

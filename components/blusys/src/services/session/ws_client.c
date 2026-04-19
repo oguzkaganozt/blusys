@@ -5,7 +5,9 @@
 
 #include "soc/soc_caps.h"
 
-#if SOC_WIFI_SUPPORTED
+#if !SOC_WIFI_SUPPORTED
+#error "blusys_ws_client requires SOC_WIFI_SUPPORTED"
+#endif
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
@@ -503,55 +505,3 @@ bool blusys_ws_client_is_connected(blusys_ws_client_t *handle)
     return connected;
 }
 
-#else /* !SOC_WIFI_SUPPORTED */
-
-blusys_err_t blusys_ws_client_open(const blusys_ws_client_config_t *config,
-                                    blusys_ws_client_t             **out_handle)
-{
-    (void) config;
-    (void) out_handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ws_client_close(blusys_ws_client_t *handle)
-{
-    (void) handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ws_client_connect(blusys_ws_client_t *handle)
-{
-    (void) handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ws_client_disconnect(blusys_ws_client_t *handle)
-{
-    (void) handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ws_client_send_text(blusys_ws_client_t *handle, const char *text)
-{
-    (void) handle;
-    (void) text;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ws_client_send(blusys_ws_client_t *handle,
-                                    const uint8_t      *data,
-                                    size_t              len)
-{
-    (void) handle;
-    (void) data;
-    (void) len;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-bool blusys_ws_client_is_connected(blusys_ws_client_t *handle)
-{
-    (void) handle;
-    return false;
-}
-
-#endif /* SOC_WIFI_SUPPORTED */

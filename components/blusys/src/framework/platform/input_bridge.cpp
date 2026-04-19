@@ -2,7 +2,7 @@
 
 #include "blusys/framework/platform/input_bridge.hpp"
 
-#include "blusys/framework/engine/intent.hpp"
+#include "blusys/framework/events/event.hpp"
 #include "blusys/framework/ui/input/encoder.hpp"
 #include "blusys/hal/log.h"
 

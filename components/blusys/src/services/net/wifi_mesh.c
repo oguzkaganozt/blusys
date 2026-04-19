@@ -6,7 +6,10 @@
 
 #include "soc/soc_caps.h"
 
-#if SOC_WIFI_SUPPORTED
+#if !(SOC_WIFI_SUPPORTED)
+#error "blusys_wifi_mesh requires SOC_WIFI_SUPPORTED"
+#endif
+
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
@@ -416,57 +419,3 @@ blusys_err_t blusys_wifi_mesh_get_layer(blusys_wifi_mesh_t *handle, int *out_lay
     return BLUSYS_OK;
 }
 
-#else /* !SOC_WIFI_SUPPORTED */
-
-blusys_err_t blusys_wifi_mesh_open(const blusys_wifi_mesh_config_t *config,
-                                    blusys_wifi_mesh_t **out_handle)
-{
-    (void)config;
-    (void)out_handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_mesh_close(blusys_wifi_mesh_t *handle)
-{
-    (void)handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_mesh_send(blusys_wifi_mesh_t *handle,
-                                    const blusys_wifi_mesh_addr_t *dst,
-                                    const void *data, size_t len)
-{
-    (void)handle;
-    (void)dst;
-    (void)data;
-    (void)len;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_wifi_mesh_recv(blusys_wifi_mesh_t *handle,
-                                    blusys_wifi_mesh_addr_t *src,
-                                    void *buf, size_t *len,
-                                    int timeout_ms)
-{
-    (void)handle;
-    (void)src;
-    (void)buf;
-    (void)len;
-    (void)timeout_ms;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-bool blusys_wifi_mesh_is_root(blusys_wifi_mesh_t *handle)
-{
-    (void)handle;
-    return false;
-}
-
-blusys_err_t blusys_wifi_mesh_get_layer(blusys_wifi_mesh_t *handle, int *out_layer)
-{
-    (void)handle;
-    (void)out_layer;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-#endif /* SOC_WIFI_SUPPORTED */

@@ -17,7 +17,7 @@
 #include "blusys/drivers/display.h"
 #include "blusys/drivers/encoder.h"
 #include "blusys/drivers/button.h"
-#include "blusys/framework/engine/intent.hpp"
+#include "blusys/framework/events/event.hpp"
 
 #include <cstddef>
 

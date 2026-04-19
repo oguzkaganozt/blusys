@@ -204,7 +204,7 @@ static void demo_on_event(void *ctx,
                           blusys::route_sink *routes)
 {
     auto *h = static_cast<demo_handler_ctx *>(ctx);
-    if (event.kind != blusys::app_event_kind::intent) {
+    if (event.source != blusys::event_source::intent) {
         return;
     }
     if (h->state == nullptr || h->state->slider == nullptr) {

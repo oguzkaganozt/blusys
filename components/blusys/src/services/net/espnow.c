@@ -5,7 +5,10 @@
 
 #include "soc/soc_caps.h"
 
-#if SOC_WIFI_SUPPORTED
+#if !(SOC_WIFI_SUPPORTED)
+#error "blusys_espnow requires SOC_WIFI_SUPPORTED"
+#endif
+
 
 #include "esp_now.h"
 #include "esp_wifi.h"
@@ -235,47 +238,3 @@ blusys_err_t blusys_espnow_send(blusys_espnow_t *handle,
     return blusys_translate_esp_err(esp_err);
 }
 
-#else /* !SOC_WIFI_SUPPORTED */
-
-blusys_err_t blusys_espnow_open(const blusys_espnow_config_t *config,
-                                blusys_espnow_t **out_handle)
-{
-    (void) config;
-    (void) out_handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_espnow_close(blusys_espnow_t *handle)
-{
-    (void) handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_espnow_add_peer(blusys_espnow_t *handle,
-                                    const blusys_espnow_peer_t *peer)
-{
-    (void) handle;
-    (void) peer;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_espnow_remove_peer(blusys_espnow_t *handle,
-                                       const uint8_t addr[6])
-{
-    (void) handle;
-    (void) addr;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_espnow_send(blusys_espnow_t *handle,
-                                const uint8_t addr[6],
-                                const void *data, size_t size)
-{
-    (void) handle;
-    (void) addr;
-    (void) data;
-    (void) size;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-#endif /* SOC_WIFI_SUPPORTED */

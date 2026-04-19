@@ -46,8 +46,8 @@ void update(app_ctx &ctx, AppState &state, const Action &action)
 std::optional<Action> on_event(blusys::event event, AppState &state)
 {
     (void)state;
-    switch (event.kind) {
-    case blusys::app_event_kind::intent:
+    switch (event.source) {
+    case blusys::event_source::intent:
         switch (blusys::event_intent(event)) {
         case blusys::intent::increment:
             return Action{.tag = Tag::volume_up};

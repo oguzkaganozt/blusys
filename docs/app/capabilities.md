@@ -20,7 +20,7 @@ bool map_event(blusys::capability_event event, Action *out)
 {
     using E = blusys::connectivity_event;
     if (event.tag == blusys::capability_event_tag::connectivity) {
-        switch (static_cast<E>(event.code)) {
+        switch (static_cast<E>(event.kind)) {
         case E::got_ip:       *out = Action::wifi_connected;    return true;
         case E::disconnected: *out = Action::wifi_disconnected; return true;
         default:              return false;

@@ -118,12 +118,12 @@ void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, State & /*state*/, std::u
 std::optional<Action> on_event(blusys::event event, State &state)
 {
     (void)state;
-    if (event.kind != blusys::app_event_kind::integration) {
+    if (event.source != blusys::event_source::integration) {
         return std::nullopt;
     }
 
     blusys::capability_event ce{};
-    if (!blusys::map_integration_event(event.id, event.code, &ce)) {
+    if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
         return std::nullopt;
     }
     ce.payload = event.payload;
@@ -158,4 +158,4 @@ static auto spec = blusys::app_spec<State, Action>{
     .capabilities   = &capabilities,
 };
 
-BLUSYS_APP_MAIN_HEADLESS(spec)
+BLUSYS_APP_HEADLESS(spec)

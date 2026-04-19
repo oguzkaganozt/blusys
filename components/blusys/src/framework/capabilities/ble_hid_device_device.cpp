@@ -1,6 +1,6 @@
 #include "blusys/framework/capabilities/ble_hid_device.hpp"
-#include "blusys/framework/engine/pending_events.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/pending_events.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 #include "blusys/hal/log.h"
 #include "blusys/services/connectivity/ble_hid_device.h"
 

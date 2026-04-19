@@ -116,8 +116,8 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 std::optional<action> on_event(blusys::event event, app_state &state)
 {
     (void)state;
-    switch (event.kind) {
-    case blusys::app_event_kind::intent:
+    switch (event.source) {
+    case blusys::event_source::intent:
         switch (blusys::event_intent(event)) {
         case blusys::intent::increment:
             return action{.tag = action_tag::level_delta, .value = 4};
@@ -130,9 +130,9 @@ std::optional<action> on_event(blusys::event event, app_state &state)
         default:
             return std::nullopt;
         }
-    case blusys::app_event_kind::integration: {
+    case blusys::event_source::integration: {
         blusys::capability_event ce{};
-        if (!blusys::map_integration_event(event.id, event.code, &ce)) {
+        if (!blusys::map_integration_event(event.id, event.kind, &ce)) {
             return std::nullopt;
         }
         ce.payload = event.payload;

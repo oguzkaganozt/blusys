@@ -5,6 +5,7 @@
 
 #include "sdkconfig.h"
 
+
 #if defined(CONFIG_BT_NIMBLE_ENABLED)
 
 #include "freertos/FreeRTOS.h"
@@ -950,52 +951,4 @@ blusys_err_t blusys_ble_hid_device_set_battery(blusys_ble_hid_device_t *handle,
     return rc == 0 ? BLUSYS_OK : BLUSYS_ERR_INTERNAL;
 }
 
-#else /* !CONFIG_BT_NIMBLE_ENABLED */
-
-blusys_err_t blusys_ble_hid_device_open(const blusys_ble_hid_device_config_t *config,
-                                         blusys_ble_hid_device_t **out_handle)
-{
-    (void)config; (void)out_handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ble_hid_device_close(blusys_ble_hid_device_t *handle)
-{
-    (void)handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-bool blusys_ble_hid_device_is_connected(const blusys_ble_hid_device_t *handle)
-{
-    (void)handle;
-    return false;
-}
-
-bool blusys_ble_hid_device_is_ready(const blusys_ble_hid_device_t *handle)
-{
-    (void)handle;
-    return false;
-}
-
-blusys_err_t blusys_ble_hid_device_send_consumer(blusys_ble_hid_device_t *handle,
-                                                  uint16_t usage, bool pressed)
-{
-    (void)handle; (void)usage; (void)pressed;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ble_hid_device_send_report(blusys_ble_hid_device_t *handle,
-                                                const uint8_t *data, size_t len)
-{
-    (void)handle; (void)data; (void)len;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_ble_hid_device_set_battery(blusys_ble_hid_device_t *handle,
-                                                uint8_t percent)
-{
-    (void)handle; (void)percent;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-#endif /* CONFIG_BT_NIMBLE_ENABLED */
+#endif  /* CONFIG_BT_NIMBLE_ENABLED */

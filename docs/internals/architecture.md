@@ -162,7 +162,7 @@ see [Widget kit](#widget-kit) below.
 - `bluetooth.hpp`, `ota.hpp`, `diagnostics.hpp`, `lan_control.hpp`,
   `provisioning.hpp`, `usb.hpp` — additional capability modules
 
-#### Engine (`include/blusys/framework/engine/`)
+#### Engine (`include/blusys/framework/events/`)
 
 Internal framework spine. Product code does not interact with it directly.
 

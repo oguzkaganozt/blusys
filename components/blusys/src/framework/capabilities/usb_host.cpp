@@ -1,5 +1,5 @@
 #include "blusys/framework/capabilities/usb.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 #include "blusys/hal/log.h"
 
 static const char *TAG = "blusys_usb_cap";

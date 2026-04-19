@@ -14,19 +14,7 @@ namespace blusys {
 #endif
 
 #ifndef BLUSYS_BUILD_FEATURE_FLAGS
-#if defined(ESP_PLATFORM)
-#if defined(BLUSYS_FRAMEWORK_HAS_UI)
-#define BLUSYS_BUILD_FEATURE_FLAGS "platform=device,ui=1"
-#else
-#define BLUSYS_BUILD_FEATURE_FLAGS "platform=device,ui=0"
-#endif
-#else
-#if defined(BLUSYS_FRAMEWORK_HAS_UI)
-#define BLUSYS_BUILD_FEATURE_FLAGS "platform=host,ui=1"
-#else
-#define BLUSYS_BUILD_FEATURE_FLAGS "platform=host,ui=0"
-#endif
-#endif
+#define BLUSYS_BUILD_FEATURE_FLAGS "unknown"
 #endif
 
 struct build_info_status : capability_status_base {

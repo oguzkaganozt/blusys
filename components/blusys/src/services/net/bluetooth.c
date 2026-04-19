@@ -5,6 +5,7 @@
 
 #include "sdkconfig.h"
 
+
 #if defined(CONFIG_BT_NIMBLE_ENABLED)
 
 #include "freertos/FreeRTOS.h"
@@ -483,45 +484,4 @@ blusys_err_t blusys_bluetooth_scan_stop(blusys_bluetooth_t *bt)
     return BLUSYS_OK;
 }
 
-#else /* !CONFIG_BT_NIMBLE_ENABLED */
-
-blusys_err_t blusys_bluetooth_open(const blusys_bluetooth_config_t *config,
-                                    blusys_bluetooth_t **out_bt)
-{
-    (void)config; (void)out_bt;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_bluetooth_close(blusys_bluetooth_t *bt)
-{
-    (void)bt;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_bluetooth_advertise_start(blusys_bluetooth_t *bt)
-{
-    (void)bt;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_bluetooth_advertise_stop(blusys_bluetooth_t *bt)
-{
-    (void)bt;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_bluetooth_scan_start(blusys_bluetooth_t *bt,
-                                          blusys_bluetooth_scan_cb_t cb,
-                                          void *user_ctx)
-{
-    (void)bt; (void)cb; (void)user_ctx;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_bluetooth_scan_stop(blusys_bluetooth_t *bt)
-{
-    (void)bt;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-#endif /* CONFIG_BT_NIMBLE_ENABLED */
+#endif  /* CONFIG_BT_NIMBLE_ENABLED */

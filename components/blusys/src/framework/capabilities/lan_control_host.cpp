@@ -1,5 +1,5 @@
 #include "blusys/framework/capabilities/lan_control.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 #include "blusys/hal/log.h"
 
 static const char *TAG = "blusys_lan";

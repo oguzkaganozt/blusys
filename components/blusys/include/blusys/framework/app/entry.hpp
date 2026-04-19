@@ -20,7 +20,7 @@
 #include "blusys/framework/app/internal/app_runtime.hpp"
 #include "blusys/framework/platform/host.hpp"
 #include "blusys/framework/platform/headless.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 #include "blusys/hal/log.h"
 
 // Device-specific headers — only available in the IDF component build.

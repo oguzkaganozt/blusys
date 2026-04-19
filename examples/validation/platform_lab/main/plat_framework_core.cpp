@@ -52,7 +52,7 @@ static void core_demo_on_event(void * /*ctx*/,
                                blusys::feedback_bus *fb,
                                blusys::route_sink *routes)
 {
-    if (event.kind != blusys::app_event_kind::intent) {
+    if (event.source != blusys::event_source::intent) {
         return;
     }
 

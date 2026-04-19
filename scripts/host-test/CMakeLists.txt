@@ -37,9 +37,9 @@ add_library(blusys_test_core STATIC
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/feedback.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/presets.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/internal/logging_sink.cpp
-    ${BLUSYS_COMPONENT_DIR}/src/framework/engine/framework_init.cpp
-    ${BLUSYS_COMPONENT_DIR}/src/framework/engine/router.cpp
-    ${BLUSYS_COMPONENT_DIR}/src/framework/engine/event_queue.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/events/framework_init.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/events/router.cpp
+    ${BLUSYS_COMPONENT_DIR}/src/framework/events/event_queue.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/app/ctx.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/app/services.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/capability_event_map.cpp

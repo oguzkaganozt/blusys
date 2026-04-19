@@ -6,7 +6,7 @@
 //   - alarm threshold triggers action re-dispatch
 //   - no UI, no LVGL — pure reducer logic
 //
-// This file contains ZERO framework plumbing. The BLUSYS_APP_MAIN_HEADLESS
+// This file contains ZERO framework plumbing. The BLUSYS_APP_HEADLESS
 // macro handles everything.
 
 #include "blusys/framework/app/app.hpp"
@@ -122,4 +122,4 @@ static const blusys::app_spec<SensorState, Action> spec{
     .tick_period_ms = 1000,
 };
 
-BLUSYS_APP_MAIN_HEADLESS(spec)
+BLUSYS_APP_HEADLESS(spec)

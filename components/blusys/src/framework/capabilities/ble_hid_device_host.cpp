@@ -1,5 +1,5 @@
 #include "blusys/framework/capabilities/ble_hid_device.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 #include "blusys/hal/log.h"
 
 #include <cstdio>

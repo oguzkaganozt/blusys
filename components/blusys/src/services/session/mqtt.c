@@ -5,7 +5,9 @@
 
 #include "soc/soc_caps.h"
 
-#if SOC_WIFI_SUPPORTED
+#if !SOC_WIFI_SUPPORTED
+#error "blusys_mqtt requires SOC_WIFI_SUPPORTED"
+#endif
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -372,70 +374,3 @@ bool blusys_mqtt_is_connected(blusys_mqtt_t *handle)
     return connected;
 }
 
-#else /* !SOC_WIFI_SUPPORTED */
-
-blusys_err_t blusys_mqtt_open(const blusys_mqtt_config_t *config, blusys_mqtt_t **out_handle)
-{
-    (void) config;
-    (void) out_handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_mqtt_close(blusys_mqtt_t *handle)
-{
-    (void) handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_mqtt_connect(blusys_mqtt_t *handle)
-{
-    (void) handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_mqtt_disconnect(blusys_mqtt_t *handle)
-{
-    (void) handle;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_mqtt_publish(blusys_mqtt_t *handle,
-                                  const char    *topic,
-                                  const uint8_t *payload,
-                                  size_t         payload_len,
-                                  blusys_mqtt_qos_t qos,
-                                  bool           retain)
-{
-    (void) handle;
-    (void) topic;
-    (void) payload;
-    (void) payload_len;
-    (void) qos;
-    (void) retain;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_mqtt_subscribe(blusys_mqtt_t *handle,
-                                    const char    *topic,
-                                    blusys_mqtt_qos_t qos)
-{
-    (void) handle;
-    (void) topic;
-    (void) qos;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-blusys_err_t blusys_mqtt_unsubscribe(blusys_mqtt_t *handle, const char *topic)
-{
-    (void) handle;
-    (void) topic;
-    return BLUSYS_ERR_NOT_SUPPORTED;
-}
-
-bool blusys_mqtt_is_connected(blusys_mqtt_t *handle)
-{
-    (void) handle;
-    return false;
-}
-
-#endif /* SOC_WIFI_SUPPORTED */

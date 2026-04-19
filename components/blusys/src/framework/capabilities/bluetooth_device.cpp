@@ -1,7 +1,7 @@
 #include "blusys/framework/capabilities/bluetooth.hpp"
-#include "blusys/framework/engine/pending_events.hpp"
-#include "blusys/framework/engine/intent.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/pending_events.hpp"
+#include "blusys/framework/events/event.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 #include "blusys/hal/log.h"
 #include "blusys/framework/services/net.h"
 

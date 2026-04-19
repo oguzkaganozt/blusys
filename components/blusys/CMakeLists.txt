@@ -114,9 +114,9 @@ set(blusys_sources
     src/framework/observe/log.c
     src/framework/observe/counter.c
     src/framework/observe/snapshot.c
-    src/framework/engine/router.cpp
-    src/framework/engine/event_queue.cpp
-    src/framework/engine/framework_init.cpp
+    src/framework/events/router.cpp
+    src/framework/events/event_queue.cpp
+    src/framework/events/framework_init.cpp
     src/framework/feedback/feedback.cpp
     src/framework/feedback/presets.cpp
     src/framework/feedback/internal/logging_sink.cpp
@@ -145,6 +145,7 @@ set(blusys_sources
     # excluded from the device build entirely.
     src/framework/capabilities/ble_hid_device_device.cpp
     src/framework/capabilities/build_info_device.cpp
+    src/framework/capabilities/example_sensor_device.cpp
     src/framework/capabilities/bluetooth_device.cpp
     src/framework/capabilities/connectivity_device.cpp
     src/framework/capabilities/diagnostics_device.cpp
@@ -304,6 +305,11 @@ if("lvgl__lvgl" IN_LIST build_components)
     target_link_libraries(${COMPONENT_LIB} PUBLIC ${lvgl_lib})
     target_compile_definitions(${COMPONENT_LIB} PUBLIC BLUSYS_FRAMEWORK_HAS_UI=1)
     target_compile_definitions(${COMPONENT_LIB} PRIVATE BLUSYS_HAS_LVGL=1)
+    target_compile_definitions(${COMPONENT_LIB} PUBLIC
+        BLUSYS_BUILD_FEATURE_FLAGS="platform=device,ui=1")
+else()
+    target_compile_definitions(${COMPONENT_LIB} PUBLIC
+        BLUSYS_BUILD_FEATURE_FLAGS="platform=device,ui=0")
 endif()
 
 # ---------------------------------------------------------------------------

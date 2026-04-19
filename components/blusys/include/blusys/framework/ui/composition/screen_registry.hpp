@@ -3,7 +3,7 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/framework/containers.hpp"
-#include "blusys/framework/engine/router.hpp"
+#include "blusys/framework/events/router.hpp"
 
 #include <cstddef>
 #include <cstdint>

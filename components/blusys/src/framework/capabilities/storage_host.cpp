@@ -1,6 +1,6 @@
 #include "blusys/framework/capabilities/storage.hpp"
-#include "blusys/framework/engine/intent.hpp"
-#include "blusys/framework/engine/event_queue.hpp"
+#include "blusys/framework/events/event.hpp"
+#include "blusys/framework/events/event_queue.hpp"
 #include "blusys/hal/log.h"
 
 static const char *TAG = "blusys_stor";
