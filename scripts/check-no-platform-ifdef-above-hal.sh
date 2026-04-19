@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-BASELINE_MAX=25   # P5 in progress — capability headers now clean; remaining in examples/tests.
+BASELINE_MAX=0    # P5 complete — zero platform ifdefs above HAL.
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"

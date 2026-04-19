@@ -101,19 +101,6 @@ public:
     // before other capabilities start.
     void run_migrations(const capability_list& list);
 
-    // ---- app-level settings (fx.settings.*) ----
-    // All operations use the app_namespace from config (default "blusys_app").
-
-    blusys_err_t app_get_u32(const char* key, std::uint32_t* out) const;
-    blusys_err_t app_set_u32(const char* key, std::uint32_t value);
-    blusys_err_t app_get_i32(const char* key, std::int32_t* out) const;
-    blusys_err_t app_set_i32(const char* key, std::int32_t value);
-    blusys_err_t app_get_str(const char* key, char* out, std::size_t* len) const;
-    blusys_err_t app_set_str(const char* key, const char* value);
-    blusys_err_t app_get_blob(const char* key, void* out, std::size_t* len) const;
-    blusys_err_t app_set_blob(const char* key, const void* value, std::size_t len);
-    blusys_err_t app_erase(const char* key);
-
     struct effects {
         persistence_capability *self = nullptr;
 
@@ -124,65 +111,47 @@ public:
 
         blusys_err_t get_u32(const char* key, std::uint32_t* out) const
         {
-            return self != nullptr
-                ? self->app_get_u32(key, out)
-                : BLUSYS_ERR_INVALID_STATE;
+            return self != nullptr ? self->app_get_u32(key, out) : BLUSYS_ERR_INVALID_STATE;
         }
 
         blusys_err_t set_u32(const char* key, std::uint32_t value)
         {
-            return self != nullptr
-                ? self->app_set_u32(key, value)
-                : BLUSYS_ERR_INVALID_STATE;
+            return self != nullptr ? self->app_set_u32(key, value) : BLUSYS_ERR_INVALID_STATE;
         }
 
         blusys_err_t get_i32(const char* key, std::int32_t* out) const
         {
-            return self != nullptr
-                ? self->app_get_i32(key, out)
-                : BLUSYS_ERR_INVALID_STATE;
+            return self != nullptr ? self->app_get_i32(key, out) : BLUSYS_ERR_INVALID_STATE;
         }
 
         blusys_err_t set_i32(const char* key, std::int32_t value)
         {
-            return self != nullptr
-                ? self->app_set_i32(key, value)
-                : BLUSYS_ERR_INVALID_STATE;
+            return self != nullptr ? self->app_set_i32(key, value) : BLUSYS_ERR_INVALID_STATE;
         }
 
         blusys_err_t get_str(const char* key, char* out, std::size_t* len) const
         {
-            return self != nullptr
-                ? self->app_get_str(key, out, len)
-                : BLUSYS_ERR_INVALID_STATE;
+            return self != nullptr ? self->app_get_str(key, out, len) : BLUSYS_ERR_INVALID_STATE;
         }
 
         blusys_err_t set_str(const char* key, const char* value)
         {
-            return self != nullptr
-                ? self->app_set_str(key, value)
-                : BLUSYS_ERR_INVALID_STATE;
+            return self != nullptr ? self->app_set_str(key, value) : BLUSYS_ERR_INVALID_STATE;
         }
 
         blusys_err_t get_blob(const char* key, void* out, std::size_t* len) const
         {
-            return self != nullptr
-                ? self->app_get_blob(key, out, len)
-                : BLUSYS_ERR_INVALID_STATE;
+            return self != nullptr ? self->app_get_blob(key, out, len) : BLUSYS_ERR_INVALID_STATE;
         }
 
         blusys_err_t set_blob(const char* key, const void* value, std::size_t len)
         {
-            return self != nullptr
-                ? self->app_set_blob(key, value, len)
-                : BLUSYS_ERR_INVALID_STATE;
+            return self != nullptr ? self->app_set_blob(key, value, len) : BLUSYS_ERR_INVALID_STATE;
         }
 
         blusys_err_t erase(const char* key)
         {
-            return self != nullptr
-                ? self->app_erase(key)
-                : BLUSYS_ERR_INVALID_STATE;
+            return self != nullptr ? self->app_erase(key) : BLUSYS_ERR_INVALID_STATE;
         }
 
         void bind(persistence_capability *persistence) noexcept
@@ -192,6 +161,18 @@ public:
     };
 
 private:
+    // All operations use the app_namespace from config (default "blusys_app").
+    // Private: access through fx.settings.* (effects struct above).
+    blusys_err_t app_get_u32(const char* key, std::uint32_t* out) const;
+    blusys_err_t app_set_u32(const char* key, std::uint32_t value);
+    blusys_err_t app_get_i32(const char* key, std::int32_t* out) const;
+    blusys_err_t app_set_i32(const char* key, std::int32_t value);
+    blusys_err_t app_get_str(const char* key, char* out, std::size_t* len) const;
+    blusys_err_t app_set_str(const char* key, const char* value);
+    blusys_err_t app_get_blob(const char* key, void* out, std::size_t* len) const;
+    blusys_err_t app_set_blob(const char* key, const void* value, std::size_t len);
+    blusys_err_t app_erase(const char* key);
+
     void post_event(persistence_event ev, std::uint32_t code = 0)
     {
         post_integration_event(static_cast<std::uint32_t>(ev), code);
