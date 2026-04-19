@@ -4,7 +4,7 @@
 //
 // A device_profile groups all hardware configuration needed to bring
 // up a device target: LCD panel, UI service, and optional encoder
-// input. The device entry path (BLUSYS_APP_MAIN_DEVICE) uses the
+// input. The interactive entry path (BLUSYS_APP) uses the
 // profile to perform framework-owned display and input bring-up so
 // that product code never touches raw LCD init, UI service wiring,
 // or encoder setup.

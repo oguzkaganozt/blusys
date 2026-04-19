@@ -7,40 +7,35 @@
 //
 // Available macros:
 //   BLUSYS_APP(spec)          — interactive product (host SDL or device LCD+input).
-//                               On ESP_PLATFORM: uses spec.profile or auto_profile_interactive().
-//                               On host: uses spec.profile lcd size or 480x320, spec.host_title.
+//                               Uses `BLUSYS_DEVICE_BUILD` to select host/device behavior.
 //                               When BLUSYS_FRAMEWORK_HAS_UI is off: behaves as BLUSYS_APP_HEADLESS.
 //   BLUSYS_APP_HEADLESS(spec) — no UI, no LVGL; runs the headless runtime loop.
 //
-// Platform and display selection live in spec, not in macro names:
-//   .profile    = &blusys::platform::st7735_160x128()  ← pin display profile
-//   .host_title = "My Dashboard"                        ← SDL window title
-//   .flows      = {&kSettingsFlow}                      ← spec-selectable flows
+// Platform and display selection live in spec, not in macro names.
 
 #include "blusys/framework/app/internal/app_runtime.hpp"
-#include "blusys/framework/platform/host.hpp"
 #include "blusys/framework/platform/headless.hpp"
 #include "blusys/framework/events/event_queue.hpp"
 #include "blusys/hal/log.h"
 
-// Device-specific headers — only available in the IDF component build.
-#if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM)
-#include "blusys/framework/platform/profile.hpp"
-#include "blusys/framework/platform/input_bridge.hpp"
-#include "blusys/framework/platform/button_array_bridge.hpp"
-#include "blusys/framework/platform/touch_bridge.hpp"
-#include "blusys/framework/ui/composition/shell.hpp"
-#include "blusys/drivers/display.h"
-#endif
-
-#if defined(BLUSYS_FRAMEWORK_HAS_UI) && !defined(ESP_PLATFORM)
-#include "blusys/framework/platform/profile.hpp"
-#include "blusys/framework/platform/touch_bridge.hpp"
+#ifndef BLUSYS_DEVICE_BUILD
+#define BLUSYS_DEVICE_BUILD 0
 #endif
 
 #if defined(BLUSYS_FRAMEWORK_HAS_UI)
 #include "blusys/framework/platform/auto.hpp"
+#include "blusys/framework/platform/button_array_bridge.hpp"
+#include "blusys/framework/platform/input_bridge.hpp"
+#include "blusys/framework/platform/profile.hpp"
+#include "blusys/framework/platform/touch_bridge.hpp"
+#include "blusys/framework/ui/composition/shell.hpp"
 #include "blusys/framework/ui/style/presets.hpp"
+#include "blusys/drivers/display.h"
+
+namespace blusys {
+using blusys_lcd_t    = ::blusys_lcd_t;
+using blusys_display_t = ::blusys_display_t;
+}  // namespace blusys
 #endif
 
 #include <cstdint>
@@ -60,7 +55,6 @@ std::uint32_t host_frame_step();
 void host_frame_delay(std::uint32_t ms);
 void host_set_theme(const void *tokens);
 
-#ifdef ESP_PLATFORM
 blusys_err_t device_init(blusys::device_profile &profile,
                          blusys_lcd_t **lcd_out,
                          blusys_display_t **ui_out);
@@ -71,7 +65,6 @@ void device_delay(std::uint32_t ms);
 void device_ui_lock(blusys_display_t *ui);
 void device_ui_unlock(blusys_display_t *ui);
 void *device_find_pointer_indev();
-#endif  // ESP_PLATFORM
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
 
 std::uint32_t headless_get_ticks_ms();
@@ -93,12 +86,122 @@ const blusys::theme_tokens *resolve_theme_tokens(const app_spec<State, Action> &
     return spec.theme;
 }
 
-// ---- host interactive entry (SDL2 + LVGL) ----
+// ---- interactive entry (host SDL2 or device LCD+input) ----
 
 template <typename State, typename Action>
-void run_host(const app_spec<State, Action> &spec)
+void run_interactive(const app_spec<State, Action> &spec)
 {
-    // Window size: from spec.profile if set, else default 480x320.
+#if BLUSYS_DEVICE_BUILD
+    device_profile profile = (spec.profile != nullptr)
+                             ? *spec.profile
+                             : blusys::auto_profile_interactive();
+
+    blusys_lcd_t *lcd = nullptr;
+    blusys_display_t *ui = nullptr;
+
+    blusys_err_t err = platform::device_init(profile, &lcd, &ui);
+    if (err != BLUSYS_OK) {
+        BLUSYS_LOGE("blusys_app", "device init failed: %d", static_cast<int>(err));
+        return;
+    }
+
+    platform::device_ui_lock(ui);
+    blusys_display_invalidation_begin(ui);
+
+    const blusys::theme_tokens *resolved_theme = resolve_theme_tokens(spec);
+    const blusys::theme_tokens scaled_theme =
+        (resolved_theme != nullptr)
+            ? blusys::presets::for_display(*resolved_theme,
+                  static_cast<std::uint32_t>(profile.lcd.width),
+                  static_cast<std::uint32_t>(profile.lcd.height),
+                  static_cast<blusys::presets::panel_kind>(profile.ui.panel_kind))
+            : blusys::presets::for_display(
+                  static_cast<std::uint32_t>(profile.lcd.width),
+                  static_cast<std::uint32_t>(profile.lcd.height),
+                  static_cast<blusys::presets::panel_kind>(profile.ui.panel_kind));
+    platform::device_set_theme(static_cast<const void *>(&scaled_theme));
+
+    app_runtime<State, Action> runtime(spec);
+    err = runtime.init();
+    if (err != BLUSYS_OK) {
+        BLUSYS_LOGE("blusys_app", "app runtime init failed: %d", static_cast<int>(err));
+        blusys_display_invalidation_end(ui);
+        platform::device_ui_unlock(ui);
+        platform::device_deinit(lcd, ui);
+        return;
+    }
+
+    input_bridge bridge{};
+    if (profile.has_encoder) {
+        input_bridge_config bridge_cfg{};
+        bridge_cfg.encoder_config    = profile.encoder;
+        bridge_cfg.framework_runtime = &runtime.framework_runtime();
+        const blusys_err_t bridge_err = input_bridge_open(bridge_cfg, &bridge);
+        if (bridge_err != BLUSYS_OK) {
+            BLUSYS_LOGW("blusys_app",
+                        "input bridge open failed: %d — continuing without encoder",
+                        static_cast<int>(bridge_err));
+            profile.has_encoder = false;
+        }
+    }
+
+    blusys::touch_bridge touch{};
+    if (profile.has_touch) {
+        auto *ptr = static_cast<lv_indev_t *>(platform::device_find_pointer_indev());
+        if (ptr != nullptr) {
+            blusys::touch_bridge_config tcfg{};
+            tcfg.framework_runtime = &runtime.framework_runtime();
+            (void)blusys::touch_bridge_open(tcfg, ptr, &touch);
+        } else {
+            BLUSYS_LOGW("blusys_app",
+                        "has_touch set but no LVGL POINTER indev — skipping touch bridge");
+        }
+    }
+
+    blusys_display_invalidation_end(ui);
+    platform::device_ui_unlock(ui);
+
+    button_array_bridge btn_bridge{};
+    if (profile.button_count > 0 && profile.buttons != nullptr) {
+        button_array_config btn_cfg{};
+        btn_cfg.count             = profile.button_count;
+        btn_cfg.framework_runtime = &runtime.framework_runtime();
+        for (std::size_t i = 0; i < profile.button_count && i < kMaxButtons; ++i) {
+            btn_cfg.buttons[i] = {
+                .button_config = profile.buttons[i].button_config,
+                .on_press      = profile.buttons[i].on_press,
+                .on_long_press = profile.buttons[i].on_long_press,
+            };
+        }
+        const blusys_err_t btn_err = button_array_open(btn_cfg, &btn_bridge);
+        if (btn_err != BLUSYS_OK) {
+            BLUSYS_LOGW("blusys_app",
+                        "button array open failed: %d — continuing without buttons",
+                        static_cast<int>(btn_err));
+        }
+    }
+
+    BLUSYS_LOGI("blusys_app", "app running on device");
+
+    while (true) {
+        const std::uint32_t now = platform::device_get_ticks_ms();
+        platform::device_ui_lock(ui);
+        runtime.step(now);
+        platform::device_ui_unlock(ui);
+        platform::device_delay(spec.tick_period_ms);
+    }
+
+    // Unreachable in normal operation.
+    if (btn_bridge.count > 0) {
+        button_array_close(&btn_bridge);
+    }
+    if (profile.has_encoder) {
+        input_bridge_close(&bridge);
+    }
+    blusys::touch_bridge_close(&touch);
+    runtime.deinit();
+    platform::device_deinit(lcd, ui);
+#else
     int hor_res = 480;
     int ver_res = 320;
     if (spec.profile != nullptr && spec.profile->lcd.width > 0) {
@@ -157,128 +260,8 @@ void run_host(const app_spec<State, Action> &spec)
     }
 
     runtime.deinit();
+#endif
 }
-
-// ---- device entry (ESP-IDF + LCD + LVGL) ----
-
-#ifdef ESP_PLATFORM
-
-template <typename State, typename Action>
-void run_device(const app_spec<State, Action> &spec)
-{
-    // Profile: use spec.profile if set, otherwise fall back to auto_profile_interactive().
-    device_profile profile = (spec.profile != nullptr)
-                             ? *spec.profile
-                             : blusys::auto_profile_interactive();
-
-    blusys_lcd_t *lcd = nullptr;
-    blusys_display_t  *ui  = nullptr;
-
-    blusys_err_t err = platform::device_init(profile, &lcd, &ui);
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE("blusys_app", "device init failed: %d", static_cast<int>(err));
-        return;
-    }
-
-    platform::device_ui_lock(ui);
-    blusys_display_invalidation_begin(ui);
-
-    const blusys::theme_tokens *resolved_theme = resolve_theme_tokens(spec);
-    const blusys::theme_tokens scaled_theme =
-        (resolved_theme != nullptr)
-            ? blusys::presets::for_display(*resolved_theme,
-                  static_cast<std::uint32_t>(profile.lcd.width),
-                  static_cast<std::uint32_t>(profile.lcd.height),
-                  static_cast<blusys::presets::panel_kind>(profile.ui.panel_kind))
-            : blusys::presets::for_display(
-                  static_cast<std::uint32_t>(profile.lcd.width),
-                  static_cast<std::uint32_t>(profile.lcd.height),
-                  static_cast<blusys::presets::panel_kind>(profile.ui.panel_kind));
-    platform::device_set_theme(static_cast<const void *>(&scaled_theme));
-
-    app_runtime<State, Action> runtime(spec);
-    err = runtime.init();
-    if (err != BLUSYS_OK) {
-        BLUSYS_LOGE("blusys_app", "app runtime init failed: %d", static_cast<int>(err));
-        blusys_display_invalidation_end(ui);
-        platform::device_ui_unlock(ui);
-        platform::device_deinit(lcd, ui);
-        return;
-    }
-
-    input_bridge bridge{};
-    if (profile.has_encoder) {
-        input_bridge_config bridge_cfg{};
-        bridge_cfg.encoder_config = profile.encoder;
-        bridge_cfg.framework_runtime = &runtime.framework_runtime();
-        const blusys_err_t bridge_err = input_bridge_open(bridge_cfg, &bridge);
-        if (bridge_err != BLUSYS_OK) {
-            BLUSYS_LOGW("blusys_app",
-                        "input bridge open failed: %d — continuing without encoder",
-                        static_cast<int>(bridge_err));
-            profile.has_encoder = false;
-        }
-    }
-
-    blusys::touch_bridge touch{};
-    if (profile.has_touch) {
-        auto *ptr = static_cast<lv_indev_t *>(platform::device_find_pointer_indev());
-        if (ptr != nullptr) {
-            blusys::touch_bridge_config tcfg{};
-            tcfg.framework_runtime = &runtime.framework_runtime();
-            (void)blusys::touch_bridge_open(tcfg, ptr, &touch);
-        } else {
-            BLUSYS_LOGW("blusys_app",
-                        "has_touch set but no LVGL POINTER indev — skipping touch bridge");
-        }
-    }
-
-    blusys_display_invalidation_end(ui);
-    platform::device_ui_unlock(ui);
-
-    button_array_bridge btn_bridge{};
-    if (profile.button_count > 0 && profile.buttons != nullptr) {
-        button_array_config btn_cfg{};
-        btn_cfg.count = profile.button_count;
-        btn_cfg.framework_runtime = &runtime.framework_runtime();
-        for (std::size_t i = 0; i < profile.button_count && i < kMaxButtons; ++i) {
-            btn_cfg.buttons[i] = {
-                .button_config = profile.buttons[i].button_config,
-                .on_press      = profile.buttons[i].on_press,
-                .on_long_press = profile.buttons[i].on_long_press,
-            };
-        }
-        const blusys_err_t btn_err = button_array_open(btn_cfg, &btn_bridge);
-        if (btn_err != BLUSYS_OK) {
-            BLUSYS_LOGW("blusys_app",
-                        "button array open failed: %d — continuing without buttons",
-                        static_cast<int>(btn_err));
-        }
-    }
-
-    BLUSYS_LOGI("blusys_app", "app running on device");
-
-    while (true) {
-        const std::uint32_t now = platform::device_get_ticks_ms();
-        platform::device_ui_lock(ui);
-        runtime.step(now);
-        platform::device_ui_unlock(ui);
-        platform::device_delay(spec.tick_period_ms);
-    }
-
-    // Unreachable in normal operation.
-    if (btn_bridge.count > 0) {
-        button_array_close(&btn_bridge);
-    }
-    if (profile.has_encoder) {
-        input_bridge_close(&bridge);
-    }
-    blusys::touch_bridge_close(&touch);
-    runtime.deinit();
-    platform::device_deinit(lcd, ui);
-}
-
-#endif  // ESP_PLATFORM
 
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
 
@@ -318,24 +301,24 @@ void run_headless(const app_spec<State, Action> &spec,
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
-#ifdef ESP_PLATFORM
+#if BLUSYS_DEVICE_BUILD
 
 #define BLUSYS_APP(spec_expr)                                           \
     extern "C" void app_main(void) {                                    \
         auto _blusys_spec = (spec_expr);                                \
-        ::blusys::detail::run_device(_blusys_spec);                     \
+        ::blusys::detail::run_interactive(_blusys_spec);                \
     }
 
-#else  // host
+#else
 
 #define BLUSYS_APP(spec_expr)                                           \
     int main(void) {                                                    \
         auto _blusys_spec = (spec_expr);                                \
-        ::blusys::detail::run_host(_blusys_spec);                       \
+        ::blusys::detail::run_interactive(_blusys_spec);                \
         return 0;                                                       \
     }
 
-#endif  // ESP_PLATFORM
+#endif
 
 #else  // !BLUSYS_FRAMEWORK_HAS_UI — BLUSYS_APP falls through to headless
 
@@ -346,7 +329,7 @@ void run_headless(const app_spec<State, Action> &spec,
 // BLUSYS_APP_HEADLESS — no UI, no LVGL. Link-time decision: headless apps
 // genuinely don't link LVGL, so this cannot collapse into BLUSYS_APP.
 
-#if defined(ESP_PLATFORM)
+#if BLUSYS_DEVICE_BUILD
 
 #define BLUSYS_APP_HEADLESS(spec_expr)                                  \
     extern "C" void app_main(void) {                                    \

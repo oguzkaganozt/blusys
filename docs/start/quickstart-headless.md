@@ -52,7 +52,7 @@ my_sensor/
       app_logic.hpp    — State, Action, update(), on_tick() declarations
       app_logic.cpp    — reducer and tick hook implementation
     platform/
-      app_main.cpp     — app_spec wiring + BLUSYS_APP_MAIN_HEADLESS(spec) macro
+      app_main.cpp     — app_spec wiring + BLUSYS_APP_HEADLESS(spec) macro
   host/
     CMakeLists.txt     — standalone PC build
 ```

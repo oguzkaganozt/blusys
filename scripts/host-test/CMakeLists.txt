@@ -34,6 +34,7 @@ add_library(blusys_test_core STATIC
     ${BLUSYS_COMPONENT_DIR}/src/framework/observe/error_domain.c
     ${BLUSYS_COMPONENT_DIR}/src/framework/observe/log.c
     ${BLUSYS_COMPONENT_DIR}/src/framework/observe/counter.c
+    ${BLUSYS_COMPONENT_DIR}/src/framework/observe/snapshot.c
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/feedback.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/presets.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/internal/logging_sink.cpp
@@ -41,7 +42,6 @@ add_library(blusys_test_core STATIC
     ${BLUSYS_COMPONENT_DIR}/src/framework/events/router.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/events/event_queue.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/app/ctx.cpp
-    ${BLUSYS_COMPONENT_DIR}/src/framework/app/services.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/capability_event_map.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/test/test_stubs.cpp
 )
@@ -49,6 +49,7 @@ target_include_directories(blusys_test_core PUBLIC
     ${BLUSYS_COMPONENT_DIR}/include
     ${BLUSYS_REPO_ROOT}/scripts/host/include_host
 )
+target_compile_definitions(blusys_test_core PUBLIC BLUSYS_DEVICE_BUILD=0)
 target_compile_options(blusys_test_core PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
     $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>

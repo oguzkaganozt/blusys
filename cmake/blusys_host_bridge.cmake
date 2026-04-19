@@ -82,7 +82,6 @@ set(_BLUSYS_HOST_BRIDGE_COMMON_SOURCES
     ${BLUSYS_COMPONENT_DIR}/src/framework/events/router.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/events/event_queue.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/app/ctx.cpp
-    ${BLUSYS_COMPONENT_DIR}/src/framework/app/services.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/capability_event_map.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/ble_hid_device_host.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/capabilities/build_info_host.cpp
@@ -266,6 +265,7 @@ function(blusys_host_bridge_add_library MODE)
         BLUSYS_APP_BUILD_VERSION="${_blusys_build_version}"
         BLUSYS_BUILD_HOST="${_blusys_build_host}"
         BLUSYS_BUILD_COMMIT="${_blusys_build_commit}"
+        BLUSYS_DEVICE_BUILD=0
         BLUSYS_BUILD_FEATURE_FLAGS="platform=${_blusys_build_platform},ui=${_blusys_build_feature_ui}"
     )
 

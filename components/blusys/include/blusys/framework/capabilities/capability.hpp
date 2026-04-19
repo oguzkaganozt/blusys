@@ -20,7 +20,7 @@ class capability_persistence_schema;  // full type in capabilities/persistence.h
 //   telemetry      0x0600 – 0x06FF
 //   provisioning   0x0700 – 0x07FF
 //   mqtt (host SDL) 0x0800 – 0x08FF
-//   product custom 0x0900 – 0x09FF (handle in `on_event()` or extend the mapper)
+//   product custom 0x0900 – 0x09FF (handle in `on_event()`)
 //   lan_control    0x0A00 – 0x0AFF
 //   usb            0x0B00 – 0x0BFF
 //   ble_hid_device 0x0C00 – 0x0CFF

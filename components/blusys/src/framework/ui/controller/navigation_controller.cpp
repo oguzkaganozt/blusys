@@ -3,6 +3,7 @@
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
 #include "blusys/framework/ui/composition/overlay_manager.hpp"
+#include "blusys/framework/ui/composition/screen_router.hpp"
 #include "blusys/framework/ui/composition/shell.hpp"
 
 namespace blusys {
@@ -63,21 +64,16 @@ lv_obj_t *navigation_controller::shell_root() const
     return shell_ != nullptr ? shell_->root : nullptr;
 }
 
-lv_obj_t *navigation_controller::status_surface() const
-{
-    return shell_ != nullptr ? shell_status_surface(*shell_) : nullptr;
-}
-
-void navigation_controller::set_title(const char *title)
+void navigation_controller::set_title(const char *title) const
 {
     if (shell_ != nullptr) {
         shell_set_title(*shell_, title);
     }
 }
 
-std::size_t navigation_controller::stack_depth() const
+lv_obj_t *navigation_controller::status_surface() const
 {
-    return router_ != nullptr ? router_->stack_depth() : 0;
+    return shell_ != nullptr ? shell_->status : nullptr;
 }
 
 void navigation_controller::submit(const route_command &cmd)

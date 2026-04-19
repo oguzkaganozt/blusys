@@ -139,4 +139,4 @@ const blusys::app_spec<surface_gateway::app_state, surface_gateway::action> spec
 
 }  // namespace surface_gateway::system
 
-BLUSYS_APP_MAIN_HEADLESS(surface_gateway::system::spec)
+BLUSYS_APP_HEADLESS(surface_gateway::system::spec)

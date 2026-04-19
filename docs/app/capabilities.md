@@ -10,23 +10,20 @@ Every capability:
 2. Is composed in `platform/` and registered on `app_spec.capabilities` — not constructed ad hoc from `core/` or `ui/`.
 3. Owns lifecycle and runtime-service integration on the framework side; product code requests work through reducer-driven actions.
 4. Exposes **status** through the app-facing query path (`app_ctx` accessors) using consistent field naming (`capability_ready` signals that the capability’s default stack is up).
-5. Raises **events** with stable enum codes; `platform/` maps those events to product `action`s via `map_event`, and `core/` reacts in `update`.
+5. Raises **events** with stable enum codes; `core/` handles them in `on_event`, and `update()` reacts to the resulting actions.
 6. May expose advanced escape hatches, but the recommended path stays event- and reducer-driven.
 
-Apps bridge capability events to product actions via `map_event`:
+Apps bridge capability events to product actions via `on_event`:
 
 ```cpp
-bool map_event(blusys::capability_event event, Action *out)
+std::optional<Action> on_event(blusys::event event, State &state)
 {
-    using E = blusys::connectivity_event;
-    if (event.tag == blusys::capability_event_tag::connectivity) {
-        switch (static_cast<E>(event.kind)) {
-        case E::got_ip:       *out = Action::wifi_connected;    return true;
-        case E::disconnected: *out = Action::wifi_disconnected; return true;
-        default:              return false;
-        }
+    (void)state;
+    if (event.source == blusys::event_source::integration &&
+        event.id == 0x0102u) { // example: connectivity ready
+        return Action::wifi_connected;
     }
-    return false;
+    return std::nullopt;
 }
 ```
 
@@ -57,7 +54,7 @@ static blusys::capability_list_storage capabilities{&conn};
 static const blusys::app_spec<State, Action> spec{
     .initial_state = {},
     .update        = update,
-    .map_event     = map_event,
+    .on_event      = on_event,
     .capabilities  = &capabilities,
 };
 ```
@@ -106,8 +103,8 @@ static blusys::capability_list_storage capabilities{&conn, &stor};
 
 ```cpp
 // After storage mounts, access raw filesystem handles:
-blusys_fs_t    *spiffs = ctx.spiffs();  // POSIX path-rooted FS
-blusys_fatfs_t *fatfs  = ctx.fatfs();   // FAT FS handle
+blusys_fs_t    *spiffs = ctx.fx().storage.spiffs();  // POSIX path-rooted FS
+blusys_fatfs_t *fatfs  = ctx.fx().storage.fatfs();   // FAT FS handle
 ```
 
 ### Status query
@@ -121,4 +118,4 @@ if (status != nullptr && status->spiffs_mounted) {
 
 ## Raw Service Access
 
-The underlying `blusys_wifi_*`, `blusys_sntp_*`, `blusys_fs_*` APIs remain available for advanced use cases. See the [Services](../services/index.md) section for direct API documentation.
+The underlying `blusys_wifi_*`, `blusys_sntp_*`, `blusys_fs_*` APIs remain available for advanced use cases through the capability/service internals.

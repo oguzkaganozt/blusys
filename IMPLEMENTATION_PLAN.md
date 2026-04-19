@@ -34,7 +34,7 @@ Every event — framework intent, input device, capability event — is a `blusy
 auto on_event(event e, state s) -> std::optional<Action>;
 ```
 
-That is the entire event-to-action surface. `map_intent` / `map_event` / `capability_event_discriminant` collapse into this one function. Inputs (buttons, encoder, touch) are capabilities that emit events on the same bus — no special input path.
+That is the entire event-to-action surface. The old intent/event/discriminant split collapses into this one function. Inputs (buttons, encoder, touch) are capabilities that emit events on the same bus — no special input path.
 
 ### 4. Platform split at the HAL line, nowhere else
 
@@ -119,10 +119,10 @@ Every refactor fails by adding without removing. This one deletes first.
 
 - `app_ctx::services()` — the locator. Gone.
 - `app_services` as a product-facing type — gone. Runtime-internal only, then deleted when B-phases complete.
-- `map_intent` + `map_event` + `capability_event_discriminant` — gone. One `on_event`.
+- The old intent/event mapper split — gone. One `on_event`.
 - `k_capability_event_discriminant_unset` — gone with the discriminant.
 - `#ifdef ESP_PLATFORM` in any header above `hal/` — gone.
-- `entry.hpp` macro variants (`INTERACTIVE`, `DASHBOARD`, `MAIN_HOST`, `MAIN_HOST_PROFILE`, `MAIN_DEVICE`, `MAIN_HEADLESS`, `MAIN_HEADLESS_PROFILE`) — gone. One template + one headless variant.
+- `entry.hpp` macro variants (all old host/device/dashboard shims) — gone. One interactive macro + one headless variant.
 - `shell` as an active owner of chrome logic — gone. Passive presentation only.
 - `screen_router` / `overlay_manager` / `focus_scope` as public types reachable from `services()` — gone. Private children of the navigation controller.
 - `framework/engine/integration_dispatch` as separate from event dispatch — gone, merged into one event bus.
@@ -303,12 +303,12 @@ Land a **prototype branch** first with two capabilities (`nav`, `storage`) wired
 - Rename `framework/engine/` → `framework/events/`. One event type `blusys::event` with `(source, kind, id, payload)`. Framework intents (button/encoder/touch) become event kinds on the same bus.
 - Spec exposes one hook: `auto on_event(event, state) -> std::optional<Action>;` Runtime does all translation before the hook sees the event.
 - Input subsystem becomes capabilities that emit events. No special-case input path.
-- Delete `map_intent`, `map_event`, `capability_event_discriminant`, `k_capability_event_discriminant_unset`, `integration_dispatch.hpp`. Collapse `app_runtime.hpp:313–382` to a single dispatch function.
+- Delete the old intent/event mapper split and discriminant. Collapse `app_runtime.hpp:313–382` to a single dispatch function.
 - The existing `capability_event_tag` enum (95 values) and `event_table.hpp` (~60 mappings, binary-searched) stay — those are good. What dies is the *three-path* routing wrapped around them.
 
 **Targets:** one dispatch function in `app_runtime`. Spec has one event hook. `framework/events/` has one public event type. Dispatch LOC reduced by ≥40% in `app_runtime.hpp`.
 
-**Deletes:** the three spec hooks, the discriminant, the intent type as a distinct concept, `integration_dispatch`.
+**Deletes:** the three spec hooks, the discriminant, the intent type as a distinct concept, the old `integration_dispatch` layer.
 
 ### P5. Capability shell + access contract
 

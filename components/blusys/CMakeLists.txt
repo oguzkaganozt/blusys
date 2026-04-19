@@ -137,7 +137,6 @@ set(blusys_sources
     src/framework/platform/app_device_platform.cpp
     src/framework/platform/app_headless_platform_esp.cpp
     src/framework/app/ctx.cpp
-    src/framework/app/services.cpp
     # --- Framework capabilities (ESP-IDF / device implementations) ---
     # Host stub implementations (*_host.cpp) are excluded here — the
     # host CMake bridge (cmake/blusys_host_bridge.cmake) picks them up
@@ -211,6 +210,7 @@ if(blusys_sources)
     target_compile_definitions(${COMPONENT_LIB} PUBLIC
         BLUSYS_BUILD_HOST="${BLUSYS_BUILD_HOST}"
         BLUSYS_BUILD_COMMIT="${BLUSYS_GIT_COMMIT}"
+        BLUSYS_DEVICE_BUILD=1
     )
 endif()
 

@@ -34,7 +34,7 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 
 1. **Raw LVGL in product screens** outside custom widgets or an explicit custom view scope — bypasses routing and locks. Use actions and view helpers.
 2. **Direct connectivity orchestration** in `main/ui/` or scattered across product files — use capabilities composed in `platform/`.
-3. **Large domain logic in `platform/`** — that folder is wiring (profile, capability list, `map_event`, bridges). Heavy state machines belong in `core/`.
+3. **Large domain logic in `platform/`** — that folder is wiring (profile, capability list, `on_event`, bridges). Heavy state machines belong in `core/`.
 
 **Layout:** prefer `blusys::row`, `blusys::col`, and `blusys::page_create_in` inside the shell so LVGL flex and scroll stay consistent. Details in [Architecture — UI layout](../internals/architecture.md#ui-layout-lvgl-flex).
 
@@ -42,8 +42,8 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 
 ## Sections
 
-- [Reducer Model](reducer-model.md) --- state, actions, `update()`, dispatch lifecycle, intent map
-- [App Runtime Model](app-runtime-model.md) --- intent/event queues, threading, what runs in `update()`
+- [Reducer Model](reducer-model.md) --- state, actions, `update()`, dispatch lifecycle, unified event hook
+- [App Runtime Model](app-runtime-model.md) --- event queues, threading, what runs in `on_event()`
 - [Views & Widgets](views-and-widgets.md) --- stock widgets, page helpers, custom widget contract, bounded LVGL
 - [Widget Gallery](widget-gallery.md) --- stock widgets by product use case
 - [Capability Composition](capability-composition.md) --- how capabilities fit together in `platform/`
@@ -63,5 +63,6 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 - [`examples/reference/display/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/display) --- display + LVGL + encoder scenarios (menuconfig)
 - [`examples/reference/connectivity/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connectivity) --- Wi-Fi / HTTP / MQTT client scenarios (menuconfig)
 - [`examples/reference/hal/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/hal) --- HAL scenarios: GPIO, PWM, button, timer, NVS, ADC, SPI, I2C, UART (menuconfig)
+- [`examples/external/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/external) --- umbrella-header external-shape validation sample
 
 Use **handheld** and **headless** quickstarts as supported product-shaped starting points.

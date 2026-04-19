@@ -4,7 +4,7 @@
 Formerly checked for main/integration/; now checks main/platform/ following v0 rename.
 
 Product-shaped: under main/, at least one source file references blusys::app entry (detected via
-``blusys/framework/app/app.hpp`` include or BLUSYS_APP_MAIN*), unless the example opts in with
+``blusys/framework/app/app.hpp`` include or BLUSYS_APP / BLUSYS_APP_HEADLESS, unless the example opts in with
 ``product_layout: true`` in inventory.yml.
 
 Skipped:
@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
 from blusys.inventory_lib import find_example_dir, load_inventory  # noqa: E402
 
 PRODUCT_INCLUDE = re.compile(r'#\s*include\s*[<"]blusys/framework/app/app\.hpp[>"]')
-PRODUCT_ENTRY = re.compile(r"\bBLUSYS_APP_MAIN_")
+PRODUCT_ENTRY = re.compile(r"\bBLUSYS_APP(?:_HEADLESS)?\b")
 MAIN_ROOT_SOURCES = re.compile(r"\.(c|cpp|cc|cxx)$", re.IGNORECASE)
 
 

@@ -31,7 +31,7 @@ cmake --build examples/quickstart/headless/build-host -j
 
 ## Optional local OLED
 
-Enable **Headless example → Local SSD1306 status OLED (128x64 I2C)** in menuconfig. Rebuild; entry becomes `BLUSYS_APP_MAIN_DEVICE` with `ssd1306_128x64` profile.
+Enable **Headless example → Local SSD1306 status OLED (128x64 I2C)** in menuconfig. Rebuild; entry becomes `BLUSYS_APP(spec)` with `ssd1306_128x64()` as the profile.
 
 ## Docs
 

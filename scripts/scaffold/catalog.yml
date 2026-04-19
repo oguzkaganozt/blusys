@@ -13,7 +13,7 @@
       "description": "Dashboard-style interactive shell",
       "build_ui": true,
       "host_support": true,
-      "entry_macro": "BLUSYS_APP_DASHBOARD",
+      "entry_macro": "BLUSYS_APP",
       "host_mode": "interactive",
       "title": "Surface Starter"
     },
@@ -21,7 +21,7 @@
       "description": "Headless runtime without local UI",
       "build_ui": false,
       "host_support": true,
-      "entry_macro": "BLUSYS_APP_MAIN_HEADLESS",
+      "entry_macro": "BLUSYS_APP_HEADLESS",
       "host_mode": "headless",
       "title": "Headless Starter"
     }

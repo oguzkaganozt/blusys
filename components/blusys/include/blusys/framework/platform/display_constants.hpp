@@ -2,7 +2,7 @@
 
 // Compile-time display tier helpers for if constexpr structural layout branching.
 //
-// Usage (BLUSYS_APP_DASHBOARD builds):
+// Usage (BLUSYS_APP builds):
 //
 //   #include "blusys/framework/platform/display_constants.hpp"
 //
@@ -15,7 +15,7 @@
 // kDisplayWidth, kDisplayHeight, and kDisplayTier are sourced from
 // dashboard_display_dims.hpp (single source for the Kconfig/host dispatch).
 //
-// For BLUSYS_APP_MAIN_DEVICE with a custom profile, use tier_for(w, h) directly:
+// For BLUSYS_APP with a custom profile, use tier_for(w, h) directly:
 //   if constexpr (blusys::tier_for(MY_W, MY_H) == blusys::display_tier::compact)
 
 #include "blusys/framework/platform/dashboard_display_dims.hpp"

@@ -95,7 +95,7 @@ void update(blusys::app_ctx &ctx, State &state, const Action &action)
 
 ## Event Hook (phase 4)
 
-`on_event` is the unified hook. It sees framework intents and capability events as one stream and returns an optional action. The legacy `map_intent` / `map_event` bridges remain available while older examples migrate.
+`on_event` is the unified hook. It sees framework intents and capability events as one stream and returns an optional action.
 
 ```cpp
 std::optional<Action> on_event(blusys::event e, State &state)
@@ -134,17 +134,9 @@ void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, State & /*state*/, std::u
 ## Entry Points
 
 ```cpp
-// Host-first interactive — SDL2 window on PC
-BLUSYS_APP_MAIN_HOST(spec)
+// Interactive app — host SDL or device LCD + input
+BLUSYS_APP(spec)
 
-// Host with explicit window size and title
-BLUSYS_APP_MAIN_HOST_PROFILE(spec, blusys::host_profile{
-    .hor_res = 320, .ver_res = 240, .title = "My App"
-})
-
-// Device interactive — LCD + optional encoder
-BLUSYS_APP_MAIN_DEVICE(spec, profile)
-
-// Headless — no UI, terminal / ESP32
-BLUSYS_APP_MAIN_HEADLESS(spec)
+// Headless app — no UI, terminal / ESP32
+BLUSYS_APP_HEADLESS(spec)
 ```

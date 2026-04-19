@@ -10,7 +10,7 @@
 //
 //   auto profile = blusys::platform::st7735_160x128();
 //   profile.lcd.spi.bl_pin = 4;  // product-specific backlight pin
-//   BLUSYS_APP_MAIN_DEVICE(spec, profile)
+//   BLUSYS_APP(spec)
 
 #include "blusys/framework/platform/profile.hpp"
 #include "blusys/drivers/panels/st7735.h"

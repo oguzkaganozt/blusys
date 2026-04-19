@@ -48,9 +48,9 @@ These ship with the host harness and do not require hardware:
 |--------|---------|
 | `capability_contract_smoke` | Static checks that capability integration event IDs stay in their reserved bands |
 | `handheld_starter_reducer_smoke` | Exercises `blusys_examples::clamp_percent` shared with handheld quickstart reducers |
-| `panel_connectivity_map_smoke` | `panel_connectivity_event_triggers_sync` parity with the surface_ops_panel `map_event` bridge |
+| `panel_connectivity_map_smoke` | `panel_connectivity_event_triggers_sync` parity with the surface_ops_panel `on_event` bridge |
 | `operational_phase_smoke` | Runtime checks for the headless-telemetry-style operational phase state machine |
-| `connected_headless_host` | Headless `blusys::app` loop with connectivity + storage host stubs and a broad `map_event` bridge |
+| `connected_headless_host` | Headless `blusys::app` loop with connectivity + storage host stubs and a broad `on_event` bridge |
 
 ## Build and run
 

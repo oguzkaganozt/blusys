@@ -10,7 +10,11 @@
 #include "blusys/framework/platform/reference_build.hpp"
 #include "blusys/framework/platform/dashboard_display_dims.hpp"
 
-#if defined(ESP_PLATFORM)
+#ifndef BLUSYS_DEVICE_BUILD
+#define BLUSYS_DEVICE_BUILD 0
+#endif
+
+#if BLUSYS_DEVICE_BUILD
 #include "sdkconfig.h"
 #include "blusys/framework/platform/profiles/ili9341.hpp"
 #include "blusys/framework/platform/profiles/ili9488.hpp"
@@ -23,7 +27,7 @@ namespace blusys {
 
 // ---- handheld interactive (ST7735 / ST7789 + host) ----
 
-#if defined(ESP_PLATFORM)
+#if BLUSYS_DEVICE_BUILD
 
 [[nodiscard]] inline device_profile auto_profile_interactive()
 {
@@ -39,7 +43,7 @@ namespace blusys {
 
 #endif
 
-#if defined(BLUSYS_FRAMEWORK_HAS_UI) && !defined(ESP_PLATFORM)
+#if defined(BLUSYS_FRAMEWORK_HAS_UI) && !BLUSYS_DEVICE_BUILD
 
 [[nodiscard]] inline host_profile auto_host_profile_interactive(const char *window_title = nullptr)
 {
@@ -53,19 +57,19 @@ namespace blusys {
 
 [[nodiscard]] inline device_profile auto_profile_dashboard()
 {
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
+#if BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
     CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB
     return blusys::platform::qemu_rgb_dashboard_320x240();
-#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
+#elif BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
     return blusys::platform::ili9488_480x320();
-#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
+#elif BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
     return blusys::platform::st7735_160x128();
-#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
+#elif BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306
     return blusys::platform::ssd1306_128x64();
-#elif defined(ESP_PLATFORM)
+#elif BLUSYS_DEVICE_BUILD
     return blusys::platform::ili9341_320x240();
 #else
     device_profile p{};
@@ -77,7 +81,7 @@ namespace blusys {
 #endif
 }
 
-#if defined(BLUSYS_FRAMEWORK_HAS_UI) && !defined(ESP_PLATFORM)
+#if defined(BLUSYS_FRAMEWORK_HAS_UI) && !BLUSYS_DEVICE_BUILD
 
 [[nodiscard]] inline host_profile auto_host_profile_dashboard(const char *title)
 {
@@ -92,19 +96,19 @@ namespace blusys {
 
 [[nodiscard]] inline const char *dashboard_profile_label()
 {
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
+#if BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
     CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB
     return "QEMU RGB 320x240";
-#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
+#elif BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
     return "ILI9488 480x320";
-#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
+#elif BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
     return "ST7735 160x128";
-#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
+#elif BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306
     return "SSD1306 128x64";
-#elif defined(ESP_PLATFORM)
+#elif BLUSYS_DEVICE_BUILD
     return "ILI9341 320x240";
 #elif defined(BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE) && (BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE == 1)
     return "Host SDL 480x320";
@@ -117,19 +121,19 @@ namespace blusys {
 
 [[nodiscard]] inline const char *dashboard_hardware_label()
 {
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
+#if BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB) && \
     CONFIG_BLUSYS_DASHBOARD_LCD_QEMU_RGB
     return "QEMU virtual panel";
-#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
+#elif BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488
     return "ILI9488 reference";
-#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
+#elif BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735
     return "ST7735 reference";
-#elif defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
+#elif BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306) && \
     CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_SSD1306
     return "SSD1306 I2C OLED";
-#elif defined(ESP_PLATFORM)
+#elif BLUSYS_DEVICE_BUILD
     return "ILI9341 reference";
 #else
     return "Host simulation";

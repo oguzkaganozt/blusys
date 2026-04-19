@@ -495,7 +495,7 @@ dispatch with the macros from Step 3a.
 This header provides compile-time display tier constants for `if constexpr` structural layout
 branching. It consumes the Step 3a macros directly — no Kconfig dispatch lives here.
 
-Coverage: `BLUSYS_APP_DASHBOARD` profiles only. Developers using `BLUSYS_APP_MAIN_DEVICE`
+Coverage: `BLUSYS_APP` interactive builds only. Developers using `BLUSYS_APP`
 with custom profiles call `blusys::tier_for(w, h)` directly.
 
 ```cpp
@@ -503,7 +503,7 @@ with custom profiles call `blusys::tier_for(w, h)` directly.
 
 // Compile-time display tier helpers for if constexpr structural layout branching.
 //
-// Usage (BLUSYS_APP_DASHBOARD builds):
+// Usage (BLUSYS_APP builds):
 //
 //   #include "blusys/framework/platform/display_constants.hpp"
 //
@@ -516,7 +516,7 @@ with custom profiles call `blusys::tier_for(w, h)` directly.
 // kDisplayWidth, kDisplayHeight, and kDisplayTier are sourced from
 // dashboard_display_dims.hpp (single source for the Kconfig/host dispatch).
 //
-// For BLUSYS_APP_MAIN_DEVICE with a custom profile, use tier_for(w, h) directly:
+// For BLUSYS_APP with a custom profile, use tier_for(w, h) directly:
 //   if constexpr (blusys::tier_for(MY_W, MY_H) == blusys::display_tier::compact)
 
 #include "blusys/framework/platform/dashboard_display_dims.hpp"
@@ -771,7 +771,8 @@ No app code changes needed. `run_device()` auto-routes through `for_display()`.
 ```cpp
 // Same code, correct UI on both ST7735 (160×128) and ILI9341 (320×240).
 // Only sdkconfig changes between builds.
-BLUSYS_APP_DASHBOARD(spec, "My Product");
+spec.host_title = "My Product";
+BLUSYS_APP(spec);
 ```
 
 ### Custom base theme
@@ -783,7 +784,8 @@ blusys::theme_tokens my_theme = blusys::app::presets::expressive_dark();
 my_theme.color_primary = lv_color_hex(0xFF6600);  // custom brand colour
 // Pass via spec.theme — for_display() scales it for the actual display.
 spec.theme = &my_theme;
-BLUSYS_APP_MAIN_DEVICE(spec, profile);
+spec.profile = &profile;
+BLUSYS_APP(spec);
 ```
 
 ### Structural layout branching

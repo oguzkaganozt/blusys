@@ -610,7 +610,18 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
 
     cap_list = ", ".join(capability_refs)
     ui_include = '#include "ui/app_ui.hpp"\n' if interface != "headless" else ""
+    profile_block = ""
+    spec_tail_fields = ""
     if interface != "headless":
+        spec_tail_fields = f'    .host_title = "{project_title}",\n'
+        if interface == "surface":
+            profile_block = (
+                "static const blusys::device_profile dashboard_profile = "
+                "blusys::platform::auto_profile_dashboard();\n\n"
+            )
+            spec_tail_fields = (
+                "    .profile = &dashboard_profile,\n" + spec_tail_fields
+            )
         ui_fields = (
             f"    .on_init = {namespace_name}::ui::on_init,\n"
             f"    .on_event = {namespace_name}::on_event,\n"
@@ -622,8 +633,8 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
         )
     entry = {
         "handheld": f"BLUSYS_APP({namespace_name}::system::spec)",
-        "surface": f'BLUSYS_APP_DASHBOARD({namespace_name}::system::spec, "{project_title}")',
-        "headless": f"BLUSYS_APP_MAIN_HEADLESS({namespace_name}::system::spec)",
+        "surface": f"BLUSYS_APP({namespace_name}::system::spec)",
+        "headless": f"BLUSYS_APP_HEADLESS({namespace_name}::system::spec)",
     }[interface]
     return f"""#include \"core/app_logic.hpp\"
 {ui_include}
@@ -641,14 +652,14 @@ namespace {namespace_name}::system {{
 
 {os.linesep.join(instances)}
 
-blusys::capability_list_storage capabilities{{{cap_list}}};
+{profile_block}blusys::capability_list_storage capabilities{{{cap_list}}};
 
 const blusys::app_spec<app_state, action> spec{{
     .initial_state = {{}},
     .update = update,
 {ui_fields}    .tick_period_ms = 100,
     .capabilities = &capabilities,
-}};
+{spec_tail_fields}}};
 
 }}  // namespace {namespace_name}::system
 

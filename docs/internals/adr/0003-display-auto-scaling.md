@@ -89,9 +89,9 @@ different layouts on different display classes. The dead branch is eliminated by
   proportional resizing automatically. Structural layout changes (e.g., 3-column row → 1-column
   stack) cannot be inferred from dimensions alone. The developer uses `kDisplayTier` for these.
 
-- **`display_constants.hpp` covers `BLUSYS_APP_DASHBOARD` profiles only.** Developers using
-  `BLUSYS_APP_MAIN_DEVICE` with custom profiles use `blusys::tier_for(w, h)` directly instead
-  of `kDisplayTier`.
+- **`display_constants.hpp` covers `BLUSYS_APP` interactive builds only.** Developers using
+  `BLUSYS_APP` with custom profiles use `blusys::tier_for(w, h)` directly instead of
+  `kDisplayTier`.
 
 ## Alternatives Considered
 

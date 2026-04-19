@@ -3,7 +3,7 @@
  * Wraps app_runtime<State, Action> with a manually-advanced clock so tests
  * can drive the reducer deterministically: no sleep, no SDL, no real timer.
  * The harness is the canonical host iteration loop described in P0c — any
- * test writing a blusys app spec uses it instead of BLUSYS_APP_MAIN_HEADLESS.
+ * test writing a blusys app spec uses it instead of BLUSYS_APP_HEADLESS.
  *
  * Typical shape:
  *

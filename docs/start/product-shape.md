@@ -42,7 +42,7 @@ For historical minimal connectivity demos (kept for regression), see `examples/v
 
 ## Capabilities and policies
 
-- **Capabilities** are composed in **`platform/`**; the reducer receives work via **actions**; capability events map to actions in **`platform/`** (see [Capability composition](../app/capability-composition.md)).
+- **Capabilities** are composed in **`platform/`**; the reducer receives work via **actions**; capability events are handled in **`platform/on_event`** (see [Capability composition](../app/capability-composition.md)).
 - **Policies** adjust defaults and integration overlays (e.g. power-related `sdkconfig` fragments) without adding a new capability kind.
 
 Dependency and target rules (e.g. `telemetry` requires `connectivity`, `usb` targets ESP32-S3) are enforced by the generator and listed under **`blusys create --list`**.
@@ -59,7 +59,7 @@ update `EXTRA_COMPONENT_DIRS` or vendor the platform components — see
 ## Rules
 
 - No raw LVGL in normal product screens — use `blusys::` UI helpers, stock widgets, and the custom widget contract.
-- Keep **`platform/`** thin: profiles, capability list, `map_event`, bridges; heavy logic stays in **`core/`**.
+- Keep **`platform/`** thin: profiles, capability list, `on_event`, bridges; heavy logic stays in **`core/`**.
 
 ## Next pages
 

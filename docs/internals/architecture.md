@@ -139,13 +139,11 @@ Normal product code only touches this layer.
 
 - `app.hpp` — umbrella include for the product API
 - `spec.hpp` — `app_spec<State, Action>` template: initial state, `update()` reducer,
-  lifecycle hooks (`on_init`, `on_tick`), intent and event bridges, capability config, theme
+  lifecycle hooks (`on_init`, `on_tick`, `on_event`), capability config, theme
 - `ctx.hpp` — `app_ctx`: dispatch actions, emit feedback, query capability status,
   `product_state`, connectivity helpers; `fx()` returns `app_fx &` for typed
   navigation/storage
-- `services.hpp` — legacy runtime bridge used by framework wiring only
-- `entry.hpp` — entry macros: `BLUSYS_APP_MAIN_HOST(spec)`,
-  `BLUSYS_APP_MAIN_HEADLESS(spec)`, `BLUSYS_APP_MAIN_DEVICE(spec, profile)`
+- `entry.hpp` — entry macros: `BLUSYS_APP(spec)` and `BLUSYS_APP_HEADLESS(spec)`
 - `internal/app_runtime.hpp` — runtime engine (internal, driven by the entry macros)
 
 **View layer** (`include/blusys/framework/ui/`, gated by `BLUSYS_BUILD_UI`):
@@ -169,7 +167,7 @@ Internal framework spine. Product code does not interact with it directly.
 - `router.hpp` — six route commands (`set_root`, `push`, `replace`, `pop`,
   `show_overlay`, `hide_overlay`) plus a `route_sink` interface
 - `event_queue.hpp` — event ring buffer and dispatch helpers
-- `intent.hpp` — nine semantic intents (`press`/`long_press`/`release`/`confirm`/
+- `event.hpp` — semantic intents (`press`/`long_press`/`release`/`confirm`/
   `cancel`/`increment`/`decrement`/`focus_next`/`focus_prev`) and the `app_event` envelope
 
 #### Feedback (`include/blusys/framework/feedback/`)
@@ -198,7 +196,7 @@ headers from within the framework layer.
 - `input/encoder.hpp` — `create_encoder_group` + `auto_focus_screen`
 - `binding/bindings.hpp` — reactive data bindings for text, value, enabled, visible
 - `binding/action_widgets.hpp` — pre-built action-dispatching widgets
-- `composition/` — `page`, `screen_registry`, `screen_router`, `shell`, `overlay_manager`
+- `composition/` — `page`, `screen_registry`, `screen_router`, `shell`, `overlay_manager`, `controller/navigation_controller`
 
 Authoring contract: every widget follows the six-rule contract (theme tokens only,
 config struct interface, setters own state transitions, standard state set, one folder

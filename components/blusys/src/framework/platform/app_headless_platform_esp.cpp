@@ -1,8 +1,8 @@
-// Headless platform helpers on ESP-IDF (BLUSYS_APP_MAIN_HEADLESS).
+// Headless platform helpers on ESP-IDF (BLUSYS_APP_HEADLESS).
 //
 // Mirrors scripts/host/src/app_headless_platform.cpp for desktop.
 
-#ifdef ESP_PLATFORM
+#if BLUSYS_DEVICE_BUILD
 
 #include "esp_timer.h"
 
@@ -25,4 +25,4 @@ void headless_delay(std::uint32_t ms)
 
 }  // namespace blusys::platform
 
-#endif  // ESP_PLATFORM
+#endif  // BLUSYS_DEVICE_BUILD

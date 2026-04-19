@@ -1,7 +1,6 @@
 #pragma once
 
 #include "blusys/framework/app/fx.hpp"
-#include "blusys/framework/app/services.hpp"
 #include "blusys/framework/capabilities/list.hpp"
 #include "blusys/framework/feedback/feedback.hpp"
 
@@ -19,18 +18,6 @@ class app_runtime_base;
 
 class app_ctx {
 public:
-    // ---- routing / UI / FS (legacy bridge; runtime wiring only) ----
-
-    [[nodiscard]] app_services &services() noexcept
-    {
-        return *services_;
-    }
-
-    [[nodiscard]] const app_services &services() const noexcept
-    {
-        return *services_;
-    }
-
     [[nodiscard]] app_fx &fx() noexcept
     {
         return fx_;
@@ -158,7 +145,6 @@ private:
     dispatch_fn           dispatch_fn_   = nullptr;
     void                 *runtime_ptr_   = nullptr;
     void                 *product_state_ = nullptr;
-    app_services         *services_      = nullptr;
     app_fx                fx_            = {};
 
     // Non-owning view of the product's composed capability list. Set by the

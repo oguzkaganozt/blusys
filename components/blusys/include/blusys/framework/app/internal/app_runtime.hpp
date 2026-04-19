@@ -60,11 +60,6 @@ protected:
         ctx.product_state_ = state;
     }
 
-    static void bind_services_ptr(app_ctx &ctx, app_services *svc)
-    {
-        ctx.services_ = svc;
-    }
-
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
     static void bind_fx_navigation(app_ctx &ctx, navigation_controller *ctrl)
     {
@@ -91,27 +86,6 @@ protected:
     {
         ctx.fx_.bind_build(build);
     }
-
-    static void wire_route_sink(app_services &svc, blusys::route_sink *sink)
-    {
-        svc.route_sink_ = sink;
-    }
-
-#ifdef BLUSYS_FRAMEWORK_HAS_UI
-    static void wire_screen_router(app_services &svc, screen_router *router)
-    {
-        svc.screen_router_ = router;
-    }
-
-    static void wire_shell(app_services &svc, shell *shell)
-    {
-        svc.shell_ = shell;
-    }
-#endif
-
-    // Defined in ctx.cpp so storage.hpp does not leak into every header
-    // that pulls app_runtime.hpp.
-    static void sync_services_storage(app_ctx &ctx, app_services &svc);
 
     static void bind_capabilities(app_ctx &ctx, capability_list *capabilities)
     {
@@ -150,16 +124,11 @@ public:
             return err;
         }
 
-        bind_services_ptr(ctx_, &services_);
-        wire_route_sink(services_, &route_sink_ref());
-
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
-        wire_screen_router(services_, &screen_router_);
         screen_router_.bind_ctx(&ctx_);
 
         if (spec_.shell != nullptr) {
             shell_ = shell_create(*spec_.shell);
-            wire_shell(services_, &shell_);
             shell_load(shell_);
             screen_router_.bind_shell(shell_.content_area);
             shell_.router = &screen_router_;
@@ -176,7 +145,6 @@ public:
         bind_fx_storage(ctx_, ctx_.get<storage_capability>());
         bind_fx_persistence(ctx_, ctx_.get<persistence_capability>());
         start_capabilities();
-        sync_services_storage(ctx_, services_);
         bind_product_state(ctx_, static_cast<void *>(&state_));
 
         start_flows();
@@ -382,7 +350,6 @@ private:
     spec_type                                            spec_;
     State                                                state_;
     app_ctx                                              ctx_{};
-    app_services                                         services_{};
     blusys::runtime                           framework_runtime_{};
     blusys::ring_buffer<Action, ActionQueueCap>          action_queue_{};
     detail::feedback_logging_sink                        feedback_logging_sink_{};

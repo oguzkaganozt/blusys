@@ -785,6 +785,20 @@ examples:
   - telemetry
   policies:
   - low_power
+- name: external
+  category: validation
+  visibility: internal
+  tier: framework
+  targets:
+  - esp32
+  - esp32c3
+  - esp32s3
+  ci_pr: false
+  ci_nightly: true
+  interface: headless
+  capabilities: []
+  policies: []
+  layout_exempt: true
 - name: network_services
   category: validation
   visibility: internal

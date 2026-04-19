@@ -17,7 +17,7 @@ Forkable **handheld** interactive reference: compact, tactile, encoder-first con
 
 - `core/` — `state`, `action`, `update()`, accent names, intent mapping
 - `ui/` — screen factories registered on `screen_router`, shell tabs
-- `integration/` — `app_spec`, ST7735/ST7789/host profile, capabilities, `map_event`
+- `platform/` — `app_spec`, ST7735/ST7789/host profile, capabilities, `on_event`
 
 ## Run
 
@@ -39,7 +39,7 @@ When forking into a new product:
 
 1. `core/app_logic.{hpp,cpp}` — replace the state/action model and `update()` body; keep the reducer pattern.
 2. `ui/app_ui.{hpp,cpp}` and `ui/panels.{hpp,cpp}` — rename/restyle screens; keep routing through `screen_router` and dispatch via actions.
-3. `platform/app_main.cpp` — swap profile, adjust the `capability_list`, and update `map_event` for any new capability events.
+3. `platform/app_main.cpp` — swap profile, adjust the `capability_list`, and update `on_event` for any new capability events.
 
 When adding a new capability, see [Authoring a capability](../../../docs/app/capability-authoring.md).
 

@@ -16,7 +16,7 @@ Forkable **BLE HID** reference: three buttons on a headless device pair with any
 ## Layout
 
 - `main/core/` — `state`, `action`, `update()`; reducer stays free of radio calls (talks to HID through an injected function pointer).
-- `main/platform/` — capability instantiation, button wiring, LED wiring, `on_init` hooks, `BLUSYS_APP_MAIN_HEADLESS` entry.
+- `main/platform/` — capability instantiation, button wiring, LED wiring, `on_init` hooks, `BLUSYS_APP_HEADLESS` entry.
 - `main/Kconfig.projbuild` — GPIO assignments and advertised device name.
 
 ## Run

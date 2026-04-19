@@ -4,7 +4,7 @@
 // usual ST7735 vs ST7789 vs host matrix into one place per product entry file.
 //
 // For profile-neutral spellings (version string, shell config, host window), prefer
-// `blusys/app/build_profile.hpp` in new integration code.
+// `blusys/framework/platform/build.hpp` in new integration code.
 
 #include "blusys/framework/platform/layout_surface.hpp"
 #include "blusys/framework/platform/profile.hpp"
@@ -12,11 +12,15 @@
 
 #include <cstdint>
 
-#ifdef BLUSYS_FRAMEWORK_HAS_UI
+#ifndef BLUSYS_DEVICE_BUILD
+#define BLUSYS_DEVICE_BUILD 0
+#endif
+
+#if defined(BLUSYS_FRAMEWORK_HAS_UI) && !BLUSYS_DEVICE_BUILD
 #include "blusys/framework/platform/host.hpp"
 #endif
 
-#if defined(ESP_PLATFORM)
+#if BLUSYS_DEVICE_BUILD
 #include "sdkconfig.h"
 #include "blusys/framework/platform/profiles/st7735.hpp"
 #include "blusys/framework/platform/profiles/st7789.hpp"
@@ -28,7 +32,7 @@
 
 namespace blusys::platform {
 
-#if defined(ESP_PLATFORM) && defined(CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789) && \
+#if BLUSYS_DEVICE_BUILD && defined(CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789) && \
     CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789
 inline device_profile interactive_device_profile()
 {
@@ -38,7 +42,7 @@ inline device_profile interactive_device_profile()
 inline const char *interactive_display_label() { return "ST7789 320x240"; }
 inline const char *interactive_hardware_label() { return "ST7789 reference"; }
 
-#elif defined(ESP_PLATFORM)
+#elif BLUSYS_DEVICE_BUILD
 
 inline device_profile interactive_device_profile()
 {

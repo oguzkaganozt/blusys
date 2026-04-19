@@ -29,5 +29,6 @@ Internal CI / hardware smoke. Not the primary learning path.
 - **wireless_esp_lab** / **wireless_bt_lab** — RF stacks
 - **usb_peripheral_lab** — USB host / device / HID
 - **headless_telemetry_low_power** — low-power telemetry profile
+- **external** — umbrella-header external-shape validation sample
 - **connected_device** / **connected_headless** — regression coverage (superseded by quickstarts)
 - **framework_device_basic** — device profile smoke build

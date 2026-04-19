@@ -52,7 +52,7 @@ you'd rather not pass `--admin-password`.
 ## Event protocol
 
 Reserved integration event IDs — posted by `atlas_capability` into the
-blusys runtime and delivered to the reducer via `app_spec::map_event`
+blusys runtime and delivered to the reducer via `app_spec::on_event`
 (as `capability_event_tag::integration_passthrough`):
 
 | ID       | Symbol                            | Meaning                                |

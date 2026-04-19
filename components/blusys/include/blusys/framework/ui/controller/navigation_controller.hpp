@@ -2,14 +2,19 @@
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 
-#include "blusys/framework/ui/composition/screen_router.hpp"
-#include "blusys/framework/ui/composition/shell.hpp"
+#include "blusys/framework/ui/composition/screen_registry.hpp"
+#include "blusys/framework/ui/widgets/overlay.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
 
 namespace blusys {
+
+class screen_router;
+struct shell;
+struct screen_registration;
+struct shell_tab_item;
 
 // navigation_controller — single owner of screen routing, overlays,
 // focus management, and shell chrome. Product code interacts only through
@@ -65,15 +70,10 @@ public:
     // ---- shell surface accessors ----
 
     [[nodiscard]] bool      has_shell()      const { return shell_ != nullptr; }
-    [[nodiscard]] lv_obj_t *content_area()   const;
+    void                    set_title(const char *title) const;
     [[nodiscard]] lv_obj_t *shell_root()     const;
-    [[nodiscard]] lv_obj_t *status_surface() const;
-
-    void set_title(const char *title);
-
-    // ---- navigation state ----
-
-    [[nodiscard]] std::size_t stack_depth() const;
+    [[nodiscard]] lv_obj_t *status_surface()  const;
+    [[nodiscard]] lv_obj_t *content_area()   const;
 
     // ---- route dispatch (used by nav_fx) ----
 

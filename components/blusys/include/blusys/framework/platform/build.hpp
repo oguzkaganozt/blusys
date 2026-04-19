@@ -1,11 +1,15 @@
 #pragma once
 
 // Interface-neutral aliases for the stock interactive ST7735 / ST7789 / SDL host matrix.
-// Prefer these names in new integration entry files; `reference_build_profile.hpp` remains
-// the implementation source.
+// Prefer these names in new integration entry files; `reference_build.hpp` remains the
+// implementation source.
 
 #include "blusys/framework/platform/auto.hpp"
 #include "blusys/framework/platform/reference_build.hpp"
+
+#ifndef BLUSYS_DEVICE_BUILD
+#define BLUSYS_DEVICE_BUILD 0
+#endif
 
 namespace blusys::platform {
 
@@ -14,7 +18,7 @@ namespace blusys::platform {
     return build_version_string();
 }
 
-#if defined(ESP_PLATFORM)
+#if BLUSYS_DEVICE_BUILD
 
 [[nodiscard]] inline device_profile device_profile_for_interactive()
 {
@@ -47,7 +51,7 @@ namespace blusys::platform {
     return interactive_shell_config_for_profile(prof);
 }
 
-#if !defined(ESP_PLATFORM)
+#if !BLUSYS_DEVICE_BUILD
 [[nodiscard]] inline host_profile host_window(const char *window_title)
 {
     return auto_host_profile_interactive(window_title);

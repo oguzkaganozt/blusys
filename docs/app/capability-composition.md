@@ -7,7 +7,7 @@ Capabilities are composed in `platform/` and translated into app actions.
 - keep capability config in `platform/`
 - keep product decisions in `core/`
 - keep rendering in `ui/`
-- map capability events into reducer actions in `platform/`
+- handle capability events in `platform/on_event`
 - query capability status through `app_ctx` (use `ctx.fx()` for routing/UI reactions when needed)
 
 ## Typical stacks
@@ -51,9 +51,9 @@ Starter: `examples/quickstart/headless/` (optional local UI depends on build/pro
 If a capability changes app behavior, emit an action.
 If it only wires runtime services, keep it in `platform/`.
 
-## Event IDs And `map_event`
+## Event IDs And `on_event`
 
-Each capability posts integration events in a reserved numeric range (see `blusys::capability.hpp`). In `platform/`, implement `map_event` to translate those IDs into product `Action` values. Prefer handling at least:
+Each capability posts integration events in a reserved numeric range (see `blusys::capability.hpp`). In `platform/`, implement `on_event` to translate those IDs into product `Action` values. Prefer handling at least:
 
 | Source | Typical events to surface |
 |--------|---------------------------|
@@ -68,16 +68,16 @@ Status-only updates can be ignored in the reducer if `app_ctx` queries are enoug
 
 ### Typed helpers and `std::variant` actions
 
-- Use `blusys::integration::*` (`as_*_event`, `kind_for_event_id`, and predicates such as `event_is_diagnostics_snapshot_or_ready`) to keep `map_event` small without hiding the translation table.
-- For products that want exhaustiveness on actions, the optional path is `std::variant<...>` for `Action` plus `blusys::dispatch_variant` (`blusys/app/integration.hpp` / `variant_dispatch.hpp`). The default remains a plain tagged struct or enum.
+- Use `blusys::integration::*` (`as_*_event`, `kind_for_event_id`, and predicates such as `event_is_diagnostics_snapshot_or_ready`) to keep `on_event` small without hiding the translation table.
+- For products that want exhaustiveness on actions, the optional path is `std::variant<...>` for `Action` plus `blusys::dispatch_variant` (`blusys/framework/app/variant_dispatch.hpp`). The default remains a plain tagged struct or enum.
 
 ## Stock Flows And Screens
 
 Operational UI (`blusys::flows::*`, `blusys::screens::*`) stays LVGL-backed and must not call runtime services directly. Wire buttons through `app_ctx::dispatch`, `error_panel_dispatch`, `confirmation_dispatch`, or `app_ctx::request_connectivity_reconnect()` as appropriate; use `ctx.fx()` only for framework-approved navigation/routing from UI callbacks that already hold `app_ctx`.
 
-## Reference `map_event` Implementation
+## Reference `on_event` Implementation
 
-For a full reducer-facing translation table, see `map_event` in `examples/quickstart/headless/main/platform/app_main.cpp` — the headless quickstart composes all major capabilities (connectivity, storage, OTA, diagnostics, telemetry, lan_control) and shows the complete event mapping pattern.
+For a full reducer-facing translation table, see `on_event` in `examples/quickstart/headless/main/platform/app_main.cpp` — the headless quickstart composes all major capabilities (connectivity, storage, OTA, diagnostics, telemetry, lan_control) and shows the complete event handling pattern.
 
 Keep product-specific tags in `core/`; only `platform/` should map raw integration event IDs to those tags.
 

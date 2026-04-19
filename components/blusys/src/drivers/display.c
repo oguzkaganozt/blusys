@@ -18,6 +18,8 @@
 
 #define DISPLAY_DOMAIN err_domain_driver_display
 
+typedef void (*display_flush_fn_t)(blusys_display_t *ui, const lv_area_t *area, uint8_t *px_map);
+
 static blusys_err_t display_oom(const char *site, size_t bytes)
 {
     blusys_counter_inc(DISPLAY_DOMAIN, 1);
@@ -49,6 +51,7 @@ struct blusys_display {
     SemaphoreHandle_t       done_sem;
     volatile bool           running;
     blusys_display_panel_kind_t  panel_kind;
+    display_flush_fn_t      flush_fn;
     uint32_t                panel_width;
     uint32_t                panel_height;
 };
@@ -89,15 +92,43 @@ static void flush_mono_page_pack(blusys_display_t *ui, const lv_area_t *area,
 }
 
 static void flush_mono_page(blusys_display_t *ui, const lv_area_t *area,
-                            const uint8_t *px_map)
+                            uint8_t *px_map)
 {
-    flush_mono_page_pack(ui, area, px_map);
+    flush_mono_page_pack(ui, area, (const uint8_t *)px_map);
     blusys_err_t err = blusys_lcd_draw_bitmap(ui->lcd,
                            0, 0, (int32_t)ui->panel_width, (int32_t)ui->panel_height,
                            ui->flush_buf);
     if (err != BLUSYS_OK)
         BLUSYS_LOG(BLUSYS_LOG_ERROR, DISPLAY_DOMAIN,
                    "lcd_draw_bitmap failed: %d (mono_page)", (int)err);
+}
+
+static void flush_rgb565_band(blusys_display_t *ui, const lv_area_t *area,
+                              const uint8_t *px_map,
+                              uint32_t area_w, uint32_t area_h,
+                              uint32_t row_bytes, uint32_t src_stride);
+static void flush_rgb565_row(blusys_display_t *ui, const lv_area_t *area,
+                             uint8_t *px_map,
+                             uint32_t area_w, uint32_t area_h,
+                             uint32_t row_bytes, uint32_t src_stride);
+
+/* RGB565 strategy — copies pixel rows into DMA scratch, byte-swaps
+ * in place if required, then sends each band to the LCD. */
+static void flush_rgb565(blusys_display_t *ui, const lv_area_t *area,
+                         uint8_t *px_map)
+{
+    lv_color_format_t cf = lv_display_get_color_format(ui->disp);
+    uint32_t area_w      = (uint32_t)(area->x2 - area->x1 + 1);
+    uint32_t area_h      = (uint32_t)(area->y2 - area->y1 + 1);
+    uint32_t row_bytes   = area_w * lv_color_format_get_size(cf);
+    uint32_t src_stride  = lv_draw_buf_width_to_stride(area_w, cf);
+
+    if (ui->flush_buf != NULL && ui->flush_buf_size >= row_bytes) {
+        flush_rgb565_band(ui, area, (const uint8_t *)px_map, area_w, area_h,
+                          row_bytes, src_stride);
+    } else {
+        flush_rgb565_row(ui, area, px_map, area_w, area_h, row_bytes, src_stride);
+    }
 }
 
 /* RGB565 band flush — copies pixel rows into DMA scratch, byte-swaps
@@ -161,28 +192,15 @@ static void flush_rgb565_row(blusys_display_t *ui, const lv_area_t *area,
 }
 
 /* ------------------------------------------------------------------ */
-/* LVGL flush callback — dispatches to panel-kind strategy helper      */
+/* LVGL flush callback — dispatches to the selected strategy helper    */
 /* ------------------------------------------------------------------ */
 static void flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
     blusys_display_t *ui = lv_display_get_user_data(disp);
 
-    if (ui->panel_kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE) {
-        flush_mono_page(ui, area, px_map);
-        lv_display_flush_ready(disp);
-        return;
+    if (ui->flush_fn != NULL) {
+        ui->flush_fn(ui, area, px_map);
     }
-
-    lv_color_format_t cf = lv_display_get_color_format(disp);
-    uint32_t area_w      = (uint32_t)(area->x2 - area->x1 + 1);
-    uint32_t area_h      = (uint32_t)(area->y2 - area->y1 + 1);
-    uint32_t row_bytes   = area_w * lv_color_format_get_size(cf);
-    uint32_t src_stride  = lv_draw_buf_width_to_stride(area_w, cf);
-
-    if (ui->flush_buf != NULL && ui->flush_buf_size >= row_bytes)
-        flush_rgb565_band(ui, area, px_map, area_w, area_h, row_bytes, src_stride);
-    else
-        flush_rgb565_row(ui, area, px_map, area_w, area_h, row_bytes, src_stride);
     lv_display_flush_ready(disp);
 }
 
@@ -260,6 +278,9 @@ blusys_err_t blusys_display_open(const blusys_display_config_t *config,
     lv_display_set_color_format(ui->disp, LV_COLOR_FORMAT_RGB565);
     lv_display_set_user_data(ui->disp, ui);
     lv_display_set_flush_cb(ui->disp, flush_cb);
+    ui->flush_fn = (ui->panel_kind == BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE)
+                       ? flush_mono_page
+                       : flush_rgb565;
 
     /* MONO_PAGE forces full-refresh: page buffer is rebuilt whole on each flush. */
     bool full_refresh = config->full_refresh ||

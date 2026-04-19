@@ -1,4 +1,4 @@
-#if defined(BLUSYS_FRAMEWORK_HAS_UI) && defined(ESP_PLATFORM)
+#if defined(BLUSYS_FRAMEWORK_HAS_UI) && BLUSYS_DEVICE_BUILD
 
 #include "blusys/framework/platform/button_array_bridge.hpp"
 #include "blusys/hal/log.h"
@@ -104,4 +104,4 @@ void button_array_close(button_array_bridge *bridge)
 
 }  // namespace blusys
 
-#endif  // BLUSYS_FRAMEWORK_HAS_UI && ESP_PLATFORM
+#endif  // BLUSYS_FRAMEWORK_HAS_UI && BLUSYS_DEVICE_BUILD

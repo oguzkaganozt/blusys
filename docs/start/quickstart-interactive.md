@@ -59,7 +59,7 @@ my_product/
       panels.cpp
       app_ui.cpp       — screen factories, shell chrome wiring
     platform/
-      app_main.cpp     — app_spec wiring + BLUSYS_APP_MAIN_HOST(spec) macro
+      app_main.cpp     — app_spec wiring + BLUSYS_APP(spec) macro
   host/
     CMakeLists.txt     — standalone PC build (cmake -S host -B build-host)
 ```
@@ -69,5 +69,5 @@ my_product/
 - [Product shape](product-shape.md) — choose interface, capabilities, and policies
 - [Reducer Model](../app/reducer-model.md) — understand state, actions, and `update()`
 - [Views & Widgets](../app/views-and-widgets.md) — build screens with stock widgets
-- [Profiles](../app/profiles.md) — target a real device with `BLUSYS_APP_MAIN_DEVICE`
+- [Profiles](../app/profiles.md) — target a real device with `BLUSYS_APP` and a device profile
 - [Capabilities](../app/capabilities.md) — add WiFi and storage

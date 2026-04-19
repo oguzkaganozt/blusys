@@ -35,8 +35,9 @@ struct capability_list;  // forward declaration — include capability_list.hpp 
 // and may return an Action to dispatch.
 //
 // Alternative action models: you may use `std::variant<...>` as `Action` if every
-// alternative is dispatchable from `ctx.dispatch`. Use `blusys/app/integration.hpp`
-// if you need `dispatch_variant` from outside the reducer.
+// alternative is dispatchable from `ctx.dispatch`. Use
+// `blusys/framework/app/variant_dispatch.hpp` if you need `dispatch_variant`
+// from outside the reducer.
 
 template <typename State, typename Action>
 struct app_spec {

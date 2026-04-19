@@ -22,13 +22,6 @@ class navigation_controller;
 class diagnostics_capability;
 class build_info_capability;
 
-#ifndef ESP_PLATFORM
-struct blusys_fs;
-typedef struct blusys_fs blusys_fs_t;
-struct blusys_fatfs;
-typedef struct blusys_fatfs blusys_fatfs_t;
-#endif
-
 // Typed effect bridge for navigation, storage, diagnostics, and build info.
 //
 // nav provides the full navigation and registration surface; product code
@@ -136,24 +129,6 @@ public:
             hide_overlay(static_cast<std::uint32_t>(overlay));
         }
 
-        [[nodiscard]] std::size_t navigation_stack_depth() const
-        {
-#ifdef BLUSYS_FRAMEWORK_HAS_UI
-            return ctrl_ != nullptr ? ctrl_->stack_depth() : 0;
-#else
-            return 0;
-#endif
-        }
-
-        [[nodiscard]] bool can_navigate_back() const
-        {
-#ifdef BLUSYS_FRAMEWORK_HAS_UI
-            return ctrl_ != nullptr && ctrl_->stack_depth() > 1;
-#else
-            return false;
-#endif
-        }
-
         // ---- registration API ----
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
@@ -205,21 +180,20 @@ public:
             return create_overlay(parent, static_cast<std::uint32_t>(id), config);
         }
 
-        void set_tab_items(const ::blusys::shell_tab_item *items, std::size_t count)
-        {
-            if (ctrl_ != nullptr) ctrl_->set_tab_items(items, count);
-        }
-
-        // ---- shell surface accessors ----
-
         [[nodiscard]] bool has_shell() const
         {
             return ctrl_ != nullptr && ctrl_->has_shell();
         }
 
-        [[nodiscard]] lv_obj_t *content_area() const
+        void set_title(const char *title) const
         {
-            return ctrl_ != nullptr ? ctrl_->content_area() : nullptr;
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+            if (ctrl_ != nullptr) {
+                ctrl_->set_title(title);
+            }
+#else
+            (void)title;
+#endif
         }
 
         [[nodiscard]] lv_obj_t *shell_root() const
@@ -232,9 +206,14 @@ public:
             return ctrl_ != nullptr ? ctrl_->status_surface() : nullptr;
         }
 
-        void set_title(const char *title)
+        void set_tab_items(const ::blusys::shell_tab_item *items, std::size_t count)
         {
-            if (ctrl_ != nullptr) ctrl_->set_title(title);
+            if (ctrl_ != nullptr) ctrl_->set_tab_items(items, count);
+        }
+
+        [[nodiscard]] lv_obj_t *content_area() const
+        {
+            return ctrl_ != nullptr ? ctrl_->content_area() : nullptr;
         }
 #endif  // BLUSYS_FRAMEWORK_HAS_UI
 
@@ -251,7 +230,6 @@ public:
 
     class storage_fx {
     public:
-#ifdef ESP_PLATFORM
         [[nodiscard]] blusys_fs_t *spiffs() const
         {
             return storage_ != nullptr ? storage_->spiffs() : nullptr;
@@ -261,10 +239,6 @@ public:
         {
             return storage_ != nullptr ? storage_->fatfs() : nullptr;
         }
-#else
-        [[nodiscard]] blusys_fs_t *spiffs() const { return nullptr; }
-        [[nodiscard]] blusys_fatfs_t *fatfs() const { return nullptr; }
-#endif
 
     private:
         friend class app_fx;
