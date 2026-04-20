@@ -61,7 +61,7 @@ One ESP-IDF component (`components/blusys/`). Pure concept code on the left, esc
 ```mermaid
 flowchart TB
     prod["<b>Your product</b><br/>main/<br/>core · ui · platform"]
-    fw["<b>Framework</b><br/>pure C++<br/>app · capabilities · flows<br/>engine · feedback · ui"]
+    fw["<b>Framework</b><br/>pure C++<br/>app · capabilities · flows<br/>events · feedback · observe · ui"]
     hatch["main/platform/<br/>product escape hatch"]
     rt["<b>Runtime</b><br/>C<br/>services ➜ drivers ➜ HAL"]
     idf([ESP-IDF<br/>silicon])
@@ -85,7 +85,7 @@ flowchart TB
 
 **Rules** (enforced by `blusys lint`):
 - `hal` depends on nothing above it. `drivers` → `hal`. `services` → `hal` + `drivers`.
-- Pure framework (`app`, `capabilities`, `flows`, `engine`, `feedback`, `ui`) cannot include any lower layer. Only `framework/platform/` may bridge downward.
+- Pure framework (`app`, `capabilities`, `flows`, `events`, `feedback`, `observe`, `ui`) cannot include any lower layer. Only `framework/platform/` may bridge downward.
 - Product `core/` and `ui/` are framework-only (pure). `main/platform/` is the product-level escape hatch and may include any layer directly.
 
 | Layer | Role | Doc entry |
@@ -101,16 +101,18 @@ Module and example indices live in **`inventory.yml`** (CI and classification so
 
 ## Usage snippets
 
-**Product code (recommended):**
+Examples and product code include exactly one public header. Everything else is internal and enforced by `check-public-api.sh`.
+
+**C++ product code:**
 
 ```cpp
-#include "blusys/framework/app/app.hpp"
+#include <blusys/blusys.hpp>   // framework + capabilities + fx + hal + drivers + services
 ```
 
-**HAL and services (direct):**
+**C code (HAL / drivers / services / observe primitives):**
 
 ```c
-#include "blusys/blusys.h"   // umbrella: hal + drivers + services
+#include <blusys/blusys.h>
 ```
 
 **CMake `REQUIRES`:**
