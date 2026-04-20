@@ -19,7 +19,7 @@ Connectionless peer-to-peer wireless for ESP32 devices — no access point requi
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "blusys/connectivity/espnow.h"
+#include "blusys/blusys.h"
 
 static const uint8_t BROADCAST[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
 

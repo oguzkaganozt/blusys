@@ -7,7 +7,7 @@ Capacitive touch sensor: open one touch-capable GPIO and read filtered touch val
 ```c
 #include <stdint.h>
 
-#include "blusys/touch.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {

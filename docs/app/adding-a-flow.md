@@ -57,9 +57,9 @@ Subclass `flow_base`, register screens in `start()`, and add it to `spec.flows`:
 class my_wizard_flow : public blusys::flows::flow_base {
 public:
     void start(blusys::app_ctx &ctx) override {
-        // register screens with navigation_controller via ctx
-        ctx.nav().register_route(blusys::route::my_wizard_step1, my_step1_create);
-        ctx.nav().register_route(blusys::route::my_wizard_step2, my_step2_create);
+        // register screens through the navigation fx namespace
+        ctx.fx().nav.register_screen(RouteId::my_wizard_step1, my_step1_create);
+        ctx.fx().nav.register_screen(RouteId::my_wizard_step2, my_step2_create);
     }
 };
 ```

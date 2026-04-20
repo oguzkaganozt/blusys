@@ -233,4 +233,4 @@ No ISR-safe calls are defined for the SPI slave module.
 
 ## Example App
 
-See `examples/validation/spi_slave_basic/`.
+See `examples/validation/peripheral_lab/` (`periph_spi_slave` scenario).

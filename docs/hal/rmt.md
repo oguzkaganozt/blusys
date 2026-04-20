@@ -5,7 +5,7 @@ Timed digital pulse sequences: TX for generating IR codes and similar protocols,
 ## Quick Example
 
 ```c
-#include "blusys/rmt.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {
@@ -198,4 +198,4 @@ Waits for a pulse frame to complete (idle detected) and fills `pulses` with the 
 
 ## Example App
 
-See `examples/validation/rmt_basic/` (menuconfig: TX or RX mode).
+See `examples/validation/peripheral_lab/` (`periph_rmt` scenario — menuconfig: TX or RX mode).

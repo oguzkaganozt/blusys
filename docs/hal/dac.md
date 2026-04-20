@@ -7,7 +7,7 @@ On-chip digital-to-analog converter: write an 8-bit voltage level to a DAC-capab
 ```c
 #include <stdint.h>
 
-#include "blusys/dac.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {

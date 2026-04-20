@@ -314,4 +314,4 @@ The underlying receive completion is ISR-driven. The public `blusys_i2c_slave_re
 
 ## Example App
 
-See `examples/validation/i2c_slave_basic/`.
+See `examples/validation/peripheral_lab/` (`periph_i2c_slave` scenario).

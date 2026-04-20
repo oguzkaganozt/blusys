@@ -14,7 +14,7 @@ Self-organizing multi-hop mesh network built on the ESP-IDF `esp_mesh` stack. Ea
 
 ```c
 #include <string.h>
-#include "blusys/connectivity/wifi_mesh.h"
+#include "blusys/blusys.h"
 
 static void on_event(blusys_wifi_mesh_t *mesh, blusys_wifi_mesh_event_t event,
                      const blusys_wifi_mesh_event_info_t *info, void *ctx)

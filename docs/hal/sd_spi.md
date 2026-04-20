@@ -258,4 +258,4 @@ All operations on a handle are serialised with an internal mutex. Concurrent cal
 
 ## Example App
 
-See `examples/validation/sd_spi_basic/`.
+See `examples/validation/peripheral_lab/` (`periph_sd_spi` scenario).

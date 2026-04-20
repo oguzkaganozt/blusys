@@ -60,7 +60,7 @@ The reducer logs `phase=advertising → connected` and a running `vol_est` / `mu
 
 ## Extending the report map
 
-The HID report map (see `components/blusys/src/services/connectivity/ble_hid_device.c`, `kReportMap`) currently declares four consumer-control bits. To add media transport (Next/Prev) or keyboard reports, extend `kReportMap` and either widen the consumer byte or add a second report ID. See `docs/services/ble_hid_device.md` for the full service surface.
+The HID report map (see `components/blusys/src/services/net/ble_hid_device.c`, `kReportMap`) currently declares four consumer-control bits. To add media transport (Next/Prev) or keyboard reports, extend `kReportMap` and either widen the consumer byte or add a second report ID. See `docs/services/ble_hid_device.md` for the full service surface.
 
 ## Coexistence
 

@@ -237,8 +237,8 @@ All functions are serialized with an internal mutex. Concurrent calls on the sam
 ## Limitations
 
 - WiFi must be connected before calling `blusys_mdns_open()`.
-- This module requires the `espressif/mdns` managed component. Projects using mDNS must declare it as a dependency in `main/idf_component.yml`. See `examples/validation/mdns_basic/main/idf_component.yml` as reference.
+- This module requires the `espressif/mdns` managed component. Projects using mDNS must declare it as a dependency in `main/idf_component.yml`. See `examples/validation/network_services/main/idf_component.yml` as reference.
 
 ## Example App
 
-See `examples/validation/mdns_basic/`.
+See `examples/validation/network_services/` (`net_mdns` scenario).

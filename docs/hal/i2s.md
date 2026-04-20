@@ -7,7 +7,7 @@ Stereo audio streaming over I2S: TX for playback, RX for capture. Fixed to stand
 ```c
 #include <stdint.h>
 
-#include "blusys/i2s.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {
@@ -243,4 +243,4 @@ Reads captured audio samples into `buf`. Returns interleaved 16-bit stereo sampl
 
 ## Example App
 
-See `examples/validation/i2s_basic/` (menuconfig: TX or RX mode).
+See `examples/validation/peripheral_lab/` (I2S scenario — menuconfig: TX or RX mode).

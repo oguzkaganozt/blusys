@@ -5,7 +5,7 @@ Addressable LED strip driver supporting WS2812B, SK6812 (RGB and RGBW), WS2811, 
 ## Quick Example
 
 ```c
-#include "blusys/drivers/display/led_strip.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {

@@ -1,6 +1,6 @@
 # Headless (quickstart)
 
-Primary **headless connected** reference (`interface: headless` in `inventory.yml`): provisioning and Wi-Fi lifecycle live under **connectivity**; telemetry, diagnostics, OTA, storage, and lan_control are composed in `integration/` — all through `blusys::app` capabilities and a reducer-driven operational phase machine.
+Primary **headless connected** reference (`interface: headless` in `inventory.yml`): provisioning and Wi-Fi lifecycle live under **connectivity**; telemetry, diagnostics, OTA, storage, and lan_control are composed in `main/platform/` — all through `blusys::app` capabilities and a reducer-driven operational phase machine.
 
 ## Layout
 

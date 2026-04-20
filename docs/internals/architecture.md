@@ -64,7 +64,7 @@ Seven rules are enforced by CI:
 
 **Rule 3** — `services/` headers may not include `framework/` headers.
 
-**Rule 4** — Pure framework sub-dirs (`engine/`, `feedback/`, `ui/`, `app/`, `flows/`)
+**Rule 4** — Pure framework sub-dirs (`events/`, `feedback/`, `ui/`, `app/`, `flows/`, `observe/`)
 may not include `hal/`, `drivers/`, or `services/` headers, except:
 - `blusys/hal/log.h` and `blusys/hal/error.h` (cross-cutting utilities)
 - `framework/app/entry.hpp` (device boot bridge — guarded by `#ifdef ESP_PLATFORM`)
@@ -141,26 +141,35 @@ Normal product code only touches this layer.
 - `spec.hpp` — `app_spec<State, Action>` template: initial state, `update()` reducer,
   lifecycle hooks (`on_init`, `on_tick`, `on_event`), capability config, theme
 - `ctx.hpp` — `app_ctx`: dispatch actions, emit feedback, query capability status,
-  `product_state`, connectivity helpers; `fx()` returns `app_fx &` for typed
-  navigation/storage
+  `product_state`, `get<T>()` / `status_of<T>()`; `fx()` returns `app_fx &` for typed
+  navigation and capability-owned effects (connectivity / storage / telemetry /
+  settings / diagnostics / build)
 - `entry.hpp` — entry macros: `BLUSYS_APP(spec)` and `BLUSYS_APP_HEADLESS(spec)`
 - `internal/app_runtime.hpp` — runtime engine (internal, driven by the entry macros)
 
 **View layer** (`include/blusys/framework/ui/`, gated by `BLUSYS_BUILD_UI`):
 see [Widget kit](#widget-kit) below.
 
-**Platform profiles** (`include/blusys/framework/app/profiles/`):
-- `host.hpp` — SDL2 host simulator profile
-- `headless.hpp` — no-display marker profile
-- `st7735.hpp` — generic SPI ST7735 TFT profile (ESP32, ESP32-C3, ESP32-S3)
+**Platform profiles** (`include/blusys/framework/platform/profiles/`):
+- `st7735.hpp`, `st7789.hpp` — SPI TFT profiles (handheld)
+- `ili9341.hpp`, `ili9488.hpp` — SPI TFT profiles (surface / dashboard)
+- `ssd1306.hpp` — I2C mono OLED profile
+- `qemu_rgb.hpp` — virtual RGB framebuffer for QEMU runs
+
+See [docs/app/profiles.md](../app/profiles.md) for interface-to-profile guidance.
 
 **Capabilities** (`include/blusys/framework/capabilities/`):
 - `connectivity.hpp` — Wi-Fi, SNTP, mDNS, local control lifecycle
 - `storage.hpp` — SPIFFS and FAT filesystem mounting
-- `bluetooth.hpp`, `ota.hpp`, `diagnostics.hpp`, `lan_control.hpp`,
-  `provisioning.hpp`, `usb.hpp` — additional capability modules
+- `telemetry.hpp` — telemetry buffering and delivery
+- `persistence.hpp` — compile-time schema discovery + NVS
+- `diagnostics.hpp` — uptime, free heap, crash dumps
+- `build_info.hpp` — version / build metadata
+- `bluetooth.hpp`, `ble_hid_device.hpp`, `mqtt.hpp`, `ota.hpp`,
+  `lan_control.hpp`, `provisioning.hpp`, `usb.hpp` — additional capability modules
+- `example_sensor.hpp` — canonical template for new capabilities
 
-#### Engine (`include/blusys/framework/events/`)
+#### Events (`include/blusys/framework/events/`)
 
 Internal framework spine. Product code does not interact with it directly.
 

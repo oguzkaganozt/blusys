@@ -173,5 +173,5 @@ typedef struct {
 
 ## Example Apps
 
-- `examples/reference/http_client_basic/` — GET request with WiFi
-- `examples/validation/http_server_basic/` — server with route handlers
+- `examples/reference/connectivity/` (`ref_connectivity_http` scenario) — GET request with WiFi
+- `examples/validation/network_services/` (`net_http_server` scenario) — server with route handlers

@@ -146,10 +146,11 @@ blusys_err_t blusys_mqtt_publish(blusys_mqtt_t *handle,
                                   const char    *topic,
                                   const uint8_t *payload,
                                   size_t         payload_len,
-                                  blusys_mqtt_qos_t qos);
+                                  blusys_mqtt_qos_t qos,
+                                  bool              retain);
 ```
 
-Publishes a message. Fire-and-forget: QoS acknowledgments are handled by the ESP-IDF MQTT stack internally and are not surfaced to the caller.
+Publishes a message. Fire-and-forget: QoS acknowledgments are handled by the ESP-IDF MQTT stack internally and are not surfaced to the caller. Pass `retain = true` to request broker-side retention of the message.
 
 **Returns:**
 - `BLUSYS_OK` — message handed to the MQTT stack
@@ -223,4 +224,4 @@ The handle may be reconnected after a `disconnect()` by calling `connect()` agai
 
 ## Example App
 
-See `examples/reference/mqtt_basic/`.
+See `examples/reference/connectivity/` (`ref_connectivity_mqtt` scenario).

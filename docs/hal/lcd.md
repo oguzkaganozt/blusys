@@ -5,7 +5,7 @@ SPI and I2C display driver supporting ST7789, ST7735, SSD1306, NT35510, ILI9341,
 ## Quick Example
 
 ```c
-#include "blusys/drivers/display/lcd.h"
+#include "blusys/blusys.h"
 
 static uint16_t row_buf[240];
 
@@ -298,4 +298,4 @@ All functions are thread-safe via an internal mutex. Note that `blusys_lcd_draw_
 
 ## Example App
 
-See `examples/reference/display_basics/` (menuconfig: ST7789 or ST7735), and `examples/validation/lcd_ssd1306_basic/` (SSD1306 128x32 I2C OLED).
+See `examples/reference/display/` (LCD scenarios — menuconfig: ST7789 or ST7735), and `examples/validation/peripheral_lab/` (`periph_lcd_ssd1306` scenario — SSD1306 128x32 I2C OLED).

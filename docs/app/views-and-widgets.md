@@ -120,7 +120,7 @@ blusys::ui::vu_strip_set_value(vu, static_cast<std::uint8_t>((state.level * 12) 
 
 ## Multi-Screen Navigation
 
-Register screens with `fx.nav.screen_router()` in `on_init`, then navigate:
+Register screens with `fx.nav.register_screen()` in `on_init`, then navigate:
 
 ```cpp
 void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, State &state)
@@ -128,7 +128,7 @@ void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, State &state)
     (void)ctx;
     (void)state;
     // Register screens by route ID.
-    fx.nav.screen_router()->register_screen(RouteId::home,
+    fx.nav.register_screen(RouteId::home,
         [](blusys::app_ctx &ctx, const void *, lv_group_t **g) -> lv_obj_t * {
             auto p = blusys::page_create();
             // ... build home screen ...

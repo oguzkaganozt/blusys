@@ -5,7 +5,7 @@ GPIO-based button abstraction with software debounce and long-press detection.
 ## Quick Example
 
 ```c
-#include "blusys/drivers/input/button.h"
+#include "blusys/blusys.h"
 
 static void on_button(blusys_button_t *btn, blusys_button_event_t event, void *ctx)
 {

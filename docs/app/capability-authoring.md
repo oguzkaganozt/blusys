@@ -6,14 +6,14 @@ If you just want to **use** existing capabilities, see [Capabilities](capabiliti
 
 ## Contract
 
-Every capability derives from `capability_base` in `blusys/app/capability.hpp`:
+Every capability derives from `capability_base` in `blusys/framework/capabilities/capability.hpp`:
 
 ```cpp
 class capability_base {
 public:
     virtual ~capability_base() = default;
     virtual capability_kind kind() const = 0;
-    virtual blusys_err_t start(blusys::framework::runtime &rt) = 0;
+    virtual blusys_err_t start(blusys::runtime &rt) = 0;
     virtual void poll(std::uint32_t now_ms) = 0;
     virtual void stop() = 0;
 
@@ -21,7 +21,7 @@ protected:
     void post_integration_event(std::uint32_t event_id,
                                 std::uint32_t event_code = 0,
                                 const void *payload = nullptr);
-    blusys::framework::runtime *rt_ = nullptr;
+    blusys::runtime *rt_ = nullptr;
 };
 ```
 
@@ -40,16 +40,20 @@ Each capability owns a 256-wide event-ID range (from `capability.hpp`):
 | `0x0500–0x05FF` | diagnostics |
 | `0x0600–0x06FF` | telemetry |
 | `0x0700–0x07FF` | provisioning |
-| `0x0800–0x08FF` | mqtt_host (SDL) |
+| `0x0800–0x08FF` | mqtt (SDL host) |
 | `0x0900–0x09FF` | product custom |
+| `0x0A00–0x0AFF` | lan_control |
+| `0x0B00–0x0BFF` | usb |
+| `0x0C00–0x0CFF` | ble_hid_device |
+| `0x0D00–0x0DFF` | persistence |
 
 Add a new kind to `capability_kind` and reserve a new range in the header comment when you add a capability to the framework. Product-custom capabilities live in the `0x0900` block and flow through `app_spec::on_event` as `integration_passthrough` until handled.
 
 ## Shape to follow
 
-Model new capabilities on `storage_capability` (`blusys/app/capabilities/storage.hpp` + `src/app/capabilities/storage.cpp`) — the smallest reference. Conventions:
+Model new capabilities on `storage_capability` (`blusys/framework/capabilities/storage.hpp` + `src/framework/capabilities/storage.cpp`) — the smallest reference. Conventions:
 
-1. **One header, two implementations.** Public header declares shared `<capability>_event` enum, a `<capability>_status` struct, and a `<capability>_config`. The class body gates device vs host with `#ifdef BLUSYS_DEVICE_BUILD`; device code lives in `src/app/capabilities/<name>.cpp`, host stub in `<name>_host.cpp`.
+1. **One header, two implementations.** Public header declares shared `<capability>_event` enum, a `<capability>_status` struct, and a `<capability>_config`. The class body gates device vs host with `#ifdef BLUSYS_DEVICE_BUILD`; device code lives in `src/framework/capabilities/<name>.cpp`, host stub in `<name>_host.cpp`.
 2. **Declarative config only.** Take a `const <name>_config &` at construction. No runtime setters; changes happen via reconstruction on the `app_spec`.
 3. **Strong event enum.** Define `enum class <name>_event : std::uint32_t { … , capability_ready = 0x0<N>FF }` with values drawn from the reserved range. Always emit the terminal `capability_ready` when the configured work is done.
 4. **Queryable status.** Expose `const <name>_status &status() const`. Update the struct before posting the corresponding event so observers see consistent state.

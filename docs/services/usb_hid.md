@@ -21,7 +21,7 @@ HID input service with dual-transport support: USB OTG host (ESP32-S3, via `espr
 ## Quick Example
 
 ```c
-#include "blusys/input/usb_hid.h"
+#include "blusys/blusys.h"
 
 static void on_hid(blusys_usb_hid_t *hid,
                    const blusys_usb_hid_event_data_t *event,

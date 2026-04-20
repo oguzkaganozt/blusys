@@ -6,7 +6,6 @@ DHT11 / DHT22 (AM2302) one-wire temperature and humidity sensor driver using RMT
 
 ```c
 #include "blusys/blusys.h"
-#include "blusys/drivers/sensor/dht.h"
 
 void app_main(void)
 {

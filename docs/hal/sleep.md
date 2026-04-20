@@ -5,7 +5,7 @@ Light and deep sleep with configurable wakeup sources. Light sleep halts the CPU
 ## Quick Example
 
 ```c
-#include "blusys/sleep.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {

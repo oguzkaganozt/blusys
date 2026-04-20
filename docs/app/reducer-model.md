@@ -101,9 +101,9 @@ void update(blusys::app_ctx &ctx, State &state, const Action &action)
 std::optional<Action> on_event(blusys::event e, State &state)
 {
     (void)state;
-    switch (e.kind) {
+    switch (e.source) {
     case blusys::event_source::intent:
-        switch (blusys::event_intent(e)) {
+        switch (static_cast<blusys::intent>(e.kind)) {
         case blusys::intent::increment:
             return Action::increment;
         case blusys::intent::decrement:

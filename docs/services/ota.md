@@ -116,4 +116,4 @@ The WiFi connection must be established before calling `open()`.
 
 ## Example App
 
-See `examples/validation/ota_basic/`.
+See `examples/validation/network_services/` (`net_ota` scenario).

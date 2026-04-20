@@ -5,7 +5,7 @@ Single-channel ADC input: raw conversion values and calibrated millivolt reading
 ## Quick Example
 
 ```c
-#include "blusys/adc.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {

@@ -13,19 +13,19 @@ Use this guide for a compact manual validation pass on real hardware after the b
 Minimum async validation set:
 
 1. `examples/validation/hal_io_lab` (GPIO interrupt scenario)
-2. `examples/reference/uart_basic` (async mode)
+2. `examples/reference/hal` (UART scenario)
 3. `examples/reference/hal` (timer scenario)
 
 Recommended full smoke pass:
 
-1. `examples/validation/smoke`
+1. `examples/validation/platform_lab` (plat_smoke scenario)
 2. `examples/validation/hal_io_lab` (system_info scenario)
 3. `examples/reference/hal` (GPIO scenario)
 4. `examples/validation/hal_io_lab` (GPIO interrupt scenario)
-5. `examples/reference/uart_basic` (loopback mode)
-6. `examples/reference/uart_basic` (async mode)
+5. `examples/reference/hal` (UART loopback scenario)
+6. `examples/validation/platform_lab` (UART suite)
 7. `examples/reference/hal` (I2C scan scenario)
-8. `examples/validation/i2s_basic`
+8. `examples/validation/peripheral_lab` (I2S scenario)
 9. `examples/reference/hal` (SPI loopback scenario)
 10. `examples/reference/hal` (PWM scenario)
 11. `examples/reference/hal` (ADC scenario)
@@ -70,7 +70,7 @@ Before testing:
 
 ## Per-Example Checks
 
-### `smoke`
+### `platform_lab` (plat_smoke)
 
 - board boots normally
 - reported target is correct
@@ -98,7 +98,7 @@ Pass conditions:
 - final result shows `callback_swap_result: ok`
 - no reboot, lockup, or watchdog reset occurs
 
-### `uart_basic` (loopback mode)
+### `hal` (UART loopback)
 
 Setup:
 
@@ -108,7 +108,7 @@ Pass conditions:
 
 - transmitted bytes are read back correctly
 
-### `uart_basic` (async mode)
+### `platform_lab` (UART suite)
 
 Setup:
 
@@ -126,7 +126,7 @@ Pass conditions:
 - expected devices appear at the expected addresses
 - timeout behavior does not indicate bad wiring or missing pull-ups
 
-### `i2s_basic`
+### `peripheral_lab` (I2S)
 
 Setup:
 

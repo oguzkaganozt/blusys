@@ -46,7 +46,7 @@ blusys::connectivity_config conn_cfg{
 
 ```cpp
 #include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/capabilities/capability_list.hpp"
+#include "blusys/framework/capabilities/list.hpp"
 
 static blusys::connectivity_capability conn{conn_cfg};
 static blusys::capability_list_storage capabilities{&conn};

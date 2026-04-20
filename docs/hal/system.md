@@ -8,7 +8,7 @@ Runtime helpers common across all supported targets: uptime, reset reason, heap 
 #include <inttypes.h>
 #include <stdio.h>
 
-#include "blusys/system.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {

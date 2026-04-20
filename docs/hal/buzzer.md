@@ -5,7 +5,7 @@ PWM-driven passive piezo buzzer with single-tone and melody-sequence playback.
 ## Quick Example
 
 ```c
-#include "blusys/drivers/actuator/buzzer.h"
+#include "blusys/blusys.h"
 
 static const blusys_buzzer_note_t s_jingle[] = {
     { .freq_hz = 262, .duration_ms = 200 },  /* C4 */

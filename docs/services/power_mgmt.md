@@ -185,4 +185,4 @@ Release the lock, decrementing its reference count. The power constraint is lift
 
 ## Example App
 
-See `examples/validation/power_mgmt_basic/`.
+See `examples/validation/platform_lab/` (`plat_power_mgmt` scenario).

@@ -7,7 +7,7 @@ General-purpose timer with microsecond resolution. Supports periodic and one-sho
 ```c
 #include <stdbool.h>
 
-#include "blusys/timer.h"
+#include "blusys/blusys.h"
 
 static bool on_tick(blusys_timer_t *timer, void *user_ctx)
 {

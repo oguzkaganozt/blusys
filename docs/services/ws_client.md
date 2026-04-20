@@ -215,4 +215,4 @@ The handle may be reconnected after `disconnect()` by calling `connect()` again.
 
 ## Example App
 
-See `examples/validation/ws_client_basic/`.
+See `examples/validation/network_services/` (`net_ws_client` scenario).

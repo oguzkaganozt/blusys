@@ -131,4 +131,4 @@ blusys_console_close()          ← stops task, frees handle
 
 ## Example App
 
-See `examples/validation/console_basic/`.
+See `examples/validation/platform_lab/` (`plat_console` scenario).

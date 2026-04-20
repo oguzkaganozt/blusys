@@ -141,4 +141,4 @@ WiFi connected
 
 ## Example App
 
-See `examples/validation/local_ctrl_basic/`.
+See `examples/validation/network_services/` (`net_local_ctrl` scenario).

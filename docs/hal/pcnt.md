@@ -7,7 +7,7 @@ Pulse counter input with edge selection, watch-point callbacks, and glitch filte
 ```c
 #include <stdbool.h>
 
-#include "blusys/pcnt.h"
+#include "blusys/blusys.h"
 
 static bool on_watch(blusys_pcnt_t *pcnt, int watch_point, void *user_ctx)
 {

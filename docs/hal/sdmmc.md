@@ -154,4 +154,4 @@ No ISR-safe calls are defined for the SDMMC module.
 
 ## Example App
 
-See `examples/validation/sdmmc_basic/`.
+See `examples/validation/peripheral_lab/` (`periph_sdmmc` scenario).

@@ -6,7 +6,6 @@ Rotary encoder service with hardware quadrature decoding (PCNT on ESP32/S3) and 
 
 ```c
 #include "blusys/blusys.h"
-#include "blusys/drivers/input/encoder.h"
 
 static void on_event(blusys_encoder_t *enc, blusys_encoder_event_t event,
                       int position, void *ctx)

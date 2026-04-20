@@ -113,4 +113,4 @@ Requires an active WiFi connection. Call `blusys_sntp_open()` after WiFi has an 
 
 ## Example App
 
-See `examples/validation/sntp_basic/`.
+See `examples/validation/network_services/` (`net_sntp` scenario).

@@ -8,7 +8,7 @@ Task watchdog timer (TWDT): monitor one or more tasks and trigger a panic or log
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "blusys/wdt.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {

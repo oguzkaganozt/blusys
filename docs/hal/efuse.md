@@ -9,7 +9,7 @@ Read factory-programmed chip identity and security state from on-chip eFuse stor
 #include <stdint.h>
 #include <stdio.h>
 
-#include "blusys/efuse.h"
+#include "blusys/blusys.h"
 
 void app_main(void)
 {

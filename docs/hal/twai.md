@@ -5,7 +5,7 @@ Classic CAN-style communication using the ESP32's TWAI controller. Supports send
 ## Quick Example
 
 ```c
-#include "blusys/twai.h"
+#include "blusys/blusys.h"
 
 static bool on_rx(blusys_twai_t *twai, const blusys_twai_frame_t *frame, void *user_ctx)
 {
@@ -191,4 +191,4 @@ Registers the ISR callback for received frames. Pass NULL to clear.
 
 ## Example App
 
-See `examples/validation/twai_basic/`.
+See `examples/validation/peripheral_lab/` (`periph_twai` scenario).

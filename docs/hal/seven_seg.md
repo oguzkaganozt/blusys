@@ -5,7 +5,7 @@ Unified 7-segment display service supporting direct GPIO, 74HC595 shift-register
 ## Quick Example
 
 ```c
-#include "blusys/drivers/display/seven_seg.h"
+#include "blusys/blusys.h"
 
 blusys_seven_seg_t *display;
 
