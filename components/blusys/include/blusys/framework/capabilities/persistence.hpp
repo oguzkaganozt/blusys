@@ -94,70 +94,22 @@ public:
 
     const persistence_status& status() const { return status_; }
 
-    // Scan `list` for capabilities that implement capability_persistence_schema.
-    // For each: read stored schema version; if it differs from current, open the
-    // capability's NVS namespace and call migrate_from(). Log every migration via
-    // the structured log. Called by app_runtime after persistence starts but
-    // before other capabilities start.
     void run_migrations(const capability_list& list);
 
     struct effects {
         persistence_capability *self = nullptr;
 
-        [[nodiscard]] bool is_ready() const
-        {
-            return self != nullptr && self->status().nvs_ready;
-        }
-
-        blusys_err_t get_u32(const char* key, std::uint32_t* out) const
-        {
-            return self != nullptr ? self->app_get_u32(key, out) : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t set_u32(const char* key, std::uint32_t value)
-        {
-            return self != nullptr ? self->app_set_u32(key, value) : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t get_i32(const char* key, std::int32_t* out) const
-        {
-            return self != nullptr ? self->app_get_i32(key, out) : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t set_i32(const char* key, std::int32_t value)
-        {
-            return self != nullptr ? self->app_set_i32(key, value) : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t get_str(const char* key, char* out, std::size_t* len) const
-        {
-            return self != nullptr ? self->app_get_str(key, out, len) : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t set_str(const char* key, const char* value)
-        {
-            return self != nullptr ? self->app_set_str(key, value) : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t get_blob(const char* key, void* out, std::size_t* len) const
-        {
-            return self != nullptr ? self->app_get_blob(key, out, len) : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t set_blob(const char* key, const void* value, std::size_t len)
-        {
-            return self != nullptr ? self->app_set_blob(key, value, len) : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        blusys_err_t erase(const char* key)
-        {
-            return self != nullptr ? self->app_erase(key) : BLUSYS_ERR_INVALID_STATE;
-        }
-
-        void bind(persistence_capability *persistence) noexcept
-        {
-            self = persistence;
-        }
+        [[nodiscard]] bool is_ready() const;
+        blusys_err_t get_u32(const char* key, std::uint32_t* out) const;
+        blusys_err_t set_u32(const char* key, std::uint32_t value);
+        blusys_err_t get_i32(const char* key, std::int32_t* out) const;
+        blusys_err_t set_i32(const char* key, std::int32_t value);
+        blusys_err_t get_str(const char* key, char* out, std::size_t* len) const;
+        blusys_err_t set_str(const char* key, const char* value);
+        blusys_err_t get_blob(const char* key, void* out, std::size_t* len) const;
+        blusys_err_t set_blob(const char* key, const void* value, std::size_t len);
+        blusys_err_t erase(const char* key);
+        void bind(persistence_capability *persistence) noexcept;
     };
 
 private:
@@ -184,5 +136,62 @@ private:
     struct impl;
     impl* impl_ = nullptr;
 };
+
+// ---- effects inline bodies ----
+
+inline bool persistence_capability::effects::is_ready() const
+{
+    return self != nullptr && self->status().nvs_ready;
+}
+
+inline blusys_err_t persistence_capability::effects::get_u32(const char* key, std::uint32_t* out) const
+{
+    return self != nullptr ? self->app_get_u32(key, out) : BLUSYS_ERR_INVALID_STATE;
+}
+
+inline blusys_err_t persistence_capability::effects::set_u32(const char* key, std::uint32_t value)
+{
+    return self != nullptr ? self->app_set_u32(key, value) : BLUSYS_ERR_INVALID_STATE;
+}
+
+inline blusys_err_t persistence_capability::effects::get_i32(const char* key, std::int32_t* out) const
+{
+    return self != nullptr ? self->app_get_i32(key, out) : BLUSYS_ERR_INVALID_STATE;
+}
+
+inline blusys_err_t persistence_capability::effects::set_i32(const char* key, std::int32_t value)
+{
+    return self != nullptr ? self->app_set_i32(key, value) : BLUSYS_ERR_INVALID_STATE;
+}
+
+inline blusys_err_t persistence_capability::effects::get_str(const char* key, char* out, std::size_t* len) const
+{
+    return self != nullptr ? self->app_get_str(key, out, len) : BLUSYS_ERR_INVALID_STATE;
+}
+
+inline blusys_err_t persistence_capability::effects::set_str(const char* key, const char* value)
+{
+    return self != nullptr ? self->app_set_str(key, value) : BLUSYS_ERR_INVALID_STATE;
+}
+
+inline blusys_err_t persistence_capability::effects::get_blob(const char* key, void* out, std::size_t* len) const
+{
+    return self != nullptr ? self->app_get_blob(key, out, len) : BLUSYS_ERR_INVALID_STATE;
+}
+
+inline blusys_err_t persistence_capability::effects::set_blob(const char* key, const void* value, std::size_t len)
+{
+    return self != nullptr ? self->app_set_blob(key, value, len) : BLUSYS_ERR_INVALID_STATE;
+}
+
+inline blusys_err_t persistence_capability::effects::erase(const char* key)
+{
+    return self != nullptr ? self->app_erase(key) : BLUSYS_ERR_INVALID_STATE;
+}
+
+inline void persistence_capability::effects::bind(persistence_capability *persistence) noexcept
+{
+    self = persistence;
+}
 
 }  // namespace blusys
