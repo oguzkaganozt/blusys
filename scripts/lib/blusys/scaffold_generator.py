@@ -346,7 +346,7 @@ std::optional<action> on_event(blusys::event event, app_state &state)
         return std::nullopt;
     }}
 
-    switch (blusys::event_intent(event)) {{
+    switch (static_cast<blusys::intent>(event.kind)) {{
     case blusys::intent::increment:
         return action{{.tag = action_tag::increment}};
     case blusys::intent::decrement:
@@ -532,63 +532,62 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
     for cap in capabilities:
         if cap == "connectivity":
             instances.append(
-                """blusys::connectivity_capability connectivity{{
+                """blusys::connectivity_capability connectivity(blusys::connectivity_config{
     .wifi_ssid = nullptr,
     .prov_service_name = \"%s\",
     .prov_pop = \"123456\",
-}};"""
+});"""
                 % project_title.lower().replace(" ", "-")
             )
             capability_refs.append("&connectivity")
         elif cap == "storage":
             instances.append(
-                """blusys::storage_capability storage{{
-    .init_nvs = true,
+                """blusys::storage_capability storage(blusys::storage_config{
     .spiffs_base_path = \"/app\",
-}};"""
+});"""
             )
             capability_refs.append("&storage")
         elif cap == "diagnostics":
             instances.append(
-                """blusys::diagnostics_capability diagnostics{{
+                """blusys::diagnostics_capability diagnostics(blusys::diagnostics_config{
     .snapshot_interval_ms = 5000,
-}};"""
+});"""
             )
             capability_refs.append("&diagnostics")
         elif cap == "telemetry":
             instances.append(
-                """blusys::telemetry_capability telemetry{{
+                """blusys::telemetry_capability telemetry(blusys::telemetry_config{
     .deliver = deliver_telemetry,
     .flush_threshold = 4,
     .flush_interval_ms = 1000,
-}};"""
+});"""
             )
             capability_refs.append("&telemetry")
         elif cap == "ota":
             instances.append(
-                """blusys::ota_capability ota{{
+                """blusys::ota_capability ota(blusys::ota_config{
     .firmware_url = \"https://example.com/firmware.bin\",
     .auto_mark_valid = true,
-}};"""
+});"""
             )
             capability_refs.append("&ota")
         elif cap == "bluetooth":
             instances.append(
-                """blusys::bluetooth_capability bluetooth{{
+                """blusys::bluetooth_capability bluetooth(blusys::bluetooth_config{
     .device_name = \"%s\",
     .auto_advertise = true,
-}};"""
+});"""
                 % project_title
             )
             capability_refs.append("&bluetooth")
         elif cap == "lan_control":
             instances.append(
-                """blusys::lan_control_capability lan_control{{
+                """blusys::lan_control_capability lan_control(blusys::lan_control_config{
     .device_name = \"%s\",
     .status_cb = local_ctrl_status,
     .service_name = \"%s\",
     .instance_name = \"%s\",
-}};"""
+});"""
                 % (
                     project_title,
                     project_title.lower().replace(" ", "-"),
@@ -598,12 +597,12 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
             capability_refs.append("&lan_control")
         elif cap == "usb":
             instances.append(
-                """blusys::usb_capability usb{{
+                """blusys::usb_capability usb(blusys::usb_config{
     .role = blusys::usb_role::host,
     .class_mask = static_cast<std::uint8_t>(blusys::usb_class::cdc),
     .manufacturer = \"Blusys\",
     .product = \"%s\",
-}};"""
+});"""
                 % project_title
             )
             capability_refs.append("&usb")
@@ -617,7 +616,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
         if interface == "surface":
             profile_block = (
                 "static const blusys::device_profile dashboard_profile = "
-                "blusys::platform::auto_profile_dashboard();\n\n"
+                "blusys::auto_profile_dashboard();\n\n"
             )
             spec_tail_fields = (
                 "    .profile = &dashboard_profile,\n" + spec_tail_fields
