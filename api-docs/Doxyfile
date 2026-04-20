@@ -14,10 +14,13 @@ INPUT                  = components/blusys/include/blusys/hal/adc.h \
                          components/blusys/include/blusys/hal/i2c.h \
                          components/blusys/include/blusys/hal/i2c_slave.h \
                          components/blusys/include/blusys/hal/i2s.h \
+                         components/blusys/include/blusys/hal/one_wire.h \
                          components/blusys/include/blusys/hal/pwm.h \
+                         components/blusys/include/blusys/hal/rmt.h \
                          components/blusys/include/blusys/hal/spi.h \
                          components/blusys/include/blusys/hal/spi_slave.h \
                          components/blusys/include/blusys/hal/timer.h \
+                         components/blusys/include/blusys/hal/twai.h \
                          components/blusys/include/blusys/hal/uart.h \
                          components/blusys/include/blusys/hal/wdt.h
 RECURSIVE              = NO
