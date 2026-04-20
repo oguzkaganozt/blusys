@@ -9,11 +9,20 @@ Two invariants checked:
      blusys_sources set in components/blusys/CMakeLists.txt.
      (Catches bridge entries that reference removed/renamed sources.)
 
-  2. For each non-host device capability source in blusys_sources
-     (src/framework/capabilities/<name>.cpp, excluding *_host.cpp and
-     telemetry.cpp/mqtt_host.cpp which are host-safe), the bridge's
+     Exception: *_host.cpp files are intentionally absent from the ESP-IDF
+     component (they're the host-build counterpart to *_device.cpp). The
+     component CMakeLists.txt explicitly excludes them; only the host bridge
+     picks them up for PC builds.
+
+  2. For each device capability source in blusys_sources
+     (src/framework/capabilities/<name>_device.cpp, plus host-unsafe
+     capabilities that don't follow the _host/_device split), the bridge's
      COMMON_SOURCES must contain a corresponding *_host.cpp entry.
      (Catches capability host stubs that were forgotten in the bridge.)
+
+     Naming: a capability named "X" has X_device.cpp and X_host.cpp; the
+     host stub is derived by stripping the _device suffix and appending
+     _host (so ble_hid_device_device.cpp → ble_hid_device_host.cpp).
 """
 
 from __future__ import annotations
@@ -109,8 +118,13 @@ def main() -> None:
     errors: list[str] = []
 
     # --- Invariant 1: every bridge framework src/ entry exists in blusys_sources ---
+    # Host-stub capability sources (*_host.cpp) are intentionally absent from
+    # the component CMakeLists — they are the PC-build counterpart handled
+    # exclusively by the bridge.
     for src in all_bridge_sources:
         if not src.startswith("src/framework/") and not src.startswith("src/hal/"):
+            continue
+        if src.startswith("src/framework/capabilities/") and src.endswith("_host.cpp"):
             continue
         if src not in blusys_sources:
             errors.append(
@@ -139,8 +153,12 @@ def main() -> None:
     }
 
     for dev_src in sorted(device_caps):
-        stem = Path(dev_src).stem  # e.g. "connectivity"
-        expected_host = f"{stem}_host.cpp"
+        stem = Path(dev_src).stem  # e.g. "connectivity_device" or "ble_hid_device_device"
+        # Capabilities follow the X_device.cpp / X_host.cpp convention.
+        # Strip _device before appending _host so that ble_hid_device_device.cpp
+        # maps to ble_hid_device_host.cpp (not ble_hid_device_device_host.cpp).
+        capability_name = stem.removesuffix("_device") if stem.endswith("_device") else stem
+        expected_host = f"{capability_name}_host.cpp"
         if expected_host not in bridge_host_stubs:
             errors.append(
                 f"device capability '{dev_src}' has no '{expected_host}' in bridge COMMON_SOURCES"

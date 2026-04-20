@@ -17,6 +17,11 @@ Allowlisted exceptions (header-only type/macro files with no namespace body):
   framework/capabilities/capabilities.hpp — umbrella include
   framework/flows/flows.hpp        — umbrella include
   framework/framework.hpp          — umbrella include
+  framework/services/{net,session,storage,system}.h — umbrella forwards
+                                    to sibling public services APIs
+  framework/platform/platform.hpp  — platform umbrella include
+  framework/test/fake_hal.h        — C inject API (extern "C")
+  framework/test/test.hpp          — test-surface umbrella
 """
 
 from __future__ import annotations
@@ -50,6 +55,15 @@ ALLOWLIST_NAMES: frozenset[str] = frozenset(
         "dashboard_display_dims.hpp",  # platform/ — preprocessor-only dimension macros
         "callbacks.hpp",       # type aliases only (may or may not have namespace)
         "framework_init.cpp",  # placeholder translation unit (no code body)
+        # Framework umbrella includes (forward to sibling public service APIs).
+        "net.h",               # framework/services/net.h
+        "session.h",           # framework/services/session.h
+        "storage.h",           # framework/services/storage.h
+        "system.h",            # framework/services/system.h
+        "platform.hpp",        # framework/platform/platform.hpp
+        # Test-surface headers: pure C inject API (extern "C"), or umbrella.
+        "fake_hal.h",          # framework/test/fake_hal.h — C inject API
+        "test.hpp",            # framework/test/test.hpp — umbrella
     ]
 )
 

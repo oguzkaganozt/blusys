@@ -22,6 +22,9 @@ Allowlisted src-only exceptions (no public header counterpart required):
 Allowlisted include-only exceptions for C layers (no src/ counterpart):
   drivers/panels/*.h              — data-only panel constant headers
   hal/internal/                   — headers shared among multiple .c files
+  services/internal/              — service-private helpers (session state
+                                    machines, storage helpers, net bootstrap)
+  */*_fwd.h                       — forward-declaration-only headers
 """
 
 from __future__ import annotations
@@ -47,15 +50,22 @@ SRC_ONLY_NAME_ALLOWLIST: frozenset[str] = frozenset(
         "rmt_rx.c",    # covered by hal/rmt.h
         # Internal capability bookkeeping — no standalone public header.
         "capability_event_map.cpp",
+        # Per-MCU capability table; header is hal/internal/target_caps.h.
+        "target_caps.c",
+        # Test-time capability stubs that satisfy the linker when real
+        # capability _host.cpp files aren't linked in (mocks replace them).
+        "test_stubs.cpp",
     ]
 )
 
-# Capability host stubs: *_host.cpp — the public header is capabilities/X.hpp
-def _is_capability_host_stub(rel: Path) -> bool:
+# Capability impl stubs: *_host.cpp / *_device.cpp — both map to the single
+# public header capabilities/X.hpp. The host version handles PC builds; the
+# device version handles ESP-IDF builds. Neither has a standalone header.
+def _is_capability_impl_stub(rel: Path) -> bool:
     return (
         rel.parts[0] == "framework"
         and rel.parts[1] == "capabilities"
-        and rel.stem.endswith("_host")
+        and (rel.stem.endswith("_host") or rel.stem.endswith("_device"))
         and rel.suffix == ".cpp"
     )
 
@@ -69,11 +79,21 @@ def _is_src_only_exempt(rel: Path) -> bool:
     # src/hal/ulp/**
     if len(parts) >= 2 and parts[0] == "hal" and parts[1] == "ulp":
         return True
+    # src/framework/test/fake_hal/** — test-side HAL implementations that
+    # satisfy the real blusys_{gpio,timer,uart} public headers. No
+    # standalone header; tests drive them via framework/test/fake_hal.h.
+    if (
+        len(parts) >= 3
+        and parts[0] == "framework"
+        and parts[1] == "test"
+        and parts[2] == "fake_hal"
+    ):
+        return True
     # Named exceptions
     if rel.name in SRC_ONLY_NAME_ALLOWLIST:
         return True
-    # Framework capability host stubs
-    if _is_capability_host_stub(rel):
+    # Framework capability host/device stubs
+    if _is_capability_impl_stub(rel):
         return True
     return False
 
@@ -111,6 +131,10 @@ def _is_include_only_exempt(rel: Path) -> bool:
     # hal/log.h — macro-only header wrapping esp_log; no .c counterpart.
     # hal/ulp.h — ULP API header; implementation lives in src/hal/ulp/ subdir.
     if rel.parts[0] == "hal" and rel.name in {"log.h", "ulp.h"}:
+        return True
+    # *_fwd.h — forward-declaration-only headers carry no implementation by
+    # convention; they exist to break circular include dependencies.
+    if rel.suffix == ".h" and rel.stem.endswith("_fwd"):
         return True
     return False
 
