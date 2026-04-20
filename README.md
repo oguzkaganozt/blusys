@@ -28,7 +28,7 @@ These are the grounding constraints for the platform.
 
 **Principles.** One strong default path; keep implementations small; add abstraction only when it removes real app burden; one fixed scaffold; runtime services stay in C, product composition in the framework.
 
-**Validation.** Host smokes, scaffold checks, and CI expectations: **[docs/app/validation-host-loop.md](docs/app/validation-host-loop.md)**. Unified `blusys build` / `blusys qemu` (chip, `host`, `qemu*`): **[docs/app/cli-host-qemu.md](docs/app/cli-host-qemu.md)**.
+**Validation.** Host smokes, scaffold checks, and CI expectations: **[docs/app/validation-host-loop.md](docs/app/validation-host-loop.md)**. Fast repo preflight: `blusys validate`. Inventory-driven example builds: `blusys build-inventory <target> <ci_pr|ci_nightly>`. Unified `blusys build` / `blusys qemu` (chip, `host`, `qemu*`): **[docs/app/cli-host-qemu.md](docs/app/cli-host-qemu.md)**.
 
 ---
 
@@ -127,7 +127,7 @@ idf_component_register(SRCS "main.cpp" REQUIRES blusys)
 
 ## Host harness
 
-LVGL on **SDL2** (Linux) for fast UI iteration without flashing every change. Setup: **[scripts/host/README.md](scripts/host/README.md)**.
+SDL2 + LVGL host iteration on Linux for fast UI and smoke-test loops without flashing every change. `scripts/host/` holds the interactive demos and host smokes; `scripts/host-test/` is the minimal no-SDL headless loop. Setup: **[scripts/host/README.md](scripts/host/README.md)**.
 
 ```sh
 sudo apt install libsdl2-dev   # or your distro’s SDL2 dev package

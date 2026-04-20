@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Verify that cmake/blusys_host_bridge.cmake stays in sync with the
-blusys single-component source list (components/blusys/CMakeLists.txt).
+blusys single-component source manifests (components/blusys/CMakeLists.txt
+plus components/blusys/sources/*.cmake).
 
 Two invariants checked:
 
-  1. Every framework src/ file listed in _BLUSYS_HOST_BRIDGE_COMMON_SOURCES
-     or _BLUSYS_HOST_BRIDGE_INTERACTIVE_SOURCES also appears in the
-     blusys_sources set in components/blusys/CMakeLists.txt.
+    1. Every framework src/ file listed in _BLUSYS_HOST_BRIDGE_COMMON_SOURCES
+      or _BLUSYS_HOST_BRIDGE_INTERACTIVE_SOURCES also appears in the
+      blusys source manifests under components/blusys/.
      (Catches bridge entries that reference removed/renamed sources.)
 
      Exception: *_host.cpp files are intentionally absent from the ESP-IDF
@@ -56,7 +57,9 @@ def _parse_cmake_sources(text: str, var_name: str) -> list[str]:
             continue
         # Strip cmake variable prefix like ${BLUSYS_COMPONENT_DIR}/
         rel = re.sub(r"^\$\{[^}]+\}/", "", line)
-        if rel.startswith("src/") and (rel.endswith(".cpp") or rel.endswith(".c")):
+        if rel.endswith(".cpp") or rel.endswith(".c"):
+            if not rel.startswith("src/"):
+                rel = f"src/{rel}"
             out.append(rel)
     return out
 
@@ -72,17 +75,27 @@ def _parse_all_cmake_src(cmake_text: str) -> set[str]:
         line = line.split("#", 1)[0].strip()
         # Strip cmake variable prefix like ${COMPONENT_LIB}  or other variables.
         rel = re.sub(r"^\$\{[^}]+\}/", "", line).strip()
-        if rel.startswith("src/") and (rel.endswith(".cpp") or rel.endswith(".c")):
+        if rel.endswith(".cpp") or rel.endswith(".c"):
+            if not rel.startswith("src/"):
+                rel = f"src/{rel}"
             out.add(rel)
     return out
 
 
-def _parse_blusys_sources(cmake_text: str) -> set[str]:
-    """Collect all src/ paths from components/blusys/CMakeLists.txt."""
-    sources = _parse_all_cmake_src(cmake_text)
+def _parse_blusys_sources(repo: Path) -> set[str]:
+    """Collect all src/ paths from the component source manifests."""
+    cmake_root = repo / "components" / "blusys"
+    sources: set[str] = set()
+
+    main_cmake = (cmake_root / "CMakeLists.txt").read_text(encoding="utf-8")
+    sources.update(_parse_all_cmake_src(main_cmake))
+
+    for manifest in sorted((cmake_root / "sources").glob("*.cmake")):
+        sources.update(_parse_all_cmake_src(manifest.read_text(encoding="utf-8")))
+
     if not sources:
         print(
-            "check-host-bridge-spine: could not parse any sources in CMakeLists.txt",
+            "check-host-bridge-spine: could not parse any sources in components/blusys/",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -102,14 +115,11 @@ def _parse_bridge_sources(bridge_text: str, var_name: str) -> list[str]:
 
 def main() -> None:
     repo = Path(__file__).resolve().parents[1]
-    blusys_cmake = (
-        repo / "components" / "blusys" / "CMakeLists.txt"
-    ).read_text(encoding="utf-8")
     bridge_text = (
         repo / "cmake" / "blusys_host_bridge.cmake"
     ).read_text(encoding="utf-8")
 
-    blusys_sources = _parse_blusys_sources(blusys_cmake)
+    blusys_sources = _parse_blusys_sources(repo)
 
     common_sources = _parse_bridge_sources(bridge_text, "_BLUSYS_HOST_BRIDGE_COMMON_SOURCES")
     interactive_sources = _parse_bridge_sources(bridge_text, "_BLUSYS_HOST_BRIDGE_INTERACTIVE_SOURCES")
@@ -128,7 +138,7 @@ def main() -> None:
             continue
         if src not in blusys_sources:
             errors.append(
-                f"bridge lists '{src}' but it is not in components/blusys/CMakeLists.txt"
+                f"bridge lists '{src}' but it is not in components/blusys source manifests"
             )
 
     # --- Invariant 2: every device capability has a host stub in bridge COMMON ---

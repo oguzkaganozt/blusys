@@ -1,11 +1,13 @@
 # Blusys host harness — PC + SDL2 + LVGL
 
-Builds LVGL against SDL2 on Linux so the Blusys widget kit and framework code can be iterated against without flashing hardware on every change. The LVGL version is pinned to the same upstream tag as the ESP-IDF managed component (`lvgl/lvgl ~9.2`, currently resolving to **v9.2.2** — see `examples/framework_*/dependencies.lock`).
+Builds the SDL2/LVGL host suite on Linux so interactive demos and host smokes can iterate without flashing hardware on every change. The LVGL version is pinned to the same upstream tag as the ESP-IDF managed component (`lvgl/lvgl ~9.2`, currently resolving to **v9.2.2** — see `examples/framework_*/dependencies.lock`).
 
-Two executables are built:
+Two host-side CMake projects matter for this flow:
 
-- **`hello_lvgl`** — minimal LVGL-only smoke test that proves the host toolchain + SDL2 display path works end-to-end.
-- **`widget_kit_demo`** — links the full `blusys_framework` surface (core spine + V1 widget kit + layout primitives) against the host LVGL and builds a screen with `blusys::ui::*` calls rather than raw LVGL. Exercises the same runtime → controller → route sink chain using the same spine + widget-kit contract as the quickstart examples.
+- **`scripts/host/`** — SDL2 + LVGL interactive demos and host smokes.
+- **`scripts/host-test/`** — the minimal headless loop with no SDL, no LVGL window, and no libmosquitto dependency.
+
+The interactive starters are still `hello_lvgl` and `widget_kit_demo`.
 
 ## Product example host builds
 
@@ -98,6 +100,10 @@ Values `1`–`8` are accepted; the default is computed from the logical size.
 - `include_host/esp_log.h` — minimal host shim for ESP-IDF's log header. The framework's `blusys/log.h` wraps `esp_log.h`; on host builds this shim satisfies the include with four `fprintf`-backed macros. Do not grow this shim — keep `blusys/log.h` as the narrow contract instead.
 - `src/hello_lvgl.c` — LVGL-only smoke test. Opens an SDL2 window, registers mouse and keyboard input devices, and draws a centred rounded card.
 - `src/widget_kit_demo.cpp` — framework bridge demo. Same SDL2 window but the screen is built with `blusys::ui::screen_create`, `col_create`, `button_create`, `slider_create`, `overlay_create` and the full runtime → controller → route sink spine is wired in.
+
+## Also see
+
+- `../host-test/CMakeLists.txt` — minimal headless smoke tests (`ctest` targets with no SDL/LVGL window)
 
 ## What's coming next
 

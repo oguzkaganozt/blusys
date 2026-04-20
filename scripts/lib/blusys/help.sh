@@ -20,7 +20,9 @@ Commands:
   fullclean        Remove build directories for all targets
   example          Run a command on a bundled example
   lint             Run platform lint checks
+  validate         Run inventory, layout, and lint checks
   build-examples   Build all examples for all targets
+  build-inventory   Build inventory-filtered examples for one target
   host-build       Build the PC + SDL2 host harness (scripts/host/ or project host/)
   qemu             Build firmware, then run QEMU (UART default; --graphics for IDF framebuffer)
   install-qemu     Download and install Espressif QEMU
@@ -129,11 +131,24 @@ blusys_help_example() {
 blusys_help_build_examples() {
     printf 'Usage: blusys build-examples\n'
     printf '\nBuilds every example for every target (esp32, esp32c3, esp32s3).\n'
+    printf 'For inventory-filtered builds, use: blusys build-inventory <target> <ci_pr|ci_nightly>\n'
+}
+
+blusys_help_build_inventory() {
+    printf 'Usage: blusys build-inventory <target> <ci_pr|ci_nightly>\n'
+    printf '\nBuild examples selected from inventory.yml by the given CI flag.\n'
+    printf 'Examples: blusys build-inventory esp32s3 ci_pr\n'
+    printf '          blusys build-inventory esp32 ci_nightly\n'
 }
 
 blusys_help_lint() {
     printf 'Usage: blusys lint\n'
     printf '\nRun platform lint checks.\n'
+}
+
+blusys_help_validate() {
+    printf 'Usage: blusys validate\n'
+    printf '\nRun inventory, product-layout, and lint checks in one pass.\n'
 }
 
 blusys_help_host_build() {

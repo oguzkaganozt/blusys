@@ -29,7 +29,12 @@ VALID_INTERFACES = {"handheld", "surface", "headless", "none"}
 
 
 def find_example_dirs():
-    """Find all example directories (supports both flat and categorized layouts)."""
+    """Find all example directories (supports both flat and categorized layouts).
+
+    Only directories with a root CMakeLists.txt are treated as example roots.
+    This keeps local build outputs such as build-*/ from being mistaken for
+    source examples.
+    """
     examples_dir = REPO_ROOT / "examples"
     if not examples_dir.exists():
         return set()
@@ -40,13 +45,14 @@ def find_example_dirs():
         # Check if this is a category directory (quickstart/reference/validation)
         if entry.name in VALID_CATEGORIES:
             for sub in entry.iterdir():
-                if sub.is_dir() and not sub.name.startswith("."):
+                if sub.is_dir() and not sub.name.startswith(".") and (sub / "CMakeLists.txt").is_file():
                     dirs.add(sub.name)
         else:
             # Flat layout (pre-reorganization) — shared headers, not an example app
             if entry.name == "include":
                 continue
-            dirs.add(entry.name)
+            if (entry / "CMakeLists.txt").is_file():
+                dirs.add(entry.name)
     return dirs
 
 

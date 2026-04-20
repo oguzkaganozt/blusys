@@ -1,0 +1,24 @@
+list(APPEND blusys_sources
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/connectivity/ble_gatt.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/connectivity/ble_hid_device.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/connectivity/bluetooth.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/connectivity/espnow.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/protocol/http_client.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/protocol/http_server.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/protocol/local_ctrl.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/protocol/mdns.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/connectivity/usb_hid.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/connectivity/wifi.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/connectivity/wifi_mesh.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/connectivity/wifi_prov.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/protocol/mqtt.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/protocol/sntp.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/protocol/ws_client.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/storage/fatfs.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/storage/fs.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/system/console.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/system/ota.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/system/power_mgmt.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/internal/net_bootstrap.c
+    ${BLUSYS_COMPONENT_SRC_DIR}/services/internal/storage_helpers.c
+)

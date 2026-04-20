@@ -6,13 +6,9 @@
 # as the ESP-IDF managed component (`lvgl/lvgl ~9.2`, currently
 # resolving to v9.2.2 — see examples/framework_*/dependencies.lock).
 #
-# Two executables:
-#   hello_lvgl        — LVGL-only smoke test.
-#   widget_kit_demo   — framework bridge: compiles the full
-#                       blusys_framework C++ surface (core spine +
-#                       widget kit) against the host LVGL + SDL2 and
-#                       exercises the V1 widgets through the same
-#                       spine path a device build uses.
+# Executables include interactive demos plus host smokes; see the
+# target blocks below and scripts/host-test/CMakeLists.txt for the
+# minimal no-SDL test loop.
 #
 # To use:
 #   blusys host-build                          # configure + build
@@ -57,7 +53,7 @@ blusys_host_bridge_add_library(interactive)
 # ── hello_lvgl smoke test ───────────────────────────────────────────────────
 add_executable(hello_lvgl src/hello_lvgl.c)
 target_link_libraries(hello_lvgl PRIVATE lvgl PkgConfig::SDL2 m)
-target_compile_options(hello_lvgl PRIVATE -Wall -Wextra)
+blusys_host_bridge_apply_exe_compile_options(hello_lvgl)
 
 # ── widget_kit_demo ───────────────────────────────────────────────────────────
 #
@@ -137,20 +133,14 @@ blusys_host_bridge_apply_exe_compile_options(capability_contract_smoke)
 
 # ── operational_phase_smoke (headless-telemetry operational phase machine parity) ─
 add_executable(operational_phase_smoke src/operational_phase_smoke.cpp)
-target_compile_options(operational_phase_smoke PRIVATE
-    -Wall
-    -Wextra
-)
+blusys_host_apply_compile_options(operational_phase_smoke)
 
 # ── handheld_starter_reducer_smoke (shared clamp_percent) ─────────────────────
 add_executable(handheld_starter_reducer_smoke src/handheld_starter_reducer_smoke.cpp)
 target_include_directories(handheld_starter_reducer_smoke PRIVATE
     ${BLUSYS_REPO_ROOT}/examples/include
 )
-target_compile_options(handheld_starter_reducer_smoke PRIVATE
-    -Wall
-    -Wextra
-)
+blusys_host_apply_compile_options(handheld_starter_reducer_smoke)
 
 # ── panel_connectivity_map_smoke (panel map_event connectivity band) ──────────
 add_executable(panel_connectivity_map_smoke src/panel_connectivity_map_smoke.cpp)
@@ -175,7 +165,7 @@ blusys_host_bridge_apply_exe_compile_options(pomodoro_host)
 # ── host_spine_test (ring_buffer / containers — no LVGL) ─────────────────────
 add_executable(host_spine_test src/host_spine_test.cpp)
 target_include_directories(host_spine_test PRIVATE ${BLUSYS_COMPONENT_DIR}/include)
-target_compile_options(host_spine_test PRIVATE -Wall -Wextra)
+blusys_host_apply_warning_options(host_spine_test)
 add_test(NAME host_spine_test COMMAND host_spine_test)
 
 # ── action_queue_drop_smoke (app_runtime action queue overflow counter) ───────

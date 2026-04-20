@@ -19,9 +19,8 @@
 # Repo root: set `BLUSYS_PATH` before include, **or** export `BLUSYS_PATH` in the
 # environment and use `include("$ENV{BLUSYS_PATH}/cmake/blusys_host_bridge.cmake")`.
 #
-# Compile policy mirrors components/blusys/CMakeLists.txt:
-# -fno-exceptions, -fno-rtti, -fno-threadsafe-statics (C++ only),
-# -Wall, -Wextra.
+# Compile policy mirrors components/blusys/CMakeLists.txt.
+# Shared flag helpers live in cmake/blusys_host_common.cmake.
 
 if(NOT BLUSYS_PATH)
     if(DEFINED ENV{BLUSYS_PATH} AND NOT "$ENV{BLUSYS_PATH}" STREQUAL "")
@@ -36,6 +35,8 @@ endif()
 
 # Single merged component directory (v0 architecture).
 set(BLUSYS_COMPONENT_DIR "${BLUSYS_PATH}/components/blusys")
+
+include("${BLUSYS_PATH}/cmake/blusys_host_common.cmake")
 
 # ── LVGL + SDL2 setup (interactive mode only) ───────────────────────────────
 function(blusys_host_bridge_setup_lvgl)
@@ -215,13 +216,7 @@ function(blusys_host_bridge_add_library MODE)
         ${BLUSYS_PATH}/scripts/host/include_host
     )
 
-    target_compile_options(${lib_name} PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
-        $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
-        $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
-        -Wall
-        -Wextra
-    )
+    blusys_host_apply_compile_options(${lib_name})
 
     execute_process(
         COMMAND git -C "${BLUSYS_PATH}" rev-parse --short=12 HEAD
@@ -291,13 +286,7 @@ endfunction()
 # Usage:
 #   blusys_host_bridge_apply_exe_compile_options(<target>)
 function(blusys_host_bridge_apply_exe_compile_options target)
-    target_compile_options(${target} PRIVATE
-        -fno-exceptions
-        -fno-rtti
-        -fno-threadsafe-statics
-        -Wall
-        -Wextra
-    )
+    blusys_host_apply_compile_options(${target})
 endfunction()
 
 # ── Build version tag (for BLUSYS_APP_BUILD_VERSION defines) ────────────────

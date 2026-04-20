@@ -303,8 +303,8 @@ jobs:
       - name: Build curated examples (ci_pr=true)
         shell: bash
         run: |
-          chmod +x scripts/build-from-inventory.sh
-          scripts/build-from-inventory.sh "${{ matrix.target }}" ci_pr
+          chmod +x blusys
+          blusys build-inventory "${{ matrix.target }}" ci_pr
 
       - name: ccache stats
         if: always()

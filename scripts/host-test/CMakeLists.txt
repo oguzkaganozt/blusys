@@ -28,6 +28,8 @@ enable_testing()
 get_filename_component(BLUSYS_REPO_ROOT  "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
 set(BLUSYS_COMPONENT_DIR "${BLUSYS_REPO_ROOT}/components/blusys")
 
+include("${BLUSYS_REPO_ROOT}/cmake/blusys_host_common.cmake")
+
 # ── Minimal framework core (no FreeRTOS, no ESP-IDF, no SDL, no mosquitto) ──
 add_library(blusys_test_core STATIC
     ${BLUSYS_COMPONENT_DIR}/src/hal/error.c
@@ -50,12 +52,7 @@ target_include_directories(blusys_test_core PUBLIC
     ${BLUSYS_REPO_ROOT}/scripts/host/include_host
 )
 target_compile_definitions(blusys_test_core PUBLIC BLUSYS_DEVICE_BUILD=0)
-target_compile_options(blusys_test_core PRIVATE
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
-    -Wall -Wextra
-)
+blusys_host_apply_compile_options(blusys_test_core)
 
 # ── Persistence host stub (uses STL containers; compiled without -fno-exceptions) ──
 add_library(blusys_persistence_host STATIC
@@ -66,7 +63,7 @@ target_include_directories(blusys_persistence_host PUBLIC
     ${BLUSYS_REPO_ROOT}/scripts/host/include_host
 )
 target_link_libraries(blusys_persistence_host PUBLIC blusys_test_core)
-target_compile_options(blusys_persistence_host PRIVATE -Wall -Wextra)
+blusys_host_apply_warning_options(blusys_persistence_host)
 
 # ── Fake HAL backend (replaces real hal/gpio.c, hal/timer.c, hal/uart.c) ──
 add_library(blusys_fake_hal STATIC
@@ -77,22 +74,16 @@ add_library(blusys_fake_hal STATIC
 target_include_directories(blusys_fake_hal PUBLIC
     ${BLUSYS_COMPONENT_DIR}/include
 )
-target_compile_options(blusys_fake_hal PRIVATE -Wall -Wextra)
+blusys_host_apply_warning_options(blusys_fake_hal)
 
 # ── host_harness_smoke ─────────────────────────────────────────────────
 add_executable(host_harness_smoke ${BLUSYS_REPO_ROOT}/scripts/host/src/host_harness_smoke.cpp)
 target_link_libraries(host_harness_smoke PRIVATE blusys_test_core blusys_persistence_host blusys_fake_hal)
-target_compile_options(host_harness_smoke PRIVATE
-    -fno-exceptions -fno-rtti -fno-threadsafe-statics
-    -Wall -Wextra
-)
+blusys_host_apply_compile_options(host_harness_smoke)
 add_test(NAME host_harness_smoke COMMAND host_harness_smoke)
 
 # ── session_helper_smoke (session state machine) ───────────────────────────
 add_executable(session_helper_smoke ${BLUSYS_REPO_ROOT}/scripts/host/src/session_helper_smoke.cpp)
 target_link_libraries(session_helper_smoke PRIVATE blusys_test_core blusys_persistence_host)
-target_compile_options(session_helper_smoke PRIVATE
-    -fno-exceptions -fno-rtti -fno-threadsafe-statics
-    -Wall -Wextra
-)
+blusys_host_apply_compile_options(session_helper_smoke)
 add_test(NAME session_helper_smoke COMMAND session_helper_smoke)

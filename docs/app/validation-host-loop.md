@@ -6,26 +6,33 @@ This page maps the **validation and host-iteration** expectations from the repos
 
 | Goal | What we use |
 |-----------------|-------------|
-| **Reducer tests runnable on host** | Small host executables under `scripts/host/` (see below) plus shared helpers tested by `handheld_starter_reducer_smoke` and headless connected logic in `operational_phase_smoke`. |
-| **Capability integration tests with simulated runtime-service events** | `capability_contract_smoke` (event ID bands), `panel_connectivity_map_smoke` (connectivity `on_event` path), and the **`connected_headless_host`** harness (full headless `app_spec` + capability host stubs — run locally; see `scripts/host/README.md`). |
+| **Reducer tests runnable on host** | `scripts/host-test/` (`host_harness_smoke`, `session_helper_smoke`) plus the shared headless helpers they exercise. |
+| **Capability integration tests with simulated runtime-service events** | `scripts/host/` binaries such as `capability_contract_smoke`, `handheld_starter_reducer_smoke`, `panel_connectivity_map_smoke`, `operational_phase_smoke`, `host_spine_test`, `action_queue_drop_smoke`, `snapshot_buffer_smoke`, and `connected_headless_host`. |
+| **Fast repo preflight** | `blusys validate` (inventory, product-layout, and lint in one pass). |
+| **Inventory-driven example builds** | `blusys build-inventory <target> <ci_pr|ci_nightly>` (same inventory filter CI uses). |
 | **Screenshot or visual smoke where practical** | `widget_kit_demo`, `app_interactive_demo`, and host builds of interactive examples (SDL). Not automated as image snapshots in CI today. |
 | **Scaffold smoke for generated starters** | `scripts/scaffold-smoke.sh` (also run in CI after host smokes). |
-| **Curated CI aligned with the canonical product path** | `.github/workflows/ci.yml` — layering lint, inventory, host smokes, docs strict build, `build-from-inventory.sh` for `ci_pr=true` examples, multi-profile display builds (e.g. ST7735 variants), QEMU subset. |
+| **Curated CI aligned with the canonical product path** | `.github/workflows/ci.yml` — layering lint, inventory, host smokes, docs strict build, `build-from-inventory.sh` / `blusys build-inventory` for `ci_pr=true` examples, multi-profile display builds (e.g. ST7735 variants), QEMU subset. |
 | **Fast host iteration** | `blusys host-build` for projects with `host/CMakeLists.txt`; monorepo `blusys host-build` (no path) builds `scripts/host` harnesses. |
+
+`blusys validate` and `blusys build-inventory` need PyYAML (`pip install pyyaml`).
 
 ## Host harness smokes (quick reference)
 
-From the repo root, after `blusys host-build` (no project path), binaries live under `scripts/host/build-host/` (or `build-host-ci` in automation). Typical local run:
+From the repo root, after `blusys host-build` (no project path), interactive binaries live under `scripts/host/build-host/`; minimal headless tests live under `build-host-test/` (or `build-host-ci` in automation). Typical local run:
 
 ```bash
+blusys validate
 blusys host-build
 ./scripts/host/build-host/handheld_starter_reducer_smoke
 ./scripts/host/build-host/operational_phase_smoke
 ./scripts/host/build-host/capability_contract_smoke
 ./scripts/host/build-host/panel_connectivity_map_smoke
+ctest --test-dir build-host-test --output-on-failure -R host_harness_smoke
+ctest --test-dir build-host-test --output-on-failure -R session_helper_smoke
 ```
 
-PR CI runs the same four executables (see `host-smoke` job in `.github/workflows/ci.yml`).
+PR CI runs the same `scripts/host/` smoke binaries in `host-smoke` and the two `scripts/host-test/` ctest targets in `host-test-minimal`.
 
 ## Scaffold validation
 

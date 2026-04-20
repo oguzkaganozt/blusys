@@ -37,126 +37,15 @@ endif()
 # ---------------------------------------------------------------------------
 # Sources
 # ---------------------------------------------------------------------------
-set(blusys_sources
-    # --- HAL layer ---
-    src/hal/adc.c
-    src/hal/dac.c
-    src/hal/efuse.c
-    src/hal/error.c
-    src/hal/gpio.c
-    src/hal/gpio_expander.c
-    src/hal/i2c.c
-    src/hal/i2c_slave.c
-    src/hal/i2s.c
-    src/hal/i2s_rx.c
-    src/hal/mcpwm.c
-    src/hal/nvs.c
-    src/hal/one_wire.c
-    src/hal/pcnt.c
-    src/hal/pwm.c
-    src/hal/rmt.c
-    src/hal/rmt_rx.c
-    src/hal/sd_spi.c
-    src/hal/sdm.c
-    src/hal/sdmmc.c
-    src/hal/sleep.c
-    src/hal/spi.c
-    src/hal/spi_slave.c
-    src/hal/system.c
-    src/hal/target.c
-    src/hal/temp_sensor.c
-    src/hal/timer.c
-    src/hal/touch.c
-    src/hal/twai.c
-    src/hal/uart.c
-    src/hal/usb_device.c
-    src/hal/usb_host.c
-    src/hal/version.c
-    src/hal/wdt.c
-    src/hal/internal/bt_stack.c
-    src/hal/internal/lock_freertos.c
-    # --- Drivers layer ---
-    src/drivers/button.c
-    src/drivers/buzzer.c
-    src/drivers/dht.c
-    src/drivers/encoder.c
-    src/drivers/lcd.c
-    src/drivers/lcd_panel_ili.c
-    src/drivers/led_strip.c
-    src/drivers/seven_seg.c
-    src/drivers/display.c
-    # --- Services layer ---
-    src/services/connectivity/ble_gatt.c
-    src/services/connectivity/ble_hid_device.c
-    src/services/connectivity/bluetooth.c
-    src/services/connectivity/espnow.c
-    src/services/protocol/http_client.c
-    src/services/protocol/http_server.c
-    src/services/protocol/local_ctrl.c
-    src/services/protocol/mdns.c
-    src/services/connectivity/usb_hid.c
-    src/services/connectivity/wifi.c
-    src/services/connectivity/wifi_mesh.c
-    src/services/connectivity/wifi_prov.c
-    src/services/protocol/mqtt.c
-    src/services/protocol/sntp.c
-    src/services/protocol/ws_client.c
-    src/services/storage/fatfs.c
-    src/services/storage/fs.c
-    src/services/system/console.c
-    src/services/system/ota.c
-    src/services/system/power_mgmt.c
-    # --- Framework internal service helpers ---
-    src/services/internal/net_bootstrap.c
-    src/services/internal/storage_helpers.c
-    # --- Framework layer ---
-    src/observe/error_domain.c
-    src/observe/log.c
-    src/observe/counter.c
-    src/observe/snapshot.c
-    src/framework/events/router.cpp
-    src/framework/events/event_queue.cpp
-    src/framework/events/framework_init.cpp
-    src/framework/feedback/feedback.cpp
-    src/framework/feedback/presets.cpp
-    src/framework/feedback/internal/logging_sink.cpp
-    src/framework/capabilities/capability_event_map.cpp
-    src/framework/flows/boot.cpp
-    src/framework/flows/connectivity_flow.cpp
-    src/framework/flows/diagnostics_flow.cpp
-    src/framework/flows/error.cpp
-    src/framework/flows/loading.cpp
-    src/framework/flows/ota_flow.cpp
-    src/framework/flows/provisioning_flow.cpp
-    src/framework/flows/settings.cpp
-    src/framework/flows/status.cpp
-    # --- Framework platform layer ---
-    src/framework/platform/input_bridge.cpp
-    src/framework/platform/touch_bridge.cpp
-    src/framework/platform/button_array_bridge.cpp
-    src/framework/platform/app_device_platform.cpp
-    src/framework/platform/app_headless_platform_esp.cpp
-    src/framework/app/ctx.cpp
-    # --- Framework capabilities (ESP-IDF / device implementations) ---
-    # Host stub implementations (*_host.cpp) are excluded here — the
-    # host CMake bridge (cmake/blusys_host_bridge.cmake) picks them up
-    # for PC builds. mqtt_host keeps its own class on host and is
-    # excluded from the device build entirely.
-    src/framework/capabilities/ble_hid_device_device.cpp
-    src/framework/capabilities/build_info_device.cpp
-    src/framework/capabilities/example_sensor_device.cpp
-    src/framework/capabilities/bluetooth_device.cpp
-    src/framework/capabilities/connectivity_device.cpp
-    src/framework/capabilities/diagnostics_device.cpp
-    src/framework/capabilities/lan_control_device.cpp
-    src/framework/capabilities/mqtt_device.cpp
-    src/framework/capabilities/ota_device.cpp
-    src/framework/capabilities/persistence_device.cpp
-    src/framework/capabilities/provisioning_device.cpp
-    src/framework/capabilities/storage_device.cpp
-    src/framework/capabilities/telemetry.cpp
-    src/framework/capabilities/usb_device.cpp
-)
+set(blusys_sources)
+set(BLUSYS_COMPONENT_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/src")
+
+# Layered source manifests live in components/blusys/sources/ so the
+# top-level component file stays readable without losing explicitness.
+include("${CMAKE_CURRENT_LIST_DIR}/sources/hal.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/sources/drivers.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/sources/services.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/sources/framework.cmake")
 
 # Target capability table (HAL). Single TU; chooses the right struct via
 # CONFIG_IDF_TARGET_* at compile time.

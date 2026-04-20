@@ -600,6 +600,36 @@ cmd_lint() {
     python3 "$BLUSYS_REPO_ROOT/scripts/check-host-bridge-spine.py"
 }
 
+blusys_require_pyyaml() {
+    if ! python3 -c 'import yaml' >/dev/null 2>&1; then
+        printf 'error: PyYAML is required; install it with: pip install pyyaml\n' >&2
+        exit 1
+    fi
+}
+
+cmd_validate() {
+    if [[ $# -gt 0 ]]; then
+        blusys_help_validate
+        exit 1
+    fi
+
+    blusys_require_pyyaml
+    python3 "$BLUSYS_REPO_ROOT/scripts/check-inventory.py"
+    python3 "$BLUSYS_REPO_ROOT/scripts/check-product-layout.py"
+    cmd_lint
+}
+
+cmd_build_inventory() {
+    if [[ $# -ne 2 ]]; then
+        blusys_help_build_inventory
+        exit 1
+    fi
+
+    blusys_require_pyyaml
+    blusys_setup_idf_env
+    bash "$BLUSYS_REPO_ROOT/scripts/build-from-inventory.sh" "$1" "$2"
+}
+
 cmd_host_build() {
     local project_arg=""
 
@@ -778,7 +808,9 @@ main() {
         fullclean)      shift; cmd_fullclean "$@" ;;
         example)        shift; cmd_example "$@" ;;
         lint)           shift; cmd_lint "$@" ;;
+        validate)       shift; cmd_validate "$@" ;;
         build-examples) shift; cmd_build_examples "$@" ;;
+        build-inventory) shift; cmd_build_inventory "$@" ;;
         host-build)     shift; cmd_host_build "$@" ;;
         qemu)           shift; cmd_qemu "$@" ;;
         install-qemu)   shift; cmd_install_qemu "$@" ;;
