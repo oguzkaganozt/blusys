@@ -3,7 +3,7 @@
  * @brief Raw block-level SDMMC driver (1-bit or 4-bit bus).
  *
  * Exposes `read_blocks` / `write_blocks` without any filesystem layer. Use
- * ::blusys_sd_spi for a FAT-backed VFS mount over SPI instead. See
+ * `blusys_sd_spi` for a FAT-backed VFS mount over SPI instead. See
  * docs/hal/sdmmc.md.
  */
 

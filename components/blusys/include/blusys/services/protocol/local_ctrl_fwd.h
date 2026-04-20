@@ -1,6 +1,6 @@
 /**
  * @file local_ctrl_fwd.h
- * @brief Forward declarations and callback types for ::blusys_local_ctrl.
+ * @brief Forward declarations and callback types for `blusys_local_ctrl`.
  *
  * This lets callers declare state-pointer fields or callback signatures
  * without pulling in the full definition of the config struct.

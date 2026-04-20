@@ -1,10 +1,10 @@
 /**
  * @file local_ctrl.h
- * @brief Minimal HTTP server exposing a built-in control page plus `/api/*` routes.
+ * @brief Minimal HTTP server exposing a built-in control page plus JSON status and action routes.
  *
  * Purpose-built for simple LAN control use cases (reboot the device, read
  * status as JSON, trigger named actions). For anything richer, use
- * ::blusys_http_server directly. See docs/services/local_ctrl.md.
+ * `blusys_http_server` directly. See docs/services/local_ctrl.md.
  */
 
 #ifndef BLUSYS_LOCAL_CTRL_H

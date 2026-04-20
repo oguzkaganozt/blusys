@@ -4,7 +4,7 @@
  *
  * Registers the SPIFFS VFS under a base path so standard C file APIs resolve
  * there, and provides convenience helpers for common read/write operations.
- * For a hierarchical filesystem on flash, use ::blusys_fatfs instead. See
+ * For a hierarchical filesystem on flash, use `blusys_fatfs` instead. See
  * docs/services/fs.md.
  */
 
