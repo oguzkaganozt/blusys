@@ -2,233 +2,311 @@
 
 ## Objective
 
-Make blusys easier to start, learn, and extend by making `blusys.project.yml` the single source of truth for product shape and by shrinking the default scaffold to the minimum.
+Make blusys easier to start, learn, and extend by making `blusys.project.yml` the single compile-time source of truth for product shape, and by shrinking the default scaffold to the minimum a working app needs.
+
+## Status
+
+Supersedes the v1 draft. The `manifest-first-scaffold` branch has landed partial progress on phases 1 and 5; phases 2 and 3 are the critical path. "Current Status and Gaps" below tracks what is done versus remaining.
 
 ## Target State
 
-- `blusys.project.yml` defines `schema` (initially `1`), `interface`, `capabilities`, `flows`, `profiles`, and `policies`.
-- `interactive` starter scaffolds: `main/app_main.cpp` plus an empty `main/ui/` directory.
-- `headless` starter scaffold: `main/app_main.cpp` only.
-- No mandatory `core/` or `platform/` starter folders.
-- No runtime YAML parsing on device.
-- The generated app entrypoint stays thin and derives its wiring from the manifest.
-- `schema` is versioned from day one; unknown schema versions fail fast.
-- Profiles are built-in factory references with small overrides in v1, not standalone versioned manifest objects.
+A default `headless` starter is:
 
-## Guiding Principles
+- `blusys.project.yml` — 5–10 lines, product shape only.
+- `main/app_main.cpp` — hand-written, thin entrypoint with a visible custom-init zone.
+- No `main/core/`, no `main/platform/`, no generated C++ checked in.
 
-1. Manifest first, code second.
-2. Thin defaults, no ceremony.
-3. Generated wiring, hand-written behavior.
-4. Keep runtime overhead at zero.
-5. Keep advanced escape hatches available, but not default.
-6. Validate early and fail loud.
-7. Preserve the existing framework layering rules.
+A default `interactive` starter adds:
 
-## Phase 1 - Lock the Manifest Contract
+- `main/ui/app_ui.cpp` — small sample component tree.
+- `main/ui/CMakeLists.txt`.
 
-Goal: define the v1 product-shape schema and stop ambiguity early.
+All product shape (interface, capabilities, profile, policies) lives in the manifest. Wiring derivable from the manifest is generated into `build/` and never checked in. The runtime never parses YAML.
 
-Scope:
+## Design Decisions
 
-- Freeze the manifest field set: `schema`, `interface`, `capabilities`, `flows`, `profiles`, `policies`.
-- Treat `schema: 1` as the initial contract.
-- Define the allowed values for `interface`: `headless`, `interactive`.
-- Define interface semantics explicitly: `headless` means no direct local control surface; `interactive` means direct local UI exists.
-- Keep the interface axis about local UI presence only; display technology, input hardware, physical size, and product form factor stay in profiles and theme/layout hints.
-- Allow capability entries to carry small typed config blocks for stock capabilities.
-- Profiles reference built-in framework factories plus small override blocks for display tech, input hardware, orientation, density, and pin maps.
-- An explicit profile selection can override the interface's default family; the interface never overrides profile fields.
-- Profiles do not carry capabilities or app logic.
-- Keep flows as explicit identifiers for stock or custom flow names.
-- Keep policies as a small list of cross-cutting flags.
+Ten decisions, locked.
 
-Deliverables:
+**D1. Field name is `schema`, not `version`.** The field names the contract version of the manifest, not the app or product version. One mechanical rename across templates, catalog, docs, and fixtures.
 
-- A schema reference page for `blusys.project.yml`.
-- A schema versioning and migration note.
-- A profile schema reference page covering built-in factory references, override rules, and precedence.
-- Updated `blusys create --list` output.
-- Validation rules for legal combinations.
-- Example manifests for headless and interactive starters.
-- A compatibility policy for deprecated `none` / `controls` / `touch` labels if temporary aliases are needed during migration.
+**D2. Generated wiring is never checked in.** At build time, a CMake pre-build step translates `blusys.project.yml` into `build/generated/blusys_app_spec.h` (and any companion source). The hand-written `app_main.cpp` includes that header and calls `blusys::run(blusys::generated::kAppSpec)` inside an explicit `app_main()` function that also hosts product-specific init. One source of truth, no drift check.
 
-Exit criteria:
+**D3. Profiles are named references in schema v1. Overrides come later.** Manifest allows `profile: <factory_name>` as a single optional string. Typed override blocks (orientation, pin maps, density) are deferred to schema v2. Factories stay in C++.
 
-- One canonical manifest shape exists.
-- Invalid combinations fail with clear errors.
-- Product shape is no longer duplicated across docs and templates.
+**D4. Schema is versioned; unknown versions hard-fail.** `blusys validate` and `blusys create` reject manifests with an unrecognized `schema:` value, printing the supported range and a migration hint. Additive changes (new optional fields) do not bump the major. Removing or repurposing a field does bump.
 
-## Phase 2 - Reduce the Default Scaffold
+**D5. Manifest fields are a closed set.** `blusys validate` rejects unknown top-level keys. Typos fail loud, early.
 
-Goal: lower friction for simple apps.
+**D6. No compatibility shims for `none` / `controls` / `touch`.** Those interface values never existed in this repo. The v1 plan's migration section around them was fiction and is removed.
 
-Scope:
+**D7. Manifest = product shape, not runtime config.** Runtime values (WiFi SSID, MQTT endpoints, OTA URLs) live in NVS (runtime-writable) and Kconfig / `sdkconfig.defaults` (compile-time defaults). No secrets in git. No nested config blocks in the manifest.
 
-- `interactive` starters generate `main/app_main.cpp` and an empty `main/ui/` directory.
-- `headless` starters generate only `main/app_main.cpp`.
-- Stop generating mandatory `core/` and `platform/` folders in the starter.
-- Keep split-out helper files optional, not starter requirements.
+**D8. Interface collapses to `interactive | headless`.** The three-value `handheld | surface | headless` set in today's catalog has two mechanically identical entries (handheld and surface are both `build_ui: true` with identical wiring). Collapsing matches the real functional axis — local UI yes or no. Form-factor personality moves to profile selection, not a parallel interface axis.
 
-Deliverables:
+**D9. No mandated growth triggers.** The framework imposes no local folder structure beyond `main/`. `core/` and `platform/` are not reintroduced as conventions. Developers organize their code however they want. The plan does not prescribe when or how to split `app_main.cpp`.
 
-- Updated scaffold templates.
-- Updated starter docs and manifest fixtures.
-- A small app entrypoint template that stays readable.
-- No new public quickstart example trees; the manifest-first starter docs are the canonical onboarding path.
+**D10. Escape hatch: override-in-code.** The generated `AppSpec` is a value, not a jail. Developers can use it as-is, copy it and modify, or bypass it and hand-write their own `AppSpec` in `app_main.cpp`. The manifest validator still runs; CI still gates on schema. The generated spec is the 90% path, not the only path.
 
-Exit criteria:
+## Manifest v1 Shape
 
-- A new project can be created without being forced into a large folder tree.
-- First edits stay in one file for small apps.
+```yaml
+schema: 1
+interface: interactive | headless
+capabilities: [string, ...]
+profile: string | null
+policies: [string, ...]
+```
 
-## Phase 3 - Derive Wiring From the Manifest
+- `interface` selects whether a local UI is built.
+- `capabilities` names stock capability packs from the catalog (`connectivity`, `bluetooth`, `usb`, `telemetry`, `ota`, `lan_control`, `storage`, `diagnostics` today).
+- `profile` names a built-in platform profile factory (e.g. `st7735_160x128`). `null` means use the interface's default profile.
+- `policies` names cross-cutting flags (`low_power` today).
 
-Goal: remove duplicate product-shape declarations.
+`flows:` is deferred. When stock flows become real registered entities, the field will be added as an additive change (no schema bump per D4).
 
-Scope:
+No nested blocks in v1. Adding nested config is a schema v2 change.
 
-- Generate the app wiring from `blusys.project.yml`.
-- Map `schema` and `interface` to the correct default profile family and scaffold mode, then apply any explicit profile override.
-- Map `capabilities` to capability registration.
-- Map `flows` to stock flow registration.
-- Map `policies` to build/config overlays.
-- Validate that checked-in wiring matches the manifest.
+## Starter Footprint
 
-Deliverables:
+**Headless — 9 files, 1 hand-written source:**
 
-- Generator logic that emits or updates the thin app entrypoint.
-- Manifest drift checks.
-- A clear failure message when the manifest and app wiring disagree.
-- A deprecated-name warning path for `none` / `controls` / `touch` only if compatibility aliases are required during migration.
+```
+starter/
+├── blusys.project.yml
+├── CMakeLists.txt
+├── README.md                   (short stub, 5–10 lines)
+├── sdkconfig.defaults
+├── sdkconfig.qemu
+├── main/
+│   ├── CMakeLists.txt
+│   ├── idf_component.yml
+│   └── app_main.cpp            (β shape, ~8 lines)
+└── host/
+    └── CMakeLists.txt
+```
 
-Exit criteria:
+**Interactive — 11 files, 2 hand-written sources:**
 
-- Product shape is declared once.
-- No manual duplication of interface, capability, flow, profile, or policy lists.
+Adds:
 
-## Phase 4 - Add Small Presets, Not Bigger Defaults
+```
+main/ui/
+├── CMakeLists.txt
+└── app_ui.cpp                  (small sample component tree)
+```
 
-Goal: keep the starter compact while still giving good defaults.
+## `app_main.cpp` Shape
 
-Scope:
+```cpp
+#include "blusys_app_spec.h"
 
-- Provide curated presets for `headless` and `interactive` starter shapes.
-- Keep the preset set small and opinionated.
-- Include only common capability packs, not every possible combination.
-- Keep custom flows and custom capabilities as explicit opt-in paths.
+extern "C" void app_main() {
+    // --- product-specific init (NVS, logging, hardware) ---
 
-Deliverables:
+    blusys::run(blusys::generated::kAppSpec);
+}
+```
 
-- Presets exposed through `blusys create`.
-- Manifest examples for headless and interactive starters.
-- Starter mappings for the supported interface presets.
+Always explicit. Always a visible init zone. No macro-to-function upgrade step when the developer adds startup code.
 
-Exit criteria:
+## Phases
 
-- A developer can create a credible starter with one command.
-- The platform does not gain a large template matrix.
+Seven phases, ROI-ordered. Each has concrete exit criteria.
 
-## Phase 5 - Rewrite Docs Around the Manifest
+### Phase 1 — Schema contract, validator, interface rename
 
-Goal: reduce the learning curve by removing concept duplication.
+Goal: make the manifest contract decisive and land all rename work in one atomic migration.
 
 Scope:
 
-- Make the manifest the first thing a new developer sees.
-- Explain reducer logic after the manifest, not before it.
-- Keep `app_main.cpp` as the default mental model; split-out helper files are optional and only introduced when the entrypoint stops being readable.
-- Add a short "where does this belong?" guide for behavior, UI, and wiring.
-
-Deliverables:
-
-- Updated `docs/start/*` pages.
-- Updated `docs/app/*` pages.
-- Simplified starter docs and fixtures.
-- A small glossary for platform terms.
+- Rename `version` → `schema` in templates, catalog, docs, fixtures, smoke matrix.
+- Collapse catalog `interfaces` from three entries to two (`interactive`, `headless`); migrate handheld/surface fixtures to `interactive`.
+- Add `profile` field to the schema (optional string, null default).
+- `blusys validate` implements the 5-rule check set (see Validation Rules below).
+- `blusys create` runs the validator on generated manifests before writing.
 
 Exit criteria:
 
-- A new developer can understand product shape without reading architecture docs first.
-- The docs path is shorter and more task-first.
+- `blusys validate` rejects a manifest with a typo in any field name.
+- `blusys validate` rejects `schema: 99` with a supported-range message.
+- `blusys validate` rejects `interface: handheld` with a clear message naming valid values.
+- Every checked-in fixture passes validation.
+- `version:` appears nowhere in the repo outside historical git log.
 
-## Phase 6 - Tighten Validation and CI
+### Phase 2 — Shrink the scaffold
+
+Goal: match the target state for default starters.
+
+Scope:
+
+- `blusys create --interface headless` produces exactly the 9-file footprint above.
+- `blusys create --interface interactive` adds `main/ui/app_ui.cpp` and its `CMakeLists.txt`.
+- No `main/core/` or `main/platform/` folders generated by default.
+
+Exit criteria:
+
+- `blusys create --interface headless tmp/x && find tmp/x/main -type f | wc -l` = 3 (`app_main.cpp` + `CMakeLists.txt` + `idf_component.yml`).
+- Generated project host-builds green with no hand edits.
+- Scaffold smoke matrix passes on the new layout.
+
+### Phase 3 — Generate wiring from the manifest
+
+Goal: remove the duplicate product-shape declaration that lives in hand-written `app_main.cpp` templates today.
+
+Scope:
+
+- Add `blusys gen-spec` subcommand that translates `blusys.project.yml` into `build/generated/blusys_app_spec.h` (and any companion source file).
+- Hook `gen-spec` into CMake via `add_custom_command` so it runs before `app_main.cpp` compiles.
+- Generated file carries a single `constexpr blusys::AppSpec kAppSpec` (or equivalent) containing: capability instances, profile reference, policy flags.
+- Generated file is gitignored; CI fails if it is ever committed.
+- Hand-written `app_main.cpp` reduces to the β shape above.
+
+Exit criteria:
+
+- Editing `capabilities:` in the manifest and rebuilding picks up the new capability with zero hand edits elsewhere.
+- Two consecutive builds from the same manifest produce identical generated output.
+- `app_main.cpp` diff between headless and interactive starters is ≤5 lines.
+
+### Phase 4 — Small preset surface
+
+Goal: keep starter choices narrow.
+
+Scope:
+
+- `blusys create --interface {interactive|headless}` with optional `--with cap1,cap2`.
+- Curated capability packs stay small and opinionated — no exhaustive matrix.
+- `blusys create --list` output fits on one terminal screen.
+
+Exit criteria:
+
+- `blusys create --list` output is ≤25 lines.
+- Every listed preset has smoke coverage.
+
+### Phase 5 — Docs and cold-onboarding proof
+
+Goal: verify the docs actually work for a first-time developer.
+
+Scope:
+
+- `docs/start/*` leads with the manifest, not architecture.
+- All references to `handheld` / `surface` replaced with `interactive` (or removed).
+- Docs describe the escape-hatch path (override-in-code) under an Advanced section.
+- Cold-onboarding test: scripted walkthrough, or a developer unfamiliar with blusys, produces a host-running headless app in ≤15 minutes from `git clone`.
+
+Exit criteria:
+
+- Cold-onboarding test passes once per release with a developer new to blusys.
+- Every doc example is covered by a smoke test.
+
+### Phase 6 — CI validation and drift prevention
 
 Goal: make the new model durable.
 
 Scope:
 
-- Add manifest validation to `blusys validate`.
-- Extend scaffold smoke tests to cover the new minimal defaults.
-- Keep product-layout checks aligned with the new scaffold.
-- Verify the starter matrix for the supported targets.
-
-Deliverables:
-
-- Validation for manifest schema and allowed combinations.
-- A tiny committed starter fixture under `tests/fixtures/manifest-starter/`.
-- Scaffold smoke coverage that generates temp projects from the manifest-first starter and runs them on host.
-- CI updates for the new defaults.
+- `blusys validate` runs in pre-commit and CI on every manifest in the repo.
+- Scaffold smoke regenerates and host-builds every starter on every PR.
+- CI fails if any path under `build/generated/**` is ever committed.
 
 Exit criteria:
 
-- Invalid manifests fail before merge.
-- Starter regressions are caught automatically.
+- A PR introducing an invalid manifest fails CI in under 60 seconds.
+- A PR committing a generated spec file fails with a clear message.
 
-## Phase 7 - Preserve Flexibility Without Reintroducing Bloat
+### Phase 7 — Escape hatches and reference
 
-Goal: support larger products without forcing extra structure on simple ones.
+Goal: make the override path visible without advertising it on the default path.
 
 Scope:
 
-- Document optional growth paths for extracting UI or helper code from `app_main.cpp` only when needed.
-- Keep advanced capability and flow authoring documented, but off the default path.
-- Keep escape hatches explicit and small.
-
-Deliverables:
-
-- A growth-path guide for small, medium, and larger products.
-- Examples showing when to split logic out of `app_main.cpp`.
+- Document the override-in-code pattern with a complete example.
+- One reference example under `examples/reference/` exercises the override (e.g. a product with a one-off custom capability).
+- Document custom-capability authoring and link from the override doc.
 
 Exit criteria:
 
-- Simple apps stay simple.
-- Complex apps still have a clear path forward.
+- Override reference example builds and runs on host.
+- Default-path docs do not mention override-in-code; it lives under Advanced only.
 
-## Migration Strategy
+## Validation Rules
 
-1. Land the versioned manifest schema and validation first.
-2. Add the new `headless` / `interactive` interface names and semantics.
-3. Update scaffold generation, docs, inventory, and validators together.
-4. Use warning-only compatibility aliases only if needed, and keep them time-boxed to one migration window.
-5. Accept deprecated interface names only in CLI creation, inventory ingestion, and validation during the migration window; emit warnings.
-6. Remove deprecated interface names and any shims after the migration window.
-7. Keep the manifest-first starter docs as the canonical onboarding path; do not reintroduce public quickstart trees.
-8. Tighten validation and CI after the new path is stable.
+`blusys validate` checks five things, all data-driven from the catalog:
+
+1. **Schema version known** — `schema: 99` → error with supported range.
+2. **Top-level keys in the allow-list** — typos (`capabilties:`) → error naming the unknown key.
+3. **Values well-typed** — lists are lists, strings are strings; wrong shape → type error.
+4. **Values in catalog** — unknown `interface`, `capability`, `policy`, or `profile` → error listing valid options.
+5. **Required fields present** — `schema` and `interface` are mandatory; others optional.
+
+Intentionally excluded:
+
+- Hand-coded illegal-combination rules. If a combination is truly invalid (e.g., a display-requiring profile on a headless interface), the catalog encodes it — profiles declare which interfaces they support, and the validator reads the catalog.
+- Drift checks against checked-in generated files — moot per D2.
+- Semantic or runtime checks beyond structure.
+
+Invocation sites:
+
+- `blusys create` — validates the manifest it just wrote before returning success.
+- `blusys validate` — on-demand, from the CLI.
+- Pre-commit hook — any committed manifest.
+- CI — every PR touching a manifest.
+
+## Escape Hatches
+
+Documented, supported, off the default path.
+
+**Override-in-code.** The developer defines their own `AppSpec` in `app_main.cpp` (either copying the generated one and modifying, or hand-writing from scratch) and passes it to `blusys::run`. The manifest validator still runs — shape declarations remain authoritative — but the generated spec is bypassed for this build.
+
+**Custom capabilities and profiles.** Authored in C++ under `components/`. To appear in the manifest, they must be added to the catalog; otherwise they are invoked via override-in-code only.
+
+**Local code organization.** Developers may split `app_main.cpp` into additional files under `main/` whenever they choose. The framework imposes no convention on when, how, or into what folder names (D9).
+
+## Schema Evolution
+
+- `schema: 1` is the initial contract.
+- Additive changes (new optional fields) keep `schema: 1`.
+- Removing or repurposing a field bumps to `schema: 2`. The CLI refuses to generate `schema: 2` manifests until a migration path ships.
+- `blusys validate` and `blusys create` reject unknown schema numbers with a supported-range message.
+- No runtime compatibility shims. Migration happens at manifest-authoring time.
 
 ## Guardrails
 
-- Do not add runtime manifest parsing on device.
-- Do not introduce a new mandatory folder layer.
-- Do not create a large abstraction framework around the manifest.
+- Do not add runtime YAML parsing on device.
+- Do not check in generated wiring.
+- Do not introduce a mandatory folder layer beyond `main/`.
+- Do not build a large abstraction framework around the manifest — keep the schema flat.
 - Do not duplicate product shape across multiple config files.
-- Do not weaken the current layering rules.
+- Do not weaken existing framework layering rules.
 - Do not make the default path more complex than the app itself.
+- Do not prescribe local code organization (when to split files, subfolder naming, etc.).
 
 ## Success Metrics
 
-- Default starter is one manifest plus one source file, with `main/ui/` only for interactive apps.
-- First host build requires fewer edits and fewer concepts.
-- Adding a capability or flow is a manifest edit, not a multi-file refactor.
-- New developer onboarding requires less documentation and less architecture knowledge upfront.
-- The platform stays small because the CLI and templates do the work, not the runtime.
+Concrete, pass/fail:
 
-## Recommended Implementation Order By ROI
+- **Headless starter size:** 1 hand-written source file, no `core/` or `platform/` folders.
+- **Interactive starter size:** 2 hand-written source files.
+- **Cold-onboarding time:** new developer produces a host-running app in ≤15 minutes from `git clone`.
+- **Capability edit:** adding a capability is a one-line manifest change with zero edits elsewhere.
+- **Manifest typo survival:** zero typos reach build; all fail validation.
+- **Repo size growth:** no new mandatory folders introduced on the default path.
+- **Generated artifact drift:** zero — enforced by CI.
 
-1. Manifest schema and validation.
-2. Minimal scaffold templates.
-3. Manifest-derived wiring.
-4. Starter presets.
-5. Documentation rewrite.
-6. CI and smoke-test expansion.
-7. Optional growth-path docs.
+## Current Status and Gaps
+
+Done on the `manifest-first-scaffold` branch (commit 37f9f73):
+
+- Manifest file exists with `version`, `interface`, `capabilities`, `policies`.
+- Docs in `docs/start/` and `docs/app/` lead with the manifest.
+- Quickstart example trees removed in favor of `blusys create`.
+- Scaffold smoke matrix exists and passes.
+
+Not done (blocks this plan):
+
+- `version` not yet renamed to `schema` (D1).
+- `profile` not yet in the manifest schema (D3).
+- Interface still carries three values in the catalog (D8).
+- Scaffold still emits `main/core/` and `main/platform/` folders — contradicts Phase 2.
+- Wiring is generated from CLI args at scaffold time, not from the manifest at build time — contradicts Phase 3 and D2.
+- `blusys validate` does not yet enforce the closed field set or schema version (D4, D5).
+
