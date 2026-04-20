@@ -11,6 +11,9 @@ OUTPUT_DIRECTORY       = api-docs/build
 INPUT                  = components/blusys/include/blusys/hal/adc.h \
                          components/blusys/include/blusys/hal/dac.h \
                          components/blusys/include/blusys/hal/gpio.h \
+                         components/blusys/include/blusys/hal/i2c.h \
+                         components/blusys/include/blusys/hal/i2c_slave.h \
+                         components/blusys/include/blusys/hal/i2s.h \
                          components/blusys/include/blusys/hal/pwm.h \
                          components/blusys/include/blusys/hal/spi.h \
                          components/blusys/include/blusys/hal/spi_slave.h \
