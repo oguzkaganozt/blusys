@@ -108,13 +108,13 @@ The **blusys** component defines shared **menuconfig** choices for SPI display p
 
 - **Headless** (`examples/validation/connected_headless`): optional **local SSD1306** status UI vs default headless (device only).
 
-Host SDL builds for dashboard-class examples use `BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE` in `host/CMakeLists.txt` (0 = 320×240 logical, 1 = 480×320, 2 = 160×128 ST7735-class). Compact handheld host windows use `BLUSYS_IC_HOST_DISPLAY_PROFILE` for the ST7735/ST7789 host matrix.
+Host SDL builds for dashboard-class examples use `BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE` in `host/CMakeLists.txt` (0 = 320×240 logical, 1 = 480×320, 2 = 160×128 ST7735-class). Compact interactive host windows use `BLUSYS_IC_HOST_DISPLAY_PROFILE` for the ST7735/ST7789 host matrix.
 
 ## Interface → profile (quick reference)
 
 | Interface | Typical profiles | Notes |
 |-----------|------------------|-------|
-| Handheld | ST7735, ST7789 | Compact color; expressive theme bias |
-| Surface | ILI9341, ILI9488 | Operational / dashboard density |
+| Interactive (compact) | ST7735, ST7789 | Compact color; expressive theme bias |
+| Interactive (dashboard) | ILI9341, ILI9488 | Operational / dashboard density |
 | Headless | Headless, or SSD1306 for local status | Same reducer; `platform/` chooses entry |
-| Surface (coordinator) | Headless, ILI9341, ILI9488 | Headless default; optional local operator UI |
+| Interactive (coordinator) | Headless, ILI9341, ILI9488 | Headless default; optional local operator UI |

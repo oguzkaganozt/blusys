@@ -8,7 +8,7 @@ This page maps the **validation and host-iteration** expectations from the repos
 |-----------------|-------------|
 | **Reducer tests runnable on host** | `scripts/host-test/` (`host_harness_smoke`, `session_helper_smoke`) plus the shared headless helpers they exercise. |
 | **Capability integration tests with simulated runtime-service events** | `scripts/host/` binaries such as `capability_contract_smoke`, `handheld_starter_reducer_smoke`, `panel_connectivity_map_smoke`, `operational_phase_smoke`, `host_spine_test`, `action_queue_drop_smoke`, `snapshot_buffer_smoke`, and `connected_headless_host`. |
-| **Fast repo preflight** | `blusys validate` (inventory, product-layout, and lint in one pass). |
+| **Fast repo preflight** | `blusys validate` (manifest checks, inventory, product-layout, and lint in one pass). |
 | **Inventory-driven example builds** | `blusys build-inventory <target> <ci_pr|ci_nightly>` (same inventory filter CI uses). |
 | **Screenshot or visual smoke where practical** | `widget_kit_demo`, `app_interactive_demo`, and host builds of interactive examples (SDL). Not automated as image snapshots in CI today. |
 | **Scaffold smoke for generated starters** | `scripts/scaffold-smoke.sh` (also run in CI after host smokes). |

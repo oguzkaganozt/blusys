@@ -10,6 +10,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from blusys.manifest_validator import validate_manifest_text  # noqa: E402
+
 
 def load_catalog(repo_root: Path) -> dict:
     catalog_path = repo_root / "scripts" / "scaffold" / "catalog.yml"
@@ -188,14 +191,19 @@ def render_sdkconfig(
 
 
 def render_project_manifest(
-    interface: str, capabilities: list[str], policies: list[str]
+    interface: str,
+    capabilities: list[str],
+    policies: list[str],
+    profile: str | None = None,
 ) -> str:
     caps = ", ".join(capabilities)
     pols = ", ".join(policies)
+    profile_value = "null" if profile is None else profile
     return (
-        "version: 1\n"
+        "schema: 1\n"
         f"interface: {interface}\n"
         f"capabilities: [{caps}]\n"
+        f"profile: {profile_value}\n"
         f"policies: [{pols}]\n"
     )
 
@@ -609,18 +617,9 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
 
     cap_list = ", ".join(capability_refs)
     ui_include = '#include "ui/app_ui.hpp"\n' if interface != "headless" else ""
-    profile_block = ""
     spec_tail_fields = ""
     if interface != "headless":
         spec_tail_fields = f'    .host_title = "{project_title}",\n'
-        if interface == "surface":
-            profile_block = (
-                "static const blusys::device_profile dashboard_profile = "
-                "blusys::auto_profile_dashboard();\n\n"
-            )
-            spec_tail_fields = (
-                "    .profile = &dashboard_profile,\n" + spec_tail_fields
-            )
         ui_fields = (
             f"    .on_init = {namespace_name}::ui::on_init,\n"
             f"    .on_event = {namespace_name}::on_event,\n"
@@ -631,8 +630,7 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
             f"    .on_event = {namespace_name}::on_event,\n"
         )
     entry = {
-        "handheld": f"BLUSYS_APP({namespace_name}::system::spec)",
-        "surface": f"BLUSYS_APP({namespace_name}::system::spec)",
+        "interactive": f"BLUSYS_APP({namespace_name}::system::spec)",
         "headless": f"BLUSYS_APP_HEADLESS({namespace_name}::system::spec)",
     }[interface]
     return f"""#include \"core/app_logic.hpp\"
@@ -651,7 +649,7 @@ namespace {namespace_name}::system {{
 
 {os.linesep.join(instances)}
 
-{profile_block}blusys::capability_list_storage capabilities{{{cap_list}}};
+blusys::capability_list_storage capabilities{{{cap_list}}};
 
 const blusys::app_spec<app_state, action> spec{{
     .initial_state = {{}},
@@ -685,6 +683,7 @@ blusys create --interface {interface}{with_arg}{pol_arg} .
 
 - Interface: `{interface}`
 - Capabilities: `{caps}`
+- Profile: `null`
 - Policies: `{pols}`
 
 ## Layout
@@ -722,6 +721,13 @@ def generate_project(
 ) -> None:
     catalog = load_catalog(repo_root)
     validate_model(catalog, interface, capabilities, policies)
+    manifest_text = render_project_manifest(interface, capabilities, policies)
+    manifest_errors = validate_manifest_text(manifest_text, catalog)
+    if manifest_errors:
+        for error in manifest_errors:
+            print(f"error: generated manifest failed validation: {error}", file=sys.stderr)
+        raise SystemExit(1)
+
     if out_dir.exists():
         out_dir.mkdir(parents=True, exist_ok=True)
     else:
@@ -744,7 +750,7 @@ def generate_project(
     )
     write_file(
         out_dir / "blusys.project.yml",
-        render_project_manifest(interface, capabilities, policies),
+        manifest_text,
     )
     write_file(
         out_dir / "README.md",
@@ -802,6 +808,9 @@ def print_list(catalog: dict) -> None:
     print("Interfaces:")
     for name, meta in catalog["interfaces"].items():
         print(f"  {name:10s} {meta['description']}")
+    print("\nProfiles:")
+    for name, meta in catalog.get("profiles", {}).items():
+        print(f"  {name:18s} {meta['description']}")
     print("\nCapabilities:")
     for name, meta in catalog["capabilities"].items():
         print(f"  {name:12s} {meta['description']}")
@@ -813,7 +822,7 @@ def print_list(catalog: dict) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--repo-root", required=True)
-    parser.add_argument("--interface", default="handheld")
+    parser.add_argument("--interface", default="interactive")
     parser.add_argument("--with", dest="with_caps", default="")
     parser.add_argument("--policy", default="")
     parser.add_argument("--list", action="store_true")
@@ -833,6 +842,7 @@ def main() -> int:
     print(f"Created blusys project: {out_dir}")
     print(f"Interface: {args.interface}")
     print(f"Capabilities: {', '.join(capabilities) if capabilities else 'none'}")
+    print("Profile: null")
     print(f"Policies: {', '.join(policies) if policies else 'none'}")
     return 0
 

@@ -1,26 +1,26 @@
-# Product shape (interface, capabilities, policy)
+# Product shape (interface, capabilities, profile, policies)
 
-New Blusys products are described by three explicit axes, not by named starter bundles. The scaffold and checked-in `blusys.project.yml` use the same vocabulary.
+New Blusys products are described by `schema`, `interface`, `capabilities`, `profile`, and `policies`, not by named starter bundles. The scaffold and checked-in `blusys.project.yml` use the same vocabulary.
 
 ## Grammar
 
 ```bash
-blusys create [--interface handheld|surface|headless] [--with cap1,cap2,...] [--policy policy1,...] [path]
+blusys create [--interface interactive|headless] [--with cap1,cap2,...] [--policy policy1,...] [path]
 blusys create --list
 ```
 
-- **`--interface`** (single): how the product presents itself locally - shell, theme bias, UI on/off, host build defaults.
+- **`--interface`** (single): how the product presents itself locally - UI on/off, host build defaults.
 - **`--with`** (multi): [framework capabilities](../app/capabilities.md) - connectivity, storage, telemetry, OTA, and the rest (see `--list`).
+- **`profile`** (single): built-in device/profile factory name; `null` uses the interface default.
 - **`--policy`** (multi): cross-cutting behavior that is **not** a runtime capability - e.g. `low_power`.
 
-Defaults: **`handheld`**, empty capabilities, empty policies. Interactive onboarding still runs `blusys create` with no arguments and shows the equivalent canonical command before generation.
+Defaults: **`interactive`**, empty capabilities, `null` profile, empty policies. Interactive onboarding still runs `blusys create` with no arguments and shows the equivalent canonical command before generation.
 
 ## Interfaces
 
 | Interface | Role | Typical use |
 |-----------|------|-------------|
-| **handheld** | Compact interactive shell, tactile bias, encoder-friendly | Small displays, control loops, settings |
-| **surface** | Denser operator shell, dashboard-style | Larger panels, status at a glance |
+| **interactive** | Local UI enabled, encoder-friendly | Small displays, operator panels, settings |
 | **headless** | No local UI by default; headless entry | Telemetry, gateways, invisible-when-healthy devices |
 
 All use the same **`core/`** · **`ui/`** (if interactive) · **`platform/`** layout and **`update(ctx, state, action)`**.
@@ -41,9 +41,10 @@ For historical minimal connectivity demos (kept for regression), see `examples/v
 ## Capabilities and policies
 
 - **Capabilities** are composed in **`platform/`**; the reducer receives work via **actions**; capability events are handled in **`platform/on_event`** (see [Capability composition](../app/capability-composition.md)).
+- **Profiles** are named C++ factories selected by the manifest's `profile` field. Leave it `null` for the interface default.
 - **Policies** adjust defaults and integration overlays (e.g. power-related `sdkconfig` fragments) without adding a new capability kind.
 
-Dependency and target rules (e.g. `telemetry` requires `connectivity`, `usb` targets ESP32-S3) are enforced by the generator and listed under **`blusys create --list`**.
+Dependency, target, and profile/interface compatibility rules (e.g. `telemetry` requires `connectivity`, `usb` targets ESP32-S3) are enforced by the generator and manifest validator.
 
 ## Build layout for generated projects
 

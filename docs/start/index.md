@@ -4,11 +4,11 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 
 ## Pick a product shape first
 
-New products are created with **`blusys create`** using an explicit model: **interface** (how the product presents locally), **capabilities** (framework runtime bundles), and **policies** (cross-cutting defaults that are not capabilities). Product-shaped examples in this repo use the same fixed **`core/`** / **`ui/`** / **`platform/`** layout; CI runs `scripts/check-product-layout.py` (HAL `validation/` demos are exempt).
+New products are created with **`blusys create`** using an explicit model: **interface** (how the product presents locally), **capabilities** (framework runtime bundles), **profile** (named platform profile factory or `null`), and **policies** (cross-cutting defaults that are not capabilities). Product-shaped examples in this repo use the same fixed **`core/`** / **`ui/`** / **`platform/`** layout; CI runs `scripts/check-product-layout.py` (HAL `validation/` demos are exempt).
 
-- [Product shape](product-shape.md) — `handheld` / `surface` / `headless`, `--with`, `--policy`, and how reference examples map to that model
+- [Product shape](product-shape.md) — `interactive` / `headless`, `--with`, `profile`, `--policy`, and how reference examples map to that model
 
-At the terminal: **`blusys create --list`** prints interfaces, capabilities, policies, and dependency rules.
+At the terminal: **`blusys create --list`** prints interfaces, profiles, capabilities, and policies.
 
 ## Guided quickstarts (after you know the shape)
 
@@ -18,7 +18,7 @@ At the terminal: **`blusys create --list`** prints interfaces, capabilities, pol
 
     ---
 
-    Host-first display product: reducer model, stock widgets, and the **handheld** interface walkthrough.
+    Host-first display product: reducer model, stock widgets, and the **interactive** interface walkthrough.
 
     [:octicons-arrow-right-24: Interactive Quickstart](quickstart-interactive.md)
 

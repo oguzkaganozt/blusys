@@ -14,21 +14,13 @@ Capabilities are composed in `platform/` and translated into app actions.
 
 Each **interface** suggests a different **minimal** capability set (enough for a credible starter) and a **full** stack for a typical connected product. Compose capabilities only in `platform/`; onboarding and Wi-Fi lifecycle live under **`connectivity`**. The starter docs in `docs/start/quickstart-interactive.md` and `docs/start/quickstart-headless.md` describe the target manifest-first app shape. See [Product shape](../start/product-shape.md) and **`blusys create --list`** for dependency rules.
 
-### Handheld (`--interface handheld`)
+### Interactive (`--interface interactive`)
 
 | Minimal | Full (typical) |
 |---------|----------------|
-| storage | storage, connectivity (optional) |
+| storage | storage, connectivity, diagnostics |
 
-Starter: manifest-first handheld starter.
-
-### Surface (`--interface surface`)
-
-| Minimal | Full (typical) |
-|---------|----------------|
-| connectivity | connectivity, storage, diagnostics |
-
-Starter: manifest-first surface starter.
+Starter: manifest-first interactive starter.
 
 ### Headless connected (`--interface headless` + connected `--with`)
 
@@ -38,13 +30,13 @@ Starter: manifest-first surface starter.
 
 Starter: manifest-first headless starter.
 
-### Surface coordinator
+### Interactive coordinator
 
 | Minimal | Full (typical) |
 |---------|----------------|
 | connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: manifest-first headless starter with optional local UI.
+Starter: manifest-first interactive starter with optional local UI.
 
 ## Rule Of Thumb
 

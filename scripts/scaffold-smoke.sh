@@ -69,16 +69,16 @@ run_capability_scaffold() {
 }
 
 # Interface/capability/policy matrix
-run_create hh --interface handheld .
-run_create hs --interface handheld --with storage .
-run_create hb --interface handheld --with bluetooth,storage .
-run_create sd --interface surface --with connectivity,diagnostics .
+run_create ii --interface interactive .
+run_create is --interface interactive --with storage .
+run_create ib --interface interactive --with bluetooth,storage .
+run_create id --interface interactive --with connectivity,diagnostics .
 run_create ht --interface headless --with connectivity,telemetry,ota,diagnostics .
 run_create hl --interface headless --with connectivity,lan_control,ota .
 run_create hu --interface headless --with usb .
 run_create hp --interface headless --with connectivity,telemetry --policy low_power .
 
-for name in hh hs hb sd ht hl hu hp; do
+for name in ii is ib id ht hl hu hp; do
     run_host "$name"
 done
 

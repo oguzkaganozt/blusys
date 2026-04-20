@@ -15,11 +15,11 @@ Best for **handheld** / compact interactive surfaces and dense control strips.
 | `slider` | Ranged numeric control | Brightness, thresholds |
 | `gauge` | Compact numeric feedback | Status strips, monitoring |
 
-Reference starter: manifest-first handheld starter docs (see [Interactive Quickstart](../start/quickstart-interactive.md)).
+Reference starter: manifest-first interactive starter docs (see [Interactive Quickstart](../start/quickstart-interactive.md)).
 
 ## Operational Surface
 
-Best for **surface** interactive and gateway local UI: dashboards and multi-section screens.
+Best for **interactive** dashboard-style local UI and gateway panels: dashboards and multi-section screens.
 
 | Widget | Role | Often appears in |
 |--------|------|------------------|
@@ -32,7 +32,7 @@ Reference starter: `examples/reference/display/`.
 
 ## Data And Diagnostics
 
-Shared by surface interactive and connected products when showing health and metrics.
+Shared by interactive and connected products when showing health and metrics.
 
 | Widget | Role | Often appears in |
 |--------|------|------------------|

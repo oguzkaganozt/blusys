@@ -608,15 +608,47 @@ blusys_require_pyyaml() {
 }
 
 cmd_validate() {
-    if [[ $# -gt 0 ]]; then
-        blusys_help_validate
-        exit 1
-    fi
+    local manifest_paths=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                blusys_help_validate
+                exit 0
+                ;;
+            --*)
+                blusys_help_validate
+                exit 1
+                ;;
+            *)
+                manifest_paths+=("$1")
+                shift
+                ;;
+        esac
+    done
 
     blusys_require_pyyaml
+
+    if [[ ${#manifest_paths[@]} -gt 0 ]]; then
+        python3 "$BLUSYS_REPO_ROOT/scripts/check-manifests.py" \
+            --repo-root "$BLUSYS_REPO_ROOT" \
+            "${manifest_paths[@]}"
+        return $?
+    fi
+
+    if [[ -f "$(pwd)/blusys.project.yml" ]]; then
+        python3 "$BLUSYS_REPO_ROOT/scripts/check-manifests.py" \
+            --repo-root "$BLUSYS_REPO_ROOT" \
+            "$(pwd)"
+        return $?
+    fi
+
     python3 "$BLUSYS_REPO_ROOT/scripts/check-inventory.py"
     python3 "$BLUSYS_REPO_ROOT/scripts/check-product-layout.py"
     cmd_lint
+    python3 "$BLUSYS_REPO_ROOT/scripts/check-manifests.py" \
+        --repo-root "$BLUSYS_REPO_ROOT" \
+        --allow-empty \
+        "$BLUSYS_REPO_ROOT"
 }
 
 cmd_build_inventory() {
@@ -658,7 +690,7 @@ cmd_host_build() {
         project_dir="$(blusys_resolve_project_dir "$project_arg")" || exit 1
         if [[ ! -f "$project_dir/host/CMakeLists.txt" ]]; then
             printf 'error: no host/CMakeLists.txt found in %s\n' "$project_dir" >&2
-            printf '       re-run: blusys create --interface <handheld|surface|headless> %s\n' "$project_dir" >&2
+            printf '       re-run: blusys create --interface <interactive|headless> %s\n' "$project_dir" >&2
             exit 1
         fi
         host_dir="$project_dir/host"

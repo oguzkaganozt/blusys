@@ -623,7 +623,7 @@ examples:
   - esp32s3
   ci_pr: false
   ci_nightly: true
-  interface: handheld
+  interface: interactive
   capabilities:
   - connectivity
   policies: []

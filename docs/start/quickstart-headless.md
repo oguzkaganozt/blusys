@@ -18,7 +18,7 @@ my_sensor/
     app_main.cpp
 ```
 
-`blusys.project.yml` declares the product shape. `main/app_main.cpp` owns `State`, `Action`, `update(ctx, state, action)`, and the headless runtime hooks. There is no `ui/` directory unless the product actually needs one.
+`blusys.project.yml` declares the product shape: `schema`, `interface`, `capabilities`, `profile`, and `policies`. `main/app_main.cpp` owns `State`, `Action`, `update(ctx, state, action)`, and the headless runtime hooks. There is no `ui/` directory unless the product actually needs one.
 
 ## Run on host
 
@@ -40,7 +40,7 @@ blusys monitor my_sensor /dev/ttyUSB0 esp32
 
 - Add `capabilities` in the manifest when the device needs connectivity, telemetry, OTA, storage, or diagnostics.
 - Add `flows` when headless behavior has distinct operating phases.
-- Add `profiles` when you want a specific host or device target setup.
+- Add `profile` when you want a specific host or device target setup.
 - Split code out of `app_main.cpp` only when the file stops being readable.
 
 ## Next steps

@@ -5,7 +5,7 @@ Build a minimal interactive product using the manifest-first starter.
 ## Create the project
 
 ```bash
-blusys create --interface handheld my_product
+blusys create --interface interactive my_product
 cd my_product
 ```
 
@@ -19,7 +19,7 @@ my_product/
     ui/
 ```
 
-`blusys.project.yml` declares the product shape. `main/app_main.cpp` owns `State`, `Action`, `update(ctx, state, action)`, and app wiring. `main/ui/` stays empty until the product actually needs screens or widgets.
+`blusys.project.yml` declares the product shape: `schema`, `interface`, `capabilities`, `profile`, and `policies`. `main/app_main.cpp` owns `State`, `Action`, `update(ctx, state, action)`, and app wiring. `main/ui/` stays empty until the product actually needs screens or widgets.
 
 ## Run on host
 
@@ -33,7 +33,7 @@ The app launches in a host SDL2 window with the default theme. Arrow keys move f
 
 - Add `capabilities` in the manifest when the app needs connectivity, storage, telemetry, OTA, or other runtime services.
 - Add `flows` when the product has distinct UI journeys.
-- Add `profiles` when you need a specific host or device target setup.
+- Add `profile` when you need a specific host or device target setup.
 - Split code out of `app_main.cpp` only when the file stops being readable.
 
 ## Next steps

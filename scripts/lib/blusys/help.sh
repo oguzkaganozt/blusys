@@ -36,22 +36,21 @@ HELP
 }
 
 blusys_help_create() {
-    printf 'Usage: blusys create [--interface <handheld|surface|headless>] [--with <cap1,cap2,...>] [--policy <policy1,...>] [--list] [path]\n'
+    printf 'Usage: blusys create [--interface <interactive|headless>] [--with <cap1,cap2,...>] [--policy <policy1,...>] [--list] [path]\n'
     printf '\nScaffold a new blusys product project from the explicit product model:\n'
-    printf 'interface + capabilities + policy.\n'
+    printf 'interface + capabilities + profile + policies.\n'
     printf '\nOptions:\n'
-    printf '  --interface <type>  product shell family (default: handheld)\n'
-    printf '                       handheld  — compact interactive shell\n'
-    printf '                       surface   — dashboard-style interactive shell\n'
-    printf '                       headless  — no local UI\n'
+    printf '  --interface <type>  product interface (default: interactive)\n'
+    printf '                       interactive — local UI enabled\n'
+    printf '                       headless    — no local UI\n'
     printf '  --with <caps>       comma-separated capabilities\n'
     printf '                       connectivity, bluetooth, usb, telemetry, ota, lan_control, storage, diagnostics\n'
     printf '  --policy <items>    comma-separated non-capability policy overlays\n'
     printf '                       low_power\n'
-    printf '  --list              print interfaces, capabilities, and policies\n'
+    printf '  --list              print interfaces, profiles, capabilities, and policies\n'
     printf '\nIf path is given, creates the project there; otherwise uses the current directory.\n'
     printf 'Asks before overwriting existing files.\n'
-    printf '\nGenerates: top-level CMake, main/, host/, sdkconfig defaults, and blusys.project.yml.\n'
+    printf '\nGenerates: top-level CMake, main/, host/, sdkconfig defaults, and schema-first blusys.project.yml.\n'
     printf 'ESP-IDF finds blusys_* via EXTRA_COMPONENT_DIRS (embedded path to components/) plus\n'
     printf 'main/idf_component.yml for registry deps (e.g. LVGL).\n'
     printf '\nEnvironment:\n'
@@ -147,8 +146,9 @@ blusys_help_lint() {
 }
 
 blusys_help_validate() {
-    printf 'Usage: blusys validate\n'
-    printf '\nRun inventory, product-layout, and lint checks in one pass.\n'
+    printf 'Usage: blusys validate [path ...]\n'
+    printf '\nValidate blusys.project.yml manifests with the schema contract.\n'
+    printf 'With no path and no local manifest, runs inventory, product-layout, lint, and repository manifest scans in one pass.\n'
 }
 
 blusys_help_host_build() {

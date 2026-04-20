@@ -1,7 +1,7 @@
 # Sourced by repo-root `blusys` — `create` command and project scaffolding.
 
 cmd_create() {
-    local interface="handheld"
+    local interface="interactive"
     local with_caps=""
     local policies=""
     local list_only="0"
@@ -53,13 +53,15 @@ cmd_create() {
                 positional+=("$1")
                 shift
                 ;;
-        esac
+            esac
     done
 
     if [[ ${#positional[@]} -gt 1 ]]; then
         blusys_help_create
         exit 1
     fi
+
+    blusys_require_pyyaml
 
     if [[ "$list_only" == "1" ]]; then
         python3 "$BLUSYS_REPO_ROOT/scripts/lib/blusys/scaffold_generator.py" \
@@ -121,15 +123,13 @@ blusys_prompt_create() {
     local -n _target_arg_ref=$4
 
     printf 'Product interface?\n'
-    printf '  1) handheld\n'
-    printf '  2) surface\n'
-    printf '  3) headless\n\n'
+    printf '  1) interactive\n'
+    printf '  2) headless\n\n'
     printf 'Choose [1]: '
     read -r choice
     case "$choice" in
-        2) _interface_ref="surface" ;;
-        3) _interface_ref="headless" ;;
-        *) _interface_ref="handheld" ;;
+        2) _interface_ref="headless" ;;
+        *) _interface_ref="interactive" ;;
     esac
 
     local selected_caps=()
@@ -137,10 +137,8 @@ blusys_prompt_create() {
         local default="N"
         if [[ "$_interface_ref" == "headless" ]]; then
             case "$cap" in connectivity|telemetry|ota|diagnostics) default="Y" ;; esac
-        elif [[ "$_interface_ref" == "surface" ]]; then
+        elif [[ "$_interface_ref" == "interactive" ]]; then
             case "$cap" in connectivity|diagnostics|storage) default="Y" ;; esac
-        elif [[ "$_interface_ref" == "handheld" ]]; then
-            case "$cap" in storage) default="Y" ;; esac
         fi
         printf '%-12s [%s]: ' "$cap" "$default"
         read -r answer

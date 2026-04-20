@@ -24,7 +24,7 @@ VALID_TARGETS = {"esp32", "esp32c3", "esp32s3"}
 VALID_CATEGORIES = {"reference", "validation"}
 VALID_VISIBILITY = {"public", "internal"}
 VALID_SECTIONS = {"start", "app", "services", "hal_drivers", "internals"}
-VALID_INTERFACES = {"handheld", "surface", "headless", "none"}
+VALID_INTERFACES = {"interactive", "headless", "none"}
 
 
 def find_example_dirs():
