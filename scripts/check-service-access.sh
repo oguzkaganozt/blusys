@@ -5,16 +5,13 @@
 # `blusys/services/*` are:
 #
 #   - `components/blusys/src/framework/capabilities/` (capability backends)
-#   - `components/blusys/src/framework/runtime/` (P3's future home; may not
-#     exist yet, which is fine)
+#   - `components/blusys/src/framework/runtime/` (may not exist yet; fine)
 #   - `components/blusys/src/framework/test/` (fakes + mocks)
 #   - `components/blusys/src/services/` itself (a service may re-include
 #     another service)
 #
 # Any other source that does `#include "blusys/services/..."` is reaching
-# past the capability boundary and is banned by P2's access contract.
-#
-# Baseline is 0 today — no leaker exists; the guard is tight from day one.
+# past the capability boundary and is banned by the service-access contract.
 
 set -euo pipefail
 

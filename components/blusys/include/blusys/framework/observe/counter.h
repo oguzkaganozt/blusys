@@ -1,8 +1,8 @@
 /* blusys/framework/observe/counter.h — monotonic u32 counters per domain.
  *
  * One slot per blusys_err_domain_t. Cheap to bump from any context (atomic
- * add). Diagnostics surfaces (P11) read snapshots; the runtime may reset them
- * across long tests.
+ * add). The diagnostics capability reads snapshots; the runtime may reset
+ * them across long tests.
  */
 
 #ifndef BLUSYS_FRAMEWORK_OBSERVE_COUNTER_H

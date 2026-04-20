@@ -11,7 +11,7 @@
  *   2. Values are pinned per platform (device vs host). Where both compile
  *      identically they share one value.
  *   3. Changing a budget is a policy change; it requires updating
- *      docs/app/memory-and-budgets.md (P9) alongside the header.
+ *      docs/app/memory-and-budgets.md alongside the header.
  *
  * This header is C++ because the framework reducer + queues are C++. C code
  * that needs the same numbers should keep them local to its subsystem and

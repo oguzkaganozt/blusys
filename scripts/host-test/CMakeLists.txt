@@ -1,10 +1,10 @@
-# scripts/host-test — minimal P0c test loop (no SDL, no libmosquitto, no LVGL).
+# scripts/host-test — minimal headless test loop (no SDL, no libmosquitto, no LVGL).
 #
 # A deliberately bare CMake project whose only purpose is to build and run
-# the headless tests under scripts/host/src/p0c_*.cpp against the fake HAL
+# the headless tests under scripts/host/src/*_smoke.cpp against the fake HAL
 # and capability mocks. This exists as a sibling to scripts/host/ because
 # the latter's interactive host bridge requires SDL2 and libmosquitto at
-# configure time — which contradicts P0c's "fast iteration loop" promise.
+# configure time — which contradicts the fast iteration loop promise.
 #
 # To use:
 #   cmake -S scripts/host-test -B build-host-test
@@ -79,14 +79,14 @@ target_include_directories(blusys_fake_hal PUBLIC
 )
 target_compile_options(blusys_fake_hal PRIVATE -Wall -Wextra)
 
-# ── p0c_smoke ───────────────────────────────────────────────────────────
-add_executable(p0c_smoke ${BLUSYS_REPO_ROOT}/scripts/host/src/p0c_smoke.cpp)
-target_link_libraries(p0c_smoke PRIVATE blusys_test_core blusys_persistence_host blusys_fake_hal)
-target_compile_options(p0c_smoke PRIVATE
+# ── host_harness_smoke ─────────────────────────────────────────────────
+add_executable(host_harness_smoke ${BLUSYS_REPO_ROOT}/scripts/host/src/host_harness_smoke.cpp)
+target_link_libraries(host_harness_smoke PRIVATE blusys_test_core blusys_persistence_host blusys_fake_hal)
+target_compile_options(host_harness_smoke PRIVATE
     -fno-exceptions -fno-rtti -fno-threadsafe-statics
     -Wall -Wextra
 )
-add_test(NAME p0c_smoke COMMAND p0c_smoke)
+add_test(NAME host_harness_smoke COMMAND host_harness_smoke)
 
 # ── session_helper_smoke (session state machine) ───────────────────────────
 add_executable(session_helper_smoke ${BLUSYS_REPO_ROOT}/scripts/host/src/session_helper_smoke.cpp)

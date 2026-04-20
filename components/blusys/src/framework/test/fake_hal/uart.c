@@ -2,7 +2,7 @@
  *
  * One slot per port number. TX writes are captured in a drain-able byte
  * buffer; RX pushes are handed to the registered rx_callback synchronously.
- * The implementation is small by design — P0c needs enough to compile and
+ * The implementation is small by design — tests need enough to compile and
  * exercise a code path, not cycle-accurate UART emulation.
  */
 

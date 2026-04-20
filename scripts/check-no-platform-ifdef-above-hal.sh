@@ -7,14 +7,12 @@
 #   - Anything under components/blusys/*/hal/ (the HAL is the platform line).
 #   - *_host.cpp, *_device.cpp, *_host.c, *_device.c backend files.
 #
-# Every other occurrence is a platform leak above HAL that P5's capability
-# split + other phases collapse to zero. The plan counts 26 today; actual
-# count measured at baseline is 46 (slightly higher than the plan's
-# estimate). P5 drives this to 0.
+# Every other occurrence is a platform leak above HAL and must be collapsed
+# into the host/device backend split.
 
 set -euo pipefail
 
-BASELINE_MAX=0    # P5 complete — zero platform ifdefs above HAL.
+BASELINE_MAX=0    # zero platform ifdefs above HAL.
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"

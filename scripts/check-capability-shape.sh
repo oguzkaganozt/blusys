@@ -2,18 +2,14 @@
 # check-capability-shape.sh
 #
 # Every capability is one header + one *_host.cpp + one *_device.cpp.
-# Today the device variant is named `<name>.cpp` (no `_device` suffix);
-# P5 renames it to `<name>_device.cpp`. Until P5 lands, the "mismatch"
-# metric we track is: capability-header names whose `*_device.cpp` does
-# NOT exist (but where `<name>.cpp` does exist instead). That is exactly
-# the P5 rename debt.
-#
-# After P5 the baseline tightens to zero and any new capability that
-# diverges from (header + *_host.cpp + *_device.cpp) fails.
+# Any new capability that diverges from that shape fails. The "rename-debt"
+# metric tracks capability-header names whose `*_device.cpp` does NOT exist
+# but where a legacy `<name>.cpp` does — no such debt remains, but the
+# check stays as a ratchet.
 
 set -euo pipefail
 
-BASELINE_MISSING_DEVICE_CPP=0    # P5 complete: all capabilities have *_device.cpp + *_host.cpp.
+BASELINE_MISSING_DEVICE_CPP=0    # all capabilities have *_device.cpp + *_host.cpp.
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
@@ -44,7 +40,7 @@ for hdr in "$cap_hdr_dir"/*.hpp; do
     if [ ! -f "$device_cpp" ]; then
         if [ -f "$legacy_cpp" ]; then
             missing=$((missing + 1))
-            offenders+=("P5 rename debt: $legacy_cpp → ${name}_device.cpp")
+            offenders+=("rename debt: $legacy_cpp → ${name}_device.cpp")
         else
             offenders+=("missing device: $device_cpp")
         fi

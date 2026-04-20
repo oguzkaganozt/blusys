@@ -1,7 +1,7 @@
 #pragma once
 
 // Canonical capability template — minimal, reads one value.
-// This is the shape the scaffolder emits in P12 and the reference every new
+// This is the shape the scaffolder emits and the reference every new
 // capability header is measured against (≤60 LOC of class shell).
 
 #include "blusys/framework/capabilities/capability.hpp"

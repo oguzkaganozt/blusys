@@ -1,6 +1,6 @@
-/* p0c_smoke — end-to-end smoke for the P0c test harness.
+/* host_harness_smoke — end-to-end smoke for the headless test harness.
  *
- * Exercises, in one executable, everything P0c delivers:
+ * Exercises, in one executable, everything the harness delivers:
  *
  *   1. test_harness<State, Action>   — init / step / post_action / deinit.
  *   2. fake HAL for gpio, timer, uart — drive a pin, advance virtual time,
@@ -12,11 +12,11 @@
  *      on_event routes it to an Action, the reducer mutates state.
  *
  * If any assertion fails the harness prints [FAIL] file:line expr and exits
- * non-zero. Success prints "p0c_smoke: all asserts passed" and returns 0.
+ * non-zero. Success prints "host_harness_smoke: all asserts passed" and returns 0.
  *
- * Link list is intentionally minimal — no libmosquitto, no SDL2, no LVGL.
- * The plan calls this the fast host iteration loop; proving a test can link
- * without those is the point.
+ * Link list is intentionally minimal — no libmosquitto, no SDL2, no LVGL. This
+ * is the fast host iteration loop; proving a test can link without those is
+ * the point.
  */
 
 #include "blusys/framework/app/internal/app_runtime.hpp"
@@ -194,6 +194,6 @@ int main()
     BLUSYS_TEST_REQUIRE(diagnostics.stop_calls == 1);
     BLUSYS_TEST_REQUIRE(telemetry.stop_calls   == 1);
 
-    std::fprintf(stdout, "p0c_smoke: all asserts passed\n");
+    std::fprintf(stdout, "host_harness_smoke: all asserts passed\n");
     return 0;
 }

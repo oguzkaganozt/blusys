@@ -4,9 +4,9 @@
  * pin levels via blusys_test_gpio_drive() and read back what product code
  * most recently wrote via blusys_test_gpio_last_write().
  *
- * Interrupt callbacks fire synchronously from the drive site — same thread as
- * the reducer. That matches the "one task owns state" invariant in P0b's
- * threading contract.
+ * Interrupt callbacks fire synchronously from the drive site — same thread
+ * as the reducer. That matches the "one task owns state" invariant in the
+ * threading contract (docs/internals/threading.md).
  */
 
 #include "blusys/framework/test/fake_hal.h"

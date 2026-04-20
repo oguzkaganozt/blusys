@@ -30,7 +30,7 @@ typedef enum {
     /* Framework — observe itself, for its own failures. */
     err_domain_framework_observe,
 
-    /* Drivers that migrated in P0b's OOM fix. */
+    /* Drivers. */
     err_domain_driver_display,
     err_domain_driver_dht,
     err_domain_driver_encoder,
@@ -38,16 +38,16 @@ typedef enum {
     err_domain_driver_lcd,
     err_domain_driver_button,
 
-    /* Services that migrated in P0a. */
+    /* Storage services. */
     err_domain_storage_fs,
     err_domain_storage_fatfs,
 
-    /* HAL peripherals that migrated in P1. */
+    /* HAL peripherals. */
     err_domain_hal_gpio,
     err_domain_hal_timer,
     err_domain_hal_uart,
 
-    /* Persistence capability (P10). */
+    /* Persistence capability. */
     err_domain_persistence,
 
     err_domain_count,

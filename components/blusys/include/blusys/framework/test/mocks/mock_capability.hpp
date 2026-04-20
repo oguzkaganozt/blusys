@@ -8,7 +8,7 @@
  *
  * Threading: identical to any real capability. start/poll/stop run on the
  * reducer thread; emit_integration_event must also run there in tests (the
- * P0c harness has no worker threads). See docs/internals/threading.md.
+ * headless harness has no worker threads). See docs/internals/threading.md.
  */
 
 #ifndef BLUSYS_FRAMEWORK_TEST_MOCKS_MOCK_CAPABILITY_HPP

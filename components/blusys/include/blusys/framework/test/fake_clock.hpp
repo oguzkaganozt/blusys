@@ -3,8 +3,8 @@
  * Tests drive time forward explicitly instead of waiting on a real timer. The
  * fake_clock sits between the test harness and any subsystem that wants to
  * observe "now", so a test can write `clock.advance(250)` and every subsequent
- * `now_ms()` sees the new time. This is the reason P0c tests are fast and
- * reproducible — there is no sleeping anywhere in the loop.
+ * `now_ms()` sees the new time. This is the reason headless tests are fast
+ * and reproducible — there is no sleeping anywhere in the loop.
  *
  * Header-only. Thread-unsafe by design: reducer + tests run on one task.
  */

@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 # check-public-api.sh
 #
-# After P9 the only public include an app author uses is <blusys/blusys.hpp>
+# The only public include an app author uses is <blusys/blusys.hpp>
 # (or <blusys/blusys.h> for C code). This guard bans deep includes such as
 # `#include "blusys/framework/..."` or `#include "blusys/hal/..."` in the
 # examples/ tree.
-#
-# Baseline starts at the current tree count; P9 drives this to 0.
 
 set -euo pipefail
 

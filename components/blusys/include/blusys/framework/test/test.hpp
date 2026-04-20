@@ -1,4 +1,4 @@
-/* blusys/framework/test/test.hpp — umbrella for the P0c test surface.
+/* blusys/framework/test/test.hpp — umbrella for the headless test surface.
  *
  * Include this from a blusys test source to pull in the headless harness,
  * fake clock, fake HAL inject API, and canonical capability mocks. Nothing
