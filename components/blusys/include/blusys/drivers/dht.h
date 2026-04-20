@@ -1,3 +1,12 @@
+/**
+ * @file dht.h
+ * @brief DHT11 / DHT22 temperature and humidity sensor driver.
+ *
+ * Uses the RMT peripheral for bit-level timing on the single-wire DHT bus.
+ * An external 4.7–10 kΩ pull-up on the data line is required. See
+ * docs/hal/dht.md.
+ */
+
 #ifndef BLUSYS_DHT_H
 #define BLUSYS_DHT_H
 

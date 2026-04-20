@@ -39,7 +39,15 @@ INPUT                  = components/blusys/include/blusys/hal/adc.h \
                          components/blusys/include/blusys/hal/usb_device.h \
                          components/blusys/include/blusys/hal/usb_host.h \
                          components/blusys/include/blusys/hal/version.h \
-                         components/blusys/include/blusys/hal/wdt.h
+                         components/blusys/include/blusys/hal/wdt.h \
+                         components/blusys/include/blusys/drivers/button.h \
+                         components/blusys/include/blusys/drivers/buzzer.h \
+                         components/blusys/include/blusys/drivers/dht.h \
+                         components/blusys/include/blusys/drivers/display.h \
+                         components/blusys/include/blusys/drivers/encoder.h \
+                         components/blusys/include/blusys/drivers/lcd.h \
+                         components/blusys/include/blusys/drivers/led_strip.h \
+                         components/blusys/include/blusys/drivers/seven_seg.h
 RECURSIVE              = NO
 FILE_PATTERNS          = *.h *.hpp
 EXTRACT_ALL            = NO

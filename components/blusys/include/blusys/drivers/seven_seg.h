@@ -1,3 +1,12 @@
+/**
+ * @file seven_seg.h
+ * @brief Multi-digit 7-segment display driver (GPIO, 74HC595, or MAX7219).
+ *
+ * Direct-GPIO and 74HC595 backends multiplex digits via an `esp_timer`; the
+ * MAX7219 handles multiplexing internally and also supports hardware
+ * brightness. See docs/hal/seven_seg.md.
+ */
+
 #ifndef BLUSYS_SEVEN_SEG_H
 #define BLUSYS_SEVEN_SEG_H
 
@@ -92,6 +101,7 @@ typedef struct {
     };
 } blusys_seven_seg_config_t;
 
+/** @brief Opaque handle to an open 7-segment display. */
 typedef struct blusys_seven_seg blusys_seven_seg_t;
 
 /**
