@@ -58,11 +58,11 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 
 ## Example Apps
 
-- [`examples/quickstart/handheld/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/handheld) --- canonical handheld interactive quickstart using shell navigation and setup flow
-- [`examples/quickstart/headless/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/quickstart/headless) --- headless-first connected reference (`interface: headless` in `inventory.yml`)
 - [`examples/reference/display/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/display) --- display + LVGL + encoder scenarios (menuconfig)
 - [`examples/reference/connectivity/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connectivity) --- Wi-Fi / HTTP / MQTT client scenarios (menuconfig)
 - [`examples/reference/hal/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/hal) --- HAL scenarios: GPIO, PWM, button, timer, NVS, ADC, SPI, I2C, UART (menuconfig)
 - [`examples/external/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/external) --- umbrella-header external-shape validation sample
 
-Use **handheld** and **headless** quickstarts as supported product-shaped starting points.
+The quickstart starters are temporarily removed while the manifest-first scaffold is rewritten. See `APP_MANIFEST_REFACTOR_PLAN.md` for the target path.
+
+Use the manifest-first starter docs as the supported product-shaped starting points.

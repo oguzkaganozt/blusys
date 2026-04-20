@@ -15,7 +15,7 @@ Best for **handheld** / compact interactive surfaces and dense control strips.
 | `slider` | Ranged numeric control | Brightness, thresholds |
 | `gauge` | Compact numeric feedback | Status strips, monitoring |
 
-Reference starter: `examples/quickstart/handheld/` (host + ST7735 path; see [Product shape](../start/product-shape.md)).
+Reference starter: manifest-first handheld starter docs (see [Interactive Quickstart](../start/quickstart-interactive.md)).
 
 ## Operational Surface
 
@@ -41,7 +41,7 @@ Shared by surface interactive and connected products when showing health and met
 | `progress` | Long-running work | OTA, loading flows |
 | `dropdown` | Compact single choice | Filters, mode picks |
 
-Reference starters: `examples/quickstart/headless/`, `examples/quickstart/handheld/`.
+Reference starters: manifest-first headless starter docs (see [Headless Quickstart](../start/quickstart-headless.md)) and `examples/reference/display/`.
 
 ## Notes
 

@@ -141,9 +141,10 @@ blusys host-build
 
 | Path | Purpose |
 |------|---------|
-| `examples/quickstart/` | Canonical starters (inventory `ci_pr`), aligned with interface/capability examples |
 | `examples/reference/` | Deeper demos and per-area examples, nightly CI |
 | `examples/validation/` | Internal smoke and stress, nightly CI |
+
+The quickstart starters are temporarily removed while the manifest-first scaffold is being rewritten. See `APP_MANIFEST_REFACTOR_PLAN.md`.
 
 Details and flags: **`inventory.yml`**.
 

@@ -1,8 +1,6 @@
 # Headless Quickstart
 
-Build a headless-first connected product using the same `blusys::app` reducer model.
-
-The canonical headless reference in-tree is **`examples/quickstart/headless/`** (inventory: `interface: headless` with a full connected capability stack).
+Build a minimal headless product using the manifest-first starter.
 
 ## Create the project
 
@@ -11,7 +9,16 @@ blusys create --interface headless my_sensor
 cd my_sensor
 ```
 
-Add capabilities with **`--with`** (see **`blusys create --list`** for rules). A minimal headless project has no UI or LVGL dependencies; richer connected products add `connectivity`, `telemetry`, `ota`, and so on explicitly.
+The starter keeps the first scaffold intentionally thin:
+
+```text
+my_sensor/
+  blusys.project.yml
+  main/
+    app_main.cpp
+```
+
+`blusys.project.yml` declares the product shape. `main/app_main.cpp` owns `State`, `Action`, `update(ctx, state, action)`, and the headless runtime hooks. There is no `ui/` directory unless the product actually needs one.
 
 ## Run on host
 
@@ -19,7 +26,7 @@ Add capabilities with **`--with`** (see **`blusys create --list`** for rules). A
 blusys host-build my_sensor
 ```
 
-The app runs in the terminal, printing heartbeat logs. No hardware needed.
+The app runs in the terminal. No hardware needed.
 
 ## Build for a target
 
@@ -29,33 +36,12 @@ blusys flash my_sensor /dev/ttyUSB0 esp32
 blusys monitor my_sensor /dev/ttyUSB0 esp32
 ```
 
-## What you get
+## When to expand
 
-The scaffold generates a minimal headless app with:
-
-- a `State` with a tick counter, periodic heartbeat log
-- `on_tick` dispatching `Action::periodic_tick` every 100 ms
-- `main/idf_component.yml` with managed git pins for the platform component (plus managed deps when you select connected capabilities); set `BLUSYS_SCAFFOLD_PLATFORM_VERSION` to change the tag
-- no UI or LVGL dependencies unless you add capabilities or code that pull them in
-
-## Project structure
-
-```
-my_sensor/
-  CMakeLists.txt       — bakes BLUSYS_BUILD_UI=OFF and project name
-  sdkconfig.defaults
-  blusys.project.yml
-  main/
-    CMakeLists.txt     — idf_component_register listing core + platform
-    idf_component.yml
-    core/
-      app_logic.hpp    — State, Action, update(), on_tick() declarations
-      app_logic.cpp    — reducer and tick hook implementation
-    platform/
-      app_main.cpp     — app_spec wiring + BLUSYS_APP_HEADLESS(spec) macro
-  host/
-    CMakeLists.txt     — standalone PC build
-```
+- Add `capabilities` in the manifest when the device needs connectivity, telemetry, OTA, storage, or diagnostics.
+- Add `flows` when headless behavior has distinct operating phases.
+- Add `profiles` when you want a specific host or device target setup.
+- Split code out of `app_main.cpp` only when the file stops being readable.
 
 ## Next steps
 

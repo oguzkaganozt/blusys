@@ -1,6 +1,5 @@
 // operational_phase_smoke — host-only assertions for the headless-telemetry-style
-// operational phase machine. Keeps logic aligned with
-// examples/quickstart/headless_telemetry/main/core/app_logic.cpp compute_phase().
+// operational phase machine used by the validation examples.
 
 #include <cstdint>
 #include <cstdlib>

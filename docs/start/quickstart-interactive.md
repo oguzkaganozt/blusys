@@ -1,23 +1,25 @@
 # Interactive Quickstart
 
-Build and run a display-first interactive product using the `blusys::app` path.
-
-The default interactive starting point uses the **`handheld`** interface (compact shell, tactile bias):
-
-- example: `examples/quickstart/handheld/`
-- visual bias: expressive and tactile
-- interaction bias: compact, encoder-friendly control flows
-- architecture: the same reducer, shell, and capability model used everywhere else
+Build a minimal interactive product using the manifest-first starter.
 
 ## Create the project
 
 ```bash
-blusys create my_product
-# equivalent: blusys create --interface handheld my_product
+blusys create --interface handheld my_product
 cd my_product
 ```
 
-For a denser operator shell, use **`--interface surface`** (see [Product shape](product-shape.md)).
+The starter keeps the first scaffold intentionally thin:
+
+```text
+my_product/
+  blusys.project.yml
+  main/
+    app_main.cpp
+    ui/
+```
+
+`blusys.project.yml` declares the product shape. `main/app_main.cpp` owns `State`, `Action`, `update(ctx, state, action)`, and app wiring. `main/ui/` stays empty until the product actually needs screens or widgets.
 
 ## Run on host
 
@@ -27,46 +29,16 @@ blusys host-build my_product
 
 The app launches in a host SDL2 window with the default theme. Arrow keys move focus between buttons; Enter activates. No hardware needed.
 
-## What you get
+## When to expand
 
-The scaffold generates a host-first interactive app with:
-
-- framework-owned boot, LVGL lifecycle, shell, and focus wiring
-- the canonical `core/`, `ui/`, and `platform/` product structure (CI-enforced for product-shaped examples via `scripts/check-product-layout.py`)
-- `main/idf_component.yml` with managed git pins for the platform component (and LVGL); set `BLUSYS_SCAFFOLD_PLATFORM_VERSION` when you need a different release tag
-- a reducer-owned control flow that can be retargeted to host or ST7735 device profiles
-
-If you want a concrete product-shaped reference immediately, start from:
-
-- `examples/quickstart/handheld/` for compact expressive control surfaces (see its `README.md`)
-- `examples/reference/display/` for display / LVGL / encoder scenarios (menuconfig)
-
-## Project structure
-
-```
-my_product/
-  CMakeLists.txt       — bakes BLUSYS_BUILD_UI=ON and project name
-  sdkconfig.defaults
-  blusys.project.yml   — declared interface, capabilities, policies
-  main/
-    CMakeLists.txt     — idf_component_register listing core, ui, and platform
-    idf_component.yml
-    core/
-      app_logic.hpp    — State, Action, update(); domain-only (no LVGL component defs)
-      app_logic.cpp    — reducer implementation
-    ui/
-      panels.hpp       — product panel types + sync from state (custom “components”)
-      panels.cpp
-      app_ui.cpp       — screen factories, shell chrome wiring
-    platform/
-      app_main.cpp     — app_spec wiring + BLUSYS_APP(spec) macro
-  host/
-    CMakeLists.txt     — standalone PC build (cmake -S host -B build-host)
-```
+- Add `capabilities` in the manifest when the app needs connectivity, storage, telemetry, OTA, or other runtime services.
+- Add `flows` when the product has distinct UI journeys.
+- Add `profiles` when you need a specific host or device target setup.
+- Split code out of `app_main.cpp` only when the file stops being readable.
 
 ## Next steps
 
-- [Product shape](product-shape.md) — choose interface, capabilities, and policies
+- [Product shape](product-shape.md) — choose interface, capabilities, flows, profiles, and policies
 - [Reducer Model](../app/reducer-model.md) — understand state, actions, and `update()`
 - [Views & Widgets](../app/views-and-widgets.md) — build screens with stock widgets
 - [Profiles](../app/profiles.md) — target a real device with `BLUSYS_APP` and a device profile

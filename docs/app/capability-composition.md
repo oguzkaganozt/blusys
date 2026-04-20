@@ -12,7 +12,7 @@ Capabilities are composed in `platform/` and translated into app actions.
 
 ## Typical stacks
 
-Each **interface** suggests a different **minimal** capability set (enough for a credible starter) and a **full** stack for a typical connected product. Compose capabilities only in `platform/`; onboarding and Wi-Fi lifecycle live under **`connectivity`**. See [Product shape](../start/product-shape.md) and **`blusys create --list`** for dependency rules.
+Each **interface** suggests a different **minimal** capability set (enough for a credible starter) and a **full** stack for a typical connected product. Compose capabilities only in `platform/`; onboarding and Wi-Fi lifecycle live under **`connectivity`**. The starter docs in `docs/start/quickstart-interactive.md` and `docs/start/quickstart-headless.md` describe the target manifest-first app shape. See [Product shape](../start/product-shape.md) and **`blusys create --list`** for dependency rules.
 
 ### Handheld (`--interface handheld`)
 
@@ -20,7 +20,7 @@ Each **interface** suggests a different **minimal** capability set (enough for a
 |---------|----------------|
 | storage | storage, connectivity (optional) |
 
-Starter: `examples/quickstart/handheld/`.
+Starter: manifest-first handheld starter.
 
 ### Surface (`--interface surface`)
 
@@ -28,7 +28,7 @@ Starter: `examples/quickstart/handheld/`.
 |---------|----------------|
 | connectivity | connectivity, storage, diagnostics |
 
-Starter: `examples/quickstart/handheld/`.
+Starter: manifest-first surface starter.
 
 ### Headless connected (`--interface headless` + connected `--with`)
 
@@ -36,7 +36,7 @@ Starter: `examples/quickstart/handheld/`.
 |---------|----------------|
 | connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: `examples/quickstart/headless/`.
+Starter: manifest-first headless starter.
 
 ### Surface coordinator
 
@@ -44,7 +44,7 @@ Starter: `examples/quickstart/headless/`.
 |---------|----------------|
 | connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: `examples/quickstart/headless/` (optional local UI depends on build/profile; scaffold selects interface explicitly).
+Starter: manifest-first headless starter with optional local UI.
 
 ## Rule Of Thumb
 
@@ -77,7 +77,7 @@ Operational UI (`blusys::flows::*`, `blusys::screens::*`) stays LVGL-backed and 
 
 ## Reference `on_event` Implementation
 
-For a full reducer-facing translation table, see `on_event` in `examples/quickstart/headless/main/platform/app_main.cpp` — the headless quickstart composes all major capabilities (connectivity, storage, OTA, diagnostics, telemetry, lan_control) and shows the complete event handling pattern.
+For a full reducer-facing translation table, see `examples/validation/connected_headless/main/platform/app_main.cpp` — the headless validation example composes all major capabilities (connectivity, storage, OTA, diagnostics, telemetry, lan_control) and shows the complete event handling pattern.
 
 Keep product-specific tags in `core/`; only `platform/` should map raw integration event IDs to those tags.
 

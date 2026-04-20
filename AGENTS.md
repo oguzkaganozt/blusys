@@ -8,7 +8,7 @@
 ## Repo Shape
 - `components/blusys/` is the single framework component.
 - Inside `components/blusys/`, the layer order is `hal -> drivers -> services -> framework`; keep includes one-way.
-- `examples/quickstart/` are the canonical starters, `examples/reference/` are deeper demos, and `examples/validation/` are internal smoke apps.
+- The manifest-first starter is being rewritten; `examples/reference/` are deeper demos, and `examples/validation/` are internal smoke apps.
 - Product apps use `main/core`, `main/ui`, and `main/platform`; `main/platform/app_main.cpp` is the entrypoint and the only downward bridge.
 - Keep `core` and `ui` framework-only; product logic should stay reducer-first (`update(ctx, state, action)` in-place), use `ctx.fx()` for navigation/overlays, and keep raw LVGL out of product code except explicit custom widget/view scope.
 - Examples and product code should include only `<blusys/blusys.hpp>`; use `<blusys/blusys.h>` only in C HAL/driver/service code.

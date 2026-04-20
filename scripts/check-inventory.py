@@ -8,8 +8,7 @@ Checks:
   - All required fields present with valid enum values
   - Every module has valid tier, support, and target fields
   - Every doc entry has a valid section and visibility
-  - Quickstart examples must be public and ci_pr=true
-  - Validation examples must be internal
+  - Starter docs are manifest-first; validation examples must be internal
 """
 
 import sys
@@ -22,7 +21,7 @@ from blusys.inventory_lib import REPO_ROOT, load_inventory  # noqa: E402
 VALID_TIERS = {"hal", "driver", "service", "framework"}
 VALID_SUPPORT = {"supported", "advanced", "internal", "deprecated"}
 VALID_TARGETS = {"esp32", "esp32c3", "esp32s3"}
-VALID_CATEGORIES = {"quickstart", "reference", "validation"}
+VALID_CATEGORIES = {"reference", "validation"}
 VALID_VISIBILITY = {"public", "internal"}
 VALID_SECTIONS = {"start", "app", "services", "hal_drivers", "internals"}
 VALID_INTERFACES = {"handheld", "surface", "headless", "none"}
@@ -42,7 +41,7 @@ def find_example_dirs():
     for entry in examples_dir.iterdir():
         if not entry.is_dir() or entry.name.startswith("."):
             continue
-        # Check if this is a category directory (quickstart/reference/validation)
+        # Check if this is a category directory (reference/validation)
         if entry.name in VALID_CATEGORIES:
             for sub in entry.iterdir():
                 if sub.is_dir() and not sub.name.startswith(".") and (sub / "CMakeLists.txt").is_file():

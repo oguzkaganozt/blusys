@@ -447,7 +447,6 @@ modules:
   doc: docs/services/bluetooth.md
   examples:
   - wireless_bt_lab
-  - bt_classic_controller
 - name: ble_gatt
   tier: service
   support: supported
@@ -467,7 +466,7 @@ modules:
   - esp32s3
   doc: docs/services/ble_hid_device.md
   examples:
-  - bluetooth_controller
+  - wireless_bt_lab
 - name: mdns
   tier: service
   support: supported
@@ -612,66 +611,8 @@ modules:
 # Examples
 # ---------------------------------------------------------------------------
 
+# Quickstart starters are intentionally absent during the manifest-first scaffold rewrite.
 examples:
-- name: handheld
-  category: quickstart
-  visibility: public
-  tier: framework
-  targets:
-  - esp32
-  - esp32c3
-  - esp32s3
-  ci_pr: true
-  ci_nightly: true
-  interface: handheld
-  capabilities:
-  - storage
-  - connectivity
-  policies: []
-- name: headless
-  category: quickstart
-  visibility: public
-  tier: framework
-  targets:
-  - esp32
-  - esp32c3
-  - esp32s3
-  ci_pr: true
-  ci_nightly: true
-  interface: headless
-  capabilities:
-  - connectivity
-  - lan_control
-  - telemetry
-  - diagnostics
-  - ota
-  - storage
-  policies: []
-- name: bt_classic_controller
-  category: quickstart
-  visibility: public
-  tier: framework
-  targets:
-  - esp32
-  ci_pr: true
-  ci_nightly: true
-  interface: handheld
-  capabilities: []
-  policies: []
-- name: bluetooth_controller
-  category: quickstart
-  visibility: public
-  tier: framework
-  targets:
-  - esp32
-  - esp32c3
-  - esp32s3
-  ci_pr: true
-  ci_nightly: true
-  interface: headless
-  capabilities:
-  - ble_hid_device
-  policies: []
 - name: connected_device
   category: validation
   visibility: internal

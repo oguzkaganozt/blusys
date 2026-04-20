@@ -11,9 +11,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 EXAMPLES = [
-    "examples/reference/connected_headless/main/platform",
-    "examples/reference/connected_device/main/platform",
-    "examples/quickstart/handheld/main/platform",
+    "examples/reference/atlas/main/platform",
+    "examples/validation/connected_headless/main/platform",
+    "examples/validation/connected_device/main/platform",
 ]
 
 

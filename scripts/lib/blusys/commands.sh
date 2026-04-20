@@ -320,7 +320,7 @@ cmd_example() {
         done < <(_find_examples)
         if [[ $match_count -gt 1 ]]; then
             printf 'error: example name is ambiguous: %s\n' "$target_name" >&2
-            printf 'Use a category-qualified name such as quickstart/%s\n' "$target_name" >&2
+            printf 'Use a category-qualified name such as reference/%s\n' "$target_name" >&2
             return 1
         fi
         printf '%s' "$found"

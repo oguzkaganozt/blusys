@@ -1,7 +1,0 @@
-dependencies:
-  lvgl/lvgl:
-    version: "~9.2"
-  espressif/mdns:
-    version: "*"
-  idf:
-    version: ">=5.5"

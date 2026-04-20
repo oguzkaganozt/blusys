@@ -30,7 +30,7 @@ inline bool panel_connectivity_event_triggers_sync(blusys::capability_event_tag 
 }
 
 /// True when `id` is a connectivity capability lifecycle ID that should trigger a panel
-/// `sync_connectivity` action (see e.g. `examples/quickstart/handheld/main/platform/app_main.cpp`).
+/// `sync_connectivity` action (see the manifest-first starter wiring in `APP_MANIFEST_REFACTOR_PLAN.md`).
 /// IDs in 0x0100–0x01FF that are not listed return false so the caller can fall through.
 inline bool panel_connectivity_event_triggers_sync(std::uint32_t id)
 {
