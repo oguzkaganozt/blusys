@@ -21,10 +21,10 @@ extern "C" {
  * Any modern OS pairs with it natively as a HID media device — no companion
  * app required.
  *
- * Coexistence: shares the BLE controller through @ref blusys_bt_stack so it
- * mutually excludes @ref blusys_bluetooth, @ref blusys_ble_gatt, Wi-Fi BLE
- * provisioning, and the USB-HID BLE-central path. Only one BLE-owning module
- * may be open at a time.
+ * Coexistence: shares the BLE controller with the rest of the NimBLE-based
+ * services so it mutually excludes `blusys_bluetooth`, `blusys_ble_gatt`,
+ * Wi-Fi BLE provisioning, and the USB-HID BLE-central path. Only one
+ * BLE-owning module may be open at a time.
  *
  * Report bit layout (1-byte payload on the Input Report characteristic):
  *   bit 0 → Usage 0x00E9 (Consumer: Volume Increment)
@@ -36,10 +36,18 @@ extern "C" {
  *   bit 6 → Usage 0x006F (Consumer: Brightness Up)
  *   bit 7 → Usage 0x0070 (Consumer: Brightness Down)
  */
+/** @brief Opaque handle to an open BLE HID peripheral session. */
 typedef struct blusys_ble_hid_device blusys_ble_hid_device_t;
 
+/**
+ * @brief Connect / disconnect callback.
+ *
+ * @param connected  True on connect, false on disconnect.
+ * @param user_ctx   The @c conn_user_ctx pointer passed in the config.
+ */
 typedef void (*blusys_ble_hid_device_conn_cb_t)(bool connected, void *user_ctx);
 
+/** @brief Configuration passed to @ref blusys_ble_hid_device_open. */
 typedef struct {
     const char *device_name;            /**< Advertised name (required; ≤29 bytes). */
     uint16_t    vendor_id;              /**< PnP ID: USB-IF vendor id (0 → default 0x05AC). */
@@ -50,14 +58,21 @@ typedef struct {
     void       *conn_user_ctx;          /**< Passed to conn_cb. */
 } blusys_ble_hid_device_config_t;
 
-/** Consumer-control HID usage codes understood by send_consumer. */
+/** Consumer: Volume Increment. */
 #define BLUSYS_HID_USAGE_VOLUME_UP       0x00E9u
+/** Consumer: Volume Decrement. */
 #define BLUSYS_HID_USAGE_VOLUME_DOWN     0x00EAu
+/** Consumer: Mute. */
 #define BLUSYS_HID_USAGE_MUTE            0x00E2u
+/** Consumer: Play/Pause. */
 #define BLUSYS_HID_USAGE_PLAY_PAUSE      0x00CDu
+/** Consumer: Scan Next Track. */
 #define BLUSYS_HID_USAGE_NEXT_TRACK      0x00B5u
+/** Consumer: Scan Previous Track. */
 #define BLUSYS_HID_USAGE_PREV_TRACK      0x00B6u
+/** Consumer: Brightness Up. */
 #define BLUSYS_HID_USAGE_BRIGHTNESS_UP   0x006Fu
+/** Consumer: Brightness Down. */
 #define BLUSYS_HID_USAGE_BRIGHTNESS_DOWN 0x0070u
 
 /**

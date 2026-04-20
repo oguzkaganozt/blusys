@@ -11,6 +11,17 @@ extern "C" {
 #endif
 
 /**
+ * @file wifi_prov.h
+ * @brief Runtime WiFi credential provisioning over BLE or SoftAP, with NVS persistence.
+ *
+ * Wraps the ESP-IDF @c wifi_provisioning manager. BLE transport requires
+ * @c CONFIG_BT_NIMBLE_ENABLED. Coexistence: the BLE transport owns the NimBLE
+ * controller while running and cannot share it with `blusys_bluetooth`,
+ * `blusys_ble_gatt`, BLE-transport `blusys_usb_hid`, or
+ * `blusys_ble_hid_device`.
+ */
+
+/**
  * @brief Opaque handle for the WiFi provisioning service.
  */
 typedef struct blusys_wifi_prov blusys_wifi_prov_t;

@@ -11,8 +11,20 @@
 extern "C" {
 #endif
 
+/**
+ * @file wifi_mesh.h
+ * @brief Self-organizing multi-hop mesh network over the ESP-IDF @c esp_mesh stack.
+ *
+ * Each node acts as a WiFi station (connects to a parent) and a WiFi soft-AP
+ * (accepts children), so data can hop across the mesh without a direct path
+ * to the router. Initializes the WiFi driver internally — do not combine with
+ * `blusys_wifi`, `blusys_espnow`, or `blusys_wifi_prov`.
+ */
+
+/** @brief Opaque handle to an open mesh session. */
 typedef struct blusys_wifi_mesh blusys_wifi_mesh_t;
 
+/** @brief Lifecycle events delivered through @ref blusys_wifi_mesh_event_cb_t. */
 typedef enum {
     BLUSYS_WIFI_MESH_EVENT_STARTED = 0,          /**< mesh stack started */
     BLUSYS_WIFI_MESH_EVENT_STOPPED,              /**< mesh stack stopped */

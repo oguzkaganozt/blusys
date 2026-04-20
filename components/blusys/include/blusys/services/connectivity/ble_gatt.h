@@ -8,8 +8,14 @@ extern "C" {
 #endif
 
 /**
- * @brief Opaque BLE GATT server handle.
+ * @file ble_gatt.h
+ * @brief BLE GATT server over NimBLE — service/characteristic registration and notifications.
+ *
+ * Coexistence: the GATT server owns the BLE host stack while open and mutually
+ * excludes `blusys_bluetooth`, BLE-transport `blusys_usb_hid`, BLE-transport
+ * `blusys_wifi_prov`, and `blusys_ble_hid_device`.
  */
+
 /** Characteristic can be read by a connected client. */
 #define BLUSYS_BLE_GATT_CHR_F_READ    (1u << 0)
 /** Characteristic can be written by a connected client. */
@@ -22,6 +28,14 @@ extern "C" {
  *
  * Write up to @p max_len bytes into @p out_data and set @p *out_len to the
  * actual length. Return 0 on success or an ATT error code on failure.
+ *
+ * @param conn_handle  NimBLE connection handle of the reading client.
+ * @param uuid         128-bit UUID of the characteristic being read (little-endian).
+ * @param out_data     Output buffer supplied by the stack.
+ * @param max_len      Capacity of @p out_data.
+ * @param out_len      Output: number of bytes written into @p out_data.
+ * @param user_ctx     The @c user_ctx pointer stored on the characteristic def.
+ * @return 0 on success or an ATT error code.
  */
 typedef int (*blusys_ble_gatt_read_cb_t)(uint16_t conn_handle,
                                          const uint8_t uuid[16],
@@ -32,18 +46,19 @@ typedef int (*blusys_ble_gatt_read_cb_t)(uint16_t conn_handle,
  * @brief Called when a connected client writes a characteristic.
  *
  * Return 0 on success or an ATT error code on failure.
+ *
+ * @param conn_handle  NimBLE connection handle of the writing client.
+ * @param uuid         128-bit UUID of the characteristic being written (little-endian).
+ * @param data         Client-provided payload.
+ * @param len          Payload length in bytes.
+ * @param user_ctx     The @c user_ctx pointer stored on the characteristic def.
+ * @return 0 on success or an ATT error code.
  */
 typedef int (*blusys_ble_gatt_write_cb_t)(uint16_t conn_handle,
                                           const uint8_t uuid[16],
                                           const uint8_t *data, size_t len,
                                           void *user_ctx);
 
-/**
- * @brief Called when a BLE client connects or disconnects.
- *
- * @p conn_handle identifies the connection and may be used with
- * @ref blusys_ble_gatt_notify. On disconnect @p connected is false.
- */
 /**
  * @brief Characteristic definition.
  *
@@ -52,7 +67,7 @@ typedef int (*blusys_ble_gatt_write_cb_t)(uint16_t conn_handle,
  */
 struct blusys_ble_gatt_chr_def {
     uint8_t                      uuid[16];        /**< 128-bit UUID, little-endian byte order. */
-    uint32_t                     flags;            /**< @ref BLUSYS_BLE_GATT_CHR_F_* bitmask. */
+    uint32_t                     flags;            /**< @ref BLUSYS_BLE_GATT_CHR_F_READ bitmask. */
     blusys_ble_gatt_read_cb_t    read_cb;          /**< Required when BLUSYS_BLE_GATT_CHR_F_READ is set. */
     blusys_ble_gatt_write_cb_t   write_cb;         /**< Required when BLUSYS_BLE_GATT_CHR_F_WRITE is set. */
     void                        *user_ctx;         /**< Passed to read_cb / write_cb as-is. */
