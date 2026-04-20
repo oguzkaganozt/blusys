@@ -84,9 +84,7 @@ public:
 
     void mark_network_ready(bool ready) { network_ready_ = ready; }
 
-    blusys_err_t publish(const char *topic,
-                         const void *payload, std::size_t len,
-                         int qos = -1, bool retain = false);
+    blusys_err_t publish(const char *topic, const void *payload, std::size_t len, int qos = -1, bool retain = false);
     blusys_err_t subscribe(const char *topic_filter, int qos = -1);
     blusys_err_t unsubscribe(const char *topic_filter);
 
@@ -102,10 +100,7 @@ private:
     void         close_broker();
     void         issue_auto_subscribes();
 
-    void post_ev(mqtt_event ev, const void *payload = nullptr)
-    {
-        post_integration_event(static_cast<std::uint32_t>(ev), 0, payload);
-    }
+    void post_ev(mqtt_event ev, const void *payload = nullptr);
 
     mqtt_config               cfg_;
     mqtt_status               status_{};
@@ -129,5 +124,10 @@ private:
     mqtt_message_handler_fn   handler_     = nullptr;
     void                     *handler_ctx_ = nullptr;
 };
+
+inline void mqtt_capability::post_ev(mqtt_event ev, const void *payload)
+{
+    post_integration_event(static_cast<std::uint32_t>(ev), 0, payload);
+}
 
 }  // namespace blusys
