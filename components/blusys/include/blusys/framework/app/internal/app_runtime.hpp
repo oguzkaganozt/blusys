@@ -138,6 +138,15 @@ public:
             return err;
         }
 
+        // Wire the ctx so ctx.dispatch() reaches post_action() and
+        // ctx.emit_feedback() reaches the framework feedback bus. Must run
+        // before capability start(), on_init, or anything a user flow might
+        // invoke that dispatches an action.
+        bind_ctx(ctx_,
+                 framework_runtime_.feedback_bus_ptr(),
+                 &dispatch_trampoline,
+                 this);
+
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
         screen_router_.bind_ctx(&ctx_);
 
