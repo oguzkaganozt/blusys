@@ -208,6 +208,130 @@ def render_project_manifest(
     )
 
 
+def render_ui_types(namespace_name: str) -> str:
+    return f"""namespace {namespace_name} {{
+
+struct app_state {{
+    std::int32_t counter = 0;
+    void *label = nullptr;
+}};
+
+enum class action_tag : std::uint8_t {{
+    decrement,
+    increment,
+}};
+
+struct action {{
+    action_tag tag = action_tag::increment;
+}};
+
+}}  // namespace {namespace_name}
+"""
+
+
+def render_headless_types(namespace_name: str, capabilities: list[str]) -> str:
+    fields = _headless_app_state_fields(capabilities)
+    return f"""namespace {namespace_name} {{
+
+enum class action_tag : std::uint8_t {{
+    capability_event,
+}};
+
+struct action {{
+    action_tag tag = action_tag::capability_event;
+    blusys::capability_event cap_event{{}};
+}};
+
+struct app_state {{
+{fields}
+}};
+
+}}  // namespace {namespace_name}
+"""
+
+
+def render_app_entry(namespace_name: str, interface: str) -> str:
+    run_name = "run_interactive" if interface != "headless" else "run_headless"
+    return f"""#if BLUSYS_DEVICE_BUILD
+extern "C" void app_main(void)
+#else
+int main(void)
+#endif
+{{
+    // --- product-specific init (NVS, logging, hardware) ---
+    blusys::detail::{run_name}({namespace_name}::system::spec);
+#if !BLUSYS_DEVICE_BUILD
+    return 0;
+#endif
+}}
+"""
+
+
+def render_app_main_cpp(
+    namespace_name: str,
+    project_title: str,
+    interface: str,
+    capabilities: list[str],
+) -> str:
+    if interface == "headless":
+        prelude = (
+            '#include "blusys/framework/app/app.hpp"\n'
+            '#include "blusys/framework/capabilities/event.hpp"\n'
+            '#include "blusys/framework/events/event.hpp"\n'
+            '#include "blusys/hal/log.h"\n\n'
+            '#include <cstddef>\n'
+            '#include <cstdint>\n'
+            '#include <cstdio>\n\n'
+        )
+        logic = render_headless_logic_cpp(namespace_name, capabilities, include_header=False)
+        integration = render_integration_cpp(
+            namespace_name,
+            project_title,
+            interface,
+            capabilities,
+            include_logic_header=False,
+            include_ui_header=False,
+            emit_entry=False,
+        )
+        return f"{prelude}{render_headless_types(namespace_name, capabilities)}\n{logic}\nnamespace {namespace_name}::system {{\n}}\n"
+
+    prelude = (
+        '#include "blusys/framework/app/app.hpp"\n'
+        '#include "blusys/framework/events/event.hpp"\n\n'
+        '#include <cstdint>\n\n'
+    )
+    logic = render_ui_logic_cpp(namespace_name, include_header=False)
+    integration = render_integration_cpp(
+        namespace_name,
+        project_title,
+        interface,
+        capabilities,
+        include_logic_header=False,
+        include_ui_header=False,
+        emit_entry=False,
+    )
+    ui_decl = f"namespace {namespace_name}::ui {{\nvoid on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state);\n}}\n\n"
+    return f"{prelude}{render_ui_types(namespace_name)}\n{logic}\n{ui_decl}{integration}\n{render_app_entry(namespace_name, interface)}"
+
+
+def render_app_ui_cpp(namespace_name: str, title: str) -> str:
+    prelude = (
+        '#include "blusys/framework/app/app.hpp"\n'
+        '#include "blusys/framework/events/event.hpp"\n\n'
+        '#include <cstdint>\n\n'
+    )
+    ui_body = render_ui_cpp(namespace_name, title, include_header=False)
+    return f"{prelude}{render_ui_types(namespace_name)}\n{ui_body}"
+
+
+def render_main_ui_cmakelists() -> str:
+    return f"""# Included by main/CMakeLists.txt and host/CMakeLists.txt.
+set(BLUSYS_PRODUCT_UI_SRCS
+    "${{CMAKE_CURRENT_LIST_DIR}}/app_ui.cpp"
+)
+"""
+
+
 def render_headless_logic_hpp(namespace_name: str, capabilities: list[str]) -> str:
     fields = _headless_app_state_fields(capabilities)
     return f"""#pragma once
@@ -241,11 +365,12 @@ void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state, std::ui
 """
 
 
-def render_headless_logic_cpp(namespace_name: str, capabilities: list[str]) -> str:
+def render_headless_logic_cpp(
+    namespace_name: str, capabilities: list[str], include_header: bool = True
+) -> str:
     switch_body = _headless_update_switch_body(capabilities)
-    return f"""#include \"core/app_logic.hpp\"
-
-#include <optional>
+    header = '#include "core/app_logic.hpp"\n\n' if include_header else ''
+    return f"""{header}#include <optional>
 
 namespace {namespace_name} {{
 
@@ -802,6 +927,791 @@ def generate_project(
         out_dir / "host" / "CMakeLists.txt",
         render_host_cmakelists(project_name, interface_meta["build_ui"]),
     )
+
+
+def render_ui_logic_cpp(namespace_name: str, include_header: bool = True) -> str:
+    header = '#include "core/app_logic.hpp"\n\n' if include_header else ''
+    return f"""{header}#include \"blusys/framework/ui/binding/action_widgets.hpp\"
+
+#include <cstdio>
+#include <optional>
+
+namespace {namespace_name} {{
+
+void update(blusys::app_ctx &ctx, app_state &state, const action &event)
+{{
+    (void)ctx;
+    switch (event.tag) {{
+    case action_tag::decrement:
+        state.counter -= 1;
+        break;
+    case action_tag::increment:
+        state.counter += 1;
+        break;
+    }}
+
+    if (state.label != nullptr) {{
+        char buf[48];
+        std::snprintf(buf, sizeof(buf), "%ld", static_cast<long>(state.counter));
+        blusys::set_text(static_cast<lv_obj_t *>(state.label), buf);
+    }}
+}}
+
+std::optional<action> on_event(blusys::event event, app_state &state)
+{{
+    (void)state;
+    if (event.source != blusys::event_source::intent) {{
+        return std::nullopt;
+    }}
+
+    switch (static_cast<blusys::intent>(event.kind)) {{
+    case blusys::intent::increment:
+        return action{{.tag = action_tag::increment}};
+    case blusys::intent::decrement:
+        return action{{.tag = action_tag::decrement}};
+    default:
+        return std::nullopt;
+    }}
+}}
+
+}}  // namespace {namespace_name}
+"""
+
+
+def render_ui_cpp(namespace_name: str, title: str, include_header: bool = True) -> str:
+    header = '#include "ui/app_ui.hpp"\n\n' if include_header else ''
+    return f"""{header}#include \"blusys/framework/ui/binding/action_widgets.hpp\"
+
+#include \"blusys/framework/ui/composition/page.hpp\"
+
+namespace {namespace_name}::ui {{
+
+void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state)
+{{
+    (void)fx;
+
+    auto page = blusys::page_create();
+    blusys::title(page.content, \"{title}\");
+    blusys::divider(page.content);
+
+    state.label = blusys::label(page.content, \"0\");
+
+    auto *row = blusys::row(page.content);
+    blusys::button(row, \"-\", action{{.tag = action_tag::decrement}}, &ctx,
+                   blusys::button_variant::secondary);
+    blusys::button(row, \"+\", action{{.tag = action_tag::increment}}, &ctx,
+                   blusys::button_variant::secondary);
+
+    blusys::page_load(page);
+}}
+
+}}  // namespace {namespace_name}::ui
+"""
+
+
+def render_headless_logic_cpp(
+    namespace_name: str, capabilities: list[str], include_header: bool = True
+) -> str:
+    switch_body = _headless_update_switch_body(capabilities)
+    header = '#include "core/app_logic.hpp"\n\n' if include_header else ''
+    return f"""{header}#include <optional>
+
+namespace {namespace_name} {{
+
+std::optional<action> on_event(blusys::event event, app_state &state)
+{{
+    (void)state;
+    if (event.source != blusys::event_source::integration) {{
+        return std::nullopt;
+    }}
+
+    blusys::capability_event ce{{}};
+    if (!blusys::map_integration_event(event.id, event.kind, &ce)) {{
+        return std::nullopt;
+    }}
+    ce.payload = event.payload;
+    return action{{.tag = action_tag::capability_event, .cap_event = ce}};
+}}
+
+void update(blusys::app_ctx &ctx, app_state &state, const action &event)
+{{
+    (void)ctx;
+    if (event.tag != action_tag::capability_event) {{
+        return;
+    }}
+
+    switch (event.cap_event.tag) {{
+{switch_body}    }}
+}}
+
+void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state, std::uint32_t now_ms)
+{{
+    (void)ctx;
+    (void)fx;
+    (void)now_ms;
+    state.tick_count++;
+}}
+
+}}  // namespace {namespace_name}
+"""
+
+
+def render_integration_cpp(
+    namespace_name: str,
+    project_title: str,
+    interface: str,
+    capabilities: list[str],
+    include_logic_header: bool = True,
+    include_ui_header: bool = True,
+    emit_entry: bool = True,
+) -> str:
+    includes = [capability_include(cap) for cap in capabilities]
+    helper_blocks: list[str] = []
+    instances: list[str] = []
+    capability_refs: list[str] = []
+
+    if interface == "headless":
+        if "telemetry" in capabilities:
+            helper_blocks.append(
+                """
+namespace {
+bool deliver_telemetry(const blusys::telemetry_metric *metrics, std::size_t count, void *user_ctx)
+{
+    (void)metrics;
+    (void)count;
+    (void)user_ctx;
+    return true;
+}
+}  // namespace
+"""
+            )
+        if "lan_control" in capabilities:
+            helper_blocks.append(_headless_local_ctrl_helper(namespace_name, capabilities))
+    elif "lan_control" in capabilities:
+        helper_blocks.append(
+            """
+namespace {
+blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, void *user_ctx)
+{
+    auto *state = static_cast<%s::app_state *>(user_ctx);
+    int written = std::snprintf(
+        json_buf,
+        buf_len,
+        "{\\\"counter\\\":%%ld}",
+        static_cast<long>(state != nullptr ? state->counter : 0));
+    if (written < 0 || static_cast<size_t>(written) >= buf_len) {
+        return BLUSYS_ERR_NO_MEM;
+    }
+    *out_len = static_cast<size_t>(written);
+    return BLUSYS_OK;
+}
+}  // namespace
+"""
+            % namespace_name
+        )
+
+    for cap in capabilities:
+        if cap == "connectivity":
+            instances.append(
+                """blusys::connectivity_capability connectivity(blusys::connectivity_config{
+    .wifi_ssid = nullptr,
+    .prov_service_name = \"%s\",
+    .prov_pop = \"123456\",
+});"""
+                % project_title.lower().replace(" ", "-")
+            )
+            capability_refs.append("&connectivity")
+        elif cap == "storage":
+            instances.append(
+                """blusys::storage_capability storage(blusys::storage_config{
+    .spiffs_base_path = \"/app\",
+});"""
+            )
+            capability_refs.append("&storage")
+        elif cap == "diagnostics":
+            instances.append(
+                """blusys::diagnostics_capability diagnostics(blusys::diagnostics_config{
+    .snapshot_interval_ms = 5000,
+});"""
+            )
+            capability_refs.append("&diagnostics")
+        elif cap == "telemetry":
+            instances.append(
+                """blusys::telemetry_capability telemetry(blusys::telemetry_config{
+    .deliver = deliver_telemetry,
+    .flush_threshold = 4,
+    .flush_interval_ms = 1000,
+});"""
+            )
+            capability_refs.append("&telemetry")
+        elif cap == "ota":
+            instances.append(
+                """blusys::ota_capability ota(blusys::ota_config{
+    .firmware_url = \"https://example.com/firmware.bin\",
+    .auto_mark_valid = true,
+});"""
+            )
+            capability_refs.append("&ota")
+        elif cap == "bluetooth":
+            instances.append(
+                """blusys::bluetooth_capability bluetooth(blusys::bluetooth_config{
+    .device_name = \"%s\",
+    .auto_advertise = true,
+});"""
+                % project_title
+            )
+            capability_refs.append("&bluetooth")
+        elif cap == "lan_control":
+            instances.append(
+                """blusys::lan_control_capability lan_control(blusys::lan_control_config{
+    .device_name = \"%s\",
+    .status_cb = local_ctrl_status,
+    .service_name = \"%s\",
+    .instance_name = \"%s\",
+});"""
+                % (
+                    project_title,
+                    project_title.lower().replace(" ", "-"),
+                    project_title,
+                )
+            )
+            capability_refs.append("&lan_control")
+        elif cap == "usb":
+            instances.append(
+                """blusys::usb_capability usb(blusys::usb_config{
+    .role = blusys::usb_role::host,
+    .class_mask = static_cast<std::uint8_t>(blusys::usb_class::cdc),
+    .manufacturer = \"Blusys\",
+    .product = \"%s\",
+});"""
+                % project_title
+            )
+            capability_refs.append("&usb")
+
+    cap_list = ", ".join(capability_refs)
+    logic_include = '#include "core/app_logic.hpp"\n' if include_logic_header else ""
+    ui_include = '#include "ui/app_ui.hpp"\n' if interface != "headless" and include_ui_header else ""
+    spec_tail_fields = ""
+    if interface != "headless":
+        spec_tail_fields = f'    .host_title = "{project_title}",\n'
+        ui_fields = (
+            f"    .on_init = {namespace_name}::ui::on_init,\n"
+            f"    .on_event = {namespace_name}::on_event,\n"
+        )
+    else:
+        ui_fields = (
+            f"    .on_tick = {namespace_name}::on_tick,\n"
+            f"    .on_event = {namespace_name}::on_event,\n"
+        )
+    entry = {
+        "interactive": f"BLUSYS_APP({namespace_name}::system::spec)",
+        "headless": f"BLUSYS_APP_HEADLESS({namespace_name}::system::spec)",
+    }[interface]
+    header_block = f"{logic_include}{ui_include}"
+    if header_block:
+        header_block += "\n"
+    entry_block = f"\n{entry}\n" if emit_entry else "\n"
+    return f"""{header_block}#include \"blusys/framework/app/app.hpp\"\n{os.linesep.join(includes)}\n
+#include <cstddef>\n+#include <cstdint>\n+#include <cstdio>\n
+namespace {namespace_name}::system {{
+
+{os.linesep.join(helper_blocks)}
+
+{os.linesep.join(instances)}
+
+blusys::capability_list_storage capabilities{{{cap_list}}};
+
+const blusys::app_spec<app_state, action> spec{{
+    .initial_state = {{}},
+    .update = update,
+{ui_fields}    .tick_period_ms = 100,
+    .capabilities = &capabilities,
+{spec_tail_fields}}};
+
+}}  // namespace {namespace_name}::system
+
+{entry_block}"""
+
+
+def render_main_cmakelists(build_ui: bool) -> str:
+    if build_ui:
+        return """include("${CMAKE_CURRENT_LIST_DIR}/ui/CMakeLists.txt")
+
+idf_component_register(
+    SRCS
+        "app_main.cpp"
+        ${BLUSYS_PRODUCT_UI_SRCS}
+    INCLUDE_DIRS "."
+    REQUIRES blusys
+)
+"""
+    return """idf_component_register(
+    SRCS
+        "app_main.cpp"
+    INCLUDE_DIRS "."
+    REQUIRES blusys
+)
+"""
+
+
+def render_host_cmakelists(project_name: str, build_ui: bool) -> str:
+    if build_ui:
+        return f"""cmake_minimum_required(VERSION 3.16)
+project({project_name}_host LANGUAGES C CXX)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(NOT DEFINED ENV{{BLUSYS_PATH}} OR "$ENV{{BLUSYS_PATH}}" STREQUAL "")
+    message(FATAL_ERROR
+        "BLUSYS_PATH is not set.\n"
+        "Run via 'blusys host-build' (it exports BLUSYS_PATH automatically), or:\n"
+        "  export BLUSYS_PATH=/path/to/blusys && cmake -S host -B build-host")
+endif()
+
+include("$ENV{{BLUSYS_PATH}}/cmake/blusys_host_bridge.cmake")
+blusys_host_bridge_setup_lvgl()
+include("${{CMAKE_CURRENT_LIST_DIR}}/../main/ui/CMakeLists.txt")
+blusys_host_bridge_add_library(interactive)
+blusys_host_bridge_resolve_build_version(BLUSYS_GIT_VERSION)
+
+add_executable({project_name}_host
+    "${{CMAKE_CURRENT_LIST_DIR}}/../main/app_main.cpp"
+    ${{BLUSYS_PRODUCT_UI_SRCS}}
+    "$ENV{{BLUSYS_PATH}}/scripts/host/src/app_host_platform.cpp"
+)
+target_include_directories({project_name}_host PRIVATE
+    "${{CMAKE_CURRENT_LIST_DIR}}/../main"
+)
+target_link_libraries({project_name}_host PRIVATE
+    blusys_framework_host PkgConfig::SDL2 m
+)
+blusys_host_bridge_apply_exe_compile_options({project_name}_host)
+target_compile_definitions({project_name}_host PRIVATE
+    BLUSYS_APP_BUILD_VERSION="${{BLUSYS_GIT_VERSION}}")
+"""
+    return f"""cmake_minimum_required(VERSION 3.16)
+project({project_name}_host LANGUAGES C CXX)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(NOT DEFINED ENV{{BLUSYS_PATH}} OR "$ENV{{BLUSYS_PATH}}" STREQUAL "")
+    message(FATAL_ERROR
+        "BLUSYS_PATH is not set.\n"
+        "Run via 'blusys host-build' (it exports BLUSYS_PATH automatically), or:\n"
+        "  export BLUSYS_PATH=/path/to/blusys && cmake -S host -B build-host")
+endif()
+
+include("$ENV{{BLUSYS_PATH}}/cmake/blusys_host_bridge.cmake")
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
+blusys_host_bridge_add_library(headless)
+
+add_executable({project_name}_host
+    "${{CMAKE_CURRENT_LIST_DIR}}/../main/app_main.cpp"
+    "$ENV{{BLUSYS_PATH}}/scripts/host/src/app_headless_platform.cpp"
+)
+target_include_directories({project_name}_host PRIVATE
+    "${{CMAKE_CURRENT_LIST_DIR}}/../main"
+)
+target_link_libraries({project_name}_host PRIVATE
+    blusys_framework_core_host PkgConfig::SDL2 m
+)
+blusys_host_bridge_apply_exe_compile_options({project_name}_host)
+"""
+
+
+def render_app_main_cpp(
+    namespace_name: str,
+    project_title: str,
+    interface: str,
+    capabilities: list[str],
+) -> str:
+    if interface == "headless":
+        prelude = (
+            '#include "blusys/framework/app/app.hpp"\n'
+            '#include "blusys/framework/capabilities/event.hpp"\n'
+            '#include "blusys/framework/events/event.hpp"\n'
+            '#include "blusys/hal/log.h"\n\n'
+            '#include <cstddef>\n'
+            '#include <cstdint>\n'
+            '#include <cstdio>\n\n'
+        )
+        logic = render_headless_logic_cpp(namespace_name, capabilities, include_header=False)
+        integration = render_integration_cpp(
+            namespace_name,
+            project_title,
+            interface,
+            capabilities,
+            include_logic_header=False,
+            include_ui_header=False,
+            emit_entry=False,
+        )
+        return f"{prelude}{render_headless_types(namespace_name, capabilities)}\n{logic}\n{integration}\n{render_app_entry(namespace_name, interface)}"
+
+    prelude = (
+        '#include "blusys/framework/app/app.hpp"\n'
+        '#include "blusys/framework/events/event.hpp"\n\n'
+        '#include <cstdint>\n\n'
+    )
+    logic = render_ui_logic_cpp(namespace_name, include_header=False)
+    integration = render_integration_cpp(
+        namespace_name,
+        project_title,
+        interface,
+        capabilities,
+        include_logic_header=False,
+        include_ui_header=False,
+        emit_entry=False,
+    )
+    ui_decl = f"namespace {namespace_name}::ui {{\nvoid on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state);\n}}\n\n"
+    return f"{prelude}{render_ui_types(namespace_name)}\n{logic}\n{ui_decl}{integration}\n{render_app_entry(namespace_name, interface)}"
+
+
+def render_app_ui_cpp(namespace_name: str, title: str) -> str:
+    prelude = (
+        '#include "blusys/framework/app/app.hpp"\n'
+        '#include "blusys/framework/events/event.hpp"\n\n'
+        '#include <cstdint>\n\n'
+    )
+    return f"{prelude}{render_ui_types(namespace_name)}\n{render_ui_cpp(namespace_name, title, include_header=False)}"
+
+
+def render_readme(
+    project_name: str, interface: str, capabilities: list[str], policies: list[str]
+) -> str:
+    caps = ", ".join(capabilities) if capabilities else "none"
+    pols = ", ".join(policies) if policies else "none"
+    with_arg = f" --with {caps}" if capabilities else ""
+    pol_arg = f" --policy {pols}" if policies else ""
+    layout = ["- `main/app_main.cpp` thin entrypoint and product logic"]
+    if interface != "headless":
+        layout.append("- `main/ui/CMakeLists.txt` interactive UI source list fragment")
+        layout.append("- `main/ui/app_ui.cpp` small sample component tree")
+    return f"""# {project_name}
+
+Generated with:
+
+```bash
+blusys create --interface {interface}{with_arg}{pol_arg} .
+```
+
+## Shape
+
+- Interface: `{interface}`
+- Capabilities: `{caps}`
+- Profile: `null`
+- Policies: `{pols}`
+
+## Layout
+
+{os.linesep.join(layout)}
+
+## Building with platform components
+
+The generated top-level `CMakeLists.txt` sets `EXTRA_COMPONENT_DIRS` to the
+`components/` directory of the Blusys tree used when `blusys create` ran (embedded
+absolute path). Adjust it if you move the project, use another checkout, or vendor
+`blusys` for a standalone tree.
+
+## Commands
+
+- `blusys host-build`
+- `blusys build . esp32s3`
+- `blusys build . esp32`
+"""
+
+
+def generate_project(
+    repo_root: Path,
+    out_dir: Path,
+    interface: str,
+    capabilities: list[str],
+    policies: list[str],
+) -> None:
+    catalog = load_catalog(repo_root)
+    validate_model(catalog, interface, capabilities, policies)
+    manifest_text = render_project_manifest(interface, capabilities, policies)
+    manifest_errors = validate_manifest_text(manifest_text, catalog)
+    if manifest_errors:
+        for error in manifest_errors:
+            print(f"error: generated manifest failed validation: {error}", file=sys.stderr)
+        raise SystemExit(1)
+
+    if out_dir.exists():
+        out_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        out_dir.mkdir(parents=True)
+
+    project_name = out_dir.name.replace("-", "_")
+    namespace_name = project_name
+    interface_meta = catalog["interfaces"][interface]
+    build_ui = interface_meta["build_ui"]
+    write_file(
+        out_dir / "CMakeLists.txt",
+        render_top_cmakelists(project_name, build_ui, repo_root),
+    )
+    write_file(
+        out_dir / "sdkconfig.defaults",
+        render_sdkconfig(catalog, capabilities, policies),
+    )
+    write_file(
+        out_dir / "sdkconfig.qemu",
+        (repo_root / "scripts" / "scaffold" / "sdkconfig.qemu").read_text(),
+    )
+    write_file(out_dir / "blusys.project.yml", manifest_text)
+    write_file(out_dir / "README.md", render_readme(project_name, interface, capabilities, policies))
+
+    write_file(out_dir / "main" / "CMakeLists.txt", render_main_cmakelists(build_ui))
+    write_file(
+        out_dir / "main" / "idf_component.yml",
+        render_idf_component_yml(catalog, interface, capabilities),
+    )
+    write_file(
+        out_dir / "main" / "app_main.cpp",
+        render_app_main_cpp(namespace_name, interface_meta["title"], interface, capabilities),
+    )
+
+    if build_ui:
+        write_file(out_dir / "main" / "ui" / "CMakeLists.txt", render_main_ui_cmakelists())
+        write_file(
+            out_dir / "main" / "ui" / "app_ui.cpp",
+            render_app_ui_cpp(namespace_name, interface_meta["title"]),
+        )
+
+    write_file(
+        out_dir / "host" / "CMakeLists.txt",
+        render_host_cmakelists(project_name, build_ui),
+    )
+
+
+def render_integration_cpp(
+    namespace_name: str,
+    project_title: str,
+    interface: str,
+    capabilities: list[str],
+    include_logic_header: bool = True,
+    include_ui_header: bool = True,
+    emit_entry: bool = True,
+) -> str:
+    includes = [capability_include(cap) for cap in capabilities]
+    helper_blocks: list[str] = []
+    instances: list[str] = []
+    capability_refs: list[str] = []
+
+    if interface == "headless":
+        if "telemetry" in capabilities:
+            helper_blocks.append(
+                """
+namespace {
+bool deliver_telemetry(const blusys::telemetry_metric *metrics, std::size_t count, void *user_ctx)
+{
+    (void)metrics;
+    (void)count;
+    (void)user_ctx;
+    return true;
+}
+}  // namespace
+"""
+            )
+        if "lan_control" in capabilities:
+            helper_blocks.append(_headless_local_ctrl_helper(namespace_name, capabilities))
+    elif "lan_control" in capabilities:
+        helper_blocks.append(
+            """
+namespace {
+blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, void *user_ctx)
+{
+    auto *state = static_cast<%s::app_state *>(user_ctx);
+    int written = std::snprintf(
+        json_buf,
+        buf_len,
+        "{\\\"counter\\\":%%ld}",
+        static_cast<long>(state != nullptr ? state->counter : 0));
+    if (written < 0 || static_cast<size_t>(written) >= buf_len) {
+        return BLUSYS_ERR_NO_MEM;
+    }
+    *out_len = static_cast<size_t>(written);
+    return BLUSYS_OK;
+}
+}  // namespace
+"""
+            % namespace_name
+        )
+
+    for cap in capabilities:
+        if cap == "connectivity":
+            instances.append(
+                """blusys::connectivity_capability connectivity(blusys::connectivity_config{
+    .wifi_ssid = nullptr,
+    .prov_service_name = \"%s\",
+    .prov_pop = \"123456\",
+});"""
+                % project_title.lower().replace(" ", "-")
+            )
+            capability_refs.append("&connectivity")
+        elif cap == "storage":
+            instances.append(
+                """blusys::storage_capability storage(blusys::storage_config{
+    .spiffs_base_path = \"/app\",
+});"""
+            )
+            capability_refs.append("&storage")
+        elif cap == "diagnostics":
+            instances.append(
+                """blusys::diagnostics_capability diagnostics(blusys::diagnostics_config{
+    .snapshot_interval_ms = 5000,
+});"""
+            )
+            capability_refs.append("&diagnostics")
+        elif cap == "telemetry":
+            instances.append(
+                """blusys::telemetry_capability telemetry(blusys::telemetry_config{
+    .deliver = deliver_telemetry,
+    .flush_threshold = 4,
+    .flush_interval_ms = 1000,
+});"""
+            )
+            capability_refs.append("&telemetry")
+        elif cap == "ota":
+            instances.append(
+                """blusys::ota_capability ota(blusys::ota_config{
+    .firmware_url = \"https://example.com/firmware.bin\",
+    .auto_mark_valid = true,
+});"""
+            )
+            capability_refs.append("&ota")
+        elif cap == "bluetooth":
+            instances.append(
+                """blusys::bluetooth_capability bluetooth(blusys::bluetooth_config{
+    .device_name = \"%s\",
+    .auto_advertise = true,
+});"""
+                % project_title
+            )
+            capability_refs.append("&bluetooth")
+        elif cap == "lan_control":
+            instances.append(
+                """blusys::lan_control_capability lan_control(blusys::lan_control_config{
+    .device_name = \"%s\",
+    .status_cb = local_ctrl_status,
+    .service_name = \"%s\",
+    .instance_name = \"%s\",
+});"""
+                % (
+                    project_title,
+                    project_title.lower().replace(" ", "-"),
+                    project_title,
+                )
+            )
+            capability_refs.append("&lan_control")
+        elif cap == "usb":
+            instances.append(
+                """blusys::usb_capability usb(blusys::usb_config{
+    .role = blusys::usb_role::host,
+    .class_mask = static_cast<std::uint8_t>(blusys::usb_class::cdc),
+    .manufacturer = \"Blusys\",
+    .product = \"%s\",
+});"""
+                % project_title
+            )
+            capability_refs.append("&usb")
+
+    cap_list = ", ".join(capability_refs)
+    logic_include = '#include "core/app_logic.hpp"\n' if include_logic_header else ""
+    ui_include = '#include "ui/app_ui.hpp"\n' if interface != "headless" and include_ui_header else ""
+    spec_tail_fields = ""
+    if interface != "headless":
+        spec_tail_fields = f'    .host_title = "{project_title}",\n'
+        ui_fields = (
+            f"    .on_init = {namespace_name}::ui::on_init,\n"
+            f"    .on_event = {namespace_name}::on_event,\n"
+        )
+    else:
+        ui_fields = (
+            f"    .on_tick = {namespace_name}::on_tick,\n"
+            f"    .on_event = {namespace_name}::on_event,\n"
+        )
+    entry = {
+        "interactive": f"BLUSYS_APP({namespace_name}::system::spec)",
+        "headless": f"BLUSYS_APP_HEADLESS({namespace_name}::system::spec)",
+    }[interface]
+    header_block = f"{logic_include}{ui_include}"
+    if header_block:
+        header_block += "\n"
+    entry_block = f"\n{entry}\n" if emit_entry else "\n"
+    return f"""{header_block}#include \"blusys/framework/app/app.hpp\"\n{os.linesep.join(includes)}\n
+#include <cstddef>\n#include <cstdint>\n#include <cstdio>\n
+namespace {namespace_name}::system {{
+
+{os.linesep.join(helper_blocks)}
+
+{os.linesep.join(instances)}
+
+blusys::capability_list_storage capabilities{{{cap_list}}};
+
+const blusys::app_spec<app_state, action> spec{{
+    .initial_state = {{}},
+    .update = update,
+{ui_fields}    .tick_period_ms = 100,
+    .capabilities = &capabilities,
+{spec_tail_fields}}};
+
+}}  // namespace {namespace_name}::system
+
+{entry_block}"""
+
+
+def render_app_main_cpp(
+    namespace_name: str,
+    project_title: str,
+    interface: str,
+    capabilities: list[str],
+) -> str:
+    if interface == "headless":
+        prelude = (
+            '#include "blusys/framework/app/app.hpp"\n'
+            '#include "blusys/framework/capabilities/event.hpp"\n'
+            '#include "blusys/framework/events/event.hpp"\n'
+            '#include "blusys/hal/log.h"\n\n'
+            '#include <cstddef>\n'
+            '#include <cstdint>\n'
+            '#include <cstdio>\n\n'
+        )
+        logic = render_headless_logic_cpp(namespace_name, capabilities, include_header=False)
+        integration = render_integration_cpp(
+            namespace_name,
+            project_title,
+            interface,
+            capabilities,
+            include_logic_header=False,
+            include_ui_header=False,
+            emit_entry=False,
+        )
+        return f"{prelude}{render_headless_types(namespace_name, capabilities)}\n{logic}\n{integration}\n{render_app_entry(namespace_name, interface)}"
+
+    prelude = (
+        '#include "blusys/framework/app/app.hpp"\n'
+        '#include "blusys/framework/events/event.hpp"\n\n'
+        '#include <cstdint>\n\n'
+    )
+    logic = render_ui_logic_cpp(namespace_name, include_header=False)
+    integration = render_integration_cpp(
+        namespace_name,
+        project_title,
+        interface,
+        capabilities,
+        include_logic_header=False,
+        include_ui_header=False,
+        emit_entry=False,
+    )
+    ui_decl = f"namespace {namespace_name}::ui {{\nvoid on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state);\n}}\n\n"
+    return f"{prelude}{render_ui_types(namespace_name)}\n{logic}\n{ui_decl}{integration}\n{render_app_entry(namespace_name, interface)}"
 
 
 def print_list(catalog: dict) -> None:

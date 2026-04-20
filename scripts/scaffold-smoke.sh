@@ -68,15 +68,64 @@ run_capability_scaffold() {
     printf 'scaffold-smoke: capability-scaffold ok %s\n' "$name"
 }
 
+assert_layout() {
+    local name="$1"
+    local expected_total="$2"
+    local expected_main="$3"
+    local expect_ui="$4"
+    local dir="$TMP/$name"
+    local total_files
+    local main_files
+
+    total_files="$(find "$dir" -type f | wc -l)"
+    main_files="$(find "$dir/main" -type f | wc -l)"
+
+    if [[ "$total_files" -ne "$expected_total" ]]; then
+        printf 'scaffold-smoke: expected %s files in %s, got %s\n' "$expected_total" "$name" "$total_files" >&2
+        exit 1
+    fi
+    if [[ "$main_files" -ne "$expected_main" ]]; then
+        printf 'scaffold-smoke: expected %s main files in %s, got %s\n' "$expected_main" "$name" "$main_files" >&2
+        exit 1
+    fi
+    if [[ ! -f "$dir/main/app_main.cpp" ]]; then
+        printf 'scaffold-smoke: missing app_main.cpp in %s\n' "$name" >&2
+        exit 1
+    fi
+    if [[ -d "$dir/main/core" || -d "$dir/main/platform" ]]; then
+        printf 'scaffold-smoke: legacy core/platform dirs remain in %s\n' "$name" >&2
+        exit 1
+    fi
+    if [[ "$expect_ui" == "1" ]]; then
+        if [[ ! -f "$dir/main/ui/CMakeLists.txt" || ! -f "$dir/main/ui/app_ui.cpp" ]]; then
+            printf 'scaffold-smoke: missing interactive ui files in %s\n' "$name" >&2
+            exit 1
+        fi
+    else
+        if [[ -e "$dir/main/ui" ]]; then
+            printf 'scaffold-smoke: unexpected ui dir in %s\n' "$name" >&2
+            exit 1
+        fi
+    fi
+}
+
 # Interface/capability/policy matrix
 run_create ii --interface interactive .
+assert_layout ii 11 5 1
 run_create is --interface interactive --with storage .
+assert_layout is 11 5 1
 run_create ib --interface interactive --with bluetooth,storage .
+assert_layout ib 11 5 1
 run_create id --interface interactive --with connectivity,diagnostics .
+assert_layout id 11 5 1
 run_create ht --interface headless --with connectivity,telemetry,ota,diagnostics .
+assert_layout ht 9 3 0
 run_create hl --interface headless --with connectivity,lan_control,ota .
+assert_layout hl 9 3 0
 run_create hu --interface headless --with usb .
+assert_layout hu 9 3 0
 run_create hp --interface headless --with connectivity,telemetry --policy low_power .
+assert_layout hp 9 3 0
 
 for name in ii is ib id ht hl hu hp; do
     run_host "$name"
