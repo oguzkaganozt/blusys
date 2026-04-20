@@ -2,6 +2,39 @@
 
 NTP time synchronization for setting the system clock after boot.
 
+## Quick Example
+
+```c
+#include <time.h>
+#include "blusys/blusys.h"
+
+void app_main(void)
+{
+    /* WiFi must already be connected. */
+
+    blusys_sntp_t *sntp;
+    blusys_sntp_config_t cfg = {
+        .server      = "pool.ntp.org",
+        .smooth_sync = false,
+    };
+    blusys_sntp_open(&cfg, &sntp);
+
+    if (blusys_sntp_sync(sntp, 10000) == BLUSYS_OK) {
+        time_t now = time(NULL);
+        struct tm tm;
+        localtime_r(&now, &tm);
+        printf("Current time: %04d-%02d-%02d %02d:%02d:%02d\n",
+               tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+               tm.tm_hour, tm.tm_min, tm.tm_sec);
+    }
+}
+```
+
+## Common Mistakes
+
+- **calling `open()` before WiFi has an IP** — `sync()` will time out; bring up WiFi first
+- **opening a second SNTP instance** — the ESP-IDF backend is a singleton; close the existing instance before opening a new one
+- **blocking inside `sync_cb`** — the callback runs on the SNTP service task
 
 ## Target Support
 
@@ -11,105 +44,21 @@ NTP time synchronization for setting the system clock after boot.
 | ESP32-C3 | yes |
 | ESP32-S3 | yes |
 
-## Types
-
-### `blusys_sntp_config_t`
-
-```c
-typedef struct {
-    const char             *server;       /* Primary NTP server (default: "pool.ntp.org") */
-    const char             *server2;      /* Optional secondary server (NULL to skip) */
-    bool                    smooth_sync;  /* true = gradual adjustment, false = immediate */
-    blusys_sntp_sync_cb_t   sync_cb;      /* Optional callback on each sync event */
-    void                   *user_ctx;     /* User context passed to sync_cb */
-} blusys_sntp_config_t;
-```
-
-### `blusys_sntp_sync_cb_t`
-
-```c
-typedef void (*blusys_sntp_sync_cb_t)(void *user_ctx);
-```
-
-Callback invoked each time the system clock is synchronized with the NTP server.
-
-## Functions
-
-### `blusys_sntp_open`
-
-```c
-blusys_err_t blusys_sntp_open(const blusys_sntp_config_t *config,
-                               blusys_sntp_t **out_sntp);
-```
-
-Initializes the SNTP client and begins polling the configured NTP server(s). WiFi must already be connected before calling this function.
-
-Only one SNTP instance may be active at a time.
-
-**Parameters:**
-
-- `config` — server(s) and options (required)
-- `out_sntp` — output handle
-
-**Returns:** `BLUSYS_OK` on success, `BLUSYS_ERR_INVALID_STATE` if already open, `BLUSYS_ERR_NO_MEM` if allocation fails.
-
----
-
-### `blusys_sntp_close`
-
-```c
-blusys_err_t blusys_sntp_close(blusys_sntp_t *sntp);
-```
-
-Stops the SNTP client and frees the handle. The system clock retains the last synchronized time.
-
----
-
-### `blusys_sntp_sync`
-
-```c
-blusys_err_t blusys_sntp_sync(blusys_sntp_t *sntp, int timeout_ms);
-```
-
-Blocks until the system clock has been synchronized with the NTP server or the timeout expires.
-
-After this function returns `BLUSYS_OK`, standard C functions (`time()`, `localtime()`, `gmtime()`) return correct wall-clock time.
-
-**Parameters:**
-
-- `sntp` — handle from `blusys_sntp_open()`
-- `timeout_ms` — maximum wait time; pass `BLUSYS_TIMEOUT_FOREVER` (`-1`) to block indefinitely
-
-**Returns:**
-
-- `BLUSYS_OK` — clock synchronized
-- `BLUSYS_ERR_TIMEOUT` — `timeout_ms` elapsed before sync completed
-
----
-
-### `blusys_sntp_is_synced`
-
-```c
-bool blusys_sntp_is_synced(blusys_sntp_t *sntp);
-```
-
-Returns `true` if the system clock has been synchronized at least once. Non-blocking.
-
-## Lifecycle
-
-Requires an active WiFi connection. Call `blusys_sntp_open()` after WiFi has an IP address. Only one instance at a time; close before re-opening with different servers.
-
 ## Thread Safety
 
-- `blusys_sntp_open` / `blusys_sntp_close` are not reentrant
-- `blusys_sntp_is_synced` is safe from any task
+- `open()` / `close()` are not reentrant
+- `is_synced()` is safe from any task
 - `sync_cb` runs on the SNTP service task — do not block
+
+## ISR Notes
+
+No ISR-safe calls are defined for the SNTP module.
 
 ## Limitations
 
 - single active instance
-- requires WiFi (or another network interface with routable DNS) before `open`
-- system clock retains the last sync across `close`/`open` cycles; there is no “reset to epoch” helper
+- requires WiFi (or another network interface with routable DNS) before `open()`
+- the system clock retains the last sync across `close()` / `open()` cycles; there is no "reset to epoch" helper
 
 ## Example App
 

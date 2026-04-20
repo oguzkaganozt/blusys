@@ -1,3 +1,12 @@
+/**
+ * @file ws_client.h
+ * @brief WebSocket client (`ws://` and `wss://`) with TEXT/BINARY frames.
+ *
+ * Callbacks run on the receive task; no fragmentation reassembly is
+ * performed — the receive callback fires per frame. See
+ * docs/services/ws_client.md.
+ */
+
 #ifndef BLUSYS_WS_CLIENT_H
 #define BLUSYS_WS_CLIENT_H
 
@@ -11,68 +20,105 @@
 extern "C" {
 #endif
 
+/** @brief Opaque WebSocket client handle. */
 typedef struct blusys_ws_client blusys_ws_client_t;
 
+/** @brief WebSocket data-frame type. */
 typedef enum {
-    BLUSYS_WS_MSG_TEXT   = 0,
-    BLUSYS_WS_MSG_BINARY = 1,
+    BLUSYS_WS_MSG_TEXT   = 0,   /**< UTF-8 text frame. */
+    BLUSYS_WS_MSG_BINARY = 1,   /**< Binary frame. */
 } blusys_ws_msg_type_t;
 
-/* Called from the receive task when a data frame arrives.
-   data is raw bytes; for TEXT frames it is NOT null-terminated.
-   This callback may be called for fragmented frames individually — no reassembly
-   is performed.  Check message type via the type parameter. */
+/**
+ * @brief Incoming-frame callback.
+ *
+ * May fire per fragment; no reassembly is performed. For TEXT frames @p data
+ * is not null-terminated — use @p len.
+ *
+ * @param type      Frame type.
+ * @param data      Frame bytes.
+ * @param len       Number of bytes in @p data.
+ * @param user_ctx  User pointer supplied via ::blusys_ws_client_config_t::user_ctx.
+ */
 typedef void (*blusys_ws_message_cb_t)(blusys_ws_msg_type_t  type,
                                         const uint8_t        *data,
                                         size_t                len,
                                         void                 *user_ctx);
 
-/* Called from the receive task when the connection is closed by the server
-   or a network error occurs.  Optional; set to NULL if not needed. */
+/**
+ * @brief Disconnect callback. Fired when the server closes the connection
+ *        or a network error occurs.
+ * @param user_ctx  User pointer supplied via ::blusys_ws_client_config_t::user_ctx.
+ */
 typedef void (*blusys_ws_disconnect_cb_t)(void *user_ctx);
 
+/** @brief Configuration for ::blusys_ws_client_open. */
 typedef struct {
-    const char                  *url;            /* required; "ws://" or "wss://" */
-    blusys_ws_message_cb_t       message_cb;     /* required; called on incoming data frames */
-    blusys_ws_disconnect_cb_t    disconnect_cb;  /* optional; called on disconnect */
-    void                        *user_ctx;       /* passed through to callbacks */
-    int                          timeout_ms;     /* connect/send timeout; BLUSYS_TIMEOUT_FOREVER to block */
-    const char                  *subprotocol;    /* optional Sec-WebSocket-Protocol value */
-    const char                  *server_cert_pem; /* PEM CA cert for wss://; NULL skips CN check */
+    const char                  *url;             /**< Required `ws://` or `wss://` URL. */
+    blusys_ws_message_cb_t       message_cb;      /**< Required incoming-frame callback. */
+    blusys_ws_disconnect_cb_t    disconnect_cb;   /**< Optional disconnect callback. */
+    void                        *user_ctx;        /**< Opaque pointer forwarded to both callbacks. */
+    int                          timeout_ms;      /**< Connect/send timeout; `BLUSYS_TIMEOUT_FOREVER` to block. */
+    const char                  *subprotocol;     /**< Optional `Sec-WebSocket-Protocol` value. */
+    const char                  *server_cert_pem; /**< PEM CA cert for wss://; NULL skips CN check. */
 } blusys_ws_client_config_t;
 
-/* Allocate and initialise a WebSocket client.  Does not connect.
-   Returns BLUSYS_ERR_INVALID_ARG if config or out_handle is NULL, url or message_cb is NULL,
-   or timeout_ms is invalid (less than BLUSYS_TIMEOUT_FOREVER).
-   Returns BLUSYS_ERR_NO_MEM on allocation failure.
-   Returns BLUSYS_ERR_NOT_SUPPORTED on targets without WiFi. */
+/**
+ * @brief Allocate and initialise a WebSocket client. Does not connect.
+ * @param config      Configuration.
+ * @param out_handle  Output handle.
+ * @return `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG`, `BLUSYS_ERR_NO_MEM`,
+ *         `BLUSYS_ERR_NOT_SUPPORTED` on targets without WiFi.
+ */
 blusys_err_t blusys_ws_client_open(const blusys_ws_client_config_t *config,
                                     blusys_ws_client_t             **out_handle);
 
-/* Release all resources.  Disconnects first if still connected. */
+/**
+ * @brief Disconnect (if connected) and free the client.
+ * @param handle  Handle.
+ * @return `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` if @p handle is NULL.
+ */
 blusys_err_t blusys_ws_client_close(blusys_ws_client_t *handle);
 
-/* Connect to the server.  Blocks until the WebSocket handshake completes, the
-   timeout expires, or a network error occurs.
-   Returns BLUSYS_ERR_INVALID_STATE if already connected.
-   Returns BLUSYS_ERR_IO on network-level failure. */
+/**
+ * @brief Connect to the server.
+ *
+ * Blocks until the WebSocket handshake completes, the timeout expires, or
+ * a network error occurs.
+ *
+ * @param handle  Handle.
+ * @return `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if already connected,
+ *         `BLUSYS_ERR_IO` on network-level failure.
+ */
 blusys_err_t blusys_ws_client_connect(blusys_ws_client_t *handle);
 
-/* Disconnect from the server.  Sends a WebSocket CLOSE frame, waits for the
-   receive task to finish, then tears down the transport. */
+/**
+ * @brief Send a WebSocket CLOSE and tear down the transport.
+ * @param handle  Handle.
+ * @return `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG`.
+ */
 blusys_err_t blusys_ws_client_disconnect(blusys_ws_client_t *handle);
 
-/* Send a UTF-8 text frame.  null must not be passed as text.
-   Returns BLUSYS_ERR_INVALID_STATE if not connected. */
+/**
+ * @brief Send a UTF-8 text frame.
+ * @param handle  Handle.
+ * @param text    Null-terminated UTF-8 string; must not be NULL.
+ * @return `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if not connected.
+ */
 blusys_err_t blusys_ws_client_send_text(blusys_ws_client_t *handle, const char *text);
 
-/* Send a binary frame.
-   Returns BLUSYS_ERR_INVALID_STATE if not connected. */
+/**
+ * @brief Send a binary frame.
+ * @param handle  Handle.
+ * @param data    Payload bytes.
+ * @param len     Bytes in @p data.
+ * @return `BLUSYS_OK`, `BLUSYS_ERR_INVALID_STATE` if not connected.
+ */
 blusys_err_t blusys_ws_client_send(blusys_ws_client_t *handle,
                                     const uint8_t      *data,
                                     size_t              len);
 
-/* Returns true if the client is currently connected. */
+/** @brief Whether the client is currently connected. */
 bool blusys_ws_client_is_connected(blusys_ws_client_t *handle);
 
 #ifdef __cplusplus

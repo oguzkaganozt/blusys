@@ -52,7 +52,15 @@ INPUT                  = components/blusys/include/blusys/hal/adc.h \
                          components/blusys/include/blusys/services/storage/fs.h \
                          components/blusys/include/blusys/services/system/console.h \
                          components/blusys/include/blusys/services/system/ota.h \
-                         components/blusys/include/blusys/services/system/power_mgmt.h
+                         components/blusys/include/blusys/services/system/power_mgmt.h \
+                         components/blusys/include/blusys/services/protocol/http_client.h \
+                         components/blusys/include/blusys/services/protocol/http_server.h \
+                         components/blusys/include/blusys/services/protocol/local_ctrl.h \
+                         components/blusys/include/blusys/services/protocol/local_ctrl_fwd.h \
+                         components/blusys/include/blusys/services/protocol/mdns.h \
+                         components/blusys/include/blusys/services/protocol/mqtt.h \
+                         components/blusys/include/blusys/services/protocol/sntp.h \
+                         components/blusys/include/blusys/services/protocol/ws_client.h
 RECURSIVE              = NO
 FILE_PATTERNS          = *.h *.hpp
 EXTRACT_ALL            = NO
