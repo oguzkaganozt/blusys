@@ -1,7 +1,10 @@
-/* blusys/blusys.h — C umbrella header (HAL + drivers + services)
+/**
+ * @file blusys.h
+ * @brief C umbrella header — pulls in the full HAL, drivers, and services surface.
  *
- * Include this from C code to pull in everything.
- * For finer-grained control, include specific layer headers directly.
+ * Include this from C code to get everything. For finer-grained control,
+ * include specific layer headers directly (`blusys/hal/<name>.h`,
+ * `blusys/drivers/<name>.h`, or `blusys/services/<group>/<name>.h`).
  */
 
 #ifndef BLUSYS_BLUSYS_H

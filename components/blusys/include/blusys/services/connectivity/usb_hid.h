@@ -1,16 +1,3 @@
-#ifndef BLUSYS_USB_HID_H
-#define BLUSYS_USB_HID_H
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
-#include "blusys/hal/error.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @file usb_hid.h
  * @brief Dual-transport HID input service (USB OTG host on S3, BLE HOGP central elsewhere).
@@ -23,6 +10,19 @@ extern "C" {
  * Coexistence: the BLE transport shares the NimBLE controller with other
  * BLE-owning modules. Only one BLE owner may be open at a time.
  */
+
+#ifndef BLUSYS_USB_HID_H
+#define BLUSYS_USB_HID_H
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include "blusys/hal/error.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** @brief Opaque HID session handle. */
 typedef struct blusys_usb_hid blusys_usb_hid_t;

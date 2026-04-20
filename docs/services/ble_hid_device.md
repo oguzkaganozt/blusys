@@ -94,3 +94,15 @@ Open / close from a single task. `send_consumer`, `send_report`, `set_battery`, 
 ## Stack Notes
 
 Uses NimBLE. If you also need Wi-Fi provisioning, provision before enabling HID (or tear the HID capability down first) — the BLE controller is single-owner.
+
+## Limitations
+
+- only one `blusys_ble_hid_device` instance may be open at a time
+- cannot be used alongside `blusys_bluetooth`, `blusys_ble_gatt`, BLE-transport `blusys_usb_hid`, or BLE-transport `blusys_wifi_prov` — the second opener receives `BLUSYS_ERR_BUSY`
+- built-in report map is Consumer Control only (one 1-byte input report); full keyboard/mouse/gamepad reports require `blusys_ble_hid_device_send_report()` with a caller-supplied payload
+- pairing is Just-Works only — no passkey or out-of-band bonding
+- bond storage uses the NimBLE default NVS store; expose a factory-reset path if end-users need to re-pair with a new host
+
+## Example App
+
+See `examples/quickstart/bluetooth_controller` — wires `blusys::ble_hid_device_capability` to three GPIO buttons for a minimal media remote.

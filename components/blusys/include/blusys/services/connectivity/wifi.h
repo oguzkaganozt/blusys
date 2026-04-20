@@ -1,13 +1,3 @@
-#ifndef BLUSYS_WIFI_H
-#define BLUSYS_WIFI_H
-
-#include <stdbool.h>
-#include "blusys/hal/error.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @file wifi.h
  * @brief Station-mode WiFi for connecting the ESP32 family to an existing AP.
@@ -19,6 +9,16 @@ extern "C" {
  * Only one WiFi owner may be active at a time — do not combine this service
  * with `blusys_espnow`, `blusys_wifi_mesh`, or `blusys_wifi_prov`.
  */
+
+#ifndef BLUSYS_WIFI_H
+#define BLUSYS_WIFI_H
+
+#include <stdbool.h>
+#include "blusys/hal/error.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** @brief Opaque handle to an open WiFi station session. */
 typedef struct blusys_wifi blusys_wifi_t;

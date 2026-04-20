@@ -153,3 +153,4 @@ nav:
           - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md
           - Concurrency Tests: internals/testing/concurrency-tests.md
           - Validation Template: internals/testing/hardware-validation-report-template.md
+  - API Reference: https://oguzkaganozt.github.io/blusys/api/

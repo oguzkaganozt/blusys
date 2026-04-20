@@ -1,3 +1,12 @@
+/**
+ * @file espnow.h
+ * @brief ESP-NOW connectionless peer-to-peer wireless (no access point required).
+ *
+ * Initializes the WiFi driver in STA mode internally — do not combine with
+ * `blusys_wifi`, `blusys_wifi_mesh`, or `blusys_wifi_prov` in the same
+ * application. Maximum payload per frame is 250 bytes.
+ */
+
 #ifndef BLUSYS_ESPNOW_H
 #define BLUSYS_ESPNOW_H
 
@@ -10,15 +19,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * @file espnow.h
- * @brief ESP-NOW connectionless peer-to-peer wireless (no access point required).
- *
- * Initializes the WiFi driver in STA mode internally — do not combine with
- * `blusys_wifi`, `blusys_wifi_mesh`, or `blusys_wifi_prov` in the same
- * application. Maximum payload per frame is 250 bytes.
- */
 
 /** @brief Opaque handle to an open ESP-NOW session. */
 typedef struct blusys_espnow blusys_espnow_t;

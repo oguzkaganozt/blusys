@@ -1,12 +1,3 @@
-#ifndef BLUSYS_BLE_GATT_H
-#define BLUSYS_BLE_GATT_H
-
-#include "blusys/services/connectivity/ble_gatt_fwd.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @file ble_gatt.h
  * @brief BLE GATT server over NimBLE — service/characteristic registration and notifications.
@@ -15,6 +6,15 @@ extern "C" {
  * excludes `blusys_bluetooth`, BLE-transport `blusys_usb_hid`, BLE-transport
  * `blusys_wifi_prov`, and `blusys_ble_hid_device`.
  */
+
+#ifndef BLUSYS_BLE_GATT_H
+#define BLUSYS_BLE_GATT_H
+
+#include "blusys/services/connectivity/ble_gatt_fwd.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Characteristic can be read by a connected client. */
 #define BLUSYS_BLE_GATT_CHR_F_READ    (1u << 0)

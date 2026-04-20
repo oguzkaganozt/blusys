@@ -1,13 +1,3 @@
-#ifndef BLUSYS_BLUETOOTH_H
-#define BLUSYS_BLUETOOTH_H
-
-#include <stdint.h>
-#include "blusys/hal/error.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @file bluetooth.h
  * @brief BLE advertising and scanning via the NimBLE host stack.
@@ -21,6 +11,16 @@ extern "C" {
  *   `blusys_bluetooth`, `blusys_ble_gatt`, BLE-transport `blusys_usb_hid`,
  *   BLE-transport `blusys_wifi_prov`, `blusys_ble_hid_device`.
  */
+
+#ifndef BLUSYS_BLUETOOTH_H
+#define BLUSYS_BLUETOOTH_H
+
+#include <stdint.h>
+#include "blusys/hal/error.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** @brief Opaque handle to an open BLE session. */
 typedef struct blusys_bluetooth blusys_bluetooth_t;

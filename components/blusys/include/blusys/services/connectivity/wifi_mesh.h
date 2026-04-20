@@ -1,3 +1,13 @@
+/**
+ * @file wifi_mesh.h
+ * @brief Self-organizing multi-hop mesh network over the ESP-IDF @c esp_mesh stack.
+ *
+ * Each node acts as a WiFi station (connects to a parent) and a WiFi soft-AP
+ * (accepts children), so data can hop across the mesh without a direct path
+ * to the router. Initializes the WiFi driver internally — do not combine with
+ * `blusys_wifi`, `blusys_espnow`, or `blusys_wifi_prov`.
+ */
+
 #ifndef BLUSYS_WIFI_MESH_H
 #define BLUSYS_WIFI_MESH_H
 
@@ -10,16 +20,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * @file wifi_mesh.h
- * @brief Self-organizing multi-hop mesh network over the ESP-IDF @c esp_mesh stack.
- *
- * Each node acts as a WiFi station (connects to a parent) and a WiFi soft-AP
- * (accepts children), so data can hop across the mesh without a direct path
- * to the router. Initializes the WiFi driver internally — do not combine with
- * `blusys_wifi`, `blusys_espnow`, or `blusys_wifi_prov`.
- */
 
 /** @brief Opaque handle to an open mesh session. */
 typedef struct blusys_wifi_mesh blusys_wifi_mesh_t;

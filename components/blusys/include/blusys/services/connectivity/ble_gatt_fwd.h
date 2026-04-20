@@ -1,3 +1,11 @@
+/**
+ * @file ble_gatt_fwd.h
+ * @brief Forward declarations for the BLE GATT server types.
+ *
+ * Lets other headers refer to @ref blusys_ble_gatt_t and its callback signatures
+ * without pulling in the full @ref ble_gatt.h definitions.
+ */
+
 #ifndef BLUSYS_BLE_GATT_FWD_H
 #define BLUSYS_BLE_GATT_FWD_H
 
@@ -10,14 +18,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * @file ble_gatt_fwd.h
- * @brief Forward declarations for the BLE GATT server types.
- *
- * Lets other headers refer to @ref blusys_ble_gatt_t and its callback signatures
- * without pulling in the full @ref ble_gatt.h definitions.
- */
 
 struct blusys_ble_gatt;
 /** @brief Opaque BLE GATT server handle. */

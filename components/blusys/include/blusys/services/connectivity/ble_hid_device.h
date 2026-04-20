@@ -1,16 +1,3 @@
-#ifndef BLUSYS_BLE_HID_DEVICE_H
-#define BLUSYS_BLE_HID_DEVICE_H
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
-#include "blusys/hal/error.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @file ble_hid_device.h
  * @brief BLE HID (HOGP) peripheral service — consumer-control remote.
@@ -36,6 +23,20 @@ extern "C" {
  *   bit 6 → Usage 0x006F (Consumer: Brightness Up)
  *   bit 7 → Usage 0x0070 (Consumer: Brightness Down)
  */
+
+#ifndef BLUSYS_BLE_HID_DEVICE_H
+#define BLUSYS_BLE_HID_DEVICE_H
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include "blusys/hal/error.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @brief Opaque handle to an open BLE HID peripheral session. */
 typedef struct blusys_ble_hid_device blusys_ble_hid_device_t;
 
