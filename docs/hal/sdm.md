@@ -2,6 +2,8 @@
 
 High-frequency sigma-delta bitstream output on a GPIO. Useful for LED dimming, simple DAC approximation with an RC filter, or any load that accepts a PWM-style bitstream.
 
+Density scale: `-128` ≈ 0% (always low), `0` ≈ 50%, `127` ≈ 100% (always high).
+
 ## Quick Example
 
 ```c
@@ -30,73 +32,6 @@ blusys_sdm_close(sdm);
 | ESP32 | yes |
 | ESP32-C3 | yes |
 | ESP32-S3 | yes |
-
-## Types
-
-### `blusys_sdm_t`
-
-```c
-typedef struct blusys_sdm blusys_sdm_t;
-```
-
-Opaque handle returned by `blusys_sdm_open()`.
-
-## Functions
-
-### `blusys_sdm_open`
-
-```c
-blusys_err_t blusys_sdm_open(int pin, uint32_t sample_rate_hz, blusys_sdm_t **out_sdm);
-```
-
-Opens an SDM channel on the given pin and enables the output immediately.
-
-**Parameters:**
-- `pin` — GPIO number
-- `sample_rate_hz` — modulator sample rate (e.g. 1000000 for 1 MHz)
-- `out_sdm` — output handle
-
-**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for invalid pin, zero sample rate, or NULL pointer.
-
----
-
-### `blusys_sdm_close`
-
-```c
-blusys_err_t blusys_sdm_close(blusys_sdm_t *sdm);
-```
-
-Disables the SDM output and frees the handle.
-
----
-
-### `blusys_sdm_set_density`
-
-```c
-blusys_err_t blusys_sdm_set_density(blusys_sdm_t *sdm, int8_t density);
-```
-
-Sets the pulse density, which controls the average output level after low-pass filtering.
-
-**Parameters:**
-- `sdm` — handle
-- `density` — signed 8-bit value in range `[-128, 127]`
-
-**Density scale:**
-
-| `density` | Approximate output |
-|-----------|--------------------|
-| -128 | ~0% (always low) |
-| 0 | ~50% |
-| 127 | ~100% (always high) |
-
-**Returns:** `BLUSYS_OK`.
-
-## Lifecycle
-
-1. `blusys_sdm_open()` — configure channel, output begins
-2. `blusys_sdm_set_density()` — change output level as needed
-3. `blusys_sdm_close()` — disable output and release
 
 ## Thread Safety
 
