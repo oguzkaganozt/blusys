@@ -47,7 +47,12 @@ INPUT                  = components/blusys/include/blusys/hal/adc.h \
                          components/blusys/include/blusys/drivers/encoder.h \
                          components/blusys/include/blusys/drivers/lcd.h \
                          components/blusys/include/blusys/drivers/led_strip.h \
-                         components/blusys/include/blusys/drivers/seven_seg.h
+                         components/blusys/include/blusys/drivers/seven_seg.h \
+                         components/blusys/include/blusys/services/storage/fatfs.h \
+                         components/blusys/include/blusys/services/storage/fs.h \
+                         components/blusys/include/blusys/services/system/console.h \
+                         components/blusys/include/blusys/services/system/ota.h \
+                         components/blusys/include/blusys/services/system/power_mgmt.h
 RECURSIVE              = NO
 FILE_PATTERNS          = *.h *.hpp
 EXTRACT_ALL            = NO

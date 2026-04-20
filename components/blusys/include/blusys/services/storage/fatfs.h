@@ -1,3 +1,12 @@
+/**
+ * @file fatfs.h
+ * @brief FAT filesystem on internal flash with wear-levelling.
+ *
+ * Registers the FAT VFS under a base path so standard C file APIs resolve
+ * there, and provides convenience helpers for common read/write/listdir
+ * operations. See docs/services/fatfs.md.
+ */
+
 #ifndef BLUSYS_FATFS_H
 #define BLUSYS_FATFS_H
 
@@ -10,6 +19,7 @@
 extern "C" {
 #endif
 
+/** @brief Opaque handle to a mounted FAT filesystem. */
 typedef struct blusys_fatfs blusys_fatfs_t;
 
 /**
@@ -20,12 +30,13 @@ typedef struct blusys_fatfs blusys_fatfs_t;
  */
 typedef void (*blusys_fatfs_listdir_cb_t)(const char *name, void *user_data);
 
+/** @brief Configuration for ::blusys_fatfs_mount. */
 typedef struct {
-    const char *base_path;              /**< VFS mount point, e.g. "/ffat" (required) */
-    const char *partition_label;        /**< Flash partition label; NULL = "ffat" */
-    size_t      max_files;              /**< Max simultaneously open files; 0 = 5 */
-    bool        format_if_mount_failed; /**< Auto-format partition when mount fails */
-    size_t      allocation_unit_size;   /**< FAT cluster size in bytes; 0 = default (4096) */
+    const char *base_path;              /**< VFS mount point, e.g. `"/ffat"` (required). */
+    const char *partition_label;        /**< Flash partition label; NULL selects `"ffat"`. */
+    size_t      max_files;              /**< Max simultaneously open files; `0` selects 5. */
+    bool        format_if_mount_failed; /**< Auto-format the partition when mount fails. */
+    size_t      allocation_unit_size;   /**< FAT cluster size in bytes; `0` selects 4096. */
 } blusys_fatfs_config_t;
 
 /**

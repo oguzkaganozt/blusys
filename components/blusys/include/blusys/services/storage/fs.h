@@ -1,3 +1,13 @@
+/**
+ * @file fs.h
+ * @brief SPIFFS filesystem on internal flash.
+ *
+ * Registers the SPIFFS VFS under a base path so standard C file APIs resolve
+ * there, and provides convenience helpers for common read/write operations.
+ * For a hierarchical filesystem on flash, use ::blusys_fatfs instead. See
+ * docs/services/fs.md.
+ */
+
 #ifndef BLUSYS_FS_H
 #define BLUSYS_FS_H
 
@@ -10,13 +20,15 @@
 extern "C" {
 #endif
 
+/** @brief Opaque handle to a mounted SPIFFS filesystem. */
 typedef struct blusys_fs blusys_fs_t;
 
+/** @brief Configuration for ::blusys_fs_mount. */
 typedef struct {
-    const char *base_path;        /**< VFS mount point, e.g. "/fs" (required) */
-    const char *partition_label;  /**< Flash partition label; NULL = default "spiffs" partition */
-    size_t      max_files;        /**< Max simultaneously open files; 0 = use default (5) */
-    bool        format_if_mount_failed; /**< Auto-format partition when mount fails */
+    const char *base_path;              /**< VFS mount point, e.g. `"/fs"` (required). */
+    const char *partition_label;        /**< Flash partition label; NULL selects the default `"spiffs"` partition. */
+    size_t      max_files;              /**< Max simultaneously open files; `0` selects 5. */
+    bool        format_if_mount_failed; /**< Auto-format the partition when mount fails. */
 } blusys_fs_config_t;
 
 /**
