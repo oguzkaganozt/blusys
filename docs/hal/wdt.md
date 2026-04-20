@@ -2,12 +2,13 @@
 
 Task watchdog timer (TWDT): monitor one or more tasks and trigger a panic or log event if any fail to feed the watchdog within the timeout.
 
+The WDT module is global — no open/close handle. One controlling task calls `init`/`deinit`; each monitored task calls `subscribe`/`feed`/`unsubscribe`.
+
 ## Quick Example
 
 ```c
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
 #include "blusys/blusys.h"
 
 void app_main(void)
@@ -28,8 +29,8 @@ void app_main(void)
 
 ## Common Mistakes
 
-- subscribing multiple tasks but only feeding from one: all subscribed tasks must feed within the window
-- calling `blusys_wdt_feed()` from an ISR: feed must be called from task context
+- subscribing multiple tasks but only feeding from one — **all** subscribed tasks must feed within the window, or the slowest triggers it
+- calling `blusys_wdt_feed()` from an ISR — feed must be called from task context
 
 ## Target Support
 
@@ -38,76 +39,6 @@ void app_main(void)
 | ESP32 | yes |
 | ESP32-C3 | yes |
 | ESP32-S3 | yes |
-
-## Functions
-
-The WDT module is global (not handle-based). No `open()`/`close()` pattern.
-
-### `blusys_wdt_init`
-
-```c
-blusys_err_t blusys_wdt_init(uint32_t timeout_ms, bool panic_on_timeout);
-```
-
-Configures and enables the task watchdog. Call once from the controlling task.
-
-**Parameters:**
-- `timeout_ms` — watchdog timeout in milliseconds; must be greater than zero
-- `panic_on_timeout` — `true` causes a system panic (core dump or reboot) on expiry; `false` logs only
-
-**Returns:** `BLUSYS_OK`, `BLUSYS_ERR_INVALID_ARG` for zero timeout, translated ESP-IDF error on double-init.
-
----
-
-### `blusys_wdt_deinit`
-
-```c
-blusys_err_t blusys_wdt_deinit(void);
-```
-
-Disables the task watchdog. All tasks should unsubscribe before calling this.
-
----
-
-### `blusys_wdt_subscribe`
-
-```c
-blusys_err_t blusys_wdt_subscribe(void);
-```
-
-Subscribes the **calling task** to be monitored by the watchdog. Call from each task that should be watched.
-
-**Returns:** `BLUSYS_OK`, translated ESP-IDF error if the task is already subscribed.
-
----
-
-### `blusys_wdt_unsubscribe`
-
-```c
-blusys_err_t blusys_wdt_unsubscribe(void);
-```
-
-Unsubscribes the calling task. Call before the task exits.
-
----
-
-### `blusys_wdt_feed`
-
-```c
-blusys_err_t blusys_wdt_feed(void);
-```
-
-Resets the watchdog timeout for the calling task. Must be called within `timeout_ms` after the previous feed (or after `subscribe()`).
-
-**Returns:** `BLUSYS_OK`, translated ESP-IDF error if the calling task is not subscribed.
-
-## Lifecycle
-
-1. `blusys_wdt_init()` — enable watchdog (one controlling task)
-2. `blusys_wdt_subscribe()` — called by each task that should be monitored
-3. `blusys_wdt_feed()` — called regularly within `timeout_ms` from each monitored task
-4. `blusys_wdt_unsubscribe()` — called before a monitored task exits
-5. `blusys_wdt_deinit()` — disable watchdog (controlling task)
 
 ## Thread Safety
 

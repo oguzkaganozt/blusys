@@ -8,7 +8,12 @@ OUTPUT_DIRECTORY       = api-docs/build
 # ---------------------------------------------------------------------------
 # Scope — spike only indexes the single annotated header.
 # ---------------------------------------------------------------------------
-INPUT                  = components/blusys/include/blusys/hal/gpio.h
+INPUT                  = components/blusys/include/blusys/hal/adc.h \
+                         components/blusys/include/blusys/hal/dac.h \
+                         components/blusys/include/blusys/hal/gpio.h \
+                         components/blusys/include/blusys/hal/pwm.h \
+                         components/blusys/include/blusys/hal/timer.h \
+                         components/blusys/include/blusys/hal/wdt.h
 RECURSIVE              = NO
 FILE_PATTERNS          = *.h *.hpp
 EXTRACT_ALL            = NO
