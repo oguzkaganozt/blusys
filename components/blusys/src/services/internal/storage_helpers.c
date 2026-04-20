@@ -1,4 +1,4 @@
-#include "blusys/framework/services/internal/storage_helpers.h"
+#include "blusys/services/internal/storage_helpers.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -6,8 +6,8 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "blusys/framework/observe/counter.h"
-#include "blusys/framework/observe/log.h"
+#include "blusys/observe/counter.h"
+#include "blusys/observe/log.h"
 
 blusys_err_t blusys_storage_fail(blusys_err_domain_t domain,
                                  uint16_t code,

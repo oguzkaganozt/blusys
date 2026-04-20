@@ -12,8 +12,8 @@
 
 #include "blusys/hal/internal/callback_lifecycle.h"
 #include "blusys/drivers/button.h"
-#include "blusys/framework/observe/counter.h"
-#include "blusys/framework/observe/log.h"
+#include "blusys/observe/counter.h"
+#include "blusys/observe/log.h"
 #include "blusys/hal/gpio.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"

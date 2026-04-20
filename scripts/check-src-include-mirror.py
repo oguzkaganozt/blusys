@@ -104,6 +104,10 @@ def _is_include_only_exempt(rel: Path) -> bool:
     # hal/internal/*.h — shared internal headers included by multiple .c files.
     if rel.parts[0] == "hal" and len(rel.parts) >= 2 and rel.parts[1] == "internal":
         return True
+    # services/internal/*.h — shared internal service helpers (e.g. session
+    # state machines, header-only inline helpers used across service .c files).
+    if rel.parts[0] == "services" and len(rel.parts) >= 2 and rel.parts[1] == "internal":
+        return True
     # hal/log.h — macro-only header wrapping esp_log; no .c counterpart.
     # hal/ulp.h — ULP API header; implementation lives in src/hal/ulp/ subdir.
     if rel.parts[0] == "hal" and rel.name in {"log.h", "ulp.h"}:

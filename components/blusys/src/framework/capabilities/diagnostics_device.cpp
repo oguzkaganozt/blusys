@@ -1,6 +1,6 @@
 #include "blusys/framework/capabilities/diagnostics.hpp"
-#include "blusys/framework/observe/log.h"
-#include "blusys/framework/observe/snapshot.h"
+#include "blusys/observe/log.h"
+#include "blusys/observe/snapshot.h"
 #include "blusys/hal/nvs.h"
 #include "blusys/framework/services/system.h"
 

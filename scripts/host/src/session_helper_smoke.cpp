@@ -1,4 +1,4 @@
-#include "blusys/framework/services/internal/session_helper.h"
+#include "blusys/services/internal/session_helper.h"
 #include "blusys/framework/test/test.hpp"
 
 #include <cstdio>

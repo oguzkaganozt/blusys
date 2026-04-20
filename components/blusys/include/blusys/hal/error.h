@@ -1,7 +1,7 @@
 /* blusys/hal/error.h — packed (domain, code) error type.
  *
  * blusys_err_t is a 32-bit value: high 16 bits identify the originating
- * subsystem (see framework/observe/error_domain.h), low 16 bits hold a
+ * subsystem (see observe/error_domain.h), low 16 bits hold a
  * subsystem-defined code. Generic codes (INVALID_ARG, NO_MEM, ...) live in
  * `err_domain_generic = 0` with their historical numeric values, so existing
  * `if (err != BLUSYS_OK)` checks and switches keep working untouched.

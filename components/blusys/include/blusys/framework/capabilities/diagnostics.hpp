@@ -1,7 +1,7 @@
 #pragma once
 
 #include "blusys/framework/capabilities/capability.hpp"
-#include "blusys/framework/observe/snapshot.h"
+#include "blusys/observe/snapshot.h"
 
 #include <cstdint>
 

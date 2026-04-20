@@ -1,4 +1,4 @@
-#include "blusys/framework/observe/error_domain.h"
+#include "blusys/observe/error_domain.h"
 
 const char *blusys_err_domain_string(blusys_err_domain_t domain)
 {

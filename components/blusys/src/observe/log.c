@@ -1,4 +1,4 @@
-/* framework/observe/log.c — printf-backed structured log sink.
+/* observe/log.c — printf-backed structured log sink.
  *
  * Single output format on host and device:
  *
@@ -9,8 +9,8 @@
  * without dragging in esp_log's own format. Host builds get the same shape.
  */
 
-#include "blusys/framework/observe/log.h"
-#include "blusys/framework/observe/snapshot.h"
+#include "blusys/observe/log.h"
+#include "blusys/observe/snapshot.h"
 
 #include <stdio.h>
 #include <string.h>

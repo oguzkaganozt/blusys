@@ -1,4 +1,4 @@
-#include "blusys/framework/services/internal/net_bootstrap.h"
+#include "blusys/services/internal/net_bootstrap.h"
 
 #include "esp_event.h"
 #include "esp_netif.h"

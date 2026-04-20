@@ -1,4 +1,4 @@
-/* blusys/framework/observe/log.h — structured log front-end.
+/* blusys/observe/log.h — structured log front-end.
  *
  * One macro, one signature, one output format on host and device:
  *
@@ -12,12 +12,12 @@
  * subsystems that have not migrated yet. New code should use this header.
  */
 
-#ifndef BLUSYS_FRAMEWORK_OBSERVE_LOG_H
-#define BLUSYS_FRAMEWORK_OBSERVE_LOG_H
+#ifndef BLUSYS_OBSERVE_LOG_H
+#define BLUSYS_OBSERVE_LOG_H
 
 #include <stdarg.h>
 
-#include "blusys/framework/observe/error_domain.h"
+#include "blusys/observe/error_domain.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,4 +52,4 @@ blusys_log_level_t blusys_log_get_min_level(void);
 }
 #endif
 
-#endif /* BLUSYS_FRAMEWORK_OBSERVE_LOG_H */
+#endif /* BLUSYS_OBSERVE_LOG_H */

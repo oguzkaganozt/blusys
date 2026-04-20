@@ -17,7 +17,7 @@
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
 #include "blusys/hal/internal/timeout.h"
-#include "blusys/framework/services/internal/session_helper.h"
+#include "blusys/services/internal/session_helper.h"
 
 #define MQTT_CONNECTED_BIT    BIT0
 #define MQTT_DISCONNECTED_BIT BIT1

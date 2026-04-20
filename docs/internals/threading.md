@@ -29,7 +29,7 @@ will corrupt state, miss events, or leak allocations under load.
 | WebSocket recv | `blusys_ws_client_open()` | 4 KiB | `tskIDLE_PRIORITY + 2` | Decodes incoming frames; enqueues to reducer |
 
 Stack and priority defaults are declared in
-`include/blusys/framework/observe/budget.hpp` and must not be overridden
+`include/blusys/observe/budget.hpp` and must not be overridden
 silently — any subsystem that needs a different value passes it through its
 `*_config_t` and documents the reason.
 
@@ -78,7 +78,7 @@ at their public API surface.
 - `#ifdef ESP_PLATFORM` above the HAL line — forbidden
   (`scripts/check-no-platform-ifdef-above-hal.sh`).
 - Stack / queue budgets — cross-checked against
-  `framework/observe/budget.hpp` at build time.
+  `observe/budget.hpp` at build time.
 
 ## Why these rules
 

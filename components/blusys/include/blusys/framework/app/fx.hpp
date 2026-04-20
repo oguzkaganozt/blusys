@@ -7,7 +7,7 @@
 #include "blusys/framework/capabilities/diagnostics.hpp"
 #include "blusys/framework/capabilities/build_info.hpp"
 #include "blusys/framework/events/router.hpp"
-#include "blusys/framework/observe/snapshot.h"
+#include "blusys/observe/snapshot.h"
 
 #ifdef BLUSYS_FRAMEWORK_HAS_UI
 #include "blusys/framework/ui/controller/navigation_controller.hpp"

@@ -21,7 +21,7 @@
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
 #include "blusys/hal/internal/timeout.h"
-#include "blusys/framework/services/internal/session_helper.h"
+#include "blusys/services/internal/session_helper.h"
 
 #define WS_RECV_BUF_SIZE   1024
 #define WS_RECV_TASK_STACK 4096

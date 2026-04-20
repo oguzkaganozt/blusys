@@ -26,7 +26,7 @@
 #include "blusys/hal/internal/bt_stack.h"
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
-#include "blusys/framework/services/internal/net_bootstrap.h"
+#include "blusys/services/internal/net_bootstrap.h"
 
 struct blusys_wifi_prov {
     blusys_net_bootstrap_t        bootstrap;

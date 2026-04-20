@@ -19,7 +19,7 @@
 #include "blusys/framework/events/router.hpp"
 #include "blusys/framework/events/event_queue.hpp"
 #include "blusys/framework/feedback/internal/logging_sink.hpp"
-#include "blusys/framework/observe/budget.hpp"
+#include "blusys/observe/budget.hpp"
 #include "blusys/hal/log.h"
 
 #include <cstddef>

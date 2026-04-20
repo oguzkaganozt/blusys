@@ -1,4 +1,4 @@
-#include "blusys/framework/observe/snapshot.h"
+#include "blusys/observe/snapshot.h"
 
 #include <stddef.h>
 #include <string.h>

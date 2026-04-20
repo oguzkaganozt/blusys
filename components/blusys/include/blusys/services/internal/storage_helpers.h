@@ -1,6 +1,6 @@
 #pragma once
 
-#include "blusys/framework/observe/error_domain.h"
+#include "blusys/observe/error_domain.h"
 #include "blusys/hal/internal/lock.h"
 #include "blusys/hal/error.h"
 

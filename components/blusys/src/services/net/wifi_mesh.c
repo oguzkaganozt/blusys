@@ -21,7 +21,7 @@
 
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
-#include "blusys/framework/services/internal/net_bootstrap.h"
+#include "blusys/services/internal/net_bootstrap.h"
 
 #define MESH_DEFAULT_MAX_LAYER       6
 #define MESH_DEFAULT_MAX_CONNECTIONS 6

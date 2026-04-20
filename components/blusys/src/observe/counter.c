@@ -1,11 +1,11 @@
-/* framework/observe/counter.c — monotonic u32 counter slab, one per domain.
+/* observe/counter.c — monotonic u32 counter slab, one per domain.
  *
  * Atomic add via stdatomic so any task or ISR-handled deferred work can bump
  * a counter without coordinating with the reducer. Snapshot reads are
  * relaxed; perfect coherence across domains is not a goal.
  */
 
-#include "blusys/framework/observe/counter.h"
+#include "blusys/observe/counter.h"
 
 #include <stddef.h>
 #include <stdatomic.h>

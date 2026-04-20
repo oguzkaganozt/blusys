@@ -4,7 +4,7 @@
 #include "blusys/framework/feedback/feedback.hpp"
 #include "blusys/framework/events/event.hpp"
 #include "blusys/framework/events/router.hpp"
-#include "blusys/framework/observe/budget.hpp"
+#include "blusys/observe/budget.hpp"
 
 #include <cstddef>
 #include <cstdint>

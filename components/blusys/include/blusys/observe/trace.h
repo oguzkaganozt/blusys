@@ -1,4 +1,4 @@
-/* blusys/framework/observe/trace.h — verbose tracing that compiles out.
+/* blusys/observe/trace.h — verbose tracing that compiles out.
  *
  *   BLUSYS_TRACE(domain, fmt, ...)
  *
@@ -7,10 +7,10 @@
  * it expands to a no-op that still type-checks fmt arguments at -Wformat sites.
  */
 
-#ifndef BLUSYS_FRAMEWORK_OBSERVE_TRACE_H
-#define BLUSYS_FRAMEWORK_OBSERVE_TRACE_H
+#ifndef BLUSYS_OBSERVE_TRACE_H
+#define BLUSYS_OBSERVE_TRACE_H
 
-#include "blusys/framework/observe/log.h"
+#include "blusys/observe/log.h"
 
 #ifndef BLUSYS_OBSERVE_TRACE_ENABLED
 #  ifdef NDEBUG
@@ -32,4 +32,4 @@
        } while (0)
 #endif
 
-#endif /* BLUSYS_FRAMEWORK_OBSERVE_TRACE_H */
+#endif /* BLUSYS_OBSERVE_TRACE_H */

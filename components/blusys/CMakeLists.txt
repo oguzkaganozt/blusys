@@ -107,13 +107,13 @@ set(blusys_sources
     src/services/system/ota.c
     src/services/system/power_mgmt.c
     # --- Framework internal service helpers ---
-    src/framework/services/internal/net_bootstrap.c
-    src/framework/services/internal/storage_helpers.c
+    src/services/internal/net_bootstrap.c
+    src/services/internal/storage_helpers.c
     # --- Framework layer ---
-    src/framework/observe/error_domain.c
-    src/framework/observe/log.c
-    src/framework/observe/counter.c
-    src/framework/observe/snapshot.c
+    src/observe/error_domain.c
+    src/observe/log.c
+    src/observe/counter.c
+    src/observe/snapshot.c
     src/framework/events/router.cpp
     src/framework/events/event_queue.cpp
     src/framework/events/framework_init.cpp

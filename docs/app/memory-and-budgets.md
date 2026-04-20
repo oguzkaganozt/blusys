@@ -1,6 +1,6 @@
 # Memory and budgets
 
-All bounded resources are declared in `components/blusys/include/blusys/framework/observe/budget.hpp`. This page describes each budget, its rationale, and what crossing it means.
+All bounded resources are declared in `components/blusys/include/blusys/observe/budget.hpp`. This page describes each budget, its rationale, and what crossing it means.
 
 ## Runtime queues
 
@@ -52,5 +52,5 @@ A budget change is a policy change:
 
 ## See also
 
-- `components/blusys/include/blusys/framework/observe/budget.hpp` — source of truth
+- `components/blusys/include/blusys/observe/budget.hpp` — source of truth
 - [Threading contract](../internals/threading.md) — task ownership, ISR constraints, queue lifetime

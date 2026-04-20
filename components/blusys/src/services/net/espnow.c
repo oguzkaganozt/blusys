@@ -16,7 +16,7 @@
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/global_lock.h"
 #include "blusys/hal/internal/lock.h"
-#include "blusys/framework/services/internal/net_bootstrap.h"
+#include "blusys/services/internal/net_bootstrap.h"
 
 #define ESPNOW_MAX_DATA_LEN ESP_NOW_MAX_DATA_LEN  /* 250 bytes */
 

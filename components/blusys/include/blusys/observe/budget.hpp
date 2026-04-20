@@ -1,4 +1,4 @@
-/* blusys/framework/observe/budget.hpp — per-platform budgets.
+/* blusys/observe/budget.hpp — per-platform budgets.
  *
  * Every bounded resource on the platform (queue depth, task stack, scratch
  * buffer size, heap reservation) is declared here so the compiler, the runtime
@@ -18,8 +18,8 @@
  * cite this header by name.
  */
 
-#ifndef BLUSYS_FRAMEWORK_OBSERVE_BUDGET_HPP
-#define BLUSYS_FRAMEWORK_OBSERVE_BUDGET_HPP
+#ifndef BLUSYS_OBSERVE_BUDGET_HPP
+#define BLUSYS_OBSERVE_BUDGET_HPP
 
 #include <cstddef>
 #include <cstdint>
@@ -55,4 +55,4 @@ inline constexpr std::size_t device_heap_free_target_bytes = 300 * 1024;
 
 }  // namespace blusys::budget
 
-#endif  // BLUSYS_FRAMEWORK_OBSERVE_BUDGET_HPP
+#endif  // BLUSYS_OBSERVE_BUDGET_HPP

@@ -1,11 +1,11 @@
-#ifndef BLUSYS_FRAMEWORK_OBSERVE_SNAPSHOT_H
-#define BLUSYS_FRAMEWORK_OBSERVE_SNAPSHOT_H
+#ifndef BLUSYS_OBSERVE_SNAPSHOT_H
+#define BLUSYS_OBSERVE_SNAPSHOT_H
 
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "blusys/framework/observe/counter.h"
-#include "blusys/framework/observe/log.h"
+#include "blusys/observe/counter.h"
+#include "blusys/observe/log.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,4 +47,4 @@ void blusys_observe_clear(void);
 }
 #endif
 
-#endif /* BLUSYS_FRAMEWORK_OBSERVE_SNAPSHOT_H */
+#endif /* BLUSYS_OBSERVE_SNAPSHOT_H */

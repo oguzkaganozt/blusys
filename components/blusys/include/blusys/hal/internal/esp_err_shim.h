@@ -3,7 +3,7 @@
 
 #include "esp_err.h"
 
-#include "blusys/framework/observe/error_domain.h"
+#include "blusys/observe/error_domain.h"
 #include "blusys/hal/error.h"
 
 /* Map an ESP-IDF error to a generic-domain blusys_err_t. Backward-compatible

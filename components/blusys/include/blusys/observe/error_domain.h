@@ -1,4 +1,4 @@
-/* blusys/framework/observe/error_domain.h — per-subsystem error domains.
+/* blusys/observe/error_domain.h — per-subsystem error domains.
  *
  * Each subsystem owns one domain. blusys_err_t (see blusys/hal/error.h) packs
  * a 16-bit domain in its high bits and a 16-bit subsystem-defined code in its
@@ -15,8 +15,8 @@
  * `BLUSYS_ERR_*` constants and `if (err != BLUSYS_OK)` checks keep working.
  */
 
-#ifndef BLUSYS_FRAMEWORK_OBSERVE_ERROR_DOMAIN_H
-#define BLUSYS_FRAMEWORK_OBSERVE_ERROR_DOMAIN_H
+#ifndef BLUSYS_OBSERVE_ERROR_DOMAIN_H
+#define BLUSYS_OBSERVE_ERROR_DOMAIN_H
 
 #include <stdint.h>
 
@@ -61,4 +61,4 @@ const char *blusys_err_domain_string(blusys_err_domain_t domain);
 }
 #endif
 
-#endif /* BLUSYS_FRAMEWORK_OBSERVE_ERROR_DOMAIN_H */
+#endif /* BLUSYS_OBSERVE_ERROR_DOMAIN_H */

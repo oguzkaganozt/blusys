@@ -8,7 +8,7 @@
 #define BLUSYS_BLUSYS_H
 
 /* --- Framework: observe (error domains, structured log, trace, counters) --- */
-#include "blusys/framework/observe/observe.h"
+#include "blusys/observe/observe.h"
 
 /* --- HAL layer --- */
 #include "blusys/hal/adc.h"

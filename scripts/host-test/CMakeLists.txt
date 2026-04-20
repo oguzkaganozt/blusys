@@ -31,10 +31,10 @@ set(BLUSYS_COMPONENT_DIR "${BLUSYS_REPO_ROOT}/components/blusys")
 # ── Minimal framework core (no FreeRTOS, no ESP-IDF, no SDL, no mosquitto) ──
 add_library(blusys_test_core STATIC
     ${BLUSYS_COMPONENT_DIR}/src/hal/error.c
-    ${BLUSYS_COMPONENT_DIR}/src/framework/observe/error_domain.c
-    ${BLUSYS_COMPONENT_DIR}/src/framework/observe/log.c
-    ${BLUSYS_COMPONENT_DIR}/src/framework/observe/counter.c
-    ${BLUSYS_COMPONENT_DIR}/src/framework/observe/snapshot.c
+    ${BLUSYS_COMPONENT_DIR}/src/observe/error_domain.c
+    ${BLUSYS_COMPONENT_DIR}/src/observe/log.c
+    ${BLUSYS_COMPONENT_DIR}/src/observe/counter.c
+    ${BLUSYS_COMPONENT_DIR}/src/observe/snapshot.c
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/feedback.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/presets.cpp
     ${BLUSYS_COMPONENT_DIR}/src/framework/feedback/internal/logging_sink.cpp

@@ -1,6 +1,6 @@
 #include "blusys/framework/capabilities/persistence.hpp"
 #include "blusys/framework/capabilities/list.hpp"
-#include "blusys/framework/observe/log.h"
+#include "blusys/observe/log.h"
 
 #include <cstdint>
 #include <cstring>
