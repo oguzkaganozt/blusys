@@ -1,0 +1,49 @@
+# Blusys API reference — Doxygen config (spike: hal/gpio.h only)
+
+PROJECT_NAME           = "Blusys API Reference"
+PROJECT_BRIEF          = "Embedded Application Platform"
+PROJECT_NUMBER         =
+OUTPUT_DIRECTORY       = api-docs/build
+
+# ---------------------------------------------------------------------------
+# Scope — spike only indexes the single annotated header.
+# ---------------------------------------------------------------------------
+INPUT                  = components/blusys/include/blusys/hal/gpio.h
+RECURSIVE              = NO
+FILE_PATTERNS          = *.h *.hpp
+EXTRACT_ALL            = NO
+EXTRACT_STATIC         = NO
+EXTRACT_PRIVATE        = NO
+EXTRACT_PRIV_VIRTUAL   = NO
+OPTIMIZE_OUTPUT_FOR_C  = YES
+JAVADOC_AUTOBRIEF      = YES
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+HIDE_UNDOC_MEMBERS     = NO
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_IF_INCOMPLETE_DOC = YES
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
+QUIET                  = YES
+
+# ---------------------------------------------------------------------------
+# Output formats — HTML only for the public site.
+# ---------------------------------------------------------------------------
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+HTML_COLORSTYLE        = LIGHT
+
+# ---------------------------------------------------------------------------
+# doxygen-awesome-css theme.
+# ---------------------------------------------------------------------------
+HTML_EXTRA_STYLESHEET  = api-docs/awesome/doxygen-awesome.css \
+                         api-docs/awesome/doxygen-awesome-sidebar-only.css
+
+# ---------------------------------------------------------------------------
+# Diagrams — off for the spike; revisit if desired.
+# ---------------------------------------------------------------------------
+HAVE_DOT               = NO

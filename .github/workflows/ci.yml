@@ -13,6 +13,7 @@ on:
       - "inventory.yml"
       - "docs/**"
       - "mkdocs.yml"
+      - "api-docs/**"
       - ".github/workflows/ci.yml"
   pull_request:
     paths:
@@ -25,6 +26,7 @@ on:
       - "inventory.yml"
       - "docs/**"
       - "mkdocs.yml"
+      - "api-docs/**"
       - ".github/workflows/ci.yml"
   workflow_dispatch:
 
@@ -240,6 +242,28 @@ jobs:
 
       - name: Build docs (strict)
         run: mkdocs build --strict
+
+  # ── Tier 0: API Reference Build (Doxygen, strict) ─────────────────────────
+  # Enforces that every exported symbol in the migrated public headers is
+  # documented. WARN_AS_ERROR=FAIL_ON_WARNINGS in api-docs/Doxyfile turns
+  # missing @brief / malformed @param / etc. into a non-zero exit.
+  # INPUT in the Doxyfile scopes which headers are checked — widen as each
+  # module migrates to inline doxygen comments.
+  api-docs:
+    name: "API reference build"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends doxygen
+
+      - name: Build API reference (strict)
+        run: doxygen api-docs/Doxyfile
 
   # ── Tier 1: Build Curated Examples ─────────────────────────────────────────
   build:

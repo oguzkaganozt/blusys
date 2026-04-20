@@ -3,6 +3,7 @@
 .ruff_cache/
 .venv-docs/
 site/
+api-docs/build/
 __pycache__/
 build-*/
 scripts/host/build/
