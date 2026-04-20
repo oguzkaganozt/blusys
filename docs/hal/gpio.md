@@ -4,7 +4,7 @@ Pin-based digital IO: input, output, pull resistors, and direct ISR callbacks.
 
 GPIO is stateless and pin-based — there is no open/close handle. Configure a pin, use it, reset it when done.
 
-> **API reference:** [`gpio.h`](../api/gpio_8h.html) — function signatures, parameters, return codes.
+> Function signatures, parameters, and return codes live in `components/blusys/include/blusys/hal/gpio.h` and in the generated API reference.
 
 ## Quick Example
 
