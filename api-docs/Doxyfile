@@ -12,6 +12,7 @@ INPUT                  = components/blusys/include/blusys/hal/adc.h \
                          components/blusys/include/blusys/hal/dac.h \
                          components/blusys/include/blusys/hal/efuse.h \
                          components/blusys/include/blusys/hal/gpio.h \
+                         components/blusys/include/blusys/hal/gpio_expander.h \
                          components/blusys/include/blusys/hal/i2c.h \
                          components/blusys/include/blusys/hal/i2c_slave.h \
                          components/blusys/include/blusys/hal/i2s.h \
@@ -21,7 +22,9 @@ INPUT                  = components/blusys/include/blusys/hal/adc.h \
                          components/blusys/include/blusys/hal/pcnt.h \
                          components/blusys/include/blusys/hal/pwm.h \
                          components/blusys/include/blusys/hal/rmt.h \
+                         components/blusys/include/blusys/hal/sd_spi.h \
                          components/blusys/include/blusys/hal/sdm.h \
+                         components/blusys/include/blusys/hal/sdmmc.h \
                          components/blusys/include/blusys/hal/sleep.h \
                          components/blusys/include/blusys/hal/spi.h \
                          components/blusys/include/blusys/hal/spi_slave.h \
@@ -32,6 +35,9 @@ INPUT                  = components/blusys/include/blusys/hal/adc.h \
                          components/blusys/include/blusys/hal/touch.h \
                          components/blusys/include/blusys/hal/twai.h \
                          components/blusys/include/blusys/hal/uart.h \
+                         components/blusys/include/blusys/hal/ulp.h \
+                         components/blusys/include/blusys/hal/usb_device.h \
+                         components/blusys/include/blusys/hal/usb_host.h \
                          components/blusys/include/blusys/hal/version.h \
                          components/blusys/include/blusys/hal/wdt.h
 RECURSIVE              = NO

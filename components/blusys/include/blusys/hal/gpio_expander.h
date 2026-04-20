@@ -1,3 +1,12 @@
+/**
+ * @file gpio_expander.h
+ * @brief I2C/SPI GPIO expander driver (PCF8574/A, MCP23017, MCP23S17).
+ *
+ * Provides 8- or 16-pin digital I/O over an existing I2C or SPI bus.
+ * The caller owns the underlying bus handle and must keep it open for the
+ * lifetime of the expander. See docs/hal/gpio_expander.md.
+ */
+
 #ifndef BLUSYS_GPIO_EXPANDER_H
 #define BLUSYS_GPIO_EXPANDER_H
 
