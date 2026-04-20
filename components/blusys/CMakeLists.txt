@@ -86,21 +86,21 @@ set(blusys_sources
     src/drivers/seven_seg.c
     src/drivers/display.c
     # --- Services layer ---
-    src/services/net/ble_gatt.c
-    src/services/net/ble_hid_device.c
-    src/services/net/bluetooth.c
-    src/services/net/espnow.c
-    src/services/net/http_client.c
-    src/services/net/http_server.c
-    src/services/net/local_ctrl.c
-    src/services/net/mdns.c
-    src/services/net/usb_hid.c
-    src/services/net/wifi.c
-    src/services/net/wifi_mesh.c
-    src/services/net/wifi_prov.c
-    src/services/session/mqtt.c
-    src/services/net/sntp.c
-    src/services/session/ws_client.c
+    src/services/connectivity/ble_gatt.c
+    src/services/connectivity/ble_hid_device.c
+    src/services/connectivity/bluetooth.c
+    src/services/connectivity/espnow.c
+    src/services/protocol/http_client.c
+    src/services/protocol/http_server.c
+    src/services/protocol/local_ctrl.c
+    src/services/protocol/mdns.c
+    src/services/connectivity/usb_hid.c
+    src/services/connectivity/wifi.c
+    src/services/connectivity/wifi_mesh.c
+    src/services/connectivity/wifi_prov.c
+    src/services/protocol/mqtt.c
+    src/services/protocol/sntp.c
+    src/services/protocol/ws_client.c
     src/services/storage/fatfs.c
     src/services/storage/fs.c
     src/services/system/console.c
