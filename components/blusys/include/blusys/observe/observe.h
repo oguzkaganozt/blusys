@@ -1,7 +1,10 @@
-/* blusys/observe/observe.h — umbrella for the observe subsystem.
+/**
+ * @file observe.h
+ * @brief Umbrella header for the observe subsystem.
  *
- * Pulls in error domains, structured log, trace, counters, and snapshots. Re-exported by
- * blusys/blusys.h so app authors do not need to learn the four sub-headers.
+ * Pulls in error domains, structured log, trace, counters, and snapshots.
+ * Re-exported by blusys/blusys.h so app authors do not need to learn the
+ * individual sub-headers.
  */
 
 #ifndef BLUSYS_OBSERVE_OBSERVE_H

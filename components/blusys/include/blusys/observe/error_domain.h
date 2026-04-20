@@ -1,6 +1,8 @@
-/* blusys/observe/error_domain.h — per-subsystem error domains.
+/**
+ * @file error_domain.h
+ * @brief Per-subsystem error domains for structured log and diagnostics.
  *
- * Each subsystem owns one domain. blusys_err_t (see blusys/hal/error.h) packs
+ * Each subsystem owns one domain. `blusys_err_t` (see blusys/hal/error.h) packs
  * a 16-bit domain in its high bits and a 16-bit subsystem-defined code in its
  * low bits, so structured log and diagnostics can attribute every failure to
  * its origin without stringly-typed tags.
@@ -10,9 +12,10 @@
  * subsystems that haven't migrated is forbidden — the enum should always
  * reflect the actually-covered subsystems, not the hoped-for ones.
  *
- * `err_domain_generic` exists for legacy / cross-subsystem codes (INVALID_ARG,
- * NO_MEM, ...). Its numeric codes match the pre-domain enum values so existing
- * `BLUSYS_ERR_*` constants and `if (err != BLUSYS_OK)` checks keep working.
+ * `err_domain_generic` exists for legacy / cross-subsystem codes
+ * (`INVALID_ARG`, `NO_MEM`, ...). Its numeric codes match the pre-domain enum
+ * values so existing `BLUSYS_ERR_*` constants and `if (err != BLUSYS_OK)`
+ * checks keep working.
  */
 
 #ifndef BLUSYS_OBSERVE_ERROR_DOMAIN_H
@@ -24,37 +27,39 @@
 extern "C" {
 #endif
 
+/** @brief Error domain identifier, packed into the high bits of `blusys_err_t`. */
 typedef enum {
-    err_domain_generic = 0,
+    err_domain_generic = 0,         /**< Legacy / cross-subsystem codes. */
 
-    /* Framework — observe itself, for its own failures. */
-    err_domain_framework_observe,
+    err_domain_framework_observe,   /**< Observe subsystem's own failures. */
 
-    /* Drivers. */
-    err_domain_driver_display,
-    err_domain_driver_dht,
-    err_domain_driver_encoder,
-    err_domain_driver_seven_seg,
-    err_domain_driver_lcd,
-    err_domain_driver_button,
+    err_domain_driver_display,      /**< Display driver. */
+    err_domain_driver_dht,          /**< DHT temperature/humidity driver. */
+    err_domain_driver_encoder,      /**< Rotary encoder driver. */
+    err_domain_driver_seven_seg,    /**< Seven-segment display driver. */
+    err_domain_driver_lcd,          /**< LCD driver. */
+    err_domain_driver_button,       /**< Button driver. */
 
-    /* Storage services. */
-    err_domain_storage_fs,
-    err_domain_storage_fatfs,
+    err_domain_storage_fs,          /**< Generic filesystem service. */
+    err_domain_storage_fatfs,       /**< FAT filesystem service. */
 
-    /* HAL peripherals. */
-    err_domain_hal_gpio,
-    err_domain_hal_timer,
-    err_domain_hal_uart,
+    err_domain_hal_gpio,            /**< GPIO HAL. */
+    err_domain_hal_timer,           /**< Timer HAL. */
+    err_domain_hal_uart,            /**< UART HAL. */
 
-    /* Persistence capability. */
-    err_domain_persistence,
+    err_domain_persistence,         /**< Persistence capability. */
 
-    err_domain_count,
+    err_domain_count,               /**< Sentinel: number of declared domains. */
 } blusys_err_domain_t;
 
-/* Stable, lowercase, dotted name (e.g. "hal.gpio", "storage.fs"). Used by the
- * structured log front-end and diagnostics. Returns "?" for out-of-range. */
+/**
+ * @brief Return the stable dotted name for a domain (e.g. `"hal.gpio"`).
+ *
+ * Used by the structured log front-end and diagnostics.
+ *
+ * @param domain  Domain identifier.
+ * @return Lowercase dotted name, or `"?"` for out-of-range values.
+ */
 const char *blusys_err_domain_string(blusys_err_domain_t domain);
 
 #ifdef __cplusplus

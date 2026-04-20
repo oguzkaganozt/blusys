@@ -69,7 +69,23 @@ INPUT                  = components/blusys/include/blusys/hal/adc.h \
                          components/blusys/include/blusys/services/connectivity/usb_hid.h \
                          components/blusys/include/blusys/services/connectivity/wifi.h \
                          components/blusys/include/blusys/services/connectivity/wifi_mesh.h \
-                         components/blusys/include/blusys/services/connectivity/wifi_prov.h
+                         components/blusys/include/blusys/services/connectivity/wifi_prov.h \
+                         components/blusys/include/blusys/target.h \
+                         components/blusys/include/blusys/hal/error.h \
+                         components/blusys/include/blusys/hal/log.h \
+                         components/blusys/include/blusys/observe/budget.hpp \
+                         components/blusys/include/blusys/observe/counter.h \
+                         components/blusys/include/blusys/observe/error_domain.h \
+                         components/blusys/include/blusys/observe/log.h \
+                         components/blusys/include/blusys/observe/observe.h \
+                         components/blusys/include/blusys/observe/snapshot.h \
+                         components/blusys/include/blusys/observe/trace.h \
+                         components/blusys/include/blusys/drivers/panels/ili9341.h \
+                         components/blusys/include/blusys/drivers/panels/ili9488.h \
+                         components/blusys/include/blusys/drivers/panels/qemu_rgb.h \
+                         components/blusys/include/blusys/drivers/panels/ssd1306.h \
+                         components/blusys/include/blusys/drivers/panels/st7735.h \
+                         components/blusys/include/blusys/drivers/panels/st7789.h
 RECURSIVE              = NO
 FILE_PATTERNS          = *.h *.hpp
 EXTRACT_ALL            = NO
