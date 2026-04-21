@@ -40,6 +40,74 @@ cmd_update() {
     printf 'Done.\n'
 }
 
+cmd_gen_spec() {
+    local manifest_path=""
+    local output_path=""
+    local positional=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --manifest)
+                [[ $# -ge 2 ]] || { printf 'error: --manifest requires an argument\n' >&2; exit 1; }
+                manifest_path="$2"
+                shift 2
+                ;;
+            --manifest=*)
+                manifest_path="${1#--manifest=}"
+                shift
+                ;;
+            --output)
+                [[ $# -ge 2 ]] || { printf 'error: --output requires an argument\n' >&2; exit 1; }
+                output_path="$2"
+                shift 2
+                ;;
+            --output=*)
+                output_path="${1#--output=}"
+                shift
+                ;;
+            -h|--help)
+                blusys_help_gen_spec
+                exit 0
+                ;;
+            --*)
+                printf 'error: unknown option %s\n' "$1" >&2
+                blusys_help_gen_spec
+                exit 1
+                ;;
+            *)
+                positional+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    if [[ ${#positional[@]} -gt 2 ]]; then
+        blusys_help_gen_spec
+        exit 1
+    fi
+    if [[ ${#positional[@]} -ge 1 && -z "$manifest_path" ]]; then
+        manifest_path="${positional[0]}"
+    fi
+    if [[ ${#positional[@]} -ge 2 && -z "$output_path" ]]; then
+        output_path="${positional[1]}"
+    fi
+
+    if [[ -z "$manifest_path" ]]; then
+        manifest_path="$(pwd)/blusys.project.yml"
+    fi
+    if [[ -z "$output_path" ]]; then
+        output_path="$(pwd)/build/generated/blusys_app_spec.h"
+    fi
+
+    blusys_require_pyyaml
+
+    python3 "$BLUSYS_REPO_ROOT/scripts/lib/blusys/scaffold_generator.py" \
+        --repo-root "$BLUSYS_REPO_ROOT" \
+        --emit-spec \
+        --manifest "$manifest_path" \
+        --output "$output_path"
+}
+
 cmd_config_idf() {
     # Discover all ESP-IDF installations
     local -a idf_paths=() idf_labels=()
@@ -320,7 +388,7 @@ cmd_example() {
         done < <(_find_examples)
         if [[ $match_count -gt 1 ]]; then
             printf 'error: example name is ambiguous: %s\n' "$target_name" >&2
-            printf 'Use a category-qualified name such as quickstart/%s\n' "$target_name" >&2
+            printf 'Use a category-qualified name such as reference/%s\n' "$target_name" >&2
             return 1
         fi
         printf '%s' "$found"
@@ -608,15 +676,48 @@ blusys_require_pyyaml() {
 }
 
 cmd_validate() {
-    if [[ $# -gt 0 ]]; then
-        blusys_help_validate
-        exit 1
-    fi
+    local manifest_paths=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                blusys_help_validate
+                exit 0
+                ;;
+            --*)
+                blusys_help_validate
+                exit 1
+                ;;
+            *)
+                manifest_paths+=("$1")
+                shift
+                ;;
+        esac
+    done
 
     blusys_require_pyyaml
+    python3 "$BLUSYS_REPO_ROOT/scripts/check-generated-artifacts.py"
+
+    if [[ ${#manifest_paths[@]} -gt 0 ]]; then
+        python3 "$BLUSYS_REPO_ROOT/scripts/check-manifests.py" \
+            --repo-root "$BLUSYS_REPO_ROOT" \
+            "${manifest_paths[@]}"
+        return $?
+    fi
+
+    if [[ -f "$(pwd)/blusys.project.yml" ]]; then
+        python3 "$BLUSYS_REPO_ROOT/scripts/check-manifests.py" \
+            --repo-root "$BLUSYS_REPO_ROOT" \
+            "$(pwd)"
+        return $?
+    fi
+
     python3 "$BLUSYS_REPO_ROOT/scripts/check-inventory.py"
     python3 "$BLUSYS_REPO_ROOT/scripts/check-product-layout.py"
     cmd_lint
+    python3 "$BLUSYS_REPO_ROOT/scripts/check-manifests.py" \
+        --repo-root "$BLUSYS_REPO_ROOT" \
+        --allow-empty \
+        "$BLUSYS_REPO_ROOT"
 }
 
 cmd_build_inventory() {
@@ -658,7 +759,7 @@ cmd_host_build() {
         project_dir="$(blusys_resolve_project_dir "$project_arg")" || exit 1
         if [[ ! -f "$project_dir/host/CMakeLists.txt" ]]; then
             printf 'error: no host/CMakeLists.txt found in %s\n' "$project_dir" >&2
-            printf '       re-run: blusys create --interface <handheld|surface|headless> %s\n' "$project_dir" >&2
+            printf '       re-run: blusys create --interface <interactive|headless> %s\n' "$project_dir" >&2
             exit 1
         fi
         host_dir="$project_dir/host"
@@ -797,6 +898,7 @@ main() {
 
     case "$command" in
         create)         shift; cmd_create "$@" ;;
+        gen-spec)       shift; cmd_gen_spec "$@" ;;
         build)          shift; cmd_build "$@" ;;
         flash)          shift; cmd_flash "$@" ;;
         monitor)        shift; cmd_monitor "$@" ;;

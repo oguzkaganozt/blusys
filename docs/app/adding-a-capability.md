@@ -85,7 +85,7 @@ void blusys::example_sensor_capability::stop()         { status_.running = false
 
 ## 5. Register in the app spec
 
-In `platform/app_main.cpp`, add the capability to the spec's capability list and handle its events in `on_event`:
+In `main/app_main.cpp`, add the capability to the spec's capability list and handle its events in `on_event`:
 
 ```cpp
 static blusys::example_sensor_capability kSensor{{}};

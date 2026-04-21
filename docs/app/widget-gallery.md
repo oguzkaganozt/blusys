@@ -6,7 +6,7 @@ For layout across display sizes, see [Profiles](profiles.md). For how screens ti
 
 ## Compact Control
 
-Best for **handheld** / compact interactive surfaces and dense control strips.
+Best for compact interactive devices and dense control strips.
 
 | Widget | Role | Often appears in |
 |--------|------|------------------|
@@ -15,11 +15,11 @@ Best for **handheld** / compact interactive surfaces and dense control strips.
 | `slider` | Ranged numeric control | Brightness, thresholds |
 | `gauge` | Compact numeric feedback | Status strips, monitoring |
 
-Reference starter: `examples/quickstart/handheld/` (host + ST7735 path; see [Product shape](../start/product-shape.md)).
+Reference starter: manifest-first interactive starter docs (see [Interactive Quickstart](../start/quickstart-interactive.md)).
 
 ## Operational Surface
 
-Best for **surface** interactive and gateway local UI: dashboards and multi-section screens.
+Best for **interactive** dashboard-style local UI and gateway panels: dashboards and multi-section screens.
 
 | Widget | Role | Often appears in |
 |--------|------|------------------|
@@ -32,7 +32,7 @@ Reference starter: `examples/reference/display/`.
 
 ## Data And Diagnostics
 
-Shared by surface interactive and connected products when showing health and metrics.
+Shared by interactive and connected products when showing health and metrics.
 
 | Widget | Role | Often appears in |
 |--------|------|------------------|
@@ -41,7 +41,7 @@ Shared by surface interactive and connected products when showing health and met
 | `progress` | Long-running work | OTA, loading flows |
 | `dropdown` | Compact single choice | Filters, mode picks |
 
-Reference starters: `examples/quickstart/headless/`, `examples/quickstart/handheld/`.
+Reference starters: manifest-first headless starter docs (see [Headless Quickstart](../start/quickstart-headless.md)) and `examples/reference/display/`.
 
 ## Notes
 

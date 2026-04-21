@@ -43,7 +43,7 @@ There is no separate public headless profile macro; the runtime uses its default
 | Main loop cadence | `app_spec.tick_period_ms` — delay between `runtime.step()` calls |
 | Capability events | `app_spec.on_event` — translate capability codes into product `Action`s |
 | Periodic work | `app_spec.on_tick` — time-based housekeeping without UI |
-| Capabilities | Register on `app_spec.capabilities` from `platform/` only |
+| Capabilities | Register on `app_spec.capabilities` from the app entrypoint or product-local wiring |
 
 Use the same reducer (`update`) and action model as interactive products; only the entry macro and build flags differ (`BLUSYS_BUILD_UI` off).
 
@@ -85,10 +85,10 @@ Beyond ST7735, the framework ships small **data-first** profile factories under 
 | Header | Factory (typical) | Role |
 |--------|-------------------|------|
 | `st7735.hpp` | `st7735_160x128()` | Canonical compact SPI TFT |
-| `st7789.hpp` | `st7789_320x240()` | Larger handheld / compact dashboard |
+| `st7789.hpp` | `st7789_320x240()` | Larger interactive dashboard |
 | `ssd1306.hpp` | `ssd1306_128x64()`, `ssd1306_128x32()` | I2C mono local status |
-| `ili9341.hpp` | `ili9341_320x240()` | Medium operator / panel |
-| `ili9488.hpp` | `ili9488_480x320()` | Large local surface |
+| `ili9341.hpp` | `ili9341_320x240()` | Medium interactive panel |
+| `ili9488.hpp` | `ili9488_480x320()` | Large interactive display |
 
 SPI defaults use target-gated pins where common; I2C defaults follow the `lcd_ssd1306_basic` example per target.
 
@@ -102,19 +102,19 @@ Many small OLED modules use an SSD1306-compatible controller; some use **SH1106*
 
 **Rotation:** Fix panel orientation with `device_profile` fields (`swap_xy`, mirrors) and HAL; `classify()` uses the **logical** width/height already mapped for the UI. When `BLUSYS_FRAMEWORK_HAS_UI` is defined, `blusys::layout::suggested_theme_density()` maps hints to a `blusys::ui::density` aligned with stock presets (`expressive_dark`, `operational_light`, `compact_dark`, `oled`).
 
-## Kconfig in reference examples
+## Kconfig in reference builds
 
-The **blusys** component defines shared **menuconfig** choices for SPI display profiles (dashboard-class ILI9341, ILI9488, or ST7735, plus optional QEMU RGB; handheld quickstart ST7735 vs ST7789). Individual examples add only product-specific options (e.g. Wi-Fi strings on coordinator references).
+The **blusys** component defines shared **menuconfig** choices for SPI display profiles (dashboard-class ILI9341, ILI9488, or ST7735, plus optional QEMU RGB). Individual examples add only product-specific options (e.g. Wi-Fi strings on coordinator references).
 
-- **Headless** (`quickstart/headless`): optional **local SSD1306** status UI vs default headless (device only) — see the example’s `main/Kconfig.projbuild`.
+- **Headless** (`examples/validation/connected_headless`): optional **local SSD1306** status UI vs default headless (device only).
 
-Host SDL builds for dashboard-class examples use `BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE` in `host/CMakeLists.txt` (0 = 320×240 logical, 1 = 480×320, 2 = 160×128 ST7735-class). The handheld starter quickstart uses `BLUSYS_IC_HOST_DISPLAY_PROFILE` for its ST7735/ST7789 host window matrix.
+Host SDL builds for dashboard-class examples use `BLUSYS_DASHBOARD_HOST_DISPLAY_PROFILE` in `host/CMakeLists.txt` (0 = 320×240 logical, 1 = 480×320, 2 = 160×128 ST7735-class). Compact interactive host windows use `BLUSYS_IC_HOST_DISPLAY_PROFILE` for the ST7735/ST7789 host matrix.
 
 ## Interface → profile (quick reference)
 
 | Interface | Typical profiles | Notes |
 |-----------|------------------|-------|
-| Handheld | ST7735, ST7789 | Compact color; expressive theme bias |
-| Surface | ILI9341, ILI9488 | Operational / dashboard density |
-| Headless | Headless, or SSD1306 for local status | Same reducer; `platform/` chooses entry |
-| Surface (coordinator) | Headless, ILI9341, ILI9488 | Headless default; optional local operator UI |
+| Interactive (compact) | ST7735, ST7789 | Compact color; expressive theme bias |
+| Interactive (dashboard) | ILI9341, ILI9488 | Operational / dashboard density |
+| Headless | Headless, or SSD1306 for local status | Same reducer; `BLUSYS_APP_HEADLESS(spec)` chooses the entry point |
+| Interactive (coordinator) | Headless, ILI9341, ILI9488 | Headless default; optional local operator UI |

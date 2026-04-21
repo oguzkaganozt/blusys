@@ -49,8 +49,8 @@ These ship with the host harness and do not require hardware:
 | Binary | Purpose |
 |--------|---------|
 | `capability_contract_smoke` | Static checks that capability integration event IDs stay in their reserved bands |
-| `handheld_starter_reducer_smoke` | Exercises `blusys_examples::clamp_percent` shared with handheld quickstart reducers |
-| `panel_connectivity_map_smoke` | `panel_connectivity_event_triggers_sync` parity with the surface_ops_panel `on_event` bridge |
+| `interactive_starter_reducer_smoke` | Exercises `blusys_examples::clamp_percent` shared with interactive quickstart reducers |
+| `panel_connectivity_map_smoke` | `panel_connectivity_event_triggers_sync` parity with the interactive panel example's `on_event` bridge |
 | `operational_phase_smoke` | Runtime checks for the headless-telemetry-style operational phase state machine |
 | `connected_headless_host` | Headless `blusys::app` loop with connectivity + storage host stubs and a broad `on_event` bridge |
 
@@ -62,7 +62,7 @@ The wrapper goes through the `blusys` CLI:
 blusys host-build                                  # configure + build
 ./scripts/host/build-host/hello_lvgl               # LVGL-only smoke test
 ./scripts/host/build-host/widget_kit_demo          # framework widget kit demo
-./scripts/host/build-host/handheld_starter_reducer_smoke
+./scripts/host/build-host/interactive_starter_reducer_smoke
 ./scripts/host/build-host/panel_connectivity_map_smoke
 ./scripts/host/build-host/operational_phase_smoke  # operational phase-machine smoke
 ./scripts/host/build-host/connected_headless_host  # headless capability + reducer smoke

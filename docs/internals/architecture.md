@@ -151,8 +151,8 @@ Normal product code only touches this layer.
 see [Widget kit](#widget-kit) below.
 
 **Platform profiles** (`include/blusys/framework/platform/profiles/`):
-- `st7735.hpp`, `st7789.hpp` — SPI TFT profiles (handheld)
-- `ili9341.hpp`, `ili9488.hpp` — SPI TFT profiles (surface / dashboard)
+- `st7735.hpp`, `st7789.hpp` — SPI TFT profiles (interactive compact)
+- `ili9341.hpp`, `ili9488.hpp` — SPI TFT profiles (interactive dashboard)
 - `ssd1306.hpp` — I2C mono OLED profile
 - `qemu_rgb.hpp` — virtual RGB framebuffer for QEMU runs
 
@@ -226,13 +226,13 @@ Two consumption models, deliberately separated:
 - **Bundled examples** in `examples/` are discovered via `EXTRA_COMPONENT_DIRS`
   (typically `${BLUSYS_REPO_ROOT}/components`) in each example's top-level
   `CMakeLists.txt`.
-- **Scaffolded product apps** from `blusys create [--interface …] [--with …] [--policy …]`
+- **Scaffolded product apps** from `blusys create [--interface …] [--profile …] [--with …] [--policy …]`
   use the same mechanism: the generated top-level `CMakeLists.txt` embeds
   `EXTRA_COMPONENT_DIRS` pointing at the `components/` tree from the checkout
-  used at generation time. Product code stays under `main/core/`, `main/ui/`
-  (when interactive), and `main/platform/`. See [Product shape](../start/product-shape.md)
-  and [Interactive Quickstart](../start/quickstart-interactive.md); [App](../app/index.md)
-  covers the product model.
+  used at generation time. Product code stays under `main/`; interactive apps
+  may add `ui/` when needed, and `app_main.cpp` stays thin and explicit. See
+  [Product shape](../start/product-shape.md) and [Interactive Quickstart](../start/quickstart-interactive.md);
+  [App](../app/index.md) covers the product model.
 
 ## Symmetric Pairs
 

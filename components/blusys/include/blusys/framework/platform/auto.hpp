@@ -25,7 +25,7 @@
 
 namespace blusys {
 
-// ---- handheld interactive (ST7735 / ST7789 + host) ----
+// ---- interactive display (ST7735 / ST7789 + host) ----
 
 #if BLUSYS_DEVICE_BUILD
 

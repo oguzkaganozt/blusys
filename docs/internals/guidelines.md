@@ -76,7 +76,7 @@ Breaking changes to `app_spec`, `app_ctx`, `app_fx`, and umbrella `blusys/app/*.
 
 ### Product application layout (enforced in CI)
 
-- **Canonical `main/` shape:** `core/` (state, actions, `update()`), `ui/` (screens, LVGL, sync — may be empty for headless with a README), `platform/` (`app_spec`, capabilities, `on_event`, entry macro in `platform/app_main.cpp`).
+- **Canonical `main/` shape:** `app_main.cpp` (thin entrypoint with a visible init zone), `ui/` (screens, LVGL, sync — may be empty for headless with a README). Keep the entrypoint explicit; split only when the file stops being readable.
 - **Validation examples** (`examples/validation/`) and other non-framework demos are exempt; see `scripts/check-product-layout.py`.
 - Optional inventory flags: `layout_exempt`, `product_layout` (see `inventory.yml` header).
 
@@ -90,7 +90,7 @@ For how the **framework** composes LVGL flex, scroll, and the interaction shell 
 - **View sync:** prefer `blusys::` bindings and small composites (for example `sync_percent_output`, `sync_line_chart_series`) over calling `blusys::ui::*` setters directly from product code.
 - **Route handles:** group `lv_obj_t*` handles in per-route structs with `clear()` on hide; the screen registry still owns teardown of the widget tree.
 - **Settings:** give interactive `setting_item` rows a non-zero `id` when using `settings_screen_config::on_changed`; the callback receives that stable id (or the row index when `id` is 0).
-- **Platform wiring:** include `blusys/framework/app/` headers when you need typed capability event IDs or `dispatch_variant`; use `blusys/framework/platform/build.hpp` (or `reference_build.hpp`) to avoid duplicated `#ifdef` matrices in `platform/app_main.cpp`.
+- **Product wiring:** include `blusys/framework/app/` headers when you need typed capability event IDs or `dispatch_variant`; use `blusys/framework/platform/build.hpp` (or `reference_build.hpp`) to avoid duplicated `#ifdef` matrices in `app_main.cpp` or helper files.
 
 ## Development Workflow
 
@@ -216,12 +216,12 @@ For broader changes, also run `python3 scripts/check-product-layout.py` and `scr
 
 ## Integration baseline (metrics)
 
-Record before/after snapshots when shrinking `main/platform/` or adding framework-owned flows.
+Record before/after snapshots when shrinking the product entrypoint or adding framework-owned flows.
 
 ```bash
 python3 scripts/measure_integration_baseline.py
 ```
 
-The script prints lines of code in `main/platform/` and counts `on_event` function bodies (heuristic) for reference examples.
+The script prints lines of code in the product entrypoint area and counts `on_event` function bodies (heuristic) for reference examples.
 
 The default action queue capacity is `app_runtime<State, Action, 16>` unless a project overrides the third template argument. See [App runtime model](../app/app-runtime-model.md) for overflow behavior and `action_queue_drop_count()`.

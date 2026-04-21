@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Validate staged manifest files and any staged generated artifacts here; CI
+# still covers the full repository.
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "$repo_root" ]]; then
+    exit 0
+fi
+
+manifest_paths=()
+has_generated="0"
+while IFS= read -r path; do
+    case "$path" in
+        blusys.project.yml|*/blusys.project.yml)
+            manifest_paths+=("$path")
+            ;;
+        build/generated/*|*/build/generated/*)
+            has_generated="1"
+            ;;
+    esac
+done < <(git -C "$repo_root" diff --cached --name-only --diff-filter=ACMR)
+
+if [[ ${#manifest_paths[@]} -eq 0 && "$has_generated" = "0" ]]; then
+    exit 0
+fi
+
+if [[ "$has_generated" = "1" && ${#manifest_paths[@]} -eq 0 ]]; then
+    exec "$repo_root/blusys" validate
+fi
+
+exec "$repo_root/blusys" validate "${manifest_paths[@]}"

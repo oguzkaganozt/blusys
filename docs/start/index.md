@@ -4,11 +4,11 @@ Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32
 
 ## Pick a product shape first
 
-New products are created with **`blusys create`** using an explicit model: **interface** (how the product presents locally), **capabilities** (framework runtime bundles), and **policies** (cross-cutting defaults that are not capabilities). Product-shaped examples in this repo use the same fixed **`core/`** / **`ui/`** / **`platform/`** layout; CI runs `scripts/check-product-layout.py` (HAL `validation/` demos are exempt).
+New products start from `blusys.project.yml` and `blusys create`. The manifest names `schema`, `interface`, `capabilities`, `profile`, and `policies`.
 
-- [Product shape](product-shape.md) — `handheld` / `surface` / `headless`, `--with`, `--policy`, and how reference examples map to that model
+- [Product shape](product-shape.md) — `interactive` / `headless`, `--with`, `profile`, `--policy`, and how reference examples map to that model
 
-At the terminal: **`blusys create --list`** prints interfaces, capabilities, policies, and dependency rules.
+At the terminal: **`blusys create --list`** prints interfaces, starter presets, capabilities, profiles, and policies.
 
 ## Guided quickstarts (after you know the shape)
 
@@ -18,7 +18,7 @@ At the terminal: **`blusys create --list`** prints interfaces, capabilities, pol
 
     ---
 
-    Host-first display product: reducer model, stock widgets, and the **handheld** interface walkthrough.
+    Manifest-first display product: `blusys.project.yml`, reducer model, stock widgets, and the **interactive** interface walkthrough.
 
     [:octicons-arrow-right-24: Interactive Quickstart](quickstart-interactive.md)
 
@@ -26,11 +26,15 @@ At the terminal: **`blusys create --list`** prints interfaces, capabilities, pol
 
     ---
 
-    Connected device without a display using the same runtime and reducer; aligns with **`headless`** starters and the headless telemetry–style reference examples.
+    Manifest-first headless product: `blusys.project.yml`, the same runtime and reducer, and the **headless** walkthrough.
 
     [:octicons-arrow-right-24: Headless Quickstart](quickstart-headless.md)
 
 </div>
+
+## Cold onboarding proof
+
+The exact quickstart walkthrough is smoke-tested in `scripts/scaffold-smoke.sh`. It clones the repo into a temp directory, creates a default starter, then runs the headless and interactive quickstarts with host builds.
 
 ## Platform Layers
 
@@ -46,7 +50,7 @@ At the terminal: **`blusys create --list`** prints interfaces, capabilities, pol
 The platform is optimized for these recurring product types:
 
 - **Interactive consumer devices** — smart lights, dashboards, timers, speakers
-- **Interactive control surfaces** — home panels, operator screens, compact controllers
+- **Interactive local UI products** — home panels, operator screens, compact controllers
 - **Headless connected appliances** — sensor nodes, infrastructure devices, appliance controllers
 - **Industrial telemetry and control** — fleet devices, energy monitors, production line systems
 

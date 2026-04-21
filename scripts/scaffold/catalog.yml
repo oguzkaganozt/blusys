@@ -1,21 +1,13 @@
 {
-  "version": 1,
+  "schema": 1,
   "interfaces": {
-    "handheld": {
-      "description": "Compact interactive shell",
+    "interactive": {
+      "description": "Interactive shell with local UI",
       "build_ui": true,
       "host_support": true,
       "entry_macro": "BLUSYS_APP",
       "host_mode": "interactive",
-      "title": "Handheld Starter"
-    },
-    "surface": {
-      "description": "Dashboard-style interactive shell",
-      "build_ui": true,
-      "host_support": true,
-      "entry_macro": "BLUSYS_APP",
-      "host_mode": "interactive",
-      "title": "Surface Starter"
+      "title": "Interactive Starter"
     },
     "headless": {
       "description": "Headless runtime without local UI",
@@ -98,6 +90,36 @@
       "targets": ["esp32", "esp32c3", "esp32s3"],
       "managed_dependencies": [],
       "sdkconfig_defaults": []
+    }
+  },
+  "profiles": {
+    "st7735_160x128": {
+      "description": "Canonical compact SPI TFT",
+      "interfaces": ["interactive"]
+    },
+    "st7789_320x240": {
+      "description": "Larger interactive dashboard",
+      "interfaces": ["interactive"]
+    },
+    "ssd1306_128x64": {
+      "description": "I2C mono local status",
+      "interfaces": ["interactive"]
+    },
+    "ssd1306_128x32": {
+      "description": "I2C mono compact status",
+      "interfaces": ["interactive"]
+    },
+    "ili9341_320x240": {
+      "description": "Medium interactive panel",
+      "interfaces": ["interactive"]
+    },
+    "ili9488_480x320": {
+      "description": "Large interactive display",
+      "interfaces": ["interactive"]
+    },
+    "qemu_rgb_dashboard_320x240": {
+      "description": "QEMU RGB simulation profile",
+      "interfaces": ["interactive"]
     }
   },
   "policies": {

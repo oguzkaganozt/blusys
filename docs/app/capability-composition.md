@@ -1,34 +1,26 @@
 # Capability Composition
 
-Capabilities are composed in `platform/` and translated into app actions.
+Capabilities are composed in the app entrypoint or a small product-local wiring file and translated into app actions.
 
 ## Composition Rules
 
-- keep capability config in `platform/`
-- keep product decisions in `core/`
+- keep capability config in the app entrypoint or a tiny wiring helper under `main/`
+- keep product decisions in the reducer
 - keep rendering in `ui/`
-- handle capability events in `platform/on_event`
+- handle capability events in `on_event`
 - query capability status through `app_ctx` (use `ctx.fx()` for routing/UI reactions when needed)
 
 ## Typical stacks
 
-Each **interface** suggests a different **minimal** capability set (enough for a credible starter) and a **full** stack for a typical connected product. Compose capabilities only in `platform/`; onboarding and Wi-Fi lifecycle live under **`connectivity`**. See [Product shape](../start/product-shape.md) and **`blusys create --list`** for dependency rules.
+Each **interface** suggests a different **minimal** capability set (enough for a credible starter) and a **full** stack for a typical connected product. Compose capabilities in product-local wiring; onboarding and Wi-Fi lifecycle live under **`connectivity`**. The starter docs in `docs/start/quickstart-interactive.md` and `docs/start/quickstart-headless.md` describe the target manifest-first app shape. See [Product shape](../start/product-shape.md) and **`blusys create --list`** for dependency rules.
 
-### Handheld (`--interface handheld`)
-
-| Minimal | Full (typical) |
-|---------|----------------|
-| storage | storage, connectivity (optional) |
-
-Starter: `examples/quickstart/handheld/`.
-
-### Surface (`--interface surface`)
+### Interactive (`--interface interactive`)
 
 | Minimal | Full (typical) |
 |---------|----------------|
-| connectivity | connectivity, storage, diagnostics |
+| storage | storage, connectivity, diagnostics |
 
-Starter: `examples/quickstart/handheld/`.
+Starter: manifest-first interactive starter.
 
 ### Headless connected (`--interface headless` + connected `--with`)
 
@@ -36,24 +28,24 @@ Starter: `examples/quickstart/handheld/`.
 |---------|----------------|
 | connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: `examples/quickstart/headless/`.
+Starter: manifest-first headless starter.
 
-### Surface coordinator
+### Interactive coordinator
 
 | Minimal | Full (typical) |
 |---------|----------------|
 | connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: `examples/quickstart/headless/` (optional local UI depends on build/profile; scaffold selects interface explicitly).
+Starter: manifest-first interactive starter with optional local UI.
 
 ## Rule Of Thumb
 
 If a capability changes app behavior, emit an action.
-If it only wires runtime services, keep it in `platform/`.
+If it only wires runtime services, keep it in a small wiring helper under `main/`.
 
 ## Event IDs And `on_event`
 
-Each capability posts integration events in a reserved numeric range (see `blusys::capability.hpp`). In `platform/`, implement `on_event` to translate those IDs into product `Action` values. Prefer handling at least:
+Each capability posts integration events in a reserved numeric range (see `blusys::capability.hpp`). In the app wiring layer, implement `on_event` to translate those IDs into product `Action` values. Prefer handling at least:
 
 | Source | Typical events to surface |
 |--------|---------------------------|
@@ -77,8 +69,8 @@ Operational UI (`blusys::flows::*`, `blusys::screens::*`) stays LVGL-backed and 
 
 ## Reference `on_event` Implementation
 
-For a full reducer-facing translation table, see `on_event` in `examples/quickstart/headless/main/platform/app_main.cpp` — the headless quickstart composes all major capabilities (connectivity, storage, OTA, diagnostics, telemetry, lan_control) and shows the complete event handling pattern.
+For a full reducer-facing translation table, see the headless validation example under `examples/validation/connected_headless/` — it composes all major capabilities (connectivity, storage, OTA, diagnostics, telemetry, lan_control) and shows the complete event handling pattern.
 
-Keep product-specific tags in `core/`; only `platform/` should map raw integration event IDs to those tags.
+Keep product-specific tags in reducer-facing code; only the app wiring layer should map raw integration event IDs to those tags.
 
 On Linux, `blusys host-build` (monorepo default) places binaries under `scripts/host/build-host/` — including `operational_phase_smoke` (phase machine parity) and `connected_headless_host` (headless reducer + capability stubs). See `scripts/host/README.md`.

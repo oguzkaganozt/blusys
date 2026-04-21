@@ -2,13 +2,7 @@
 
 The tree is intentionally small (see root `inventory.yml`). Everything else is selected via **menuconfig** scenarios inside merged projects.
 
-## quickstart/
-
-Fork-ready product templates. Start here.
-
-- **handheld** — interactive controller (host + device); encoder-driven UI, storage + BLE provisioning
-- **headless** — connected telemetry reference; WiFi, OTA, diagnostics, optional local OLED
-- **bluetooth_controller** — BLE HID (HOGP) 3-button volume remote; pairs natively with any OS, no companion app
+The quickstart starters were removed during the manifest-first scaffold refactor. See the starter docs under `docs/start/` for the target replacement shape.
 
 ## reference/
 

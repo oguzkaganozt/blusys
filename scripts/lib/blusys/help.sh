@@ -8,6 +8,7 @@ All commands default to the current directory when no project is specified.
 
 Commands:
   create [path]    Scaffold a new blusys project (default: cwd)
+  gen-spec         Generate build/generated/blusys_app_spec.h from a manifest
   build            Build a project
   flash            Flash a project to a device
   monitor          Open serial monitor
@@ -36,26 +37,33 @@ HELP
 }
 
 blusys_help_create() {
-    printf 'Usage: blusys create [--interface <handheld|surface|headless>] [--with <cap1,cap2,...>] [--policy <policy1,...>] [--list] [path]\n'
+    printf 'Usage: blusys create [--interface <interactive|headless>] [--profile <name>] [--with <cap1,cap2,...>] [--policy <policy1,...>] [--list] [path]\n'
     printf '\nScaffold a new blusys product project from the explicit product model:\n'
-    printf 'interface + capabilities + policy.\n'
+    printf 'interface + capabilities + profile + policies.\n'
     printf '\nOptions:\n'
-    printf '  --interface <type>  product shell family (default: handheld)\n'
-    printf '                       handheld  — compact interactive shell\n'
-    printf '                       surface   — dashboard-style interactive shell\n'
-    printf '                       headless  — no local UI\n'
+    printf '  --interface <type>  product interface (default: interactive)\n'
+    printf '                       interactive — local UI enabled\n'
+    printf '                       headless    — no local UI\n'
+    printf '  --profile <name>    built-in profile from --list (default: null)\n'
     printf '  --with <caps>       comma-separated capabilities\n'
     printf '                       connectivity, bluetooth, usb, telemetry, ota, lan_control, storage, diagnostics\n'
     printf '  --policy <items>    comma-separated non-capability policy overlays\n'
     printf '                       low_power\n'
-    printf '  --list              print interfaces, capabilities, and policies\n'
+    printf '  --list              print interfaces, starter presets, capabilities, profiles, and policies\n'
     printf '\nIf path is given, creates the project there; otherwise uses the current directory.\n'
     printf 'Asks before overwriting existing files.\n'
-    printf '\nGenerates: top-level CMake, main/, host/, sdkconfig defaults, and blusys.project.yml.\n'
+    printf 'Interactive create uses a small preset menu; use --with for custom capability mixes.\n'
+    printf '\nGenerates: top-level CMake, main/, host/, sdkconfig defaults, and schema-first blusys.project.yml.\n'
     printf 'ESP-IDF finds blusys_* via EXTRA_COMPONENT_DIRS (embedded path to components/) plus\n'
     printf 'main/idf_component.yml for registry deps (e.g. LVGL).\n'
     printf '\nEnvironment:\n'
     printf '  BLUSYS_SCAFFOLD_PLATFORM_VERSION   git ref for blusys_* deps (default: current branch)\n'
+}
+
+blusys_help_gen_spec() {
+    printf 'Usage: blusys gen-spec [--manifest <blusys.project.yml>] [--output <build/generated/blusys_app_spec.h>]\n'
+    printf '\nGenerate the manifest-derived app spec header used by app_main.cpp.\n'
+    printf 'Defaults to ./blusys.project.yml and ./build/generated/blusys_app_spec.h when omitted.\n'
 }
 
 blusys_help_build() {
@@ -147,8 +155,9 @@ blusys_help_lint() {
 }
 
 blusys_help_validate() {
-    printf 'Usage: blusys validate\n'
-    printf '\nRun inventory, product-layout, and lint checks in one pass.\n'
+    printf 'Usage: blusys validate [path ...]\n'
+    printf '\nValidate blusys.project.yml manifests with the schema contract.\n'
+    printf 'With no path and no local manifest, runs inventory, product-layout, lint, manifest scans, and tracked build/generated drift checks in one pass.\n'
 }
 
 blusys_help_host_build() {

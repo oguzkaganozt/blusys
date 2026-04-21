@@ -57,7 +57,7 @@ inline device_profile st7789_320x240()
 }
 
 // Native portrait — 240×320.  swap_xy and mirror_x disabled.
-// Typical use: handheld products where the longer edge is vertical.
+// Typical use: compact interactive products where the longer edge is vertical.
 inline device_profile st7789_240x320()
 {
     device_profile p = st7789_320x240();

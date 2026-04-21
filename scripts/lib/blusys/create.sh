@@ -1,7 +1,8 @@
 # Sourced by repo-root `blusys` — `create` command and project scaffolding.
 
 cmd_create() {
-    local interface="handheld"
+    local interface="interactive"
+    local profile=""
     local with_caps=""
     local policies=""
     local list_only="0"
@@ -25,6 +26,15 @@ cmd_create() {
                 ;;
             --with=*)
                 with_caps="${1#--with=}"
+                shift
+                ;;
+            --profile)
+                [[ $# -ge 2 ]] || { printf 'error: --profile requires an argument\n' >&2; exit 1; }
+                profile="$2"
+                shift 2
+                ;;
+            --profile=*)
+                profile="${1#--profile=}"
                 shift
                 ;;
             --policy)
@@ -53,13 +63,15 @@ cmd_create() {
                 positional+=("$1")
                 shift
                 ;;
-        esac
+            esac
     done
 
     if [[ ${#positional[@]} -gt 1 ]]; then
         blusys_help_create
         exit 1
     fi
+
+    blusys_require_pyyaml
 
     if [[ "$list_only" == "1" ]]; then
         python3 "$BLUSYS_REPO_ROOT/scripts/lib/blusys/scaffold_generator.py" \
@@ -73,7 +85,7 @@ cmd_create() {
         target_arg="${positional[0]}"
     fi
 
-    if [[ $# -eq 0 && -t 0 && -z "$with_caps" && -z "$policies" && ${#positional[@]} -eq 0 ]]; then
+    if [[ $# -eq 0 && -t 0 && -z "$profile" && -z "$with_caps" && -z "$policies" && ${#positional[@]} -eq 0 ]]; then
         blusys_prompt_create interface with_caps policies target_arg
     fi
 
@@ -90,7 +102,7 @@ cmd_create() {
     target_dir="$(cd "$target_dir" && pwd)"
 
     local existing_files=()
-    for f in CMakeLists.txt README.md sdkconfig.defaults sdkconfig.qemu blusys.project.yml main/CMakeLists.txt main/idf_component.yml main/core/app_logic.hpp main/platform/app_main.cpp host/CMakeLists.txt; do
+    for f in CMakeLists.txt README.md sdkconfig.defaults sdkconfig.qemu blusys.project.yml main/CMakeLists.txt main/idf_component.yml main/app_main.cpp main/ui/CMakeLists.txt main/ui/app_ui.cpp host/CMakeLists.txt; do
         [[ -e "$target_dir/$f" ]] && existing_files+=("$f")
     done
     if [[ ${#existing_files[@]} -gt 0 ]]; then
@@ -109,9 +121,27 @@ cmd_create() {
     python3 "$BLUSYS_REPO_ROOT/scripts/lib/blusys/scaffold_generator.py" \
         --repo-root "$BLUSYS_REPO_ROOT" \
         --interface "$interface" \
+        --profile "$profile" \
         --with "$with_caps" \
         --policy "$policies" \
         "$target_dir"
+}
+
+blusys_prompt_create_custom_caps() {
+    local -n _with_caps_ref=$1
+    local -n _policies_ref=$2
+
+    printf 'Capabilities [comma-separated]: '
+    read -r caps_answer
+    _with_caps_ref="$caps_answer"
+
+    printf 'low_power     [N]: '
+    read -r lp_answer
+    if [[ "$lp_answer" =~ ^[yY]$ ]]; then
+        _policies_ref="low_power"
+    else
+        _policies_ref=""
+    fi
 }
 
 blusys_prompt_create() {
@@ -121,45 +151,68 @@ blusys_prompt_create() {
     local -n _target_arg_ref=$4
 
     printf 'Product interface?\n'
-    printf '  1) handheld\n'
-    printf '  2) surface\n'
-    printf '  3) headless\n\n'
+    printf '  1) interactive\n'
+    printf '  2) headless\n\n'
     printf 'Choose [1]: '
     read -r choice
     case "$choice" in
-        2) _interface_ref="surface" ;;
-        3) _interface_ref="headless" ;;
-        *) _interface_ref="handheld" ;;
+        2) _interface_ref="headless" ;;
+        *) _interface_ref="interactive" ;;
     esac
 
-    local selected_caps=()
-    for cap in connectivity bluetooth usb telemetry ota lan_control storage diagnostics; do
-        local default="N"
-        if [[ "$_interface_ref" == "headless" ]]; then
-            case "$cap" in connectivity|telemetry|ota|diagnostics) default="Y" ;; esac
-        elif [[ "$_interface_ref" == "surface" ]]; then
-            case "$cap" in connectivity|diagnostics|storage) default="Y" ;; esac
-        elif [[ "$_interface_ref" == "handheld" ]]; then
-            case "$cap" in storage) default="Y" ;; esac
-        fi
-        printf '%-12s [%s]: ' "$cap" "$default"
-        read -r answer
-        if [[ -z "$answer" ]]; then
-            answer="$default"
-        fi
-        if [[ "$answer" =~ ^[yY]$ ]]; then
-            selected_caps+=("$cap")
-        fi
-    done
-    _with_caps_ref="$(IFS=,; printf '%s' "${selected_caps[*]}")"
-
-    printf 'low_power     [N]: '
-    read -r lp_answer
-    if [[ "$lp_answer" =~ ^[yY]$ ]]; then
-        _policies_ref="low_power"
-    else
-        _policies_ref=""
-    fi
+    case "$_interface_ref" in
+        interactive)
+            printf 'Starter preset?\n'
+            printf '  1) blank\n'
+            printf '  2) storage\n'
+            printf '  3) connected operator\n'
+            printf '  4) bluetooth storage\n'
+            printf '  5) custom\n\n'
+            printf 'Choose [1]: '
+            read -r preset
+            case "$preset" in
+                2) _with_caps_ref="storage" ;;
+                3) _with_caps_ref="connectivity,diagnostics" ;;
+                4) _with_caps_ref="bluetooth,storage" ;;
+                5) blusys_prompt_create_custom_caps _with_caps_ref _policies_ref ;;
+                *) _with_caps_ref="" ;;
+            esac
+            ;;
+        headless)
+            printf 'Starter preset?\n'
+            printf '  1) blank\n'
+            printf '  2) connected telemetry\n'
+            printf '  3) lan control\n'
+            printf '  4) usb host\n'
+            printf '  5) low-power telemetry\n'
+            printf '  6) custom\n\n'
+            printf 'Choose [2]: '
+            read -r preset
+            case "$preset" in
+                1)
+                    _with_caps_ref=""
+                    _policies_ref=""
+                    ;;
+                3)
+                    _with_caps_ref="connectivity,lan_control,ota"
+                    _policies_ref=""
+                    ;;
+                4)
+                    _with_caps_ref="usb"
+                    _policies_ref=""
+                    ;;
+                5)
+                    _with_caps_ref="connectivity,telemetry"
+                    _policies_ref="low_power"
+                    ;;
+                6) blusys_prompt_create_custom_caps _with_caps_ref _policies_ref ;;
+                *)
+                    _with_caps_ref="connectivity,telemetry,ota,diagnostics"
+                    _policies_ref=""
+                    ;;
+            esac
+            ;;
+    esac
 
     printf 'Path [./my_product]: '
     read -r path_answer

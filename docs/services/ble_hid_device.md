@@ -38,7 +38,7 @@ void app_main(void)
 }
 ```
 
-For a product-level wiring, see the `bluetooth_controller` quickstart — it uses the `blusys::ble_hid_device_capability` wrapper and three GPIO buttons.
+For product-level wiring, see the manifest-first starter docs and the app docs.
 
 ## Service surface
 
@@ -105,4 +105,4 @@ Uses NimBLE. If you also need Wi-Fi provisioning, provision before enabling HID 
 
 ## Example App
 
-See `examples/quickstart/bluetooth_controller` — wires `blusys::ble_hid_device_capability` to three GPIO buttons for a minimal media remote.
+See the manifest-first starter docs for the new starter shape. The old quickstart example was removed pending rewrite.

@@ -59,17 +59,16 @@ controller_fragment="$(make_fragment \
     'CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7789=y' \
     '# CONFIG_BLUSYS_INTERACTIVE_DISPLAY_PROFILE_ST7735 is not set')"
 
-edge_fragment="$(make_fragment \
-    'CONFIG_BLUSYS_HEADLESS_TELEMETRY_LOCAL_UI=y')"
+base_fragment="$(make_fragment)"
 
 build_variant \
-    "$REPO_ROOT/examples/quickstart/handheld" \
+    "$REPO_ROOT/examples/reference/display" \
+    "build-$TARGET-display-base" \
+    "$base_fragment" \
+    "reference display $TARGET base"
+
+build_variant \
+    "$REPO_ROOT/examples/reference/display" \
     "build-$TARGET-display-st7789" \
     "$controller_fragment" \
-    "handheld $TARGET ST7789"
-
-build_variant \
-    "$REPO_ROOT/examples/quickstart/headless" \
-    "build-$TARGET-display-local-ui" \
-    "$edge_fragment" \
-    "headless $TARGET SSD1306 local UI"
+    "reference display $TARGET ST7789"

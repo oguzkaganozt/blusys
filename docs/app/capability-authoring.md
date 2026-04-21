@@ -47,7 +47,7 @@ Each capability owns a 256-wide event-ID range (from `capability.hpp`):
 | `0x0C00–0x0CFF` | ble_hid_device |
 | `0x0D00–0x0DFF` | persistence |
 
-Add a new kind to `capability_kind` and reserve a new range in the header comment when you add a capability to the framework. Product-custom capabilities live in the `0x0900` block and flow through `app_spec::on_event` as `integration_passthrough` until handled.
+Add a new kind to `capability_kind` and reserve a new range in the header comment when you add a capability to the framework. Product-custom capabilities live in the `0x0900` block and flow through `app_spec::on_event` as `integration_passthrough` until handled. For the one-off product-local shell, see [Product-custom capabilities](custom-capabilities.md).
 
 ## Shape to follow
 
@@ -62,9 +62,9 @@ Model new capabilities on `storage_capability` (`blusys/framework/capabilities/s
 7. **`start()` sets `rt_`, `stop()` clears it.** `post_integration_event` is null-safe; events fire only while the runtime is bound.
 8. **`poll()` must be non-blocking.** Capabilities share the runtime thread; long work belongs in a worker task owned inside the capability.
 
-## Wiring in `platform/`
+## Wiring in the app entrypoint
 
-Add the capability to the `app_spec`'s `capability_list`; map its events to product actions in `platform/app_main.cpp` (or via `app_spec::on_event`). The reducer consumes those actions and never calls the capability directly.
+Add the capability to the `app_spec`'s `capability_list`; map its events to product actions in `main/app_main.cpp` (or via `app_spec::on_event`). The reducer consumes those actions and never calls the capability directly.
 
 Typed event helpers live in `blusys/framework/app/variant_dispatch.hpp` (`dispatch_variant`) — prefer those over raw integer compares when the event set grows.
 
@@ -78,8 +78,9 @@ Typed event helpers live in `blusys/framework/app/variant_dispatch.hpp` (`dispat
 ## See also
 
 - [Capabilities](capabilities.md) — usage of the shipped capabilities
-- [Capability composition](capability-composition.md) — wiring in `platform/`
+- [Capability composition](capability-composition.md) — wiring in the app entrypoint
 - [App runtime model](app-runtime-model.md) — event queue, threading, drops
+- [Product-custom capabilities](custom-capabilities.md) — one-off product-local capability shell
 - `components/blusys/include/blusys/framework/capabilities/` — the base contract and reference capabilities
 - `components/blusys/include/blusys/framework/capabilities/storage.hpp` — smallest reference capability
 - `scripts/scaffold/new-capability.sh` — generates the canonical capability scaffold

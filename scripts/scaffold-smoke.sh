@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Smoke-test `blusys create` for the canonical interface/capability matrix,
-# then host-build each generated project. Reuses a single FetchContent base dir
-# so interactive projects share one LVGL checkout.
+# then exercise the docs quickstart walkthrough from a fresh clone and
+# host-build each generated project. Reuses a single FetchContent base dir so
+# interactive projects share one LVGL checkout.
 #
 # Usage: from repo root, with cmake + pkg-config + libsdl2-dev:
 #   ./scripts/scaffold-smoke.sh
@@ -31,7 +32,7 @@ run_create() {
     local name="$1"
     shift
     local dir="$TMP/$name"
-    mkdir "$dir"
+    mkdir -p "$dir"
     local abs
     abs="$(cd "$dir" && pwd)"
     local args=()
@@ -51,7 +52,68 @@ run_host() {
     local name="$1"
     local dir="$TMP/$name"
     (cd "$ROOT" && "$BLUSYS" host-build "$dir")
+    local generated_header="$dir/build-host/generated/blusys_app_spec.h"
+    if [[ ! -f "$generated_header" ]]; then
+        printf 'scaffold-smoke: missing generated app spec in %s\n' "$name" >&2
+        exit 1
+    fi
     printf 'scaffold-smoke: host-build ok %s\n' "$name"
+}
+
+run_cold_onboarding() {
+    local clone="$TMP/cold-onboarding"
+    git clone --quiet "$ROOT" "$clone"
+
+    local clone_blusys="$clone/blusys"
+    if [[ ! -x "$clone_blusys" ]] && [[ -f "$clone_blusys" ]]; then
+        chmod +x "$clone_blusys" || true
+    fi
+
+    local default_dir="$clone/default"
+    mkdir -p "$default_dir"
+    (cd "$default_dir" && "$clone_blusys" create)
+    (cd "$default_dir" && "$clone_blusys" host-build)
+    if [[ ! -f "$default_dir/build-host/generated/blusys_app_spec.h" ]]; then
+        printf 'scaffold-smoke: missing generated app spec in cold default walkthrough\n' >&2
+        exit 1
+    fi
+    printf 'scaffold-smoke: cold default host-build ok\n'
+
+    local headless_dir="$clone/headless"
+    mkdir -p "$headless_dir"
+    (cd "$headless_dir" && "$clone_blusys" create --interface headless my_sensor)
+    (cd "$headless_dir/my_sensor" && "$clone_blusys" host-build)
+    if [[ ! -f "$headless_dir/my_sensor/build-host/generated/blusys_app_spec.h" ]]; then
+        printf 'scaffold-smoke: missing generated app spec in cold headless walkthrough\n' >&2
+        exit 1
+    fi
+    printf 'scaffold-smoke: cold headless host-build ok\n'
+
+    local interactive_dir="$clone/interactive"
+    mkdir -p "$interactive_dir"
+    (cd "$interactive_dir" && "$clone_blusys" create --interface interactive my_product)
+    (cd "$interactive_dir/my_product" && "$clone_blusys" host-build)
+    if [[ ! -f "$interactive_dir/my_product/build-host/generated/blusys_app_spec.h" ]]; then
+        printf 'scaffold-smoke: missing generated app spec in cold interactive walkthrough\n' >&2
+        exit 1
+    fi
+    printf 'scaffold-smoke: cold interactive host-build ok\n'
+
+    local profiled_dir="$clone/profiled"
+    mkdir -p "$profiled_dir"
+    (cd "$profiled_dir" && "$clone_blusys" create --interface interactive --profile st7735_160x128 my_profiled)
+    if ! grep -q '^profile: st7735_160x128$' "$profiled_dir/my_profiled/blusys.project.yml"; then
+        printf 'scaffold-smoke: missing selected profile in cold profiled walkthrough\n' >&2
+        exit 1
+    fi
+    (cd "$profiled_dir/my_profiled" && "$clone_blusys" host-build)
+    if [[ ! -f "$profiled_dir/my_profiled/build-host/generated/blusys_app_spec.h" ]]; then
+        printf 'scaffold-smoke: missing generated app spec in cold profiled walkthrough\n' >&2
+        exit 1
+    fi
+    printf 'scaffold-smoke: cold profiled host-build ok\n'
+
+    printf 'scaffold-smoke: cold-onboarding ok\n'
 }
 
 # Tests scripts/scaffold/new-capability.sh. Scaffolded host.cpp and device.cpp
@@ -68,19 +130,80 @@ run_capability_scaffold() {
     printf 'scaffold-smoke: capability-scaffold ok %s\n' "$name"
 }
 
-# Interface/capability/policy matrix
-run_create hh --interface handheld .
-run_create hs --interface handheld --with storage .
-run_create hb --interface handheld --with bluetooth,storage .
-run_create sd --interface surface --with connectivity,diagnostics .
-run_create ht --interface headless --with connectivity,telemetry,ota,diagnostics .
-run_create hl --interface headless --with connectivity,lan_control,ota .
-run_create hu --interface headless --with usb .
-run_create hp --interface headless --with connectivity,telemetry --policy low_power .
+assert_list_surface() {
+    local line_count
+    line_count="$($BLUSYS create --list | wc -l)"
+    if [[ "$line_count" -gt 25 ]]; then
+        printf 'scaffold-smoke: create --list exceeds one screen (%s lines)\n' "$line_count" >&2
+        exit 1
+    fi
+}
 
-for name in hh hs hb sd ht hl hu hp; do
+assert_layout() {
+    local name="$1"
+    local expected_total="$2"
+    local expected_main="$3"
+    local expect_ui="$4"
+    local dir="$TMP/$name"
+    local total_files
+    local main_files
+
+    total_files="$(find "$dir" -type f | wc -l)"
+    main_files="$(find "$dir/main" -type f | wc -l)"
+
+    if [[ "$total_files" -ne "$expected_total" ]]; then
+        printf 'scaffold-smoke: expected %s files in %s, got %s\n' "$expected_total" "$name" "$total_files" >&2
+        exit 1
+    fi
+    if [[ "$main_files" -ne "$expected_main" ]]; then
+        printf 'scaffold-smoke: expected %s main files in %s, got %s\n' "$expected_main" "$name" "$main_files" >&2
+        exit 1
+    fi
+    if [[ ! -f "$dir/main/app_main.cpp" ]]; then
+        printf 'scaffold-smoke: missing app_main.cpp in %s\n' "$name" >&2
+        exit 1
+    fi
+    if [[ -d "$dir/main/core" || -d "$dir/main/platform" ]]; then
+        printf 'scaffold-smoke: legacy core/platform dirs remain in %s\n' "$name" >&2
+        exit 1
+    fi
+    if [[ "$expect_ui" == "1" ]]; then
+        if [[ ! -f "$dir/main/ui/CMakeLists.txt" || ! -f "$dir/main/ui/app_ui.cpp" ]]; then
+            printf 'scaffold-smoke: missing interactive ui files in %s\n' "$name" >&2
+            exit 1
+        fi
+    else
+        if [[ -e "$dir/main/ui" ]]; then
+            printf 'scaffold-smoke: unexpected ui dir in %s\n' "$name" >&2
+            exit 1
+        fi
+    fi
+}
+
+# Interface/capability/policy matrix
+assert_list_surface
+run_create ii --interface interactive .
+    assert_layout ii 11 5 1
+run_create is --interface interactive --with storage .
+    assert_layout is 11 5 1
+run_create ib --interface interactive --with bluetooth,storage .
+    assert_layout ib 11 5 1
+run_create id --interface interactive --with connectivity,diagnostics .
+    assert_layout id 11 5 1
+run_create ht --interface headless --with connectivity,telemetry,ota,diagnostics .
+    assert_layout ht 9 3 0
+run_create hl --interface headless --with connectivity,lan_control,ota .
+    assert_layout hl 9 3 0
+run_create hu --interface headless --with usb .
+    assert_layout hu 9 3 0
+run_create hp --interface headless --with connectivity,telemetry --policy low_power .
+    assert_layout hp 9 3 0
+
+for name in ii is ib id ht hl hu hp; do
     run_host "$name"
 done
+
+run_cold_onboarding
 
 run_capability_scaffold cap_smoke_probe
 

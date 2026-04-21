@@ -35,7 +35,7 @@ public:
 
 ## Using stock flows
 
-In `platform/app_main.cpp`:
+In `main/app_main.cpp`:
 
 ```cpp
 static blusys::flows::settings_flow    kSettings{};
