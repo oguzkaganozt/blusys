@@ -75,6 +75,8 @@ extern "C" void app_main() {
 }
 ```
 
+For a complete product-local capability example, see [Product-custom capabilities](../app/custom-capabilities.md) and the [override reference example](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/override/).
+
 ## Next pages
 
 - [Interactive quickstart](quickstart-interactive.md)

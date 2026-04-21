@@ -49,6 +49,7 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 - [Capability Composition](capability-composition.md) --- how capabilities fit together in `platform/`
 - [Capabilities](capabilities.md) --- connectivity, storage
 - [Authoring a capability](capability-authoring.md) --- contract, reserved event IDs, reference implementation
+- [Product-custom capabilities](custom-capabilities.md) --- one-off product-local capabilities
 - [Adding a capability](adding-a-capability.md) --- step-by-step: header → device impl → host stub → register
 - [Adding a flow](adding-a-flow.md) --- stock flows, spec wiring, writing custom flows
 - [Memory and budgets](memory-and-budgets.md) --- queue depths, stack sizes, device heap floor, OOM policy
@@ -61,6 +62,7 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 - [`examples/reference/display/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/display) --- display + LVGL + encoder scenarios (menuconfig)
 - [`examples/reference/connectivity/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connectivity) --- Wi-Fi / HTTP / MQTT client scenarios (menuconfig)
 - [`examples/reference/hal/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/hal) --- HAL scenarios: GPIO, PWM, button, timer, NVS, ADC, SPI, I2C, UART (menuconfig)
+- [`examples/reference/override/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/override) --- product-local capability demo
 - [`examples/external/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/external) --- umbrella-header external-shape validation sample
 
 The quickstart starters are temporarily removed while the manifest-first scaffold is rewritten. See `APP_MANIFEST_REFACTOR_PLAN.md` for the target path.

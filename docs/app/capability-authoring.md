@@ -47,7 +47,7 @@ Each capability owns a 256-wide event-ID range (from `capability.hpp`):
 | `0x0C00–0x0CFF` | ble_hid_device |
 | `0x0D00–0x0DFF` | persistence |
 
-Add a new kind to `capability_kind` and reserve a new range in the header comment when you add a capability to the framework. Product-custom capabilities live in the `0x0900` block and flow through `app_spec::on_event` as `integration_passthrough` until handled.
+Add a new kind to `capability_kind` and reserve a new range in the header comment when you add a capability to the framework. Product-custom capabilities live in the `0x0900` block and flow through `app_spec::on_event` as `integration_passthrough` until handled. For the one-off product-local shell, see [Product-custom capabilities](custom-capabilities.md).
 
 ## Shape to follow
 
@@ -80,6 +80,7 @@ Typed event helpers live in `blusys/framework/app/variant_dispatch.hpp` (`dispat
 - [Capabilities](capabilities.md) — usage of the shipped capabilities
 - [Capability composition](capability-composition.md) — wiring in `platform/`
 - [App runtime model](app-runtime-model.md) — event queue, threading, drops
+- [Product-custom capabilities](custom-capabilities.md) — one-off product-local capability shell
 - `components/blusys/include/blusys/framework/capabilities/` — the base contract and reference capabilities
 - `components/blusys/include/blusys/framework/capabilities/storage.hpp` — smallest reference capability
 - `scripts/scaffold/new-capability.sh` — generates the canonical capability scaffold

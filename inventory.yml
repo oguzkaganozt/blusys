@@ -667,6 +667,20 @@ examples:
   - connectivity
   policies: []
   layout_exempt: true
+- name: override
+  category: reference
+  visibility: public
+  tier: framework
+  targets:
+  - esp32
+  - esp32c3
+  - esp32s3
+  ci_pr: false
+  ci_nightly: true
+  interface: headless
+  capabilities: []
+  policies: []
+  layout_exempt: true
 - name: display
   category: reference
   visibility: public
@@ -846,6 +860,9 @@ docs:
   section: app
   visibility: public
 - path: docs/app/capability-authoring.md
+  section: app
+  visibility: public
+- path: docs/app/custom-capabilities.md
   section: app
   visibility: public
 - path: docs/app/profiles.md
