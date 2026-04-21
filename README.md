@@ -28,7 +28,7 @@ These are the grounding constraints for the platform.
 
 **Principles.** One strong default path; keep implementations small; add abstraction only when it removes real app burden; one fixed scaffold; runtime services stay in C, product composition in the framework.
 
-**Validation.** Host smokes, scaffold checks, and CI expectations: **[docs/app/validation-host-loop.md](docs/app/validation-host-loop.md)**. Fast repo preflight: `blusys validate`. Inventory-driven example builds: `blusys build-inventory <target> <ci_pr|ci_nightly>`. Unified `blusys build` / `blusys qemu` (chip, `host`, `qemu*`): **[docs/app/cli-host-qemu.md](docs/app/cli-host-qemu.md)**.
+**Validation.** Host smokes, scaffold checks, and CI expectations: **[docs/app/validation-host-loop.md](docs/app/validation-host-loop.md)**. Fast repo preflight: `blusys validate` (manifest checks, inventory, product-layout, lint, and tracked `build/generated/**` drift). Inventory-driven example builds: `blusys build-inventory <target> <ci_pr|ci_nightly>`. Unified `blusys build` / `blusys qemu` (chip, `host`, `qemu*`): **[docs/app/cli-host-qemu.md](docs/app/cli-host-qemu.md)**.
 
 ---
 

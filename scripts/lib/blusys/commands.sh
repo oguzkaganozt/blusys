@@ -695,6 +695,7 @@ cmd_validate() {
     done
 
     blusys_require_pyyaml
+    python3 "$BLUSYS_REPO_ROOT/scripts/check-generated-artifacts.py"
 
     if [[ ${#manifest_paths[@]} -gt 0 ]]; then
         python3 "$BLUSYS_REPO_ROOT/scripts/check-manifests.py" \

@@ -156,7 +156,7 @@ blusys_help_lint() {
 blusys_help_validate() {
     printf 'Usage: blusys validate [path ...]\n'
     printf '\nValidate blusys.project.yml manifests with the schema contract.\n'
-    printf 'With no path and no local manifest, runs inventory, product-layout, lint, and repository manifest scans in one pass.\n'
+    printf 'With no path and no local manifest, runs inventory, product-layout, lint, manifest scans, and tracked build/generated drift checks in one pass.\n'
 }
 
 blusys_help_host_build() {

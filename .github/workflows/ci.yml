@@ -8,6 +8,10 @@ on:
       - "cmake/**"
       - "examples/**"
       - "blusys"
+      - "blusys.project.yml"
+      - "**/blusys.project.yml"
+      - "build/generated/**"
+      - "**/build/generated/**"
       - "scripts/scaffold/**"
       - "scripts/**"
       - "inventory.yml"
@@ -21,6 +25,10 @@ on:
       - "cmake/**"
       - "examples/**"
       - "blusys"
+      - "blusys.project.yml"
+      - "**/blusys.project.yml"
+      - "build/generated/**"
+      - "**/build/generated/**"
       - "scripts/scaffold/**"
       - "scripts/**"
       - "inventory.yml"
@@ -42,6 +50,7 @@ jobs:
   # ── Tier 0: Layer Invariants ───────────────────────────────────────────────
   blusys-layer-invariants:
     name: "Layer invariants"
+    needs: [validate]
     runs-on: ubuntu-latest
 
     steps:
@@ -82,24 +91,9 @@ jobs:
       - name: Lint — services only reached via capabilities/runtime/test
         run: bash scripts/check-service-access.sh
 
-  # ── Tier 0: Layering Lint (legacy checks) ─────────────────────────────────
-  lint:
-    name: "Layering lint"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Framework UI CMake source lists
-        run: python3 scripts/check-framework-ui-sources.py
-
-      - name: Host bridge spine vs component CMakeLists
-        run: python3 scripts/check-host-bridge-spine.py
-
-  # ── Tier 0: Inventory Validation ───────────────────────────────────────────
-  inventory:
-    name: "Inventory check"
+  # ── Tier 0: Repo validation ───────────────────────────────────────────────
+  validate:
+    name: "Repo validation"
     runs-on: ubuntu-latest
 
     steps:
@@ -114,16 +108,16 @@ jobs:
       - name: Install PyYAML
         run: pip install pyyaml
 
-      - name: Validate inventory
-        run: python scripts/check-inventory.py
-
-      - name: Product app main/ layout
-        run: python scripts/check-product-layout.py
+      - name: Run repo validation
+        shell: bash
+        run: |
+          chmod +x blusys
+          ./blusys validate
 
   # ── Tier 0: Host harness smokes (Linux + SDL2 deps) ───────────────────────
   host-smoke:
     name: "Host harness smoke"
-    needs: [lint, blusys-layer-invariants]
+    needs: [validate, blusys-layer-invariants]
     runs-on: ubuntu-latest
 
     steps:
@@ -197,7 +191,7 @@ jobs:
   # host-smoke because it skips the SDL2 and libmosquitto toolchains.
   host-test-minimal:
     name: "Host test (minimal)"
-    needs: [blusys-layer-invariants]
+    needs: [validate, blusys-layer-invariants]
     runs-on: ubuntu-latest
 
     steps:
@@ -223,6 +217,7 @@ jobs:
   # ── Tier 0: Docs Build ────────────────────────────────────────────────────
   docs:
     name: "Docs build"
+    needs: [validate]
     runs-on: ubuntu-latest
 
     steps:
@@ -250,6 +245,7 @@ jobs:
   # module migrates to inline doxygen comments.
   api-docs:
     name: "API reference build"
+    needs: [validate]
     runs-on: ubuntu-latest
 
     steps:
@@ -267,7 +263,7 @@ jobs:
   # ── Tier 1: Build Curated Examples ─────────────────────────────────────────
   build:
     name: "Build PR (${{ matrix.target }})"
-    needs: [lint, blusys-layer-invariants, inventory, host-smoke, host-test-minimal]
+    needs: [validate, blusys-layer-invariants, host-smoke, host-test-minimal]
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4
@@ -310,7 +306,7 @@ jobs:
 
   display-variants:
     name: "Display variants (${{ matrix.target }})"
-    needs: [lint, blusys-layer-invariants, inventory, host-smoke, host-test-minimal]
+    needs: [validate, blusys-layer-invariants, host-smoke, host-test-minimal]
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:v5.5.4
