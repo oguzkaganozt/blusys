@@ -1,5 +1,5 @@
-// handheld_starter_reducer_smoke — host-only assertions using the same
-// clamp_percent helper as the handheld / surface quickstart examples
+// interactive_starter_reducer_smoke — host-only assertions using the same
+// clamp_percent helper as the interactive quickstart examples
 // (`examples/include/blusys_examples/clamp_percent.hpp`).
 
 #include "blusys_examples/clamp_percent.hpp"
@@ -13,7 +13,7 @@ bool run_tests()
 {
     using blusys_examples::clamp_percent;
 
-    // handheld_starter: level_delta respects hold (simulated).
+    // interactive_starter: level_delta respects hold (simulated).
     bool hold = false;
     std::int32_t level = 64;
     std::int32_t d = 10;
@@ -32,12 +32,12 @@ bool run_tests()
         return false;
     }
 
-    // handheld_starter: clamp extremes
+    // interactive_starter: clamp extremes
     if (clamp_percent(-5) != 0 || clamp_percent(200) != 100) {
         return false;
     }
 
-    // surface_ops_panel: same helper for load_percent
+    // interactive_panel: same helper for load_percent
     if (clamp_percent(-1) != 0 || clamp_percent(150) != 100) {
         return false;
     }

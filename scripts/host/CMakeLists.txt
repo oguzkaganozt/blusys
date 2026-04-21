@@ -135,12 +135,12 @@ blusys_host_bridge_apply_exe_compile_options(capability_contract_smoke)
 add_executable(operational_phase_smoke src/operational_phase_smoke.cpp)
 blusys_host_apply_compile_options(operational_phase_smoke)
 
-# ── handheld_starter_reducer_smoke (shared clamp_percent) ─────────────────────
-add_executable(handheld_starter_reducer_smoke src/handheld_starter_reducer_smoke.cpp)
-target_include_directories(handheld_starter_reducer_smoke PRIVATE
+# ── interactive_starter_reducer_smoke (shared clamp_percent) ──────────────────
+add_executable(interactive_starter_reducer_smoke src/interactive_starter_reducer_smoke.cpp)
+target_include_directories(interactive_starter_reducer_smoke PRIVATE
     ${BLUSYS_REPO_ROOT}/examples/include
 )
-blusys_host_apply_compile_options(handheld_starter_reducer_smoke)
+blusys_host_apply_compile_options(interactive_starter_reducer_smoke)
 
 # ── panel_connectivity_map_smoke (panel map_event connectivity band) ──────────
 add_executable(panel_connectivity_map_smoke src/panel_connectivity_map_smoke.cpp)

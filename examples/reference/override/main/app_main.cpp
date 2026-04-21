@@ -1,6 +1,6 @@
 #include <blusys/blusys.hpp>
 
-#include "platform/override_capability.hpp"
+#include "override_capability.hpp"
 
 #include <cstdint>
 #include <optional>

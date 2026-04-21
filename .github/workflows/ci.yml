@@ -142,11 +142,11 @@ jobs:
         run: |
           set -euo pipefail
           cmake -S scripts/host -B scripts/host/build-host-ci
-          cmake --build scripts/host/build-host-ci -j \
-            --target handheld_starter_reducer_smoke \
-                     panel_connectivity_map_smoke \
-                     capability_contract_smoke \
-                     operational_phase_smoke \
+           cmake --build scripts/host/build-host-ci -j \
+             --target interactive_starter_reducer_smoke \
+                      panel_connectivity_map_smoke \
+                      capability_contract_smoke \
+                      operational_phase_smoke \
                      host_spine_test \
                      action_queue_drop_smoke \
                      snapshot_buffer_smoke
@@ -158,7 +158,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ./scripts/host/build-host-ci/handheld_starter_reducer_smoke
+           ./scripts/host/build-host-ci/interactive_starter_reducer_smoke
           ./scripts/host/build-host-ci/panel_connectivity_map_smoke
           ./scripts/host/build-host-ci/capability_contract_smoke
           ./scripts/host/build-host-ci/operational_phase_smoke

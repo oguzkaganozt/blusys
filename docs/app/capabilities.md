@@ -7,10 +7,10 @@ Capabilities provide higher-level product flows so apps stop assembling low-leve
 Every capability:
 
 1. Is configured with a plain data-only config struct (no hidden side effects in construction).
-2. Is composed in `platform/` and registered on `app_spec.capabilities` — not constructed ad hoc from `core/` or `ui/`.
+2. Is composed in `main/app_main.cpp` or a small product-local wiring file and registered on `app_spec.capabilities` — not constructed ad hoc from `ui/`.
 3. Owns lifecycle and runtime-service integration on the framework side; product code requests work through reducer-driven actions.
 4. Exposes **status** through the app-facing query path (`app_ctx` accessors) using consistent field naming (`capability_ready` signals that the capability’s default stack is up).
-5. Raises **events** with stable enum codes; `core/` handles them in `on_event`, and `update()` reacts to the resulting actions.
+5. Raises **events** with stable enum codes; the app wiring handles them in `on_event`, and `update()` reacts to the resulting actions.
 6. May expose advanced escape hatches, but the recommended path stays event- and reducer-driven.
 
 Apps bridge capability events to product actions via `on_event`:
@@ -42,7 +42,7 @@ blusys::connectivity_config conn_cfg{
 };
 ```
 
-### Wiring (in `main/platform/app_main.cpp`)
+### Wiring (in `main/app_main.cpp`)
 
 ```cpp
 #include "blusys/framework/capabilities/connectivity.hpp"

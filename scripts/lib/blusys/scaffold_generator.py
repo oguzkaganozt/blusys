@@ -850,18 +850,6 @@ absolute path). Adjust it if you move the project, use another checkout, or vend
 """
 
 
-def render_gitignore() -> str:
-    return """build*/
-managed_components/
-dependencies.lock
-sdkconfig
-sdkconfig.*
-!sdkconfig.defaults
-!sdkconfig.defaults.*
-!sdkconfig.qemu
-"""
-
-
 def write_file(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content)
@@ -1739,7 +1727,6 @@ def generate_project(
         out_dir / "sdkconfig.qemu",
         (repo_root / "scripts" / "scaffold" / "sdkconfig.qemu").read_text(),
     )
-    write_file(out_dir / ".gitignore", render_gitignore())
     write_file(out_dir / "blusys.project.yml", manifest_text)
     write_file(out_dir / "README.md", render_readme(project_name, interface, capabilities, policies))
 

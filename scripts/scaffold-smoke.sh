@@ -149,10 +149,6 @@ assert_layout() {
         printf 'scaffold-smoke: missing app_main.cpp in %s\n' "$name" >&2
         exit 1
     fi
-    if [[ ! -f "$dir/.gitignore" ]]; then
-        printf 'scaffold-smoke: missing .gitignore in %s\n' "$name" >&2
-        exit 1
-    fi
     if [[ -d "$dir/main/core" || -d "$dir/main/platform" ]]; then
         printf 'scaffold-smoke: legacy core/platform dirs remain in %s\n' "$name" >&2
         exit 1
@@ -173,21 +169,21 @@ assert_layout() {
 # Interface/capability/policy matrix
 assert_list_surface
 run_create ii --interface interactive .
-assert_layout ii 12 5 1
+    assert_layout ii 11 5 1
 run_create is --interface interactive --with storage .
-assert_layout is 12 5 1
+    assert_layout is 11 5 1
 run_create ib --interface interactive --with bluetooth,storage .
-assert_layout ib 12 5 1
+    assert_layout ib 11 5 1
 run_create id --interface interactive --with connectivity,diagnostics .
-assert_layout id 12 5 1
+    assert_layout id 11 5 1
 run_create ht --interface headless --with connectivity,telemetry,ota,diagnostics .
-assert_layout ht 10 3 0
+    assert_layout ht 9 3 0
 run_create hl --interface headless --with connectivity,lan_control,ota .
-assert_layout hl 10 3 0
+    assert_layout hl 9 3 0
 run_create hu --interface headless --with usb .
-assert_layout hu 10 3 0
+    assert_layout hu 9 3 0
 run_create hp --interface headless --with connectivity,telemetry --policy low_power .
-assert_layout hp 10 3 0
+    assert_layout hp 9 3 0
 
 for name in ii is ib id ht hl hu hp; do
     run_host "$name"

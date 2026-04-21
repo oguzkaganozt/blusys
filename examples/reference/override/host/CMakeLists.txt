@@ -24,8 +24,8 @@ pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 blusys_host_bridge_add_library(headless)
 
 add_executable(override_reference_host
-    "${CMAKE_CURRENT_LIST_DIR}/../main/platform/app_main.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../main/platform/override_capability.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/app_main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../main/override_capability.cpp"
     "${BLUSYS_PATH}/scripts/host/src/app_headless_platform.cpp"
 )
 target_include_directories(override_reference_host PRIVATE

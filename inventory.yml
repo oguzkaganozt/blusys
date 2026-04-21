@@ -597,7 +597,7 @@ modules:
   - esp32s3
   doc: docs/app/index.md
   examples:
-  - handheld
+  - interactive
   - headless
   - headless_telemetry_low_power
   - display

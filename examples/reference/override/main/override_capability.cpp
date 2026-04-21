@@ -1,4 +1,4 @@
-#include "platform/override_capability.hpp"
+#include "override_capability.hpp"
 
 namespace override_example::system {
 

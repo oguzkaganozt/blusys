@@ -26,7 +26,7 @@ namespace blusys::layout {
 
 enum class surface_size : std::uint8_t {
     tiny_mono,  // SSD1306-style local status
-    compact,    // ST7735 / small handheld
+    compact,    // ST7735 / small interactive display
     medium,     // ILI9341 / ST7789 “dashboard” class
     large,      // ILI9488 and similar
 };

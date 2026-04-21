@@ -98,7 +98,7 @@
       "interfaces": ["interactive"]
     },
     "st7789_320x240": {
-      "description": "Larger handheld / compact dashboard",
+      "description": "Larger interactive dashboard",
       "interfaces": ["interactive"]
     },
     "ssd1306_128x64": {
@@ -110,11 +110,11 @@
       "interfaces": ["interactive"]
     },
     "ili9341_320x240": {
-      "description": "Medium operator / panel",
+      "description": "Medium interactive panel",
       "interfaces": ["interactive"]
     },
     "ili9488_480x320": {
-      "description": "Large local surface",
+      "description": "Large interactive display",
       "interfaces": ["interactive"]
     },
     "qemu_rgb_dashboard_320x240": {

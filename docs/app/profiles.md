@@ -43,7 +43,7 @@ There is no separate public headless profile macro; the runtime uses its default
 | Main loop cadence | `app_spec.tick_period_ms` — delay between `runtime.step()` calls |
 | Capability events | `app_spec.on_event` — translate capability codes into product `Action`s |
 | Periodic work | `app_spec.on_tick` — time-based housekeeping without UI |
-| Capabilities | Register on `app_spec.capabilities` from `platform/` only |
+| Capabilities | Register on `app_spec.capabilities` from the app entrypoint or product-local wiring |
 
 Use the same reducer (`update`) and action model as interactive products; only the entry macro and build flags differ (`BLUSYS_BUILD_UI` off).
 
@@ -85,10 +85,10 @@ Beyond ST7735, the framework ships small **data-first** profile factories under 
 | Header | Factory (typical) | Role |
 |--------|-------------------|------|
 | `st7735.hpp` | `st7735_160x128()` | Canonical compact SPI TFT |
-| `st7789.hpp` | `st7789_320x240()` | Larger compact dashboard |
+| `st7789.hpp` | `st7789_320x240()` | Larger interactive dashboard |
 | `ssd1306.hpp` | `ssd1306_128x64()`, `ssd1306_128x32()` | I2C mono local status |
-| `ili9341.hpp` | `ili9341_320x240()` | Medium operator / panel |
-| `ili9488.hpp` | `ili9488_480x320()` | Large local display |
+| `ili9341.hpp` | `ili9341_320x240()` | Medium interactive panel |
+| `ili9488.hpp` | `ili9488_480x320()` | Large interactive display |
 
 SPI defaults use target-gated pins where common; I2C defaults follow the `lcd_ssd1306_basic` example per target.
 
@@ -116,5 +116,5 @@ Host SDL builds for dashboard-class examples use `BLUSYS_DASHBOARD_HOST_DISPLAY_
 |-----------|------------------|-------|
 | Interactive (compact) | ST7735, ST7789 | Compact color; expressive theme bias |
 | Interactive (dashboard) | ILI9341, ILI9488 | Operational / dashboard density |
-| Headless | Headless, or SSD1306 for local status | Same reducer; `platform/` chooses entry |
+| Headless | Headless, or SSD1306 for local status | Same reducer; `BLUSYS_APP_HEADLESS(spec)` chooses the entry point |
 | Interactive (coordinator) | Headless, ILI9341, ILI9488 | Headless default; optional local operator UI |

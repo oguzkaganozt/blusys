@@ -229,10 +229,10 @@ Two consumption models, deliberately separated:
 - **Scaffolded product apps** from `blusys create [--interface …] [--with …] [--policy …]`
   use the same mechanism: the generated top-level `CMakeLists.txt` embeds
   `EXTRA_COMPONENT_DIRS` pointing at the `components/` tree from the checkout
-  used at generation time. Product code stays under `main/core/`, `main/ui/`
-  (when interactive), and `main/platform/`. See [Product shape](../start/product-shape.md)
-  and [Interactive Quickstart](../start/quickstart-interactive.md); [App](../app/index.md)
-  covers the product model.
+  used at generation time. Product code stays under `main/`; interactive apps
+  may add `ui/` when needed, and `app_main.cpp` stays thin and explicit. See
+  [Product shape](../start/product-shape.md) and [Interactive Quickstart](../start/quickstart-interactive.md);
+  [App](../app/index.md) covers the product model.
 
 ## Symmetric Pairs
 
