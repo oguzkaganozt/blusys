@@ -2,7 +2,7 @@
 
 The tree is intentionally small (see root `inventory.yml`). Everything else is selected via **menuconfig** scenarios inside merged projects.
 
-The quickstart starters were removed during the manifest-first scaffold refactor. See `APP_MANIFEST_REFACTOR_PLAN.md` and the starter docs under `docs/start/` for the target replacement shape.
+The quickstart starters were removed during the manifest-first scaffold refactor. See the starter docs under `docs/start/` for the target replacement shape.
 
 ## reference/
 

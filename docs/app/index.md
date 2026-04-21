@@ -65,6 +65,6 @@ The recommended product path is `blusys::app`: `app_spec`, `update(ctx, state, a
 - [`examples/reference/override/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/override) --- product-local capability demo
 - [`examples/external/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/external) --- umbrella-header external-shape validation sample
 
-The quickstart starters are temporarily removed while the manifest-first scaffold is rewritten. See `APP_MANIFEST_REFACTOR_PLAN.md` for the target path.
+The quickstart starters are temporarily removed while the manifest-first scaffold is rewritten. See the manifest-first starter docs under `docs/start/` for the target path.
 
 Use the manifest-first starter docs as the supported product-shaped starting points.

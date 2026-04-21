@@ -38,7 +38,7 @@ void app_main(void)
 }
 ```
 
-For product-level wiring, see `APP_MANIFEST_REFACTOR_PLAN.md` and the manifest-first starter docs.
+For product-level wiring, see the manifest-first starter docs and the app docs.
 
 ## Service surface
 
@@ -105,4 +105,4 @@ Uses NimBLE. If you also need Wi-Fi provisioning, provision before enabling HID 
 
 ## Example App
 
-See `APP_MANIFEST_REFACTOR_PLAN.md` for the new starter shape. The old quickstart example was removed pending rewrite.
+See the manifest-first starter docs for the new starter shape. The old quickstart example was removed pending rewrite.

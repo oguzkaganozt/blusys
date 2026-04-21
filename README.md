@@ -144,7 +144,7 @@ blusys host-build
 | `examples/reference/` | Deeper demos and per-area examples, nightly CI |
 | `examples/validation/` | Internal smoke and stress, nightly CI |
 
-The quickstart starters are temporarily removed while the manifest-first scaffold is being rewritten. See `APP_MANIFEST_REFACTOR_PLAN.md`.
+The quickstart starters are temporarily removed while the manifest-first scaffold is being rewritten. See the manifest-first starter docs under `docs/start/`.
 
 Details and flags: **`inventory.yml`**.
 
