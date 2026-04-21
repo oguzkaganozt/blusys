@@ -2004,15 +2004,31 @@ int main(void)
 
 
 def print_list(catalog: dict) -> None:
+    def emit_names(values: list[str], per_line: int) -> None:
+        for i in range(0, len(values), per_line):
+            print("  " + ", ".join(values[i : i + per_line]))
+
     print("Interfaces:")
     for name, meta in catalog["interfaces"].items():
         print(f"  {name:10s} {meta['description']}")
-    print("\nProfiles:")
-    for name, meta in catalog.get("profiles", {}).items():
-        print(f"  {name:18s} {meta['description']}")
+    print("\nStarter presets:")
+    presets = [
+        ("ii", "interactive blank", "no capabilities"),
+        ("is", "interactive storage", "storage"),
+        ("ib", "interactive bluetooth storage", "bluetooth, storage"),
+        ("id", "interactive connected operator", "connectivity, diagnostics"),
+        ("ht", "headless connected telemetry", "connectivity, telemetry, ota, diagnostics"),
+        ("hl", "headless lan control", "connectivity, lan_control, ota"),
+        ("hu", "headless usb host", "usb"),
+        ("hp", "headless low-power telemetry", "connectivity, telemetry + low_power"),
+    ]
+    for code, label, details in presets:
+        print(f"  {code:2s}  {label:29s} {details}")
+
     print("\nCapabilities:")
-    for name, meta in catalog["capabilities"].items():
-        print(f"  {name:12s} {meta['description']}")
+    emit_names(list(catalog["capabilities"].keys()), 4)
+    print("\nProfiles:")
+    emit_names(list(catalog.get("profiles", {}).keys()), 4)
     print("\nPolicies:")
     for name, meta in catalog["policies"].items():
         print(f"  {name:12s} {meta['description']}")

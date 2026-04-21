@@ -116,6 +116,23 @@ cmd_create() {
         "$target_dir"
 }
 
+blusys_prompt_create_custom_caps() {
+    local -n _with_caps_ref=$1
+    local -n _policies_ref=$2
+
+    printf 'Capabilities [comma-separated]: '
+    read -r caps_answer
+    _with_caps_ref="$caps_answer"
+
+    printf 'low_power     [N]: '
+    read -r lp_answer
+    if [[ "$lp_answer" =~ ^[yY]$ ]]; then
+        _policies_ref="low_power"
+    else
+        _policies_ref=""
+    fi
+}
+
 blusys_prompt_create() {
     local -n _interface_ref=$1
     local -n _with_caps_ref=$2
@@ -132,32 +149,59 @@ blusys_prompt_create() {
         *) _interface_ref="interactive" ;;
     esac
 
-    local selected_caps=()
-    for cap in connectivity bluetooth usb telemetry ota lan_control storage diagnostics; do
-        local default="N"
-        if [[ "$_interface_ref" == "headless" ]]; then
-            case "$cap" in connectivity|telemetry|ota|diagnostics) default="Y" ;; esac
-        elif [[ "$_interface_ref" == "interactive" ]]; then
-            case "$cap" in connectivity|diagnostics|storage) default="Y" ;; esac
-        fi
-        printf '%-12s [%s]: ' "$cap" "$default"
-        read -r answer
-        if [[ -z "$answer" ]]; then
-            answer="$default"
-        fi
-        if [[ "$answer" =~ ^[yY]$ ]]; then
-            selected_caps+=("$cap")
-        fi
-    done
-    _with_caps_ref="$(IFS=,; printf '%s' "${selected_caps[*]}")"
-
-    printf 'low_power     [N]: '
-    read -r lp_answer
-    if [[ "$lp_answer" =~ ^[yY]$ ]]; then
-        _policies_ref="low_power"
-    else
-        _policies_ref=""
-    fi
+    case "$_interface_ref" in
+        interactive)
+            printf 'Starter preset?\n'
+            printf '  1) blank\n'
+            printf '  2) storage\n'
+            printf '  3) connected operator\n'
+            printf '  4) bluetooth storage\n'
+            printf '  5) custom\n\n'
+            printf 'Choose [1]: '
+            read -r preset
+            case "$preset" in
+                2) _with_caps_ref="storage" ;;
+                3) _with_caps_ref="connectivity,diagnostics" ;;
+                4) _with_caps_ref="bluetooth,storage" ;;
+                5) blusys_prompt_create_custom_caps _with_caps_ref _policies_ref ;;
+                *) _with_caps_ref="" ;;
+            esac
+            ;;
+        headless)
+            printf 'Starter preset?\n'
+            printf '  1) blank\n'
+            printf '  2) connected telemetry\n'
+            printf '  3) lan control\n'
+            printf '  4) usb host\n'
+            printf '  5) low-power telemetry\n'
+            printf '  6) custom\n\n'
+            printf 'Choose [2]: '
+            read -r preset
+            case "$preset" in
+                1)
+                    _with_caps_ref=""
+                    _policies_ref=""
+                    ;;
+                3)
+                    _with_caps_ref="connectivity,lan_control,ota"
+                    _policies_ref=""
+                    ;;
+                4)
+                    _with_caps_ref="usb"
+                    _policies_ref=""
+                    ;;
+                5)
+                    _with_caps_ref="connectivity,telemetry"
+                    _policies_ref="low_power"
+                    ;;
+                6) blusys_prompt_create_custom_caps _with_caps_ref _policies_ref ;;
+                *)
+                    _with_caps_ref="connectivity,telemetry,ota,diagnostics"
+                    _policies_ref=""
+                    ;;
+            esac
+            ;;
+    esac
 
     printf 'Path [./my_product]: '
     read -r path_answer

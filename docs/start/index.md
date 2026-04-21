@@ -8,7 +8,7 @@ New products are created with **`blusys create`** using an explicit model: **int
 
 - [Product shape](product-shape.md) — `interactive` / `headless`, `--with`, `profile`, `--policy`, and how reference examples map to that model
 
-At the terminal: **`blusys create --list`** prints interfaces, profiles, capabilities, and policies.
+At the terminal: **`blusys create --list`** prints interfaces, starter presets, capabilities, profiles, and policies.
 
 ## Guided quickstarts (after you know the shape)
 

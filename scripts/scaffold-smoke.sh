@@ -73,6 +73,15 @@ run_capability_scaffold() {
     printf 'scaffold-smoke: capability-scaffold ok %s\n' "$name"
 }
 
+assert_list_surface() {
+    local line_count
+    line_count="$($BLUSYS create --list | wc -l)"
+    if [[ "$line_count" -gt 25 ]]; then
+        printf 'scaffold-smoke: create --list exceeds one screen (%s lines)\n' "$line_count" >&2
+        exit 1
+    fi
+}
+
 assert_layout() {
     local name="$1"
     local expected_total="$2"
@@ -119,6 +128,7 @@ assert_layout() {
 }
 
 # Interface/capability/policy matrix
+assert_list_surface
 run_create ii --interface interactive .
 assert_layout ii 12 5 1
 run_create is --interface interactive --with storage .
