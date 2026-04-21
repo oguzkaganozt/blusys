@@ -85,10 +85,10 @@ Beyond ST7735, the framework ships small **data-first** profile factories under 
 | Header | Factory (typical) | Role |
 |--------|-------------------|------|
 | `st7735.hpp` | `st7735_160x128()` | Canonical compact SPI TFT |
-| `st7789.hpp` | `st7789_320x240()` | Larger handheld / compact dashboard |
+| `st7789.hpp` | `st7789_320x240()` | Larger compact dashboard |
 | `ssd1306.hpp` | `ssd1306_128x64()`, `ssd1306_128x32()` | I2C mono local status |
 | `ili9341.hpp` | `ili9341_320x240()` | Medium operator / panel |
-| `ili9488.hpp` | `ili9488_480x320()` | Large local surface |
+| `ili9488.hpp` | `ili9488_480x320()` | Large local display |
 
 SPI defaults use target-gated pins where common; I2C defaults follow the `lcd_ssd1306_basic` example per target.
 

@@ -6,7 +6,7 @@ For layout across display sizes, see [Profiles](profiles.md). For how screens ti
 
 ## Compact Control
 
-Best for **handheld** / compact interactive surfaces and dense control strips.
+Best for compact interactive devices and dense control strips.
 
 | Widget | Role | Often appears in |
 |--------|------|------------------|

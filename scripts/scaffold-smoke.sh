@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Smoke-test `blusys create` for the canonical interface/capability matrix,
-# then host-build each generated project. Reuses a single FetchContent base dir
-# so interactive projects share one LVGL checkout.
+# then exercise the docs quickstart walkthrough from a fresh clone and
+# host-build each generated project. Reuses a single FetchContent base dir so
+# interactive projects share one LVGL checkout.
 #
 # Usage: from repo root, with cmake + pkg-config + libsdl2-dev:
 #   ./scripts/scaffold-smoke.sh
@@ -31,7 +32,7 @@ run_create() {
     local name="$1"
     shift
     local dir="$TMP/$name"
-    mkdir "$dir"
+    mkdir -p "$dir"
     local abs
     abs="$(cd "$dir" && pwd)"
     local args=()
@@ -57,6 +58,48 @@ run_host() {
         exit 1
     fi
     printf 'scaffold-smoke: host-build ok %s\n' "$name"
+}
+
+run_cold_onboarding() {
+    local clone="$TMP/cold-onboarding"
+    git clone --quiet "$ROOT" "$clone"
+
+    local clone_blusys="$clone/blusys"
+    if [[ ! -x "$clone_blusys" ]] && [[ -f "$clone_blusys" ]]; then
+        chmod +x "$clone_blusys" || true
+    fi
+
+    local default_dir="$clone/default"
+    mkdir -p "$default_dir"
+    (cd "$default_dir" && "$clone_blusys" create)
+    (cd "$default_dir" && "$clone_blusys" host-build)
+    if [[ ! -f "$default_dir/build-host/generated/blusys_app_spec.h" ]]; then
+        printf 'scaffold-smoke: missing generated app spec in cold default walkthrough\n' >&2
+        exit 1
+    fi
+    printf 'scaffold-smoke: cold default host-build ok\n'
+
+    local headless_dir="$clone/headless"
+    mkdir -p "$headless_dir"
+    (cd "$headless_dir" && "$clone_blusys" create --interface headless my_sensor)
+    (cd "$headless_dir/my_sensor" && "$clone_blusys" host-build)
+    if [[ ! -f "$headless_dir/my_sensor/build-host/generated/blusys_app_spec.h" ]]; then
+        printf 'scaffold-smoke: missing generated app spec in cold headless walkthrough\n' >&2
+        exit 1
+    fi
+    printf 'scaffold-smoke: cold headless host-build ok\n'
+
+    local interactive_dir="$clone/interactive"
+    mkdir -p "$interactive_dir"
+    (cd "$interactive_dir" && "$clone_blusys" create --interface interactive my_product)
+    (cd "$interactive_dir/my_product" && "$clone_blusys" host-build)
+    if [[ ! -f "$interactive_dir/my_product/build-host/generated/blusys_app_spec.h" ]]; then
+        printf 'scaffold-smoke: missing generated app spec in cold interactive walkthrough\n' >&2
+        exit 1
+    fi
+    printf 'scaffold-smoke: cold interactive host-build ok\n'
+
+    printf 'scaffold-smoke: cold-onboarding ok\n'
 }
 
 # Tests scripts/scaffold/new-capability.sh. Scaffolded host.cpp and device.cpp
@@ -149,6 +192,8 @@ assert_layout hp 10 3 0
 for name in ii is ib id ht hl hu hp; do
     run_host "$name"
 done
+
+run_cold_onboarding
 
 run_capability_scaffold cap_smoke_probe
 

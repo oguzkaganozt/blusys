@@ -23,7 +23,7 @@ my_sensor/
 ## Run on host
 
 ```bash
-blusys host-build my_sensor
+blusys host-build
 ```
 
 The app runs in the terminal. No hardware needed.
@@ -31,15 +31,14 @@ The app runs in the terminal. No hardware needed.
 ## Build for a target
 
 ```bash
-blusys build my_sensor esp32
-blusys flash my_sensor /dev/ttyUSB0 esp32
-blusys monitor my_sensor /dev/ttyUSB0 esp32
+blusys build esp32
+blusys flash /dev/ttyUSB0 esp32
+blusys monitor /dev/ttyUSB0 esp32
 ```
 
 ## When to expand
 
 - Add `capabilities` in the manifest when the device needs connectivity, telemetry, OTA, storage, or diagnostics.
-- Add `flows` when headless behavior has distinct operating phases.
 - Add `profile` when you want a specific host or device target setup.
 - Split code out of `app_main.cpp` only when the file stops being readable.
 

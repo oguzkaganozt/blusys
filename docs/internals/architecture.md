@@ -151,8 +151,8 @@ Normal product code only touches this layer.
 see [Widget kit](#widget-kit) below.
 
 **Platform profiles** (`include/blusys/framework/platform/profiles/`):
-- `st7735.hpp`, `st7789.hpp` — SPI TFT profiles (handheld)
-- `ili9341.hpp`, `ili9488.hpp` — SPI TFT profiles (surface / dashboard)
+- `st7735.hpp`, `st7789.hpp` — SPI TFT profiles (interactive compact)
+- `ili9341.hpp`, `ili9488.hpp` — SPI TFT profiles (interactive dashboard)
 - `ssd1306.hpp` — I2C mono OLED profile
 - `qemu_rgb.hpp` — virtual RGB framebuffer for QEMU runs
 

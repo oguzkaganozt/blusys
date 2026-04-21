@@ -24,7 +24,7 @@ my_product/
 ## Run on host
 
 ```bash
-blusys host-build my_product
+blusys host-build
 ```
 
 The app launches in a host SDL2 window with the default theme. Arrow keys move focus between buttons; Enter activates. No hardware needed.
@@ -32,13 +32,12 @@ The app launches in a host SDL2 window with the default theme. Arrow keys move f
 ## When to expand
 
 - Add `capabilities` in the manifest when the app needs connectivity, storage, telemetry, OTA, or other runtime services.
-- Add `flows` when the product has distinct UI journeys.
 - Add `profile` when you need a specific host or device target setup.
 - Split code out of `app_main.cpp` only when the file stops being readable.
 
 ## Next steps
 
-- [Product shape](product-shape.md) — choose interface, capabilities, flows, profiles, and policies
+- [Product shape](product-shape.md) — choose interface, capabilities, profiles, and policies
 - [Reducer Model](../app/reducer-model.md) — understand state, actions, and `update()`
 - [Views & Widgets](../app/views-and-widgets.md) — build screens with stock widgets
 - [Profiles](../app/profiles.md) — target a real device with `BLUSYS_APP` and a device profile

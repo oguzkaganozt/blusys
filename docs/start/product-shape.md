@@ -1,6 +1,6 @@
-# Product shape (interface, capabilities, profile, policies)
+# Product shape (schema, interface, capabilities, profile, policies)
 
-New Blusys products are described by `schema`, `interface`, `capabilities`, `profile`, and `policies`, not by named starter bundles. The scaffold and checked-in `blusys.project.yml` use the same vocabulary.
+Start from `blusys.project.yml`: new Blusys products are described by `schema`, `interface`, `capabilities`, `profile`, and `policies`, not by named starter bundles. The scaffold and checked-in `blusys.project.yml` use the same vocabulary.
 
 ## Grammar
 
@@ -14,7 +14,7 @@ blusys create --list
 - **`profile`** (single): built-in device/profile factory name; `null` uses the interface default.
 - **`--policy`** (multi): cross-cutting behavior that is **not** a runtime capability - e.g. `low_power`.
 
-Defaults: **`interactive`**, empty capabilities, `null` profile, empty policies. Interactive onboarding still runs `blusys create` with no arguments and shows the equivalent canonical command before generation.
+Defaults: **`interactive`**, empty capabilities, `null` profile, empty policies. `blusys create` with no flags uses that default shape.
 
 ## Interfaces
 
@@ -23,7 +23,7 @@ Defaults: **`interactive`**, empty capabilities, `null` profile, empty policies.
 | **interactive** | Local UI enabled, encoder-friendly | Small displays, operator panels, settings |
 | **headless** | No local UI by default; headless entry | Telemetry, gateways, invisible-when-healthy devices |
 
-All use the same **`core/`** · **`ui/`** (if interactive) · **`platform/`** layout and **`update(ctx, state, action)`**.
+Interactive and headless starters stay reducer-first through `update(ctx, state, action)`; interactive products add `main/ui/` only when needed.
 
 ## Reference examples in this repo
 
@@ -40,7 +40,7 @@ For historical minimal connectivity demos (kept for regression), see `examples/v
 
 ## Capabilities and policies
 
-- **Capabilities** are composed in **`platform/`**; the reducer receives work via **actions**; capability events are handled in **`platform/on_event`** (see [Capability composition](../app/capability-composition.md)).
+- **Capabilities** are composed in the product code behind the manifest; the reducer receives work via **actions**; capability events are handled in the product event path (see [Capability composition](../app/capability-composition.md)).
 - **Profiles** are named C++ factories selected by the manifest's `profile` field. Leave it `null` for the interface default.
 - **Policies** adjust defaults and integration overlays (e.g. power-related `sdkconfig` fragments) without adding a new capability kind.
 
@@ -58,7 +58,22 @@ update `EXTRA_COMPONENT_DIRS` or vendor the platform components - see
 ## Rules
 
 - No raw LVGL in normal product screens - use `blusys::` UI helpers, stock widgets, and the custom widget contract.
-- Keep **`platform/`** thin: profiles, capability list, `on_event`, bridges; heavy logic stays in **`core/`**.
+- Keep the event bridge thin: profiles, capability list, `on_event`, bridges; heavy logic stays in application code.
+
+## Advanced
+
+### Override in code
+
+The generated spec lives in `build/generated/blusys_app_spec.h`. If you need a one-off shape change, copy it or hand-write your own `AppSpec` in `app_main.cpp` and pass it to `blusys::run`. The manifest validator still runs, so the repo stays schema-driven.
+
+```cpp
+#include "blusys_app_spec.h"
+
+extern "C" void app_main() {
+    auto spec = blusys::generated::kAppSpec;
+    blusys::run(spec);
+}
+```
 
 ## Next pages
 
