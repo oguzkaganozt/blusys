@@ -37,13 +37,14 @@ HELP
 }
 
 blusys_help_create() {
-    printf 'Usage: blusys create [--interface <interactive|headless>] [--with <cap1,cap2,...>] [--policy <policy1,...>] [--list] [path]\n'
+    printf 'Usage: blusys create [--interface <interactive|headless>] [--profile <name>] [--with <cap1,cap2,...>] [--policy <policy1,...>] [--list] [path]\n'
     printf '\nScaffold a new blusys product project from the explicit product model:\n'
     printf 'interface + capabilities + profile + policies.\n'
     printf '\nOptions:\n'
     printf '  --interface <type>  product interface (default: interactive)\n'
     printf '                       interactive — local UI enabled\n'
     printf '                       headless    — no local UI\n'
+    printf '  --profile <name>    built-in profile from --list (default: null)\n'
     printf '  --with <caps>       comma-separated capabilities\n'
     printf '                       connectivity, bluetooth, usb, telemetry, ota, lan_control, storage, diagnostics\n'
     printf '  --policy <items>    comma-separated non-capability policy overlays\n'

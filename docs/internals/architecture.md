@@ -226,7 +226,7 @@ Two consumption models, deliberately separated:
 - **Bundled examples** in `examples/` are discovered via `EXTRA_COMPONENT_DIRS`
   (typically `${BLUSYS_REPO_ROOT}/components`) in each example's top-level
   `CMakeLists.txt`.
-- **Scaffolded product apps** from `blusys create [--interface …] [--with …] [--policy …]`
+- **Scaffolded product apps** from `blusys create [--interface …] [--profile …] [--with …] [--policy …]`
   use the same mechanism: the generated top-level `CMakeLists.txt` embeds
   `EXTRA_COMPONENT_DIRS` pointing at the `components/` tree from the checkout
   used at generation time. Product code stays under `main/`; interactive apps

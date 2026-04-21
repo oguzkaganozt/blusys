@@ -5,7 +5,7 @@ Start from `blusys.project.yml`: new Blusys products are described by `schema`, 
 ## Grammar
 
 ```bash
-blusys create [--interface interactive|headless] [--with cap1,cap2,...] [--policy policy1,...] [path]
+blusys create [--interface interactive|headless] [--profile profile] [--with cap1,cap2,...] [--policy policy1,...] [path]
 blusys create --list
 ```
 

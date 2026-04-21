@@ -2,6 +2,7 @@
 
 cmd_create() {
     local interface="interactive"
+    local profile=""
     local with_caps=""
     local policies=""
     local list_only="0"
@@ -25,6 +26,15 @@ cmd_create() {
                 ;;
             --with=*)
                 with_caps="${1#--with=}"
+                shift
+                ;;
+            --profile)
+                [[ $# -ge 2 ]] || { printf 'error: --profile requires an argument\n' >&2; exit 1; }
+                profile="$2"
+                shift 2
+                ;;
+            --profile=*)
+                profile="${1#--profile=}"
                 shift
                 ;;
             --policy)
@@ -75,7 +85,7 @@ cmd_create() {
         target_arg="${positional[0]}"
     fi
 
-    if [[ $# -eq 0 && -t 0 && -z "$with_caps" && -z "$policies" && ${#positional[@]} -eq 0 ]]; then
+    if [[ $# -eq 0 && -t 0 && -z "$profile" && -z "$with_caps" && -z "$policies" && ${#positional[@]} -eq 0 ]]; then
         blusys_prompt_create interface with_caps policies target_arg
     fi
 
@@ -111,6 +121,7 @@ cmd_create() {
     python3 "$BLUSYS_REPO_ROOT/scripts/lib/blusys/scaffold_generator.py" \
         --repo-root "$BLUSYS_REPO_ROOT" \
         --interface "$interface" \
+        --profile "$profile" \
         --with "$with_caps" \
         --policy "$policies" \
         "$target_dir"

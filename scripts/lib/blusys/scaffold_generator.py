@@ -94,8 +94,7 @@ def _headless_local_ctrl_helper(namespace_name: str, capabilities: list[str]) ->
     for bf in bool_fields:
         args.append(f'state != nullptr && state->{bf} ? "true" : "false"')
     args_joined = ",\n        ".join(args)
-    return f"""namespace {{
-blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, void *user_ctx)
+    return f"""inline blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, void *user_ctx)
 {{
     auto *state = static_cast<{namespace_name}::app_state *>(user_ctx);
     int written = std::snprintf(
@@ -109,7 +108,6 @@ blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, 
     *out_len = static_cast<size_t>(written);
     return BLUSYS_OK;
 }}
-}}  // namespace
 """
 
 
@@ -1457,11 +1455,13 @@ def render_generated_spec_header(
     instances: list[str] = []
     capability_refs: list[str] = []
 
+    # This header is included by multiple translation units, so keep the
+    # callback helpers as inline definitions with shared linkage.
+
     if interface == "headless":
         if "telemetry" in capabilities:
             helper_blocks.append(
                 """
-namespace {
 inline bool deliver_telemetry(const blusys::telemetry_metric *metrics, std::size_t count, void *user_ctx)
 {
     (void)metrics;
@@ -1469,7 +1469,6 @@ inline bool deliver_telemetry(const blusys::telemetry_metric *metrics, std::size
     (void)user_ctx;
     return true;
 }
-}  // namespace
 """
             )
         if "lan_control" in capabilities:
@@ -1477,7 +1476,6 @@ inline bool deliver_telemetry(const blusys::telemetry_metric *metrics, std::size
     elif "lan_control" in capabilities:
         helper_blocks.append(
             """
-namespace {
 inline blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, void *user_ctx)
 {
     auto *state = static_cast<blusys::generated::app_state *>(user_ctx);
@@ -1492,7 +1490,6 @@ inline blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *ou
     *out_len = static_cast<size_t>(written);
     return BLUSYS_OK;
 }
-}  // namespace
 """
         )
 
@@ -1641,10 +1638,16 @@ namespace blusys::generated {{
 
 
 def render_readme(
-    project_name: str, interface: str, capabilities: list[str], policies: list[str]
+    project_name: str,
+    interface: str,
+    capabilities: list[str],
+    policies: list[str],
+    profile: str | None = None,
 ) -> str:
     caps = ", ".join(capabilities) if capabilities else "none"
     pols = ", ".join(policies) if policies else "none"
+    profile_value = "null" if profile is None else profile
+    profile_arg = f" --profile {profile}" if profile else ""
     with_arg = f" --with {caps}" if capabilities else ""
     pol_arg = f" --policy {pols}" if policies else ""
     layout = [
@@ -1659,14 +1662,14 @@ def render_readme(
 Generated with:
 
 ```bash
-blusys create --interface {interface}{with_arg}{pol_arg} .
+blusys create --interface {interface}{profile_arg}{with_arg}{pol_arg} .
 ```
 
 ## Shape
 
 - Interface: `{interface}`
 - Capabilities: `{caps}`
-- Profile: `null`
+- Profile: `{profile_value}`
 - Policies: `{pols}`
 
 ## Layout
@@ -1696,10 +1699,12 @@ def generate_project(
     interface: str,
     capabilities: list[str],
     policies: list[str],
+    profile: str | None = None,
 ) -> None:
+    profile = profile or None
     catalog = load_catalog(repo_root)
     validate_model(catalog, interface, capabilities, policies)
-    manifest_text = render_project_manifest(interface, capabilities, policies)
+    manifest_text = render_project_manifest(interface, capabilities, policies, profile)
     manifest_errors = validate_manifest_text(manifest_text, catalog)
     if manifest_errors:
         for error in manifest_errors:
@@ -1728,7 +1733,10 @@ def generate_project(
         (repo_root / "scripts" / "scaffold" / "sdkconfig.qemu").read_text(),
     )
     write_file(out_dir / "blusys.project.yml", manifest_text)
-    write_file(out_dir / "README.md", render_readme(project_name, interface, capabilities, policies))
+    write_file(
+        out_dir / "README.md",
+        render_readme(project_name, interface, capabilities, policies, profile),
+    )
 
     write_file(out_dir / "main" / "CMakeLists.txt", render_main_cmakelists(build_ui))
     write_file(
@@ -2025,6 +2033,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--interface", default="interactive")
+    parser.add_argument("--profile", default="")
     parser.add_argument("--with", dest="with_caps", default="")
     parser.add_argument("--policy", default="")
     parser.add_argument("--list", action="store_true")
@@ -2068,11 +2077,12 @@ def main() -> int:
     out_dir = Path(args.paths[0]).resolve() if args.paths else Path.cwd()
     capabilities = parse_csv_arg(args.with_caps)
     policies = parse_csv_arg(args.policy)
-    generate_project(repo_root, out_dir, args.interface, capabilities, policies)
+    profile = args.profile or None
+    generate_project(repo_root, out_dir, args.interface, capabilities, policies, profile)
     print(f"Created blusys project: {out_dir}")
     print(f"Interface: {args.interface}")
     print(f"Capabilities: {', '.join(capabilities) if capabilities else 'none'}")
-    print("Profile: null")
+    print(f"Profile: {profile if profile is not None else 'null'}")
     print(f"Policies: {', '.join(policies) if policies else 'none'}")
     return 0
 

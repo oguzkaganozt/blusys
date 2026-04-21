@@ -99,6 +99,20 @@ run_cold_onboarding() {
     fi
     printf 'scaffold-smoke: cold interactive host-build ok\n'
 
+    local profiled_dir="$clone/profiled"
+    mkdir -p "$profiled_dir"
+    (cd "$profiled_dir" && "$clone_blusys" create --interface interactive --profile st7735_160x128 my_profiled)
+    if ! grep -q '^profile: st7735_160x128$' "$profiled_dir/my_profiled/blusys.project.yml"; then
+        printf 'scaffold-smoke: missing selected profile in cold profiled walkthrough\n' >&2
+        exit 1
+    fi
+    (cd "$profiled_dir/my_profiled" && "$clone_blusys" host-build)
+    if [[ ! -f "$profiled_dir/my_profiled/build-host/generated/blusys_app_spec.h" ]]; then
+        printf 'scaffold-smoke: missing generated app spec in cold profiled walkthrough\n' >&2
+        exit 1
+    fi
+    printf 'scaffold-smoke: cold profiled host-build ok\n'
+
     printf 'scaffold-smoke: cold-onboarding ok\n'
 }
 
