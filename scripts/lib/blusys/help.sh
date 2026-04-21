@@ -8,6 +8,7 @@ All commands default to the current directory when no project is specified.
 
 Commands:
   create [path]    Scaffold a new blusys project (default: cwd)
+  gen-spec         Generate build/generated/blusys_app_spec.h from a manifest
   build            Build a project
   flash            Flash a project to a device
   monitor          Open serial monitor
@@ -55,6 +56,12 @@ blusys_help_create() {
     printf 'main/idf_component.yml for registry deps (e.g. LVGL).\n'
     printf '\nEnvironment:\n'
     printf '  BLUSYS_SCAFFOLD_PLATFORM_VERSION   git ref for blusys_* deps (default: current branch)\n'
+}
+
+blusys_help_gen_spec() {
+    printf 'Usage: blusys gen-spec [--manifest <blusys.project.yml>] [--output <build/generated/blusys_app_spec.h>]\n'
+    printf '\nGenerate the manifest-derived app spec header used by app_main.cpp.\n'
+    printf 'Defaults to ./blusys.project.yml and ./build/generated/blusys_app_spec.h when omitted.\n'
 }
 
 blusys_help_build() {

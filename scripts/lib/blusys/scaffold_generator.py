@@ -10,6 +10,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from blusys.manifest_validator import validate_manifest_text  # noqa: E402
 
@@ -22,7 +24,8 @@ def load_catalog(repo_root: Path) -> dict:
 def parse_csv_arg(value: str) -> list[str]:
     if not value:
         return []
-    return [item.strip() for item in value.split(",") if item.strip()]
+    items = [item.strip() for item in value.split(",") if item.strip()]
+    return list(dict.fromkeys(items))
 
 
 # Headless reducer stubs only track readiness for capabilities the user selected.
@@ -36,6 +39,20 @@ _HEADLESS_READY: dict[str, tuple[str, str]] = {
     "diagnostics": ("diagnostics_ready", "diagnostics_ready"),
     "lan_control": ("lan_control_ready", "lan_control_ready"),
     "usb": ("usb_ready", "usb_ready"),
+}
+
+
+_PROFILE_HEADERS: dict[str, tuple[str, str]] = {
+    "st7735_160x128": ("blusys/framework/platform/profiles/st7735.hpp", "blusys::platform::st7735_160x128()"),
+    "st7789_320x240": ("blusys/framework/platform/profiles/st7789.hpp", "blusys::platform::st7789_320x240()"),
+    "ssd1306_128x64": ("blusys/framework/platform/profiles/ssd1306.hpp", "blusys::platform::ssd1306_128x64()"),
+    "ssd1306_128x32": ("blusys/framework/platform/profiles/ssd1306.hpp", "blusys::platform::ssd1306_128x32()"),
+    "ili9341_320x240": ("blusys/framework/platform/profiles/ili9341.hpp", "blusys::platform::ili9341_320x240()"),
+    "ili9488_480x320": ("blusys/framework/platform/profiles/ili9488.hpp", "blusys::platform::ili9488_480x320()"),
+    "qemu_rgb_dashboard_320x240": (
+        "blusys/framework/platform/profiles/qemu_rgb.hpp",
+        "blusys::platform::qemu_rgb_dashboard_320x240()",
+    ),
 }
 
 
@@ -133,6 +150,7 @@ def render_top_cmakelists(project_name: str, build_ui: bool, repo_root: Path) ->
     build_ui_str = "ON" if build_ui else "OFF"
     return f"""cmake_minimum_required(VERSION 3.16)
 
+set(BLUSYS_REPO_ROOT "{repo_root}")
 set(BLUSYS_BUILD_UI {build_ui_str} CACHE BOOL \"Build blusys/framework/ui\")
 set(EXTRA_COMPONENT_DIRS \"{repo_root / "components"}\")
 
@@ -389,7 +407,7 @@ std::optional<action> on_event(blusys::event event, app_state &state)
     return action{{.tag = action_tag::capability_event, .cap_event = ce}};
 }}
 
-void update(blusys::app_ctx &ctx, app_state &state, const action &event)
+inline void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {{
     (void)ctx;
     if (event.tag != action_tag::capability_event) {{
@@ -453,7 +471,7 @@ def render_ui_logic_cpp(namespace_name: str) -> str:
 
 namespace {namespace_name} {{
 
-void update(blusys::app_ctx &ctx, app_state &state, const action &event)
+inline void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {{
     (void)ctx;
     switch (event.tag) {{
@@ -472,7 +490,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
     }}
 }}
 
-std::optional<action> on_event(blusys::event event, app_state &state)
+inline std::optional<action> on_event(blusys::event event, app_state &state)
 {{
     (void)state;
     if (event.source != blusys::event_source::intent) {{
@@ -537,7 +555,7 @@ void on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state)
 """
 
 
-def render_host_cmakelists(project_name: str, build_ui: bool) -> str:
+def render_host_cmakelists(project_name: str, build_ui: bool, repo_root: Path) -> str:
     if build_ui:
         return f"""cmake_minimum_required(VERSION 3.16)
 project({project_name}_host LANGUAGES C CXX)
@@ -832,6 +850,18 @@ absolute path). Adjust it if you move the project, use another checkout, or vend
 """
 
 
+def render_gitignore() -> str:
+    return """build*/
+managed_components/
+dependencies.lock
+sdkconfig
+sdkconfig.*
+!sdkconfig.defaults
+!sdkconfig.defaults.*
+!sdkconfig.qemu
+"""
+
+
 def write_file(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content)
@@ -844,6 +874,8 @@ def generate_project(
     capabilities: list[str],
     policies: list[str],
 ) -> None:
+    capabilities = list(dict.fromkeys(capabilities))
+    policies = list(dict.fromkeys(policies))
     catalog = load_catalog(repo_root)
     validate_model(catalog, interface, capabilities, policies)
     manifest_text = render_project_manifest(interface, capabilities, policies)
@@ -938,7 +970,7 @@ def render_ui_logic_cpp(namespace_name: str, include_header: bool = True) -> str
 
 namespace {namespace_name} {{
 
-void update(blusys::app_ctx &ctx, app_state &state, const action &event)
+inline void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {{
     (void)ctx;
     switch (event.tag) {{
@@ -957,7 +989,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
     }}
 }}
 
-std::optional<action> on_event(blusys::event event, app_state &state)
+inline std::optional<action> on_event(blusys::event event, app_state &state)
 {{
     (void)state;
     if (event.source != blusys::event_source::intent) {{
@@ -1018,7 +1050,7 @@ def render_headless_logic_cpp(
 
 namespace {namespace_name} {{
 
-std::optional<action> on_event(blusys::event event, app_state &state)
+inline std::optional<action> on_event(blusys::event event, app_state &state)
 {{
     (void)state;
     if (event.source != blusys::event_source::integration) {{
@@ -1033,7 +1065,7 @@ std::optional<action> on_event(blusys::event event, app_state &state)
     return action{{.tag = action_tag::capability_event, .cap_event = ce}};
 }}
 
-void update(blusys::app_ctx &ctx, app_state &state, const action &event)
+inline void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {{
     (void)ctx;
     if (event.tag != action_tag::capability_event) {{
@@ -1044,7 +1076,7 @@ void update(blusys::app_ctx &ctx, app_state &state, const action &event)
 {switch_body}    }}
 }}
 
-void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state, std::uint32_t now_ms)
+inline void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state, std::uint32_t now_ms)
 {{
     (void)ctx;
     (void)fx;
@@ -1234,27 +1266,40 @@ const blusys::app_spec<app_state, action> spec{{
 
 
 def render_main_cmakelists(build_ui: bool) -> str:
-    if build_ui:
-        return """include("${CMAKE_CURRENT_LIST_DIR}/ui/CMakeLists.txt")
+    ui_include = 'include("${CMAKE_CURRENT_LIST_DIR}/ui/CMakeLists.txt")\n\n' if build_ui else ''
+    ui_sources = '        ${BLUSYS_PRODUCT_UI_SRCS}\n' if build_ui else ''
+    return f"""set(BLUSYS_GENERATED_SPEC_DIR "${{CMAKE_BINARY_DIR}}/generated")
+set(BLUSYS_GENERATED_SPEC "${{BLUSYS_GENERATED_SPEC_DIR}}/blusys_app_spec.h")
 
-idf_component_register(
+add_custom_command(
+    OUTPUT "${{BLUSYS_GENERATED_SPEC}}"
+    COMMAND "${{CMAKE_COMMAND}}" -E make_directory "${{BLUSYS_GENERATED_SPEC_DIR}}"
+    COMMAND "${{BLUSYS_REPO_ROOT}}/blusys" gen-spec
+        --manifest "${{CMAKE_CURRENT_LIST_DIR}}/../blusys.project.yml"
+        --output "${{BLUSYS_GENERATED_SPEC}}"
+    DEPENDS
+        "${{CMAKE_CURRENT_LIST_DIR}}/../blusys.project.yml"
+        "${{BLUSYS_REPO_ROOT}}/blusys"
+        "${{BLUSYS_REPO_ROOT}}/scripts/lib/blusys/scaffold_generator.py"
+        "${{BLUSYS_REPO_ROOT}}/scripts/lib/blusys/manifest_validator.py"
+        "${{BLUSYS_REPO_ROOT}}/scripts/scaffold/catalog.yml"
+    VERBATIM
+)
+add_custom_target(blusys_gen_spec DEPENDS "${{BLUSYS_GENERATED_SPEC}}")
+
+{ui_include}idf_component_register(
     SRCS
         "app_main.cpp"
-        ${BLUSYS_PRODUCT_UI_SRCS}
-    INCLUDE_DIRS "."
+{ui_sources}    INCLUDE_DIRS "."
     REQUIRES blusys
 )
-"""
-    return """idf_component_register(
-    SRCS
-        "app_main.cpp"
-    INCLUDE_DIRS "."
-    REQUIRES blusys
-)
+
+target_include_directories(${{COMPONENT_LIB}} PRIVATE "${{CMAKE_BINARY_DIR}}")
+add_dependencies(${{COMPONENT_LIB}} blusys_gen_spec)
 """
 
 
-def render_host_cmakelists(project_name: str, build_ui: bool) -> str:
+def render_host_cmakelists(project_name: str, build_ui: bool, repo_root: Path) -> str:
     if build_ui:
         return f"""cmake_minimum_required(VERSION 3.16)
 project({project_name}_host LANGUAGES C CXX)
@@ -1264,26 +1309,41 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(NOT DEFINED ENV{{BLUSYS_PATH}} OR "$ENV{{BLUSYS_PATH}}" STREQUAL "")
-    message(FATAL_ERROR
-        "BLUSYS_PATH is not set.\n"
-        "Run via 'blusys host-build' (it exports BLUSYS_PATH automatically), or:\n"
-        "  export BLUSYS_PATH=/path/to/blusys && cmake -S host -B build-host")
-endif()
+set(BLUSYS_REPO_ROOT "{repo_root}")
 
-include("$ENV{{BLUSYS_PATH}}/cmake/blusys_host_bridge.cmake")
+include("${{BLUSYS_REPO_ROOT}}/cmake/blusys_host_bridge.cmake")
 blusys_host_bridge_setup_lvgl()
-include("${{CMAKE_CURRENT_LIST_DIR}}/../main/ui/CMakeLists.txt")
 blusys_host_bridge_add_library(interactive)
 blusys_host_bridge_resolve_build_version(BLUSYS_GIT_VERSION)
+
+set(BLUSYS_GENERATED_SPEC_DIR "${{CMAKE_BINARY_DIR}}/generated")
+set(BLUSYS_GENERATED_SPEC "${{BLUSYS_GENERATED_SPEC_DIR}}/blusys_app_spec.h")
+
+add_custom_command(
+    OUTPUT "${{BLUSYS_GENERATED_SPEC}}"
+    COMMAND "${{CMAKE_COMMAND}}" -E make_directory "${{BLUSYS_GENERATED_SPEC_DIR}}"
+    COMMAND "${{BLUSYS_REPO_ROOT}}/blusys" gen-spec
+        --manifest "${{CMAKE_CURRENT_LIST_DIR}}/../blusys.project.yml"
+        --output "${{BLUSYS_GENERATED_SPEC}}"
+    DEPENDS
+        "${{CMAKE_CURRENT_LIST_DIR}}/../blusys.project.yml"
+        "${{BLUSYS_REPO_ROOT}}/blusys"
+        "${{BLUSYS_REPO_ROOT}}/scripts/lib/blusys/scaffold_generator.py"
+        "${{BLUSYS_REPO_ROOT}}/scripts/lib/blusys/manifest_validator.py"
+        "${{BLUSYS_REPO_ROOT}}/scripts/scaffold/catalog.yml"
+    VERBATIM
+)
+add_custom_target(blusys_gen_spec DEPENDS "${{BLUSYS_GENERATED_SPEC}}")
+
+include("${{CMAKE_CURRENT_LIST_DIR}}/../main/ui/CMakeLists.txt")
 
 add_executable({project_name}_host
     "${{CMAKE_CURRENT_LIST_DIR}}/../main/app_main.cpp"
     ${{BLUSYS_PRODUCT_UI_SRCS}}
-    "$ENV{{BLUSYS_PATH}}/scripts/host/src/app_host_platform.cpp"
+    "${{BLUSYS_REPO_ROOT}}/scripts/host/src/app_host_platform.cpp"
 )
 target_include_directories({project_name}_host PRIVATE
-    "${{CMAKE_CURRENT_LIST_DIR}}/../main"
+    "${{CMAKE_BINARY_DIR}}"
 )
 target_link_libraries({project_name}_host PRIVATE
     blusys_framework_host PkgConfig::SDL2 m
@@ -1291,6 +1351,7 @@ target_link_libraries({project_name}_host PRIVATE
 blusys_host_bridge_apply_exe_compile_options({project_name}_host)
 target_compile_definitions({project_name}_host PRIVATE
     BLUSYS_APP_BUILD_VERSION="${{BLUSYS_GIT_VERSION}}")
+add_dependencies({project_name}_host blusys_gen_spec)
 """
     return f"""cmake_minimum_required(VERSION 3.16)
 project({project_name}_host LANGUAGES C CXX)
@@ -1300,29 +1361,44 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(NOT DEFINED ENV{{BLUSYS_PATH}} OR "$ENV{{BLUSYS_PATH}}" STREQUAL "")
-    message(FATAL_ERROR
-        "BLUSYS_PATH is not set.\n"
-        "Run via 'blusys host-build' (it exports BLUSYS_PATH automatically), or:\n"
-        "  export BLUSYS_PATH=/path/to/blusys && cmake -S host -B build-host")
-endif()
+set(BLUSYS_REPO_ROOT "{repo_root}")
 
-include("$ENV{{BLUSYS_PATH}}/cmake/blusys_host_bridge.cmake")
+include("${{BLUSYS_REPO_ROOT}}/cmake/blusys_host_bridge.cmake")
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 blusys_host_bridge_add_library(headless)
 
+set(BLUSYS_GENERATED_SPEC_DIR "${{CMAKE_BINARY_DIR}}/generated")
+set(BLUSYS_GENERATED_SPEC "${{BLUSYS_GENERATED_SPEC_DIR}}/blusys_app_spec.h")
+
+add_custom_command(
+    OUTPUT "${{BLUSYS_GENERATED_SPEC}}"
+    COMMAND "${{CMAKE_COMMAND}}" -E make_directory "${{BLUSYS_GENERATED_SPEC_DIR}}"
+    COMMAND "${{BLUSYS_REPO_ROOT}}/blusys" gen-spec
+        --manifest "${{CMAKE_CURRENT_LIST_DIR}}/../blusys.project.yml"
+        --output "${{BLUSYS_GENERATED_SPEC}}"
+    DEPENDS
+        "${{CMAKE_CURRENT_LIST_DIR}}/../blusys.project.yml"
+        "${{BLUSYS_REPO_ROOT}}/blusys"
+        "${{BLUSYS_REPO_ROOT}}/scripts/lib/blusys/scaffold_generator.py"
+        "${{BLUSYS_REPO_ROOT}}/scripts/lib/blusys/manifest_validator.py"
+        "${{BLUSYS_REPO_ROOT}}/scripts/scaffold/catalog.yml"
+    VERBATIM
+)
+add_custom_target(blusys_gen_spec DEPENDS "${{BLUSYS_GENERATED_SPEC}}")
+
 add_executable({project_name}_host
     "${{CMAKE_CURRENT_LIST_DIR}}/../main/app_main.cpp"
-    "$ENV{{BLUSYS_PATH}}/scripts/host/src/app_headless_platform.cpp"
+    "${{BLUSYS_REPO_ROOT}}/scripts/host/src/app_headless_platform.cpp"
 )
 target_include_directories({project_name}_host PRIVATE
-    "${{CMAKE_CURRENT_LIST_DIR}}/../main"
+    "${{CMAKE_BINARY_DIR}}"
 )
 target_link_libraries({project_name}_host PRIVATE
     blusys_framework_core_host PkgConfig::SDL2 m
 )
 blusys_host_bridge_apply_exe_compile_options({project_name}_host)
+add_dependencies({project_name}_host blusys_gen_spec)
 """
 
 
@@ -1332,54 +1408,248 @@ def render_app_main_cpp(
     interface: str,
     capabilities: list[str],
 ) -> str:
-    if interface == "headless":
-        prelude = (
-            '#include "blusys/framework/app/app.hpp"\n'
-            '#include "blusys/framework/capabilities/event.hpp"\n'
-            '#include "blusys/framework/events/event.hpp"\n'
-            '#include "blusys/hal/log.h"\n\n'
-            '#include <cstddef>\n'
-            '#include <cstdint>\n'
-            '#include <cstdio>\n\n'
-        )
-        logic = render_headless_logic_cpp(namespace_name, capabilities, include_header=False)
-        integration = render_integration_cpp(
-            namespace_name,
-            project_title,
-            interface,
-            capabilities,
-            include_logic_header=False,
-            include_ui_header=False,
-            emit_entry=False,
-        )
-        return f"{prelude}{render_headless_types(namespace_name, capabilities)}\n{logic}\n{integration}\n{render_app_entry(namespace_name, interface)}"
+    return """#include "generated/blusys_app_spec.h"
 
-    prelude = (
-        '#include "blusys/framework/app/app.hpp"\n'
-        '#include "blusys/framework/events/event.hpp"\n\n'
-        '#include <cstdint>\n\n'
-    )
-    logic = render_ui_logic_cpp(namespace_name, include_header=False)
-    integration = render_integration_cpp(
-        namespace_name,
-        project_title,
-        interface,
-        capabilities,
-        include_logic_header=False,
-        include_ui_header=False,
-        emit_entry=False,
-    )
-    ui_decl = f"namespace {namespace_name}::ui {{\nvoid on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state);\n}}\n\n"
-    return f"{prelude}{render_ui_types(namespace_name)}\n{logic}\n{ui_decl}{integration}\n{render_app_entry(namespace_name, interface)}"
+extern "C" void app_main(void)
+{
+    // --- product-specific init (NVS, logging, hardware) ---
+    blusys::run(blusys::generated::kAppSpec);
+}
+
+#if !BLUSYS_DEVICE_BUILD
+int main(void)
+{
+    app_main();
+    return 0;
+}
+#endif
+"""
 
 
 def render_app_ui_cpp(namespace_name: str, title: str) -> str:
-    prelude = (
-        '#include "blusys/framework/app/app.hpp"\n'
-        '#include "blusys/framework/events/event.hpp"\n\n'
-        '#include <cstdint>\n\n'
+    prelude = '#include "generated/blusys_app_spec.h"\n\n'
+    return f"{prelude}{render_ui_cpp('blusys::generated', title, include_header=False)}"
+
+
+def render_generated_spec_header(
+    project_title: str,
+    interface: str,
+    capabilities: list[str],
+    policies: list[str],
+    profile: str | None = None,
+) -> str:
+    capabilities = list(dict.fromkeys(capabilities))
+    policies = list(dict.fromkeys(policies))
+    includes = [capability_include(cap) for cap in capabilities]
+    includes.extend(
+        [
+            '#include "blusys/framework/app/app.hpp"',
+            '#include "blusys/framework/capabilities/event.hpp"',
+            '#include "blusys/framework/events/event.hpp"',
+            '#include "blusys/framework/ui/binding/bindings.hpp"',
+            "#include <cstddef>",
+            "#include <cstdio>",
+            "#include <cstdint>",
+        ]
     )
-    return f"{prelude}{render_ui_types(namespace_name)}\n{render_ui_cpp(namespace_name, title, include_header=False)}"
+    profile_include_line = ""
+    profile_expr = ""
+    if profile is not None:
+        profile_include, profile_expr = _PROFILE_HEADERS[profile]
+        includes.append(f'#include "{profile_include}"')
+
+    if interface == "headless":
+        state_block = render_headless_types("blusys::generated", capabilities)
+        logic_block = render_headless_logic_cpp("blusys::generated", capabilities, include_header=False)
+    else:
+        state_block = render_ui_types("blusys::generated")
+        logic_block = render_ui_logic_cpp("blusys::generated", include_header=False)
+
+    helper_blocks: list[str] = []
+    instances: list[str] = []
+    capability_refs: list[str] = []
+
+    if interface == "headless":
+        if "telemetry" in capabilities:
+            helper_blocks.append(
+                """
+namespace {
+inline bool deliver_telemetry(const blusys::telemetry_metric *metrics, std::size_t count, void *user_ctx)
+{
+    (void)metrics;
+    (void)count;
+    (void)user_ctx;
+    return true;
+}
+}  // namespace
+"""
+            )
+        if "lan_control" in capabilities:
+            helper_blocks.append(_headless_local_ctrl_helper("blusys::generated", capabilities))
+    elif "lan_control" in capabilities:
+        helper_blocks.append(
+            """
+namespace {
+inline blusys_err_t local_ctrl_status(char *json_buf, size_t buf_len, size_t *out_len, void *user_ctx)
+{
+    auto *state = static_cast<blusys::generated::app_state *>(user_ctx);
+    int written = std::snprintf(
+        json_buf,
+        buf_len,
+        "{\\\"counter\\\":%%ld}",
+        static_cast<long>(state != nullptr ? state->counter : 0));
+    if (written < 0 || static_cast<size_t>(written) >= buf_len) {
+        return BLUSYS_ERR_NO_MEM;
+    }
+    *out_len = static_cast<size_t>(written);
+    return BLUSYS_OK;
+}
+}  // namespace
+"""
+        )
+
+    for cap in capabilities:
+        if cap == "connectivity":
+            instances.append(
+                """inline blusys::connectivity_capability connectivity(blusys::connectivity_config{
+    .wifi_ssid = nullptr,
+    .prov_service_name = \"%s\",
+    .prov_pop = \"123456\",
+});"""
+                % project_title.lower().replace(" ", "-")
+            )
+            capability_refs.append("&connectivity")
+        elif cap == "storage":
+            instances.append(
+                """inline blusys::storage_capability storage(blusys::storage_config{
+    .spiffs_base_path = \"/app\",
+});"""
+            )
+            capability_refs.append("&storage")
+        elif cap == "diagnostics":
+            instances.append(
+                """inline blusys::diagnostics_capability diagnostics(blusys::diagnostics_config{
+    .snapshot_interval_ms = 5000,
+});"""
+            )
+            capability_refs.append("&diagnostics")
+        elif cap == "telemetry":
+            instances.append(
+                """inline blusys::telemetry_capability telemetry(blusys::telemetry_config{
+    .deliver = deliver_telemetry,
+    .flush_threshold = 4,
+    .flush_interval_ms = 1000,
+});"""
+            )
+            capability_refs.append("&telemetry")
+        elif cap == "ota":
+            instances.append(
+                """inline blusys::ota_capability ota(blusys::ota_config{
+    .firmware_url = \"https://example.com/firmware.bin\",
+    .auto_mark_valid = true,
+});"""
+            )
+            capability_refs.append("&ota")
+        elif cap == "bluetooth":
+            instances.append(
+                """inline blusys::bluetooth_capability bluetooth(blusys::bluetooth_config{
+    .device_name = \"%s\",
+    .auto_advertise = true,
+});"""
+                % project_title
+            )
+            capability_refs.append("&bluetooth")
+        elif cap == "lan_control":
+            instances.append(
+                """inline blusys::lan_control_capability lan_control(blusys::lan_control_config{
+    .device_name = \"%s\",
+    .status_cb = local_ctrl_status,
+    .service_name = \"%s\",
+    .instance_name = \"%s\",
+});"""
+                % (
+                    project_title,
+                    project_title.lower().replace(" ", "-"),
+                    project_title,
+                )
+            )
+            capability_refs.append("&lan_control")
+        elif cap == "usb":
+            instances.append(
+                """inline blusys::usb_capability usb(blusys::usb_config{
+    .role = blusys::usb_role::host,
+    .class_mask = static_cast<std::uint8_t>(blusys::usb_class::cdc),
+    .manufacturer = \"Blusys\",
+    .product = \"%s\",
+});"""
+                % project_title
+            )
+            capability_refs.append("&usb")
+
+    if capability_refs:
+        capability_storage = f"inline auto kCapabilities = blusys::make_capability_list({', '.join(capability_refs)});"
+        capabilities_ref = "&kCapabilities"
+    else:
+        capability_storage = ""
+        capabilities_ref = "nullptr"
+
+    policy_flags = ["inline constexpr std::uint32_t kPolicyLowPower = 1u << 0;"]
+    policy_flags.append(
+        f"inline constexpr std::uint32_t kPolicyFlags = {'kPolicyLowPower' if 'low_power' in policies else '0u'};"
+    )
+
+    namespace_sections: list[str] = []
+    if interface != "headless":
+        namespace_sections.append(
+            "namespace ui {\nvoid on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state);\n}\n"
+        )
+        profile_include_line = f"inline const auto kProfile = {profile_expr};" if profile is not None else ""
+        namespace_sections.append(profile_include_line)
+    if helper_blocks:
+        namespace_sections.extend(helper_blocks)
+    namespace_sections.append("\n".join(policy_flags))
+    if instances:
+        namespace_sections.extend(instances)
+    if capability_storage:
+        namespace_sections.append(capability_storage)
+
+    spec_lines: list[str] = [
+        "inline const blusys::app_spec<app_state, action> kAppSpec{",
+        "    .initial_state = {},",
+        "    .update = update,",
+    ]
+    if interface != "headless":
+        spec_lines.append("    .on_init = ui::on_init,")
+        spec_lines.append("    .on_event = on_event,")
+    else:
+        spec_lines.append("    .on_tick = on_tick,")
+        spec_lines.append("    .on_event = on_event,")
+    spec_lines.append("    .tick_period_ms = 100,")
+    spec_lines.append(f"    .capabilities = {capabilities_ref},")
+    if interface != "headless":
+        spec_lines.append(f"    .profile = {('&kProfile' if profile is not None else 'nullptr')},")
+        spec_lines.append(f'    .host_title = "{project_title}",')
+    spec_lines.append("};")
+    namespace_sections.append("\n".join(spec_lines))
+
+    return """#pragma once
+
+{includes}
+
+{state_block}
+{logic_block}
+
+namespace blusys::generated {{
+
+{body}
+
+}}  // namespace blusys::generated
+""".format(
+        includes="\n".join(includes),
+        state_block=state_block,
+        logic_block=logic_block,
+        body="\n\n".join(section for section in namespace_sections if section),
+    )
 
 
 def render_readme(
@@ -1389,7 +1659,10 @@ def render_readme(
     pols = ", ".join(policies) if policies else "none"
     with_arg = f" --with {caps}" if capabilities else ""
     pol_arg = f" --policy {pols}" if policies else ""
-    layout = ["- `main/app_main.cpp` thin entrypoint and product logic"]
+    layout = [
+        "- `main/app_main.cpp` thin entrypoint",
+        "- `build/generated/blusys_app_spec.h` manifest-derived wiring",
+    ]
     if interface != "headless":
         layout.append("- `main/ui/CMakeLists.txt` interactive UI source list fragment")
         layout.append("- `main/ui/app_ui.cpp` small sample component tree")
@@ -1418,6 +1691,8 @@ The generated top-level `CMakeLists.txt` sets `EXTRA_COMPONENT_DIRS` to the
 `components/` directory of the Blusys tree used when `blusys create` ran (embedded
 absolute path). Adjust it if you move the project, use another checkout, or vendor
 `blusys` for a standalone tree.
+
+Builds also regenerate `build/generated/blusys_app_spec.h` from `blusys.project.yml`.
 
 ## Commands
 
@@ -1464,6 +1739,7 @@ def generate_project(
         out_dir / "sdkconfig.qemu",
         (repo_root / "scripts" / "scaffold" / "sdkconfig.qemu").read_text(),
     )
+    write_file(out_dir / ".gitignore", render_gitignore())
     write_file(out_dir / "blusys.project.yml", manifest_text)
     write_file(out_dir / "README.md", render_readme(project_name, interface, capabilities, policies))
 
@@ -1486,8 +1762,44 @@ def generate_project(
 
     write_file(
         out_dir / "host" / "CMakeLists.txt",
-        render_host_cmakelists(project_name, build_ui),
+        render_host_cmakelists(project_name, build_ui, repo_root),
     )
+
+
+def generate_app_spec(repo_root: Path, manifest_path: Path, output_path: Path) -> None:
+    catalog = load_catalog(repo_root)
+
+    try:
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"error: {manifest_path}: {exc}", file=sys.stderr)
+        raise SystemExit(1)
+
+    manifest_errors = validate_manifest_text(manifest_text, catalog)
+    if manifest_errors:
+        for error in manifest_errors:
+            print(f"error: manifest validation failed: {error}", file=sys.stderr)
+        raise SystemExit(1)
+
+    manifest = yaml.safe_load(manifest_text)
+    if not isinstance(manifest, dict):
+        raise SystemExit(f"error: {manifest_path}: manifest must be a mapping")
+
+    interface = manifest.get("interface")
+    capabilities = list(dict.fromkeys(manifest.get("capabilities") or []))
+    policies = list(dict.fromkeys(manifest.get("policies") or []))
+    profile = manifest.get("profile")
+
+    validate_model(catalog, interface, capabilities, policies)
+
+    header_text = render_generated_spec_header(
+        catalog["interfaces"][interface]["title"],
+        interface,
+        capabilities,
+        policies,
+        profile,
+    )
+    write_file(output_path, header_text)
 
 
 def render_integration_cpp(
@@ -1673,45 +1985,22 @@ def render_app_main_cpp(
     interface: str,
     capabilities: list[str],
 ) -> str:
-    if interface == "headless":
-        prelude = (
-            '#include "blusys/framework/app/app.hpp"\n'
-            '#include "blusys/framework/capabilities/event.hpp"\n'
-            '#include "blusys/framework/events/event.hpp"\n'
-            '#include "blusys/hal/log.h"\n\n'
-            '#include <cstddef>\n'
-            '#include <cstdint>\n'
-            '#include <cstdio>\n\n'
-        )
-        logic = render_headless_logic_cpp(namespace_name, capabilities, include_header=False)
-        integration = render_integration_cpp(
-            namespace_name,
-            project_title,
-            interface,
-            capabilities,
-            include_logic_header=False,
-            include_ui_header=False,
-            emit_entry=False,
-        )
-        return f"{prelude}{render_headless_types(namespace_name, capabilities)}\n{logic}\n{integration}\n{render_app_entry(namespace_name, interface)}"
+    return """#include "generated/blusys_app_spec.h"
 
-    prelude = (
-        '#include "blusys/framework/app/app.hpp"\n'
-        '#include "blusys/framework/events/event.hpp"\n\n'
-        '#include <cstdint>\n\n'
-    )
-    logic = render_ui_logic_cpp(namespace_name, include_header=False)
-    integration = render_integration_cpp(
-        namespace_name,
-        project_title,
-        interface,
-        capabilities,
-        include_logic_header=False,
-        include_ui_header=False,
-        emit_entry=False,
-    )
-    ui_decl = f"namespace {namespace_name}::ui {{\nvoid on_init(blusys::app_ctx &ctx, blusys::app_fx &fx, app_state &state);\n}}\n\n"
-    return f"{prelude}{render_ui_types(namespace_name)}\n{logic}\n{ui_decl}{integration}\n{render_app_entry(namespace_name, interface)}"
+extern "C" void app_main(void)
+{
+    // --- product-specific init (NVS, logging, hardware) ---
+    blusys::run(blusys::generated::kAppSpec);
+}
+
+#if !BLUSYS_DEVICE_BUILD
+int main(void)
+{
+    app_main();
+    return 0;
+}
+#endif
+"""
 
 
 def print_list(catalog: dict) -> None:
@@ -1736,7 +2025,10 @@ def main() -> int:
     parser.add_argument("--with", dest="with_caps", default="")
     parser.add_argument("--policy", default="")
     parser.add_argument("--list", action="store_true")
-    parser.add_argument("path", nargs="?")
+    parser.add_argument("--emit-spec", action="store_true")
+    parser.add_argument("--manifest")
+    parser.add_argument("--output")
+    parser.add_argument("paths", nargs="*")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root)
@@ -1745,7 +2037,32 @@ def main() -> int:
         print_list(catalog)
         return 0
 
-    out_dir = Path(args.path).resolve() if args.path else Path.cwd()
+    if args.emit_spec:
+        if len(args.paths) > 2:
+            print("error: gen-spec accepts at most manifest and output paths", file=sys.stderr)
+            return 1
+
+        manifest_path = Path(args.manifest) if args.manifest else None
+        output_path = Path(args.output) if args.output else None
+        if manifest_path is None and len(args.paths) >= 1:
+            manifest_path = Path(args.paths[0])
+        if output_path is None and len(args.paths) >= 2:
+            output_path = Path(args.paths[1])
+
+        if manifest_path is None:
+            manifest_path = Path.cwd() / "blusys.project.yml"
+        if output_path is None:
+            output_path = Path.cwd() / "build" / "generated" / "blusys_app_spec.h"
+
+        generate_app_spec(repo_root, manifest_path, output_path)
+        print(f"Generated app spec: {output_path}")
+        return 0
+
+    if len(args.paths) > 1:
+        print("error: create accepts at most one output path", file=sys.stderr)
+        return 1
+
+    out_dir = Path(args.paths[0]).resolve() if args.paths else Path.cwd()
     capabilities = parse_csv_arg(args.with_caps)
     policies = parse_csv_arg(args.policy)
     generate_project(repo_root, out_dir, args.interface, capabilities, policies)

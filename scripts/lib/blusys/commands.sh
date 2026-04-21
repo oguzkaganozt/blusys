@@ -40,6 +40,74 @@ cmd_update() {
     printf 'Done.\n'
 }
 
+cmd_gen_spec() {
+    local manifest_path=""
+    local output_path=""
+    local positional=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --manifest)
+                [[ $# -ge 2 ]] || { printf 'error: --manifest requires an argument\n' >&2; exit 1; }
+                manifest_path="$2"
+                shift 2
+                ;;
+            --manifest=*)
+                manifest_path="${1#--manifest=}"
+                shift
+                ;;
+            --output)
+                [[ $# -ge 2 ]] || { printf 'error: --output requires an argument\n' >&2; exit 1; }
+                output_path="$2"
+                shift 2
+                ;;
+            --output=*)
+                output_path="${1#--output=}"
+                shift
+                ;;
+            -h|--help)
+                blusys_help_gen_spec
+                exit 0
+                ;;
+            --*)
+                printf 'error: unknown option %s\n' "$1" >&2
+                blusys_help_gen_spec
+                exit 1
+                ;;
+            *)
+                positional+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    if [[ ${#positional[@]} -gt 2 ]]; then
+        blusys_help_gen_spec
+        exit 1
+    fi
+    if [[ ${#positional[@]} -ge 1 && -z "$manifest_path" ]]; then
+        manifest_path="${positional[0]}"
+    fi
+    if [[ ${#positional[@]} -ge 2 && -z "$output_path" ]]; then
+        output_path="${positional[1]}"
+    fi
+
+    if [[ -z "$manifest_path" ]]; then
+        manifest_path="$(pwd)/blusys.project.yml"
+    fi
+    if [[ -z "$output_path" ]]; then
+        output_path="$(pwd)/build/generated/blusys_app_spec.h"
+    fi
+
+    blusys_require_pyyaml
+
+    python3 "$BLUSYS_REPO_ROOT/scripts/lib/blusys/scaffold_generator.py" \
+        --repo-root "$BLUSYS_REPO_ROOT" \
+        --emit-spec \
+        --manifest "$manifest_path" \
+        --output "$output_path"
+}
+
 cmd_config_idf() {
     # Discover all ESP-IDF installations
     local -a idf_paths=() idf_labels=()
@@ -829,6 +897,7 @@ main() {
 
     case "$command" in
         create)         shift; cmd_create "$@" ;;
+        gen-spec)       shift; cmd_gen_spec "$@" ;;
         build)          shift; cmd_build "$@" ;;
         flash)          shift; cmd_flash "$@" ;;
         monitor)        shift; cmd_monitor "$@" ;;

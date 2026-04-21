@@ -8,6 +8,7 @@
 //   - app_ctx                  — dispatch (returns whether queued), capability status, feedback
 //   - app_fx (via ctx.fx())     — typed navigation/connectivity/storage/telemetry/settings/diag/build surface
 //   - entry macros             — BLUSYS_APP, BLUSYS_APP_HEADLESS
+//   - run(spec)                 — select interactive vs headless runtime from the build
 //   - theme presets            — expressive_dark, operational_light, compact_dark, oled
 //   - feedback presets         — expressive, operational
 //
@@ -40,3 +41,17 @@
 #include "blusys/framework/ui/style/presets.hpp"
 #include "blusys/framework/ui/composition/view.hpp"
 #endif
+
+namespace blusys {
+
+template <typename State, typename Action>
+inline void run(const app_spec<State, Action> &spec)
+{
+#ifdef BLUSYS_FRAMEWORK_HAS_UI
+    detail::run_interactive(spec);
+#else
+    detail::run_headless(spec);
+#endif
+}
+
+}  // namespace blusys
