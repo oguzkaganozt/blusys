@@ -277,7 +277,7 @@ jobs:
         shell: bash
         run: |
           chmod +x blusys
-          blusys build-inventory "${{ matrix.target }}" ci_pr
+          ./blusys build-inventory "${{ matrix.target }}" ci_pr
 
       - name: ccache stats
         if: always()

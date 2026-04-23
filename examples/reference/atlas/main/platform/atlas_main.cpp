@@ -128,7 +128,7 @@ blusys::capability_list_storage capabilities{&connectivity, &mqtt, &ota, &atlas}
 // Periodic tick — plumbs connectivity → mqtt and publishes heartbeat /
 // state. Reducer owns all persistent flags (wifi_*/time_synced/
 // broker_connected); this function treats state as read-mostly.
-void on_tick(blusys::app_ctx &ctx, blusys::app_fx & /*fx*/,
+void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx,
               app_state &state, std::uint32_t now_ms)
 {
     const auto *conn = fx.connectivity.status();
