@@ -69,6 +69,9 @@ nav:
       - Capability Composition: app/capability-composition.md
       - Capabilities: app/capabilities.md
       - "Authoring a capability": app/capability-authoring.md
+      - "Adding a capability": app/adding-a-capability.md
+      - "Adding a flow": app/adding-a-flow.md
+      - "Memory and budgets": app/memory-and-budgets.md
       - Product-custom capabilities: app/custom-capabilities.md
       - Profiles: app/profiles.md
       - "Validation & host loop": app/validation-host-loop.md
@@ -146,10 +149,13 @@ nav:
       - internals/index.md
       - Architecture: internals/architecture.md
       - Guidelines: internals/guidelines.md
+      - Threading: internals/threading.md
       - Contributing: internals/contributing.md
       - Target Matrix: internals/target-matrix.md
+      - "Display portability (implementation)": internals/display-portability-impl.md
       - "ADR 0001 (orchestration)": internals/adr/0001-orchestration-in-framework.md
       - "ADR 0002 (HAL component name)": internals/adr/0002-hal-component-name.md
+      - "ADR 0003 (display auto-scaling)": internals/adr/0003-display-auto-scaling.md
       - Testing:
           - Hardware Smoke Tests: internals/testing/hardware-smoke-tests.md
           - Concurrency Tests: internals/testing/concurrency-tests.md

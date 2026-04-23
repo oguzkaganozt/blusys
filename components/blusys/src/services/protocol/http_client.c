@@ -1,5 +1,6 @@
 #include "blusys/services/protocol/http_client.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -70,9 +71,29 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt)
         }
 
         if (h->body_buf_len + incoming + 1 > h->body_buf_cap) {
-            size_t new_cap = h->body_buf_cap == 0 ? BODY_BUF_INITIAL_CAP : h->body_buf_cap * 2;
-            while (new_cap < h->body_buf_len + incoming + 1) {
-                new_cap *= 2;
+            size_t need = h->body_buf_len + incoming + 1;
+            if ((need < h->body_buf_len) || (need < incoming)) {
+                h->cb_error = BLUSYS_ERR_NO_MEM;
+                h->body_truncated = true;
+                break;
+            }
+            size_t new_cap = (h->body_buf_cap == 0) ? BODY_BUF_INITIAL_CAP : h->body_buf_cap;
+            while (new_cap < need) {
+                if (new_cap > SIZE_MAX / 2u) {
+                    new_cap = SIZE_MAX;
+                    break;
+                }
+                size_t doubled = new_cap * 2u;
+                if (doubled < new_cap) {
+                    new_cap = SIZE_MAX;
+                    break;
+                }
+                new_cap = doubled;
+            }
+            if (new_cap < need) {
+                h->cb_error = BLUSYS_ERR_NO_MEM;
+                h->body_truncated = true;
+                break;
             }
             uint8_t *nb = realloc(h->body_buf, new_cap);
             if (nb == NULL) {

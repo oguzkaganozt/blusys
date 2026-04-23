@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     paths:
+      - "README.md"
+      - "AGENTS.md"
       - "components/**"
       - "cmake/**"
       - "examples/**"
@@ -21,6 +23,8 @@ on:
       - ".github/workflows/ci.yml"
   pull_request:
     paths:
+      - "README.md"
+      - "AGENTS.md"
       - "components/**"
       - "cmake/**"
       - "examples/**"
@@ -62,34 +66,9 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Rule 1-4 — Layering lint (no cross-layer includes)
+      - name: Layer invariants (rules 1–7 + refactor guards)
         shell: bash
-        run: bash scripts/lint-layering.sh
-
-      - name: Rule 5 — src/ mirrors include/blusys/
-        run: python3 scripts/check-src-include-mirror.py
-
-      - name: Rule 6 — No blusys_ prefix in file basenames
-        run: python3 scripts/check-no-blusys-prefix.py
-
-      - name: Rule 7 — C++ framework files in namespace blusys
-        run: python3 scripts/check-cpp-namespace.py
-
-      # ── Tier 0: refactor guards ──────────────────────────────────────────
-      - name: Lint — no `ctx.services()` locator
-        run: bash scripts/check-no-service-locator.sh
-
-      - name: Lint — no `#ifdef ESP_PLATFORM` above HAL
-        run: bash scripts/check-no-platform-ifdef-above-hal.sh
-
-      - name: Lint — examples import only <blusys.hpp>
-        run: bash scripts/check-public-api.sh
-
-      - name: Lint — capability files follow header + _host + _device shape
-        run: bash scripts/check-capability-shape.sh
-
-      - name: Lint — services only reached via capabilities/runtime/test
-        run: bash scripts/check-service-access.sh
+        run: bash scripts/layer-invariants.sh
 
   # ── Tier 0: Repo validation ───────────────────────────────────────────────
   validate:

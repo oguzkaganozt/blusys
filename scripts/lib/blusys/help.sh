@@ -147,6 +147,7 @@ blusys_help_build_inventory() {
     printf '\nBuild examples selected from inventory.yml by the given CI flag.\n'
     printf 'Examples: blusys build-inventory esp32s3 ci_pr\n'
     printf '          blusys build-inventory esp32 ci_nightly\n'
+    printf '\nEmpty ci_pr selection exits with an error unless BLUSYS_ALLOW_EMPTY_CI_PR=1.\n'
 }
 
 blusys_help_lint() {
@@ -157,7 +158,10 @@ blusys_help_lint() {
 blusys_help_validate() {
     printf 'Usage: blusys validate [path ...]\n'
     printf '\nValidate blusys.project.yml manifests with the schema contract.\n'
-    printf 'With no path and no local manifest, runs inventory, product-layout, lint, manifest scans, and tracked build/generated drift checks in one pass.\n'
+    printf 'With no path and no local manifest, runs inventory, product-layout,\n'
+    printf 'scripts/layer-invariants.sh (same checks as CI layer-invariants job),\n'
+    printf 'framework UI + host bridge spine checks, manifest scans, and tracked\n'
+    printf 'build/generated drift checks in one pass.\n'
 }
 
 blusys_help_host_build() {

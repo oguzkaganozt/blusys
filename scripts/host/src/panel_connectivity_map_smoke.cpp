@@ -4,7 +4,7 @@
 
 #include "blusys_examples/panel_connectivity_sync.hpp"
 
-#include "blusys/framework/capabilities/diagnostics.hpp"
+#include <blusys/blusys.hpp>
 
 #include <cstdint>
 #include <cstdlib>

@@ -713,7 +713,9 @@ cmd_validate() {
 
     python3 "$BLUSYS_REPO_ROOT/scripts/check-inventory.py"
     python3 "$BLUSYS_REPO_ROOT/scripts/check-product-layout.py"
-    cmd_lint
+    bash "$BLUSYS_REPO_ROOT/scripts/layer-invariants.sh"
+    python3 "$BLUSYS_REPO_ROOT/scripts/check-framework-ui-sources.py"
+    python3 "$BLUSYS_REPO_ROOT/scripts/check-host-bridge-spine.py"
     python3 "$BLUSYS_REPO_ROOT/scripts/check-manifests.py" \
         --repo-root "$BLUSYS_REPO_ROOT" \
         --allow-empty \

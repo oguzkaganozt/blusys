@@ -1,14 +1,6 @@
 #include "core/app_logic.hpp"
 
-#include "blusys/framework/app/app.hpp"
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/capabilities/diagnostics.hpp"
-#include "blusys/framework/capabilities/lan_control.hpp"
-#include "blusys/framework/capabilities/ota.hpp"
-#include "blusys/framework/capabilities/storage.hpp"
-#include "blusys/framework/capabilities/telemetry.hpp"
-#include "blusys/hal/log.h"
-#include "blusys/hal/version.h"
+#include <blusys/blusys.hpp>
 
 #include <cstdio>
 #include <cstdint>

@@ -25,7 +25,10 @@
 
 #include "blusys/hal/internal/esp_err_shim.h"
 #include "blusys/hal/internal/lock.h"
+#include "blusys/hal/log.h"
 #include "blusys/services/internal/net_bootstrap.h"
+
+#define BLUSYS_WIFI_LOG_TAG "blusys_wifi"
 
 #define WIFI_CONNECTED_BIT            BIT0
 #define WIFI_FAIL_BIT                 BIT1
@@ -373,7 +376,12 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
 
         blusys_wifi_event_info_t info;
         memset(&info, 0, sizeof(info));
-        (void)fill_ip_info(wifi, &info.ip_info);
+        blusys_err_t ip_err = fill_ip_info(wifi, &info.ip_info);
+        if (ip_err != BLUSYS_OK) {
+            BLUSYS_LOGW(BLUSYS_WIFI_LOG_TAG,
+                        "GOT_IP but esp_netif_get_ip_info failed (err=%d); event has zeroed IP fields",
+                        (int)ip_err);
+        }
         emit_event(wifi, BLUSYS_WIFI_EVENT_GOT_IP, &info);
     }
 }
@@ -578,10 +586,20 @@ blusys_err_t blusys_wifi_connect(blusys_wifi_t *wifi, int timeout_ms)
     xTaskAbortDelay(wifi->reconnect_task);
     emit_simple_event(wifi, BLUSYS_WIFI_EVENT_CONNECTING);
 
+    err = blusys_lock_take(&wifi->lock, BLUSYS_LOCK_WAIT_FOREVER);
+    if (err != BLUSYS_OK) {
+        /* FOREVER should not fail; clear flag so a future connect is not stuck on BUSY. */
+        wifi->connect_in_progress = false;
+        finish_connect_wait(wifi);
+        return err;
+    }
     if (wifi->closing || wifi->manual_disconnect || !wifi->connect_in_progress) {
+        wifi->connect_in_progress = false;
+        blusys_lock_give(&wifi->lock);
         finish_connect_wait(wifi);
         return BLUSYS_ERR_INVALID_STATE;
     }
+    blusys_lock_give(&wifi->lock);
 
     esp_err_t esp_err = esp_wifi_connect();
     if (esp_err != ESP_OK) {

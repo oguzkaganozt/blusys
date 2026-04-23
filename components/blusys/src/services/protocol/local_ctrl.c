@@ -613,13 +613,16 @@ static blusys_err_t copy_actions(const blusys_local_ctrl_config_t *config, blusy
 
         dst->name = dup_str(src->name);
         dst->label = dup_str((src->label != NULL) ? src->label : src->name);
-        dst->uri = malloc(strlen(BLUSYS_LOCAL_CTRL_ACTION_PREFIX) + strlen(src->name) + 1);
+        size_t uri_cap = strlen(BLUSYS_LOCAL_CTRL_ACTION_PREFIX) + strlen(src->name) + 1;
+        dst->uri = malloc(uri_cap);
         if ((dst->name == NULL) || (dst->label == NULL) || (dst->uri == NULL)) {
             return BLUSYS_ERR_NO_MEM;
         }
 
-        strcpy(dst->uri, BLUSYS_LOCAL_CTRL_ACTION_PREFIX);
-        strcat(dst->uri, src->name);
+        int uri_wrote = snprintf(dst->uri, uri_cap, "%s%s", BLUSYS_LOCAL_CTRL_ACTION_PREFIX, src->name);
+        if (uri_wrote < 0 || (size_t)uri_wrote >= uri_cap) {
+            return BLUSYS_ERR_INTERNAL;
+        }
         dst->handler = src->handler;
     }
     return BLUSYS_OK;

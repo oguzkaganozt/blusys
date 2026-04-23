@@ -1,5 +1,6 @@
 #include "blusys/services/protocol/mqtt.h"
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -287,6 +288,9 @@ blusys_err_t blusys_mqtt_publish(blusys_mqtt_t *handle,
                                   bool           retain)
 {
     if ((handle == NULL) || (topic == NULL)) {
+        return BLUSYS_ERR_INVALID_ARG;
+    }
+    if (payload_len > (size_t)INT_MAX) {
         return BLUSYS_ERR_INVALID_ARG;
     }
 

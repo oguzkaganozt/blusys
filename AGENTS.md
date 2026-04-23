@@ -18,9 +18,9 @@
 - `blusys build` targets `build-esp32*`, host builds land in `scripts/host/build-host` here, and QEMU builds use `build-qemu*`.
 - `blusys flash`, `run`, `monitor`, and `erase` are device-target only.
 - `blusys lint` runs `scripts/lint-layering.sh`, `scripts/check-framework-ui-sources.py`, and `scripts/check-host-bridge-spine.py`.
-- `blusys validate` runs inventory, product-layout, and lint checks in one pass.
+- `blusys validate` runs inventory, product-layout, `scripts/layer-invariants.sh` (same rules as CI `blusys-layer-invariants`), framework UI + host bridge checks, and manifest / generated-artifact gates in one pass.
 - `blusys example <name> ...` runs a command on a bundled example; `blusys build-examples` builds the full example matrix.
-- `blusys build-inventory <target> <ci_pr|ci_nightly>` is the inventory-filtered example-build entry point.
+- `blusys build-inventory <target> <ci_pr|ci_nightly>` is the inventory-filtered example-build entry point; an empty `ci_pr` selection fails unless `BLUSYS_ALLOW_EMPTY_CI_PR=1`.
 - `scripts/host/` needs SDL2, `pkg-config`, and `libmosquitto-dev`; `scripts/host-test/` is the minimal headless loop with no SDL/LVGL/mosquitto dependency.
 
 ## Checks

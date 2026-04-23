@@ -635,7 +635,7 @@ examples:
   - esp32
   - esp32c3
   - esp32s3
-  ci_pr: false
+  ci_pr: true
   ci_nightly: true
   interface: headless
   capabilities:

@@ -46,6 +46,10 @@ for ex in inv.get('examples', []):
 
 if [[ ${#example_names[@]} -eq 0 ]]; then
     printf 'No examples match %s=true in inventory.yml\n' "$CI_FLAG"
+    if [[ "$CI_FLAG" == "ci_pr" && -z "${BLUSYS_ALLOW_EMPTY_CI_PR:-}" ]]; then
+        printf 'error: refusing empty ci_pr set (set BLUSYS_ALLOW_EMPTY_CI_PR=1 to override)\n' >&2
+        exit 1
+    fi
     exit 0
 fi
 
