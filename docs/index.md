@@ -1,6 +1,8 @@
 # Blusys Platform
 
-An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a shared operating model for recurring product families --- from interactive consumer devices to headless industrial nodes --- so new products start from shared architecture instead of rebuilding plumbing.
+An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a shared operating model for recurring product families, from interactive consumer devices to headless industrial nodes, so new products start from shared architecture instead of rebuilding plumbing.
+
+The repository [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md) (Product foundations) is the long-form source for install, validation expectations, and links to this site; these docs are the structured reference.
 
 <div class="grid cards" markdown>
 
@@ -8,15 +10,15 @@ An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a sh
 
     ---
 
-    Create a new product and run it on host immediately.
+    Get oriented: product shape, manifest, then a guided interactive or headless run.
 
-    [:octicons-arrow-right-24: Interactive Quickstart](start/quickstart-interactive.md)
+    [:octicons-arrow-right-24: Start (Getting started)](start/index.md)
 
 -   :material-cube-outline:{ .lg .middle } **App**
 
     ---
 
-    The product-facing API: reducer model, views, widgets, capabilities, and profiles.
+    Build products: reducer flow, views, widgets, capabilities, and device profiles.
 
     [:octicons-arrow-right-24: App Overview](app/index.md)
 
@@ -24,7 +26,7 @@ An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a sh
 
     ---
 
-    Runtime services: WiFi, HTTP, MQTT, OTA, storage, display, and more.
+    Connect and ship: network stacks, OTA, storage, display service, and more.
 
     [:octicons-arrow-right-24: Browse Services](services/index.md)
 
@@ -32,7 +34,7 @@ An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a sh
 
     ---
 
-    Direct hardware access: GPIO, UART, SPI, I2C, sensors, actuators.
+    Talk to hardware: buses, GPIO, and common sensors or actuators.
 
     [:octicons-arrow-right-24: Browse HAL](hal/index.md)
 
@@ -40,7 +42,7 @@ An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a sh
 
     ---
 
-    Architecture, guidelines, target matrix, testing notes, and engineering references.
+    Engineering depth: architecture, invariants, target matrix, tests, and contribution checks.
 
     [:octicons-arrow-right-24: Internals](internals/index.md)
 

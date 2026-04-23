@@ -1,5 +1,11 @@
 # Reducer Model
 
+## At a glance
+
+- **Idea:** one `update(ctx, state, action)` mutates your `State`; optional `on_event` turns external events into `Action`s.
+- **Define** an `app_spec<State, Action>` with `update` plus hooks you need.
+- **Next:** [App runtime model](app-runtime-model.md) for queues and threading.
+
 The Blusys app model follows a reducer pattern: all state changes flow through a single `update()` function.
 
 ## Core Types

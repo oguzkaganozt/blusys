@@ -1,8 +1,10 @@
-# Power Management
+# Power management
 
-CPU and APB frequency scaling with automatic light sleep. Reduces power consumption during idle periods while allowing latency-critical code to temporarily lock the CPU at full speed.
+CPU and APB frequency scaling with automatic light sleep. Heavier work can **lock** max CPU frequency; idle intervals drop toward `min_freq_mhz` when light sleep is enabled.
 
-## Quick Example
+> **Frequencies** are per-chip; the **valid frequencies** table (below) is the source of truth for `*_mhz` values.
+
+## Quick example
 
 ```c
 #include "blusys/blusys.h"

@@ -1,6 +1,14 @@
-# Validation and host iteration
+---
+title: Validation and host loop
+---
 
-This page maps the **validation and host-iteration** expectations from the repository **[README](https://github.com/oguzkaganozt/blusys/blob/main/README.md)** (**Product foundations** → **Validation**) to concrete tools in this repository. It is the recommended place to answer “how do we prove the product path without flashing hardware every time?”
+# Validation and host loop
+
+## At a glance
+
+- **Purpose:** map README **Product foundations** → **Validation** to concrete commands in this repo.
+- **First run:** `blusys validate` then `blusys host-build` (see [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md) for install).
+- **This page** lists smokes, inventory builds, and CI expectations in the tables below.
 
 ## Requirements
 

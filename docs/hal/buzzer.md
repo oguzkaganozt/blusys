@@ -2,6 +2,8 @@
 
 PWM-driven passive piezo buzzer with single-tone and melody-sequence playback.
 
+> **API reference:** `components/blusys/include/blusys/drivers/buzzer.h` (via `blusys/blusys.h`) and the generated API reference.
+
 ## Quick Example
 
 ```c
@@ -64,11 +66,7 @@ This deadlocks — `close()` waits for the callback to return, but the callback 
 
 ## Target Support
 
-| Target    | Supported |
-|-----------|-----------|
-| ESP32     | yes       |
-| ESP32-C3  | yes       |
-| ESP32-S3  | yes       |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
 The buzzer driver wraps the PWM HAL, which is available on all three targets.
 

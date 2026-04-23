@@ -1,16 +1,10 @@
-# Blusys Platform
+# Getting started
 
-Blusys is an internal product platform on top of ESP-IDF v5.5.4 for ESP32, ESP32-C3, and ESP32-S3 targets.
+Targets **ESP32 / ESP32-C3 / ESP32-S3** with **ESP-IDF 5.5+**. [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md): install, validation, and CLI overview.
 
-## Pick a product shape first
-
-New products start from `blusys.project.yml` and `blusys create`. The manifest names `schema`, `interface`, `capabilities`, `profile`, and `policies`.
-
-- [Product shape](product-shape.md) — `interactive` / `headless`, `--with`, `profile`, `--policy`, and how reference examples map to that model
-
-At the terminal: **`blusys create --list`** prints interfaces, starter presets, capabilities, profiles, and policies.
-
-## Guided quickstarts (after you know the shape)
+1. **Shape** — [Product shape](product-shape.md): `blusys create`, `blusys.project.yml`, `interface`, `capabilities`, `profile`, `policies`. Run **`blusys create --list`** for presets.
+2. **Quickstart** — pick **interactive** (UI + `main/ui/`) or **headless** (terminal) below; then [App](../app/index.md) for the reducer and capabilities.
+3. **Optional:** `scripts/scaffold-smoke.sh` clones a temp tree and runs both quickstart host builds (CI-style smoke).
 
 <div class="grid cards" markdown>
 
@@ -18,7 +12,7 @@ At the terminal: **`blusys create --list`** prints interfaces, starter presets, 
 
     ---
 
-    Manifest-first display product: `blusys.project.yml`, reducer model, stock widgets, and the **interactive** interface walkthrough.
+    `blusys create --interface interactive …` — SDL host window, `main/ui/`.
 
     [:octicons-arrow-right-24: Interactive Quickstart](quickstart-interactive.md)
 
@@ -26,35 +20,25 @@ At the terminal: **`blusys create --list`** prints interfaces, starter presets, 
 
     ---
 
-    Manifest-first headless product: `blusys.project.yml`, the same runtime and reducer, and the **headless** walkthrough.
+    `blusys create --interface headless …` — same runtime, no `ui/` by default.
 
     [:octicons-arrow-right-24: Headless Quickstart](quickstart-headless.md)
 
 </div>
 
-## Cold onboarding proof
+## Where things live
 
-The exact quickstart walkthrough is smoke-tested in `scripts/scaffold-smoke.sh`. It clones the repo into a temp directory, creates a default starter, then runs the headless and interactive quickstarts with host builds.
+| Layer | Role |
+|-------|------|
+| [App](../app/index.md) | Reducer, views, capabilities, profiles (product code starts here) |
+| [Services](../services/index.md) | C services when you go below capabilities |
+| [HAL + drivers](../hal/index.md) | Direct hardware |
+| [Internals](../internals/index.md) | Architecture, layer checks, target matrix, contributing |
 
-## Platform Layers
+## Product types (examples)
 
-| Layer | What it provides | When to use |
-|-------|-----------------|-------------|
-| [App](../app/index.md) | Product-facing API: reducer model, views, capabilities, profiles | **Start here** for new products |
-| [Services](../services/index.md) | Runtime services: WiFi, HTTP, MQTT, OTA, storage, display | When you need direct service access beyond capabilities |
-| [HAL + Drivers](../hal/index.md) | Hardware abstraction: GPIO, UART, SPI, I2C, sensors, actuators | When you need direct hardware control |
-| [Internals](../internals/index.md) | Architecture, guidelines, target matrix, testing | When contributing to the platform itself |
-
-## Product Families
-
-The platform is optimized for these recurring product types:
-
-- **Interactive consumer devices** — smart lights, dashboards, timers, speakers
-- **Interactive local UI products** — home panels, operator screens, compact controllers
-- **Headless connected appliances** — sensor nodes, infrastructure devices, appliance controllers
-- **Industrial telemetry and control** — fleet devices, energy monitors, production line systems
+Interactive consumer / panels; headless connected appliances; industrial telemetry — same platform, different `interface` and capability sets.
 
 ## Requirements
 
-- ESP-IDF v5.5+ (auto-detected by `blusys` CLI)
-- Supported targets: ESP32, ESP32-C3, ESP32-S3
+ESP-IDF v5.5+; supported chips as above.

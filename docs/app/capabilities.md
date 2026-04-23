@@ -1,19 +1,10 @@
 # Capabilities
 
-Capabilities provide higher-level product flows so apps stop assembling low-level service lifecycles manually. They own startup, polling, teardown, and event-to-action bridging for a specific system concern.
+Capabilities wrap runtime services (WiFi, storage, …) so product code uses **config + `on_event` + `update()`** instead of hand-rolling lifecycles. **Stacks and rules:** [Capability composition](capability-composition.md). **Implementing a new one:** [Authoring a capability](capability-authoring.md).
 
-## Capability Contract
+**Contract (summary):** plain config; wire on `app_spec` from `main/`; **status** via `app_ctx`; **events** → `on_event` → `Action`. Details and edge cases: [Authoring a capability](capability-authoring.md#contract).
 
-Every capability:
-
-1. Is configured with a plain data-only config struct (no hidden side effects in construction).
-2. Is composed in `main/app_main.cpp` or a small product-local wiring file and registered on `app_spec.capabilities` — not constructed ad hoc from `ui/`.
-3. Owns lifecycle and runtime-service integration on the framework side; product code requests work through reducer-driven actions.
-4. Exposes **status** through the app-facing query path (`app_ctx` accessors) using consistent field naming (`capability_ready` signals that the capability’s default stack is up).
-5. Raises **events** with stable enum codes; the app wiring handles them in `on_event`, and `update()` reacts to the resulting actions.
-6. May expose advanced escape hatches, but the recommended path stays event- and reducer-driven.
-
-Apps bridge capability events to product actions via `on_event`:
+`on_event` example:
 
 ```cpp
 std::optional<Action> on_event(blusys::event event, State &state)

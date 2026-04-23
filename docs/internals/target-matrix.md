@@ -1,6 +1,8 @@
-# Compatibility
+# Target matrix
 
-## Supported Targets
+Per-chip compatibility and which HAL, driver, and service modules apply on each target.
+
+## Supported targets
 
 | Target | Status |
 |--------|--------|

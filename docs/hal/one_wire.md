@@ -36,11 +36,7 @@ blusys_one_wire_close(ow);
 
 ## Target Support
 
-| Target | Supported |
-|--------|-----------|
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
 All three targets include the RMT peripheral. On unsupported platforms all functions return `BLUSYS_ERR_NOT_SUPPORTED`.
 

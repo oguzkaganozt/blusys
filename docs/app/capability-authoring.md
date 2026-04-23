@@ -1,8 +1,6 @@
 # Authoring a capability
 
-A capability is a framework-owned runtime concern (connectivity, storage, OTA, …) that the reducer observes through integration events and controls implicitly through `app_spec` configuration. This page documents the contract for writing a new one.
-
-If you just want to **use** existing capabilities, see [Capabilities](capabilities.md) and [Capability composition](capability-composition.md).
+Framework-owned runtime module (connectivity, storage, OTA, …): **`start` / `poll` / `stop`**, **integration events**, and **`app_spec` config** — not direct product calls. **Using** built-ins only: [Capabilities](capabilities.md) and [Capability composition](capability-composition.md) (this page is for **adding** one to the tree).
 
 ## Contract
 
@@ -77,10 +75,8 @@ Typed event helpers live in `blusys/framework/app/variant_dispatch.hpp` (`dispat
 
 ## See also
 
-- [Capabilities](capabilities.md) — usage of the shipped capabilities
-- [Capability composition](capability-composition.md) — wiring in the app entrypoint
-- [App runtime model](app-runtime-model.md) — event queue, threading, drops
-- [Product-custom capabilities](custom-capabilities.md) — one-off product-local capability shell
-- `components/blusys/include/blusys/framework/capabilities/` — the base contract and reference capabilities
-- `components/blusys/include/blusys/framework/capabilities/storage.hpp` — smallest reference capability
-- `scripts/scaffold/new-capability.sh` — generates the canonical capability scaffold
+- [Adding a capability](adding-a-capability.md) — repo steps for a new kind (header, host, device, register)
+- [App Runtime Model](app-runtime-model.md) — queue, threading, drops
+- [Product-custom capabilities](custom-capabilities.md) — product-local shell
+- `components/blusys/include/blusys/framework/capabilities/capability.hpp` — `capability_base`
+- `components/blusys/include/blusys/framework/capabilities/storage.hpp` — smallest reference; `scripts/scaffold/new-capability.sh` for a generated shell

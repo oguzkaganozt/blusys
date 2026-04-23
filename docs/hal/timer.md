@@ -4,6 +4,8 @@ General-purpose timer with microsecond resolution. Supports periodic and one-sho
 
 One-shot timers stop themselves after the alarm fires.
 
+> **API reference:** `components/blusys/include/blusys/hal/timer.h` and the generated API reference.
+
 ## Quick Example
 
 ```c
@@ -38,11 +40,7 @@ void app_main(void)
 
 ## Target Support
 
-| Target | Supported |
-|--------|-----------|
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
 ## Thread Safety
 

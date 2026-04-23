@@ -1,71 +1,53 @@
 # Capability Composition
 
-Capabilities are composed in the app entrypoint or a small product-local wiring file and translated into app actions.
+Wire capabilities in the app entrypoint (or a tiny `main/` helper); map integration events to `Action`s in `on_event`. [Product shape](../start/product-shape.md) and **`blusys create --list`** set manifest and dependencies. [Adding a flow](adding-a-flow.md) covers stock flows / `spec.flows` — not duplicated here.
 
-## Composition Rules
+## Rules
 
-- keep capability config in the app entrypoint or a tiny wiring helper under `main/`
-- keep product decisions in the reducer
-- keep rendering in `ui/`
-- handle capability events in `on_event`
-- query capability status through `app_ctx` (use `ctx.fx()` for routing/UI reactions when needed)
+- Config and list live under `main/`; **reducer** owns product state; **UI** stays in `ui/`.
+- **`on_event`** translates capability events; **`app_ctx`** / **`ctx.fx()`** for status and approved navigation.
+- If a capability changes product behaviour, emit an **action**; if it only wires services, keep that wiring in a small helper.
 
 ## Typical stacks
 
-Each **interface** suggests a different **minimal** capability set (enough for a credible starter) and a **full** stack for a typical connected product. Compose capabilities in product-local wiring; onboarding and Wi-Fi lifecycle live under **`connectivity`**. The starter docs in `docs/start/quickstart-interactive.md` and `docs/start/quickstart-headless.md` describe the target manifest-first app shape. See [Product shape](../start/product-shape.md) and **`blusys create --list`** for dependency rules.
+Suggested **minimal** vs **full** sets (connected products use **`connectivity`** for Wi-Fi lifecycle):
 
-### Interactive (`--interface interactive`)
+### `interactive`
 
 | Minimal | Full (typical) |
 |---------|----------------|
 | storage | storage, connectivity, diagnostics |
 
-Starter: manifest-first interactive starter.
-
-### Headless connected (`--interface headless` + connected `--with`)
+### `headless` (connected)
 
 | Minimal | Full (typical) |
 |---------|----------------|
 | connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: manifest-first headless starter.
-
-### Interactive coordinator
+### Interactive coordinator (local UI + connected)
 
 | Minimal | Full (typical) |
 |---------|----------------|
 | connectivity, telemetry | connectivity, telemetry, OTA, diagnostics, storage, lan_control |
 
-Starter: manifest-first interactive starter with optional local UI.
+**Flows** (`blusys::flows::*`, `blusys::screens::*`) are LVGL-only: drive work through `app_ctx::dispatch` and [Adding a flow](adding-a-flow.md), not raw services from stock UIs.
 
-## Rule Of Thumb
+???+ note "Event IDs, on_event, and typed helpers (reference)"
+    Each capability posts integration events in a reserved range (see `blusys::capability.hpp`). In wiring, map IDs to `Action` values. Typical events:
 
-If a capability changes app behavior, emit an action.
-If it only wires runtime services, keep it in a small wiring helper under `main/`.
+    | Source | Typical events to surface |
+    |--------|---------------------------|
+    | Connectivity | `wifi_*`, `time_synced`, provisioning phases, `capability_ready` |
+    | Storage | `spiffs_mounted`, `fatfs_mounted`, `capability_ready` |
+    | OTA | `download_*`, `apply_failed`, `rollback_pending`, `capability_ready` |
+    | Diagnostics | `snapshot_ready`, `capability_ready` |
+    | Telemetry | `buffer_flushed`, `delivery_ok` / `delivery_failed`, `capability_ready` |
+    | Bluetooth | `gap_ready`, `gatt_ready`, `client_connected`, `capability_ready` |
 
-## Event IDs And `on_event`
+    Status-only updates can be dropped in `on_event` if `app_ctx` queries are enough.
 
-Each capability posts integration events in a reserved numeric range (see `blusys::capability.hpp`). In the app wiring layer, implement `on_event` to translate those IDs into product `Action` values. Prefer handling at least:
-
-| Source | Typical events to surface |
-|--------|---------------------------|
-| Connectivity | `wifi_*`, `time_synced`, onboarding/provisioning phases (`already_provisioned`, `credentials_received`, `success`, `failed`, …), `capability_ready` |
-| Storage | `spiffs_mounted`, `fatfs_mounted`, `capability_ready` |
-| OTA | `download_started`, `download_progress` (event `code` = percent 0–100), `download_complete`, `apply_failed`, `rollback_pending`, `capability_ready` |
-| Diagnostics | `snapshot_ready`, `capability_ready` |
-| Telemetry | `buffer_flushed`, `delivery_ok`, `delivery_failed`, `capability_ready` |
-| Bluetooth | `gap_ready`, `gatt_ready`, `client_connected`, `capability_ready` |
-
-Status-only updates can be ignored in the reducer if `app_ctx` queries are enough.
-
-### Typed helpers and `std::variant` actions
-
-- Use `blusys::integration::*` (`as_*_event`, `kind_for_event_id`, and predicates such as `event_is_diagnostics_snapshot_or_ready`) to keep `on_event` small without hiding the translation table.
-- For products that want exhaustiveness on actions, the optional path is `std::variant<...>` for `Action` plus `blusys::dispatch_variant` (`blusys/framework/app/variant_dispatch.hpp`). The default remains a plain tagged struct or enum.
-
-## Stock Flows And Screens
-
-Operational UI (`blusys::flows::*`, `blusys::screens::*`) stays LVGL-backed and must not call runtime services directly. Wire buttons through `app_ctx::dispatch`, `error_panel_dispatch`, `confirmation_dispatch`, or `app_ctx::request_connectivity_reconnect()` as appropriate; use `ctx.fx()` only for framework-approved navigation/routing from UI callbacks that already hold `app_ctx`.
+    - Use `blusys::integration::*` (`as_*_event`, `kind_for_event_id`, …) to keep `on_event` small.
+    - Optional: `std::variant<...>` for `Action` + `blusys::dispatch_variant` (`variant_dispatch.hpp`).
 
 ## Reference `on_event` Implementation
 

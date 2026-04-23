@@ -44,21 +44,20 @@ blusys qemu --serial-only <project> <qemu32|qemu32c3|qemu32s3>
 
 After app-flow or integration changes, prioritize: host interactive, headless, scaffold, and ST7735-class device builds on all three silicon targets.
 
-## CI jobs (PR)
+???+ note "CI jobs (PR) — full stage matrix"
+    Workflow: `.github/workflows/ci.yml`. Triggered by push/PR to `main` on watched paths.
 
-Workflow: `.github/workflows/ci.yml`. Triggered by push/PR to `main` on watched paths.
+    | Stage | What it runs |
+    |-------|--------------|
+    | Lint | `scripts/lint-layering.sh` + layer-invariant scripts + `scripts/check-framework-ui-sources.py` |
+    | Inventory | `scripts/check-inventory.py` + `scripts/check-product-layout.py` |
+    | Host smoke | Configure/build `scripts/host`, run smokes, `ctest`, sanitizer build/run; build `headless` host example; `scaffold-smoke.sh` |
+    | Docs | `mkdocs build --strict` |
+    | Device builds | `scripts/build-from-inventory.sh` with `ci_pr=true` across the target matrix |
+    | Display variants | `scripts/build-display-variants.sh` |
+    | QEMU smokes | Subset via `scripts/qemu-test.sh` |
 
-| Stage | What it runs |
-|-------|--------------|
-| Lint | `scripts/lint-layering.sh` + layer-invariant scripts + `scripts/check-framework-ui-sources.py` |
-| Inventory | `scripts/check-inventory.py` + `scripts/check-product-layout.py` |
-| Host smoke | Configure/build `scripts/host`, run smokes, `ctest`, sanitizer build/run; build `headless` host example; `scaffold-smoke.sh` |
-| Docs | `mkdocs build --strict` |
-| Device builds | `scripts/build-from-inventory.sh` with `ci_pr=true` across the target matrix |
-| Display variants | `scripts/build-display-variants.sh` |
-| QEMU smokes | Subset via `scripts/qemu-test.sh` |
-
-PR coverage runs only examples flagged `ci_pr: true` in `inventory.yml`. Nightly (`.github/workflows/nightly.yml`) runs broader example builds.
+    PR coverage runs only examples flagged `ci_pr: true` in `inventory.yml`. Nightly (`.github/workflows/nightly.yml`) runs broader example builds.
 
 ## Adding a module, example, or doc
 

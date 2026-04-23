@@ -1,8 +1,10 @@
 # OTA
 
-Over-the-Air firmware update: download a firmware binary from a URL, flash it to the next OTA partition, then reboot into the new image. Optional SHA256 integrity verification and IDF rollback support.
+Over-the-air firmware update: download from a URL, flash the next OTA slot, reboot into the new image. Optional SHA256 check and IDF rollback — see your sdkconfig and IDF partition table.
 
-## Quick Example
+> **Requires:** a working network client path (e.g. [WiFi](wifi.md) up, TLS if using `https` URLs) and a valid OTA layout in flash.
+
+## Quick example
 
 ```c
 #include "blusys/blusys.h"

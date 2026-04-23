@@ -1,6 +1,6 @@
-# MQTT Client
+# MQTT
 
-Publish/subscribe messaging client for connecting to an MQTT broker over WiFi.
+Client API for publish/subscribe messaging to an MQTT broker over WiFi.
 
 ## Quick Example
 

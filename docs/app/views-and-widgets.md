@@ -1,6 +1,12 @@
 # Views & Widgets
 
-The Blusys view layer provides stock widgets and a custom widget contract that keeps common apps off raw LVGL.
+## At a glance
+
+- **Use** `blusys::page_create` / `page_load` and stock widgets from `view::` helpers — not raw `lv_` in product screens (except custom widgets / scoped escapes).
+- **Layout rules** (flex, shell): [Architecture — UI layout](../internals/architecture.md#ui-layout-lvgl-flex).
+- **Widget list by scenario:** [Widget gallery](widget-gallery.md).
+
+The view layer provides stock widgets and a custom widget contract that keeps common apps off raw LVGL.
 
 ## Page Helpers
 

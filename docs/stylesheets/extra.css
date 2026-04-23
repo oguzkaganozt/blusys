@@ -1,0 +1,19 @@
+/* Slightly tighter code in body text; works in default and slate schemes */
+.md-typeset :not(pre) > code {
+  font-size: 0.9em;
+}
+
+/* Softer admonition edges without hard-coded light colors */
+.md-typeset .admonition {
+  border-radius: 0.25rem;
+}
+
+/* details / pymdownx.details blocks: spacing only (theme provides borders) */
+.md-typeset details {
+  margin: 0.75em 0;
+}
+
+.md-typeset details summary {
+  font-weight: 500;
+  cursor: pointer;
+}

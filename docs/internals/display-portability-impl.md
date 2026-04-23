@@ -2,6 +2,12 @@
 
 Companion to [ADR 0003](adr/0003-display-auto-scaling.md).
 
+## At a glance
+
+- **Goal:** one product codebase; change display / `sdkconfig` and get proportionally scaled UI (widgets, shell, touch targets) without rewriting screens — [ADR 0003](adr/0003-display-auto-scaling.md) for the decision.
+- **How to work:** follow **Step 1 → Step 6** in order; the **Implementation Order** table is the checklist.
+- **OLED / `MONO_PAGE`:** out of scope here (separate `oled()` path); listed under **Out of scope** below.
+
 ## Purpose
 
 Enable single-codebase UI portability: changing `sdkconfig` to select a different display (e.g.,
@@ -762,81 +768,83 @@ The table below shows expected `for_display()` output for common display + base 
 
 ---
 
-## Developer usage after implementation
+???+ note "Developer usage and testing (full)"
 
-### Zero-change case (most products)
-
-No app code changes needed. `run_device()` auto-routes through `for_display()`.
-
-```cpp
-// Same code, correct UI on both ST7735 (160×128) and ILI9341 (320×240).
-// Only sdkconfig changes between builds.
-spec.host_title = "My Product";
-BLUSYS_APP(spec);
-```
-
-### Custom base theme
-
-Developer's colour/style choices are preserved; only size tokens change.
-
-```cpp
-blusys::theme_tokens my_theme = blusys::app::presets::expressive_dark();
-my_theme.color_primary = lv_color_hex(0xFF6600);  // custom brand colour
-// Pass via spec.theme — for_display() scales it for the actual display.
-spec.theme = &my_theme;
-spec.profile = &profile;
-BLUSYS_APP(spec);
-```
-
-### Structural layout branching
-
-For layouts that cannot be proportionally scaled (3-column → 1-column):
-
-```cpp
-#include "blusys/framework/platform/display_constants.hpp"
-
-lv_obj_t *build_panel(lv_obj_t *parent)
-{
-    if constexpr (blusys::kDisplayTier == blusys::display_tier::compact) {
-        return build_panel_compact(parent);   // single column
-    } else {
-        return build_panel_full(parent);      // multi-column
+    ## Developer usage after implementation
+    
+    ### Zero-change case (most products)
+    
+    No app code changes needed. `run_device()` auto-routes through `for_display()`.
+    
+    ```cpp
+    // Same code, correct UI on both ST7735 (160×128) and ILI9341 (320×240).
+    // Only sdkconfig changes between builds.
+    spec.host_title = "My Product";
+    BLUSYS_APP(spec);
+    ```
+    
+    ### Custom base theme
+    
+    Developer's colour/style choices are preserved; only size tokens change.
+    
+    ```cpp
+    blusys::theme_tokens my_theme = blusys::app::presets::expressive_dark();
+    my_theme.color_primary = lv_color_hex(0xFF6600);  // custom brand colour
+    // Pass via spec.theme — for_display() scales it for the actual display.
+    spec.theme = &my_theme;
+    spec.profile = &profile;
+    BLUSYS_APP(spec);
+    ```
+    
+    ### Structural layout branching
+    
+    For layouts that cannot be proportionally scaled (3-column → 1-column):
+    
+    ```cpp
+    #include "blusys/framework/platform/display_constants.hpp"
+    
+    lv_obj_t *build_panel(lv_obj_t *parent)
+    {
+        if constexpr (blusys::kDisplayTier == blusys::display_tier::compact) {
+            return build_panel_compact(parent);   // single column
+        } else {
+            return build_panel_full(parent);      // multi-column
+        }
     }
-}
-```
-
----
-
-## Testing guidance
-
-### Build-level (no hardware)
-
-1. `idf.py build` with `CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341` — baseline.
-2. `idf.py build` with `CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735` — compact path.
-3. `idf.py build` with `CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488` — comfortable path.
-4. Host SDL build (`cmake` in `scripts/host/`) — verifies `run_host()` path compiles.
-
-### Functional checks on hardware
-
-1. **ST7735 (160×128):** Shell should show no header or tab bar. Content fills full screen.
-2. **ILI9341 (320×240):** Shell shows header and tab bar. Spacing matches `expressive_dark` at 1:1.
-3. **ILI9488 (480×320):** Shell shows header and tab bar. Spacing is visibly larger than ILI9341.
-4. **Custom theme on ST7735:** Set `spec.theme = &my_custom_dark`. Verify colours preserved, sizing compact.
-
-### Unit-level (host, no LCD)
-
-A lightweight check that `for_display()` returns correct scaled values:
-
-```cpp
-// Verify scale factor application — 320×240 base on 160×128 display → 0.5x
-auto t = blusys::presets::for_display(blusys::presets::expressive_dark(),
-                                       160, 128, BLUSYS_DISPLAY_PANEL_KIND_RGB565);
-assert(t.density_mode == blusys::density::compact);
-assert(t.spacing_md == 6);  // 12 * 0.5 = 6
-assert(t.design_w == 160 && t.design_h == 128);
-
-// Verify MONO_PAGE bypass
-auto oled_t = blusys::presets::for_display(blusys::presets::expressive_dark(),
-                                            128, 64, BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE);
-assert(oled_t.design_w == 320);  // unchanged — base returned as-is
-```
+    ```
+    
+    ---
+    
+    ## Testing guidance
+    
+    ### Build-level (no hardware)
+    
+    1. `idf.py build` with `CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9341` — baseline.
+    2. `idf.py build` with `CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ST7735` — compact path.
+    3. `idf.py build` with `CONFIG_BLUSYS_DASHBOARD_DISPLAY_PROFILE_ILI9488` — comfortable path.
+    4. Host SDL build (`cmake` in `scripts/host/`) — verifies `run_host()` path compiles.
+    
+    ### Functional checks on hardware
+    
+    1. **ST7735 (160×128):** Shell should show no header or tab bar. Content fills full screen.
+    2. **ILI9341 (320×240):** Shell shows header and tab bar. Spacing matches `expressive_dark` at 1:1.
+    3. **ILI9488 (480×320):** Shell shows header and tab bar. Spacing is visibly larger than ILI9341.
+    4. **Custom theme on ST7735:** Set `spec.theme = &my_custom_dark`. Verify colours preserved, sizing compact.
+    
+    ### Unit-level (host, no LCD)
+    
+    A lightweight check that `for_display()` returns correct scaled values:
+    
+    ```cpp
+    // Verify scale factor application — 320×240 base on 160×128 display → 0.5x
+    auto t = blusys::presets::for_display(blusys::presets::expressive_dark(),
+                                           160, 128, BLUSYS_DISPLAY_PANEL_KIND_RGB565);
+    assert(t.density_mode == blusys::density::compact);
+    assert(t.spacing_md == 6);  // 12 * 0.5 = 6
+    assert(t.design_w == 160 && t.design_h == 128);
+    
+    // Verify MONO_PAGE bypass
+    auto oled_t = blusys::presets::for_display(blusys::presets::expressive_dark(),
+                                                128, 64, BLUSYS_DISPLAY_PANEL_KIND_MONO_PAGE);
+    assert(oled_t.design_w == 320);  // unchanged — base returned as-is
+    ```

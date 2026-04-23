@@ -1,25 +1,31 @@
 # Interactive Quickstart
 
-Build a minimal interactive product using the manifest-first starter.
+Build a **minimal `interactive` app** (SDL host window, optional `main/ui/`). The only scaffold difference from [Headless quickstart](quickstart-headless.md) is `--interface interactive` and the `ui/` folder.
+
+!!! tip
+    Manifest vocabulary (`schema`, `interface`, `capabilities`, …) is in [Product shape](product-shape.md). This page is the shortest path to a running binary.
 
 ## Create the project
+
+**Interactive** = `--interface interactive` and a `main/ui/` directory (empty until you add screens).
 
 ```bash
 blusys create --interface interactive my_product
 cd my_product
 ```
 
-The starter keeps the first scaffold intentionally thin:
+??? note "Generated layout"
+    The starter is intentionally thin:
 
-```text
-my_product/
-  blusys.project.yml
-  main/
-    app_main.cpp
-    ui/
-```
+    ```text
+    my_product/
+      blusys.project.yml
+      main/
+        app_main.cpp
+        ui/
+    ```
 
-`blusys.project.yml` declares the product shape: `schema`, `interface`, `capabilities`, `profile`, and `policies`. `main/app_main.cpp` owns `State`, `Action`, `update(ctx, state, action)`, and app wiring. `main/ui/` stays empty until the product actually needs screens or widgets.
+`main/app_main.cpp` holds `State`, `Action`, and `update(ctx, state, action)`; add screens under `main/ui/` when needed.
 
 ## Run on host
 
@@ -27,18 +33,18 @@ my_product/
 blusys host-build
 ```
 
-The app launches in a host SDL2 window with the default theme. Arrow keys move focus between buttons; Enter activates. No hardware needed.
+The app opens an SDL2 window with the default theme. Arrow keys move focus; Enter activates. No hardware required.
 
 ## When to expand
 
-- Add `capabilities` in the manifest when the app needs connectivity, storage, telemetry, OTA, or other runtime services.
-- Add `profile` when you need a specific host or device target setup.
-- Split code out of `app_main.cpp` only when the file stops being readable.
+- Add **`capabilities`** in the manifest for connectivity, storage, telemetry, OTA, or other services.
+- Add **`profile`** for a specific host or device setup.
+- Split `app_main.cpp` when it stops being readable.
 
 ## Next steps
 
-- [Product shape](product-shape.md) — choose interface, capabilities, profiles, and policies
-- [Reducer Model](../app/reducer-model.md) — understand state, actions, and `update()`
-- [Views & Widgets](../app/views-and-widgets.md) — build screens with stock widgets
-- [Profiles](../app/profiles.md) — target a real device with `BLUSYS_APP` and a device profile
-- [Capabilities](../app/capabilities.md) — add WiFi and storage
+- [Product shape](product-shape.md) — interface, capabilities, profiles, policies
+- [Reducer model](../app/reducer-model.md) — state, actions, `update()`
+- [Views & widgets](../app/views-and-widgets.md) — stock widgets
+- [Profiles](../app/profiles.md) — device vs host
+- [Capabilities](../app/capabilities.md) — WiFi, storage, and more

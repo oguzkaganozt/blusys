@@ -1,6 +1,9 @@
-# Product shape (schema, interface, capabilities, profile, policies)
+# Product shape
 
-Start from `blusys.project.yml`: new Blusys products are described by `schema`, `interface`, `capabilities`, `profile`, and `policies`, not by named starter bundles. The scaffold and checked-in `blusys.project.yml` use the same vocabulary.
+New products are described in `blusys.project.yml` by **`schema`**, **`interface`**, **`capabilities`**, **`profile`**, and **`policies`** (the scaffold and examples use the same vocabulary).
+
+!!! note "CLI"
+    Use `blusys create --list` to see interfaces, presets, capabilities, profiles, and policies. Requires a working [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md) install / `blusys` on your `PATH`.
 
 ## Grammar
 
@@ -27,7 +30,7 @@ Interactive and headless starters stay reducer-first through `update(ctx, state,
 
 ## Reference examples in this repo
 
-The quickstart starters were removed during the manifest-first scaffold rewrite. The starter pages on the next links describe the target shape; `examples/reference/` and `examples/validation/` remain as the deeper demo and smoke layers.
+After `blusys create`, use [Getting started](index.md) quickstarts for the thin scaffold; go deeper with `examples/reference/` (demos) and `examples/validation/` (smoke apps). Older in-tree quickstart templates are not the path for new work.
 
 | Direction | Example path | Notes |
 |-----------|--------------|-------|

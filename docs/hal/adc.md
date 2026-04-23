@@ -4,6 +4,8 @@ Single-channel ADC input: raw conversion values and calibrated millivolt reading
 
 ADC is stateful and pin-based: open a channel, read from it, close it when done.
 
+> **API reference:** `components/blusys/include/blusys/hal/adc.h` and the generated API reference.
+
 ## Quick Example
 
 ```c
@@ -34,11 +36,7 @@ void app_main(void)
 
 ## Target Support
 
-| Target | Supported |
-|--------|-----------|
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
 ## Thread Safety
 

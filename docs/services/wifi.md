@@ -1,8 +1,10 @@
 # WiFi
 
-Station-mode WiFi for connecting the ESP32 to an existing access point.
+Station-mode WiFi: connect the SoC to an access point. Only one of WiFi, ESP-NOW, mesh, or provisioning may own the radio at a time.
 
-## Quick Example
+> **Requires:** data path up before higher-level clients (HTTP, MQTT, OTA, …) can reach the network.
+
+## Quick example
 
 ```c
 blusys_wifi_t *wifi;
@@ -38,7 +40,12 @@ if (need_network) {
 }
 ```
 
-## Event Callback
+## Common mistakes
+
+- **Calling `connect()` / `disconnect()` / `close()` from the WiFi event callback** — it runs on the ESP event task; defer work to another context (see [Threading](../internals/threading.md)).
+- **Mixing owners** — do not combine station WiFi with `blusys_espnow`, `blusys_wifi_mesh`, or `blusys_wifi_prov` on the same build without understanding exclusivity (see **Limitations** / platform notes below).
+
+## Event callback
 
 Subscribe to WiFi lifecycle events without changing the blocking `connect()` flow:
 
@@ -78,13 +85,9 @@ If you need the exact driver reason for diagnostics, read `info->raw_disconnect_
 - forgetting to call `close()` — the NVS partition and TCP/IP stack are not released until `close()`
 - doing heavy work or WiFi lifecycle calls inside the callback — keep callbacks short, non-blocking, and informational only
 
-## Target Support
+## Target support
 
-| Target | Supported |
-|--------|-----------|
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
 Only one WiFi owner may be active at a time — do not combine with `blusys_espnow`, `blusys_wifi_mesh`, or `blusys_wifi_prov`.
 

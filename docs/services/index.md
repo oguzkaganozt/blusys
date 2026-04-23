@@ -1,6 +1,10 @@
 # Services
 
-Runtime services provide stateful capabilities on top of the HAL layer. For most product apps, use [Capabilities](../app/capabilities.md) instead of calling these APIs directly.
+Runtime services provide stateful capabilities on top of the HAL layer.
+
+!!! note "Product code"
+
+    For most product apps, prefer [Capabilities](../app/capabilities.md) instead of calling these C APIs directly. Use the service pages here when you need the exact lifecycle or types for a specific module.
 
 ## Connectivity
 
@@ -21,6 +25,9 @@ Runtime services provide stateful capabilities on top of the HAL layer. For most
 | [HTTP](http.md) | HTTP client and server |
 | [MQTT](mqtt.md) | MQTT client with TLS support |
 | [WebSocket](ws_client.md) | WebSocket client |
+
+!!! tip "Protocol clients"
+    HTTP, MQTT, and WebSocket assume a working IP path (usually [WiFi](wifi.md) associated first). Each service page documents common failure modes in **Common mistakes**.
 
 ## Display & Input
 

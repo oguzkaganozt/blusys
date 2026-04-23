@@ -1,12 +1,14 @@
 # Architecture
 
-This page describes the current repository architecture and tiering constraints.
+Tiering, include rules, and where code lives. For mission, install, and the high-level stack diagram, see the repository [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md) (**Product foundations** and **Architecture**). For product API usage, see [App](../app/index.md).
 
-For the product model and locked decisions, see `../README.md` (**Product foundations**).
+## At a glance
 
-Blusys is an internal ESP32 product platform. The repo ships a single ESP-IDF
-component `components/blusys/` with four internal layers sharing the `blusys/`
-header namespace:
+- **You are** a contributor changing `components/blusys/` or wiring a product to the tiers.
+- **You need** the dependency direction, CI layering rules, and where HAL vs framework files sit.
+- **Next** [Guidelines](guidelines.md) for API shape, then [Contributing](contributing.md) for checks.
+
+The repo ships a single ESP-IDF component `components/blusys/` with four internal layers sharing the `blusys/` header namespace:
 
 ```text
 components/blusys/
@@ -47,9 +49,16 @@ Product / example app
 
 Dependency direction is one-way:
 
-```text
-framework → services → drivers → hal → (nothing)
+```mermaid
+flowchart LR
+  fw[framework]
+  sv[services]
+  dr[drivers]
+  h[hal]
+  fw --> sv --> dr --> h
 ```
+
+(`hal` and `hal/log.h` / `hal/error.h` have no upward includes; nothing below ESP-IDF pulls Blusys headers.)
 
 Reverse dependencies are forbidden. `hal/log.h` and `hal/error.h` are
 cross-cutting utilities allowed at any layer (analogous to `stdio.h`).
@@ -70,6 +79,17 @@ may not include `hal/`, `drivers/`, or `services/` headers, except:
 - `framework/app/entry.hpp` (device boot bridge — guarded by `#ifdef ESP_PLATFORM`)
 - `framework/platform/` (sole designated escape hatch for device integration)
 - `framework/capabilities/` (wraps services; exempt from Rule 4)
+
+```mermaid
+flowchart TB
+  pure["Pure framework dirs: no hal drivers services includes"]
+  ex["Exceptions"]
+  pure --> ex
+  ex --> plat[platform bridge]
+  ex --> cap[capabilities]
+  ex --> ent[entry.hpp under ESP_PLATFORM]
+  ex --> loge[hal/log.h hal/error.h]
+```
 
 **Rule 5** — Every `src/` file has a corresponding `include/blusys/` header (forward
 check), and every C-layer `include/blusys/` header (hal/drivers/services) has a
@@ -279,33 +299,35 @@ Lifecycle verbs stay explicit where relevant:
 
 The platform targets the common subset of `esp32`, `esp32c3`, and `esp32s3`. Modules
 not available on all three targets use capability checks and return
-`BLUSYS_ERR_NOT_SUPPORTED` on unsupported hardware. See [Compatibility](target-matrix.md)
+`BLUSYS_ERR_NOT_SUPPORTED` on unsupported hardware. See [Target matrix](target-matrix.md)
 for the full matrix.
 
-## UI layout (LVGL flex) {#ui-layout-lvgl-flex}
+???+ note "UI and SPI display notes (LVGL flex, ST7735 flush)"
 
-The framework uses LVGL's built-in flex and scroll so product code declares structure
-(columns, rows, shell) without reimplementing layout rules.
+    ## UI layout (LVGL flex) {#ui-layout-lvgl-flex}
 
-**Principles:**
+    The framework uses LVGL's built-in flex and scroll so product code declares structure
+    (columns, rows, shell) without reimplementing layout rules.
 
-1. **Prefer LVGL flex** (`LV_LAYOUT_FLEX`, `lv_obj_set_flex_flow`, `lv_obj_set_flex_align`). No parallel layout engine.
-2. **Bound the scroll viewport.** The shell's scrollable page column must be a flex child with bounded height (`shell` `content_area` + `page_create_in`) so chrome (tabs, header) is not pushed off-screen.
-3. **Stock widgets size to constraints.** Widgets placed in flex rows with a fixed row height must respect the allocated size (`gauge` scales its arc on `LV_EVENT_SIZE_CHANGED` via `blusys::flex_layout::effective_cross_extent_for_row_child`).
-4. **Escape hatch.** Custom product UI may use raw LVGL inside custom widgets or an explicit custom scope, keeping the same focus/action/runtime contracts as the six-rule widget contract above.
+    **Principles:**
 
-**Primitives:**
+    1. **Prefer LVGL flex** (`LV_LAYOUT_FLEX`, `lv_obj_set_flex_flow`, `lv_obj_set_flex_align`). No parallel layout engine.
+    2. **Bound the scroll viewport.** The shell's scrollable page column must be a flex child with bounded height (`shell` `content_area` + `page_create_in`) so chrome (tabs, header) is not pushed off-screen.
+    3. **Stock widgets size to constraints.** Widgets placed in flex rows with a fixed row height must respect the allocated size (`gauge` scales its arc on `LV_EVENT_SIZE_CHANGED` via `blusys::flex_layout::effective_cross_extent_for_row_child`).
+    4. **Escape hatch.** Custom product UI may use raw LVGL inside custom widgets or an explicit custom scope, keeping the same focus/action/runtime contracts as the six-rule widget contract above.
 
-- `col` / `row` — flex column/row helpers. `row_config` / `col_config` expose main/cross/track flex align (`row` defaults: `START`, `CENTER`, `CENTER`; `col`: `START`, `START`, `START`).
-- `blusys::flex_layout` — helpers for flex row/column parents (`effective_cross_extent_for_row_child`, `effective_cross_extent_for_column_child`) when a child's content-sized dimension under-reports the strip.
-- `page_create` / `page_create_in` — page column; the in-shell variant sets `flex_grow(1)`, `min_height(0)`, and optional scroll so the column fills `content_area` correctly.
+    **Primitives:**
 
-**Shell:** column flex root — header, optional status, `content_area` (`flex_grow(1)`), optional tab bar. `content_area` is itself a column flex container so its single child (the scrollable page column) participates as a proper flex item.
+    - `col` / `row` — flex column/row helpers. `row_config` / `col_config` expose main/cross/track flex align (`row` defaults: `START`, `CENTER`, `CENTER`; `col`: `START`, `START`, `START`).
+    - `blusys::flex_layout` — helpers for flex row/column parents (`effective_cross_extent_for_row_child`, `effective_cross_extent_for_column_child`) when a child's content-sized dimension under-reports the strip.
+    - `page_create` / `page_create_in` — page column; the in-shell variant sets `flex_grow(1)`, `min_height(0)`, and optional scroll so the column fills `content_area` correctly.
 
-## Display notes: ST7735 on SPI
+    **Shell:** column flex root — header, optional status, `content_area` (`flex_grow(1)`), optional tab bar. `content_area` is itself a column flex container so its single child (the scrollable page column) participates as a proper flex item.
 
-`blusys_st7735_panel_draw_bitmap()` in `components/blusys/src/drivers/display/lcd.c` sends **one display row per `RAMWR`** (each row: `COLMOD` + `CASET` + `RASET` + `RAMWR`). Packing several scanlines into one `RASET` window plus one long `RAMWR` caused diagonal shear on some ST7735 SPI modules; the per-row path fixes it. `COLMOD` is re-asserted per transaction and once more after the last `RAMWR` so DMA completion is synchronized before the source buffer is reused. Throughput is lower than multi-row bursts; override only with validated hardware.
+    ## Display notes: ST7735 on SPI
 
-LVGL's partial-mode `flush_cb` in `components/blusys/src/services/display/ui.c` copies each dirty region from `px_map` using `lv_draw_buf_width_to_stride(area_width, cf)`, packs into the DMA scratch buffer, optionally byte-swaps RGB565 for SPI, and calls `blusys_lcd_draw_bitmap()`. `lv_display_flush_ready()` runs after all SPI/DMA for that flush completes.
+    `blusys_st7735_panel_draw_bitmap()` in `components/blusys/src/drivers/display/lcd.c` sends **one display row per `RAMWR`** (each row: `COLMOD` + `CASET` + `RASET` + `RAMWR`). Packing several scanlines into one `RASET` window plus one long `RAMWR` caused diagonal shear on some ST7735 SPI modules; the per-row path fixes it. `COLMOD` is re-asserted per transaction and once more after the last `RAMWR` so DMA completion is synchronized before the source buffer is reused. Throughput is lower than multi-row bursts; override only with validated hardware.
 
-SPI default for `st7735_160x128()` is 16 MHz; lower `pclk_hz` in product integration if wiring is marginal. Typical x/y gap offsets for 160×128 modules remain in the profile; tune per glass as needed.
+    LVGL's partial-mode `flush_cb` in `components/blusys/src/services/display/ui.c` copies each dirty region from `px_map` using `lv_draw_buf_width_to_stride(area_width, cf)`, packs into the DMA scratch buffer, optionally byte-swaps RGB565 for SPI, and calls `blusys_lcd_draw_bitmap()`. `lv_display_flush_ready()` runs after all SPI/DMA for that flush completes.
+
+    SPI default for `st7735_160x128()` is 16 MHz; lower `pclk_hz` in product integration if wiring is marginal. Typical x/y gap offsets for 160×128 modules remain in the profile; tune per glass as needed.

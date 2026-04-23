@@ -27,11 +27,7 @@ blusys_uart_close(uart);
 
 ## Target Support
 
-| Target | Supported |
-|--------|-----------|
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
 ## Thread Safety
 

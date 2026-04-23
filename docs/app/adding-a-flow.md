@@ -68,6 +68,6 @@ Keep flow constructors lightweight. Heavy state init belongs in `start()`.
 
 ## See also
 
-- [App runtime model](app-runtime-model.md) — when flows start relative to on_init
+- [App Runtime Model](app-runtime-model.md) — when flows start relative to on_init
 - [Capability composition](capability-composition.md) — pairing flows with capabilities
 - `components/blusys/include/blusys/framework/flows/` — all flow headers

@@ -72,7 +72,7 @@ See [Architecture](architecture.md) for the tier model.
 
 ### Framework product API versioning
 
-Breaking changes to `app_spec`, `app_ctx`, `app_fx`, and umbrella `blusys/app/*.hpp` headers are announced alongside the framework tier (changelog / release notes when applicable) and should be accompanied by updates to canonical docs and quickstarts when they touch the recommended product path. For the runtime story (queues, threading, what not to do in `update()`), see [App runtime model](../app/app-runtime-model.md).
+Breaking changes to `app_spec`, `app_ctx`, `app_fx`, and umbrella `blusys/app/*.hpp` headers are announced alongside the framework tier (changelog / release notes when applicable) and should be accompanied by updates to canonical docs and quickstarts when they touch the recommended product path. For the runtime story (queues, threading, what not to do in `update()`), see [App Runtime Model](../app/app-runtime-model.md).
 
 ### Product application layout (enforced in CI)
 
@@ -181,6 +181,23 @@ Advanced or validation-only surfaces may require a different mix of examples, do
 - expected behavior
 - common mistakes
 
+## Module reference docs (HAL and services)
+
+Hand-written pages for each HAL or service should follow a predictable spine so readers can scan quickly. Use a **summary line**, then the sections below in order. Omit a section (or a single *N/A* line) when it does not apply. Link to the generated API reference and `components/blusys/include/...` headers in the intro or a blockquote when helpful.
+
+1. **Quick example** (minimal, copy-pasteable) — for C modules, a short `app_main` or function-level snippet.
+2. **Common mistakes** (optional) — bullets, not prose.
+3. **Target support** — if **ESP32, ESP32-C3, and ESP32-S3** are all supported, use one line: `**ESP32, ESP32-C3, ESP32-S3** — all supported.` Use a table only when per-target support differs, or when extra columns are needed (for example, backend variants).
+4. **Concurrency** — one heading name repo-wide, either *Thread safety* or *Concurrency*; use imperative bullets. Note ISR rules or *not ISR-safe* in one line when N/A.
+5. **Limitations** (optional) — when the public contract has sharp edges.
+6. **See also** — example path under `examples/`, index pages, and the API reference.
+
+Services index pages that mostly link outward can lead with a **one-line** guidance that product code should prefer [Capabilities](../app/capabilities.md) over raw service calls.
+
+### Admonition vocabulary (docs)
+
+Use consistently in Markdown: `!!! note` for “read this / prefer this path” (e.g. product vs C API), `!!! tip` for a happy-path shortcut, `!!! warning` for invariants, breaking behaviour, or ordering constraints. Favour a short title line after the type. Collapsible `???+` (Details) is for long reference blocks that are optional on first read.
+
 ## Project Tracking
 
 - product foundations: `../README.md` (**Product foundations**)
@@ -224,4 +241,4 @@ python3 scripts/measure_integration_baseline.py
 
 The script prints lines of code in the product entrypoint area and counts `on_event` function bodies (heuristic) for reference examples.
 
-The default action queue capacity is `app_runtime<State, Action, 16>` unless a project overrides the third template argument. See [App runtime model](../app/app-runtime-model.md) for overflow behavior and `action_queue_drop_count()`.
+The default action queue capacity is `app_runtime<State, Action, 16>` unless a project overrides the third template argument. See [App Runtime Model](../app/app-runtime-model.md) for overflow behavior and `action_queue_drop_count()`.

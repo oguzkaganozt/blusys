@@ -4,6 +4,8 @@ Task watchdog timer (TWDT): monitor one or more tasks and trigger a panic or log
 
 The WDT module is global — no open/close handle. One controlling task calls `init`/`deinit`; each monitored task calls `subscribe`/`feed`/`unsubscribe`.
 
+> **API reference:** `components/blusys/include/blusys/hal/wdt.h` and the generated API reference.
+
 ## Quick Example
 
 ```c
@@ -34,11 +36,7 @@ void app_main(void)
 
 ## Target Support
 
-| Target | Supported |
-|--------|-----------|
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
 ## Thread Safety
 

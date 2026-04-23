@@ -1,6 +1,6 @@
-# Platform Profiles
+# Profiles
 
-Profiles configure the hardware and runtime environment for your app. `BLUSYS_APP(spec)` uses `spec.profile` and `spec.host_title` when you want to pin display size or window title. `BLUSYS_APP_HEADLESS(spec)` runs without UI.
+**Platform profiles** configure the hardware and runtime environment for your app. `BLUSYS_APP(spec)` uses `spec.profile` and `spec.host_title` when you want to pin display size or window title. `BLUSYS_APP_HEADLESS(spec)` runs without UI.
 
 ## Interactive
 

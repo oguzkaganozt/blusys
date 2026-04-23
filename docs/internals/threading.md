@@ -1,5 +1,12 @@
 # Threading contract
 
+## At a glance
+
+- **Reducer and effects** run on the task that calls `app_runtime::step()` (usually app / display path); async effects must not touch app state — use the event queue.
+- **Capabilities:** `poll()` is cooperative on that task; `post_event()` feeds the queue.
+- **ISRs** use task notifications to hand off; they never call framework or capability code directly.
+- **Queues** are bounded (fail closed / logged); see tables below for depths and overflow behaviour.
+
 This document states the threading rules that every subsystem and capability in
 Blusys must obey. Violations are bugs, not styles — the runtime is designed
 around a small, deliberate set of task boundaries, and code that ignores them

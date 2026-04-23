@@ -110,4 +110,4 @@ spec.on_event = [](blusys::event e, State &s) -> std::optional<Action> {
 
 - [Authoring a capability](capability-authoring.md) — full contract reference (event-ID ranges, reserved fields)
 - [Capability composition](capability-composition.md) — wiring multiple capabilities together
-- [App runtime model](app-runtime-model.md) — how events reach the reducer
+- [App Runtime Model](app-runtime-model.md) — how events reach the reducer

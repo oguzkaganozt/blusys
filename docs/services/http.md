@@ -1,12 +1,14 @@
 # HTTP
 
-HTTP client and server services for communicating over WiFi.
+HTTP **client** and **server** on top of a working IP link (usually [WiFi](wifi.md) associated and addressed).
 
-## HTTP Client
+> **Client:** one in-flight request per handle. **Server:** bind and respond from callbacks; see thread notes under each section.
 
-Blocking HTTP/HTTPS client for fetching and posting data over a WiFi connection.
+## HTTP client
 
-### Quick Example
+Blocking HTTP/HTTPS client for fetch/post over WiFi.
+
+### Quick example
 
 ```c
 #include <stdlib.h>
@@ -38,7 +40,7 @@ One request at a time per handle. Concurrent `request()` calls on the same handl
 
 Embedded HTTP server for handling incoming requests.
 
-### Quick Example
+### Quick example
 
 ```c
 #include "blusys/blusys.h"
@@ -59,15 +61,11 @@ blusys_http_server_open(&cfg, &server);
 
 Handlers run on the httpd task. Each handler must send exactly one response via `blusys_http_server_resp_send()` and return `BLUSYS_OK`; any other return value triggers an automatic 500.
 
-## Target Support
+## Target support
 
-| Target | Supported |
-|--------|-----------|
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
-## Common Mistakes
+## Common mistakes
 
 - forgetting to `free(response.body)` after client requests
 - checking `err` but not `status_code` — HTTP 4xx/5xx responses still return `BLUSYS_OK`

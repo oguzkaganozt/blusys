@@ -1,4 +1,8 @@
-# Device, host, and QEMU (`blusys` CLI)
+---
+title: Device, host & QEMU CLI
+---
+
+# Device, host, and QEMU CLI
 
 Single entry point for firmware, PC iteration, and ESP-IDF QEMU. Paths below are from your **project root** (where `CMakeLists.txt` lives).
 

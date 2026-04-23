@@ -1,6 +1,12 @@
-# App runtime model
+# App Runtime Model
 
-This page summarizes how intents, integration events, and the action queue connect to your reducer. Implementation details live in `components/blusys/include/blusys/framework/app/internal/app_runtime.hpp` (framework-internal; product code uses `blusys/framework/app/app.hpp` and related public headers).
+## At a glance
+
+- **Read this after** [Reducer model](reducer-model.md) so `app_spec` and `Action` are in context.
+- **One pipeline:** UI/capability events → optional `on_event` → action queue → `update()` (see diagram below).
+- **Internals:** `app_runtime.hpp` (not included by product code; use `blusys/framework/app/app.hpp`).
+
+This page summarizes how intents, integration events, and the action queue connect to your reducer. Implementation details live in `components/blusys/include/blusys/framework/app/internal/app_runtime.hpp`.
 
 ## Flow
 

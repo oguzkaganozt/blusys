@@ -2,6 +2,8 @@
 
 Runtime helpers common across all supported targets: uptime, reset reason, heap statistics, and soft restart.
 
+> **API reference:** `components/blusys/include/blusys/hal/system.h` and the generated API reference.
+
 ## Quick Example
 
 ```c
@@ -28,11 +30,7 @@ void app_main(void)
 
 ## Target Support
 
-| Target | Supported |
-|--------|-----------|
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
 ## Thread Safety
 

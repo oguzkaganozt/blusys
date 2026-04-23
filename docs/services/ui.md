@@ -1,17 +1,22 @@
 # UI
 
+## At a glance
+
+- **Service role:** open LCD, init LVGL, render task, `blusys_display_lock()` around any `lv_*` from other tasks.
+- **Product path:** [Profiles](../app/profiles.md) + [Views & widgets](../app/views-and-widgets.md); use this page when debugging the display stack or service handles.
+- **Hardware setup:** panel wiring and driver flags — [LCD (HAL)](../hal/lcd.md).
+
 !!! note "Internal service"
     This is a low-level service used internally by the framework. Product code should use [`blusys::app` profiles](../app/profiles.md) and the [view layer](../app/views-and-widgets.md) instead of calling these APIs directly.
 
-LVGL-based UI service. Opens an LCD handle, initialises LVGL, allocates draw buffers, and runs a dedicated render task. Widget access from other tasks is serialised through `blusys_display_lock()` / `blusys_display_unlock()`.
+!!! tip "Task and lock"
+    The render task owns LVGL; every `lv_*` from another task must run between `blusys_display_lock()` and `blusys_display_unlock()`. See **Common mistakes** below.
+
+LVGL-based UI service: opens an LCD handle, initialises LVGL, allocates draw buffers, and runs a dedicated render task.
 
 ## Target Support
 
-| Target | Supported |
-| ------ | --------- |
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
 !!! note "Requires LVGL"
     This module compiles only when the `lvgl/lvgl` managed component is present in the project. Declare it in your `idf_component.yml`. Without it, all functions return `BLUSYS_ERR_NOT_SUPPORTED`.
@@ -23,7 +28,6 @@ Only one UI instance may be open at a time. `blusys_display_open()` returns `BLU
 ## Quick Example
 
 ```c
-#include "blusys/blusys.h"
 #include "blusys/blusys.h"
 #include "lvgl.h"
 

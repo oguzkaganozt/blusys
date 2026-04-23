@@ -1,6 +1,6 @@
-# WebSocket Client
+# WebSocket
 
-Full-duplex WebSocket client for real-time communication with a server over WiFi.
+Client API for full-duplex, real-time communication with a server over WiFi.
 
 ## Quick Example
 

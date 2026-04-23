@@ -2,6 +2,8 @@
 
 On-chip digital-to-analog converter: write an 8-bit voltage level to a DAC-capable GPIO.
 
+> **API reference:** `components/blusys/include/blusys/hal/dac.h` and the generated API reference.
+
 ## Quick Example
 
 ```c
