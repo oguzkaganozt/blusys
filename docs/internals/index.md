@@ -1,18 +1,23 @@
 # Internals
 
-Platform architecture, development guidelines, target support, and testing references.
+Use these pages when you need the architecture, the invariants, or the validation story behind the public docs.
 
-- [Architecture](architecture.md) — three-tier model, component dependencies, UI layout (LVGL flex), ST7735 display notes, design rationale
-- [Guidelines](guidelines.md) — API design rules, product layout, workflow, maintaining checklist, integration baseline
-- [Contributing](contributing.md) — local checks, CI jobs, release
-- [Target Matrix](target-matrix.md) — per-module target support and requirements
-- [ADR 0001 — orchestration in framework](adr/0001-orchestration-in-framework.md)
-- [ADR 0002 — HAL component name `blusys_hal`](adr/0002-hal-component-name.md) *(superseded)*
-- [ADR 0003 — display auto-scaling and portability](adr/0003-display-auto-scaling.md)
-- [Display portability implementation](display-portability-impl.md)
+## Read in order
+
+1. [Architecture](architecture.md)
+2. [Guidelines](guidelines.md)
+3. [Contributing](contributing.md)
+4. [Target Matrix](target-matrix.md)
 
 ## Testing
 
 - [Hardware Smoke Tests](testing/hardware-smoke-tests.md)
 - [Concurrency Tests](testing/concurrency-tests.md)
 - [Validation Report Template](testing/hardware-validation-report-template.md)
+
+## Design decisions
+
+- [ADR 0001 - orchestration in framework](adr/0001-orchestration-in-framework.md)
+- [ADR 0002 - HAL component name](adr/0002-hal-component-name.md)
+- [ADR 0003 - display auto-scaling and portability](adr/0003-display-auto-scaling.md)
+- [Display portability implementation](display-portability-impl.md)

@@ -1,8 +1,9 @@
 # Blusys Platform
 
-An internal ESP32 product platform built on ESP-IDF v5.5.4. Blusys provides a shared operating model for recurring product families, from interactive consumer devices to headless industrial nodes, so new products start from shared architecture instead of rebuilding plumbing.
+Blusys is an internal ESP32 product platform built on ESP-IDF v5.5.4. It gives product teams one shape, one app model, and one path from host-first iteration to hardware.
 
-The repository [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md) (Product foundations) is the long-form source for install, validation expectations, and links to this site; these docs are the structured reference.
+!!! tip "The shortest path"
+    Decide the product shape, scaffold it, run it on host, then add capabilities and a profile only when the product needs them.
 
 <div class="grid cards" markdown>
 
@@ -10,43 +11,62 @@ The repository [README](https://github.com/oguzkaganozt/blusys/blob/main/README.
 
     ---
 
-    Get oriented: product shape, manifest, then a guided interactive or headless run.
+    Choose a shape, create a project, and get the first binary running.
 
-    [:octicons-arrow-right-24: Start (Getting started)](start/index.md)
+    [Getting Started](start/index.md)
 
 -   :material-cube-outline:{ .lg .middle } **App**
 
     ---
 
-    Build products: reducer flow, views, widgets, capabilities, and device profiles.
+    Build product behavior with reducers, views, capabilities, and profiles.
 
-    [:octicons-arrow-right-24: App Overview](app/index.md)
+    [App Overview](app/index.md)
 
 -   :material-connection:{ .lg .middle } **Services**
 
     ---
 
-    Connect and ship: network stacks, OTA, storage, display service, and more.
+    Use runtime modules directly when you need their exact lifecycle.
 
-    [:octicons-arrow-right-24: Browse Services](services/index.md)
+    [Browse Services](services/index.md)
 
 -   :material-chip:{ .lg .middle } **HAL + Drivers**
 
     ---
 
-    Talk to hardware: buses, GPIO, and common sensors or actuators.
+    Drop below the framework only when you need direct hardware control.
 
-    [:octicons-arrow-right-24: Browse HAL](hal/index.md)
+    [Browse HAL](hal/index.md)
 
 -   :material-wrench:{ .lg .middle } **Internals**
 
     ---
 
-    Engineering depth: architecture, invariants, target matrix, tests, and contribution checks.
+    Architecture, checks, target support, and testing.
 
-    [:octicons-arrow-right-24: Internals](internals/index.md)
+    [Internals](internals/index.md)
 
 </div>
+
+## How Blusys works
+
+```mermaid
+flowchart LR
+    shape["Choose shape\ninterface + capabilities + profile + policies"] --> create["blusys create"]
+    create --> project["Generated project\nblusys.project.yml + main/ + host/"]
+    project --> app["blusys::app\nreducer + views + actions"]
+    app --> caps["Capabilities\nconnectivity, storage, OTA, diagnostics"]
+    app --> profile["Profile\ninteractive hardware or headless"]
+    app --> run["Host / device / QEMU\nsame product model"]
+```
+
+## First Reads
+
+1. [Start](start/index.md) - the onboarding path
+2. [App](app/index.md) - how product code stays small
+3. [Services](services/index.md) and [HAL + Drivers](hal/index.md) - lower layers when needed
+4. [Internals](internals/index.md) - architecture and checks
 
 ## Supported Targets
 

@@ -1,50 +1,48 @@
 # Widget Gallery
 
-Common stock widgets in `blusys::app` and where they fit. Visuals should come from theme tokens (see [App](index.md)) only; keep raw LVGL inside custom widgets.
+Pick widgets by the kind of screen you are building.
 
-For layout across display sizes, see [Profiles](profiles.md). For how screens tie together, see [Views & Widgets](views-and-widgets.md).
+## Compact control
 
-## Compact Control
+Best for dense interactive devices.
 
-Best for compact interactive devices and dense control strips.
+| Widget | Use it for |
+|--------|------------|
+| `button` | primary actions |
+| `toggle` | binary settings |
+| `slider` | ranged values |
+| `gauge` | compact feedback |
 
-| Widget | Role | Often appears in |
-|--------|------|------------------|
-| `button` | Primary actions, confirmations | Settings rows, modals, shell actions |
-| `toggle` | On/off and binary settings | Settings, feature flags |
-| `slider` | Ranged numeric control | Brightness, thresholds |
-| `gauge` | Compact numeric feedback | Status strips, monitoring |
+## Operational surface
 
-Reference starter: manifest-first interactive starter docs (see [Interactive Quickstart](../start/quickstart-interactive.md)).
+Best for dashboards and multi-section local UIs.
 
-## Operational Surface
+| Widget | Use it for |
+|--------|------------|
+| `card` | grouped summaries |
+| `list` | options and drill-down |
+| `tabs` | screen partitioning |
+| `status_badge` | short operational state |
 
-Best for **interactive** dashboard-style local UI and gateway panels: dashboards and multi-section screens.
+## Data and diagnostics
 
-| Widget | Role | Often appears in |
-|--------|------|------------------|
-| `card` | Grouped content and summaries | Dashboard grids |
-| `list` | Options and drill-down | Settings, device lists |
-| `tabs` | Screen partitioning | Multi-section flows |
-| `status_badge` | Short operational state | Shell chrome, headers |
+Best for health screens and long-running work.
 
-Reference starter: `examples/reference/display/`.
-
-## Data And Diagnostics
-
-Shared by interactive and connected products when showing health and metrics.
-
-| Widget | Role | Often appears in |
-|--------|------|------------------|
-| `key_value` | Paired status fields | Status and about screens |
-| `data_table` | Tabular operational rows | Diagnostics, logs |
-| `progress` | Long-running work | OTA, loading flows |
-| `dropdown` | Compact single choice | Filters, mode picks |
-
-Reference starters: manifest-first headless starter docs (see [Headless Quickstart](../start/quickstart-headless.md)) and `examples/reference/display/`.
+| Widget | Use it for |
+|--------|------------|
+| `key_value` | paired status fields |
+| `data_table` | diagnostics and logs |
+| `progress` | OTA and loading states |
+| `dropdown` | compact single choice |
 
 ## Notes
 
-- Keep visuals driven by theme tokens.
-- Use custom widgets only when the stock set no longer fits.
-- Keep raw LVGL inside the widget implementation, not in app code.
+- Drive visuals from theme tokens.
+- Keep raw LVGL inside custom widgets.
+- Use the stock set first; build custom widgets only when needed.
+
+## Next steps
+
+- [Views & widgets](views-and-widgets.md)
+- [Profiles](profiles.md)
+- [Interactive Quickstart](../start/quickstart-interactive.md)

@@ -4,42 +4,36 @@ title: Device, host & QEMU CLI
 
 # Device, host, and QEMU CLI
 
-Single entry point for firmware, PC iteration, and ESP-IDF QEMU. Paths below are from your **project root** (where `CMakeLists.txt` lives).
+Use `blusys build`, `blusys host-build`, and `blusys qemu` from the project root.
 
-## Build output directories
+## Build targets
 
-| Label | Directory | Role |
-|-------|-----------|------|
-| `esp32`, `esp32c3`, `esp32s3` | `build-esp32*` | Flash to hardware |
-| `host` | `build-host` | SDL2 + LVGL host binary (no IDF flash image) |
-| `qemu32`, `qemu32c3`, `qemu32s3` | `build-qemu*` | IDF firmware for QEMU; **separate** from chip dir so `sdkconfig` does not collide |
+| Target | Output |
+|--------|--------|
+| `esp32` / `esp32c3` / `esp32s3` | `build-esp32*` |
+| `host` | `build-host` |
+| `qemu32` / `qemu32c3` / `qemu32s3` | `build-qemu*` |
 
-## Command matrix
+## Common commands
 
 | Goal | Command |
 |------|---------|
-| Firmware for a chip | `blusys build . esp32s3` (or `esp32` / `esp32c3`) |
-| Host (SDL, same repo layout) | `blusys build . host` or `blusys host-build` |
-| Firmware for QEMU (same Kconfig as chip unless you override) | `blusys build . qemu32s3` |
-| Optional QEMU-only Kconfig merge | Edit project `sdkconfig.qemu` (scaffold ships a commented stub; display-class examples show typical overrides) |
-| Run QEMU after a build | `blusys qemu . qemu32s3` (UART / automation-style) |
-| QEMU with IDF virtual framebuffer (LVGL / `esp_lcd_qemu_rgb` class apps) | `blusys qemu . qemu32s3 --graphics` |
-| QEMU, IDF monitor, no SDL window | `blusys qemu . qemu32s3 --serial-only` |
+| Build for hardware | `blusys build . esp32s3` |
+| Build for host | `blusys host-build` |
+| Build for QEMU | `blusys build . qemu32s3` |
+| Run QEMU | `blusys qemu . qemu32s3` |
+| Run QEMU framebuffer | `blusys qemu . qemu32s3 --graphics` |
+| Serial-only QEMU | `blusys qemu . qemu32s3 --serial-only` |
 
-`blusys flash`, `run`, `monitor`, and `erase` accept **device targets only** (`esp32` family), not `host` or `qemu*`.
+`flash`, `run`, `monitor`, and `erase` accept device targets only.
 
-## Two QEMU launch paths
+## QEMU modes
 
-`blusys qemu` **without** `--graphics` / `--serial-only` builds, merges a flash image, and runs **`qemu-system-*` with `-nographic`** — good for logs and CI-style checks.
-
-With **`--graphics`** or **`--serial-only`**, the same build uses ESP-IDF’s **`idf.py qemu`** (SDL framebuffer where IDF supports it, or serial-only monitor). Interactive RGB-style demos usually need **`--graphics`** plus a suitable `sdkconfig.qemu` and HAL choice; see the interactive dashboard example.
-
-## Espressif QEMU (authoritative)
-
-- **IDF guide (usage, `idf.py qemu`, graphics, GDB, eFuse, …):** [QEMU Emulator — ESP-IDF v5.5.4](https://docs.espressif.com/projects/esp-idf/en/v5.5.4/esp32/api-guides/tools/qemu.html)
-- **Toolchain docs tree (per-chip READMEs + supported-feature matrix):** [esp-toolchain-docs / qemu](https://github.com/espressif/esp-toolchain-docs/tree/main/qemu) — start from the top-level [README](https://github.com/espressif/esp-toolchain-docs/blob/main/qemu/README.md) for the **Supported features** table (what is actually emulated vs not).
+- Default mode uses `qemu-system-* -nographic` for logs and CI-style runs.
+- `--graphics` uses the IDF framebuffer path when the platform supports it.
+- `--serial-only` skips the SDL window and keeps the monitor.
 
 ## Related
 
-- [Validation and host loop](validation-host-loop.md) — host smokes, scaffold, CI
-- `scripts/host/README.md` — monorepo host harness (`blusys host-build` with no path)
+- [Validation and host loop](validation-host-loop.md)
+- `scripts/host/README.md`

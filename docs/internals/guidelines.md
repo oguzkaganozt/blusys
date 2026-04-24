@@ -1,244 +1,103 @@
 # Guidelines
 
-Start by reading the [Architecture](architecture.md) page.
+Start with [Architecture](architecture.md). Use this page for API shape, product layout, and docs standards.
 
-## API Design Rules
+## API design
 
-### Core Rules
+- HAL, drivers, and services use `blusys_` C APIs with `blusys_err_t` results.
+- Product-facing APIs may use `blusys::...`.
+- Keep public names direct and the common path short.
+- Use opaque handles for stateful peripherals and simple scalars for simple calls.
 
-- public C APIs in HAL, drivers, and services use the `blusys_` prefix
-- product-facing C++ APIs may use the `blusys::...` namespace hierarchy
-- HAL, drivers, and services expose C headers and must not expose ESP-IDF types
-- names should be direct and readable
-- keep the common path short and easy to call
+## Language and logging
 
-### Language Policy
+- HAL, drivers, and services expose C headers with `extern "C"` guards.
+- Framework is the only C++ tier.
+- Framework C++ uses `-std=c++20 -fno-exceptions -fno-rtti -fno-threadsafe-statics`.
+- HAL and services use `esp_log.h`; framework uses `blusys/log.h`.
+- Keep cross-tier boundaries explicit.
 
-- `components/blusys/` HAL, drivers, and services layers expose C headers with `extern "C"` guards
-- `components/blusys/` framework layer is the only C++ tier; it exposes C++ headers in `include/blusys/framework/`
-- framework C++ uses `-std=c++20 -fno-exceptions -fno-rtti -fno-threadsafe-statics`
-- framework C++ should stay platform-facing and disciplined, not become a second copy of ESP-IDF internals
-- services migration to C++ is out of scope; the services tier stays C
-- keep cross-tier boundaries explicit: framework depends on services, services depend on HAL + drivers
-- integration bridge: `capability_event` may carry `payload`; unmapped raw integration IDs can appear as `integration_passthrough` when `app_spec::on_event` is set (see `capability_event.hpp`)
+## Allocation and stability
 
-See [Architecture](architecture.md) for the tier model.
+- Framework code does not call `new`, `delete`, `malloc`, or `free` after init.
+- Widget callback slots use fixed-capacity pools and fail loud on exhaustion.
+- Do not expose target-specific behavior unless all supported targets share it.
+- Do not recommend a public API without examples, docs, and validation.
 
-### Logging Convention
+## Product application shape
 
-- HAL and service code uses `esp_log.h` directly (`ESP_LOGI`, `ESP_LOGE`, etc.)
-- framework code uses `blusys/log.h` (`BLUSYS_LOGI`, `BLUSYS_LOGE`, etc.) — a thin
-  wrapper that isolates the framework tier from direct `esp_log.h` usage
-- product app code may use either, but preferring `blusys/log.h` keeps the style
-  consistent with framework code
-
-### Allocation Policy
-
-- framework code (core spine + widget kit) does not call `new` / `delete` or
-  `malloc` / `free` after initialization
-- interactive widget callback slots use fixed-capacity static pools sized by
-  KConfig symbols (`BLUSYS_UI_<NAME>_POOL_SIZE`); the pool fires a fail-loud assert
-  on exhaustion — silent pool exhaustion is worse than a crash
-- layout primitives and the core spine (router, runtime, feedback bus) are
-  allocation-free after `init()`
-
-### API Shape
-
-- use `blusys_err_t` for public results
-- use opaque handles for stateful peripherals
-- use raw GPIO numbers publicly
-- prefer simple scalar arguments for common operations
-- use config structs only when the simple path is no longer enough
-
-### Error and Behavior Rules
-
-- translate backend errors internally
-- keep the public error model small
-- document major failure cases
-- treat blocking APIs as first-class
-- add async only where it is naturally useful
-
-### Thread-Safety Rules
-
-- define thread-safety per module
-- protect lifecycle operations such as `close` against concurrent active use
-- document ISR-safe behavior explicitly
-
-### Stability Rules
-
-- do not expose target-specific behavior unless all supported targets share it
-- do not add or recommend public API without proportionate examples, docs, and validation
-- prefer the canonical product path over preserving additive continuity with legacy sketches
-
-### Framework product API versioning
-
-Breaking changes to `app_spec`, `app_ctx`, `app_fx`, and umbrella `blusys/app/*.hpp` headers are announced alongside the framework tier (changelog / release notes when applicable) and should be accompanied by updates to canonical docs and quickstarts when they touch the recommended product path. For the runtime story (queues, threading, what not to do in `update()`), see [App Runtime Model](../app/app-runtime-model.md).
-
-### Product application layout (enforced in CI)
-
-- **Canonical `main/` shape:** `app_main.cpp` (thin entrypoint with a visible init zone), `ui/` (screens, LVGL, sync — may be empty for headless with a README). Keep the entrypoint explicit; split only when the file stops being readable.
-- **Validation examples** (`examples/validation/`) and other non-framework demos are exempt; see `scripts/check-product-layout.py`.
-- Optional inventory flags: `layout_exempt`, `product_layout` (see `inventory.yml` header).
-
-For how the **framework** composes LVGL flex, scroll, and the interaction shell (primitives, shell `content_area`, stock widget sizing), see [Architecture — UI layout](architecture.md#ui-layout-lvgl-flex).
+- Canonical `main/` is `app_main.cpp` plus optional `ui/`.
+- The reducer is the center: `update(ctx, state, action)` owns domain rules.
+- Use strong route and overlay enums.
+- Prefer `ctx.fx()` for navigation and overlays.
+- Keep view sync in bindings and small composites.
 
 ### Product application C++ shape {#product-application-cpp-shape}
 
-- **Reducer center:** domain rules live in `update(ctx, state, action)`; keep navigation and capability sync as explicit actions.
-- **Strong ids:** use `enum class` for routes and overlays in product code; `ctx.fx().nav.to` / `ctx.fx().nav.show_overlay` accept those enums.
-- **State from factories:** use `ctx.product_state<YourState>()` in screen factories instead of file-scope pointers to `app_state`.
-- **View sync:** prefer `blusys::` bindings and small composites (for example `sync_percent_output`, `sync_line_chart_series`) over calling `blusys::ui::*` setters directly from product code.
-- **Route handles:** group `lv_obj_t*` handles in per-route structs with `clear()` on hide; the screen registry still owns teardown of the widget tree.
-- **Settings:** give interactive `setting_item` rows a non-zero `id` when using `settings_screen_config::on_changed`; the callback receives that stable id (or the row index when `id` is 0).
-- **Product wiring:** include `blusys/framework/app/` headers when you need typed capability event IDs or `dispatch_variant`; use `blusys/framework/platform/build.hpp` (or `reference_build.hpp`) to avoid duplicated `#ifdef` matrices in `app_main.cpp` or helper files.
+- `ctx.product_state<YourState>()` in screen factories instead of file-scope state.
+- Keep route handles in per-route structs and clear them on hide.
+- Give interactive settings rows a stable `id` when using `on_changed`.
+- Use `blusys/framework/app/` headers when you need typed capability event IDs or `dispatch_variant`.
+- Use `blusys/framework/platform/build.hpp` or `reference_build.hpp` to avoid duplicated `#ifdef` matrices.
 
-## Development Workflow
+## Workflow
 
-1. confirm the scope against `README.md` (**Product foundations**) and this guide
-2. define whether the work belongs to the canonical product path, an advanced path, or validation-only infrastructure
-3. define the public API shape and ownership boundary
-4. define lifecycle and thread-safety rules
-5. implement the smallest change that advances the canonical product path
-6. add or update only the docs, examples, and validation required for that support tier
-7. validate the affected paths proportionally
+1. Confirm scope against `README.md` and this page.
+2. Decide whether it is canonical product path, advanced path, or validation-only.
+3. Define the public API shape and ownership boundary.
+4. Define lifecycle and thread-safety rules.
+5. Implement the smallest correct change.
+6. Add only the docs, examples, and validation the change needs.
+7. Validate the affected paths proportionally.
 
-### Change Rules
+## Documentation standards
 
-- start from the smallest correct implementation
-- keep the public surface smaller than the backend surface
-- avoid target-specific public APIs unless there is a clear need
-- keep target differences internal
-- prefer deliberate simplification over preserving broad additive surface area
+- Write for application developers first.
+- Explain the task before listing APIs.
+- Prefer short examples over long theory.
+- Avoid repeating setup, build, and flash instructions.
+- Keep user docs task-first and module docs reference-first.
 
-### Release Rules
+### Module reference shape
 
-- no undocumented public API
-- no unsupported recommended-path API
-- no release cut without validation appropriate to the API's support tier
+1. Purpose
+2. Supported targets
+3. Quick example
+4. Lifecycle
+5. Thread safety
+6. Limitations
+7. See also
 
-## Module Done Criteria
+### Admonitions
 
-A public surface is done when it has support artifacts appropriate to its support tier.
+- `!!! note` for recommended paths.
+- `!!! tip` for a happy-path shortcut.
+- `!!! warning` for invariants and breaking behavior.
+- `???+` for long optional detail blocks.
 
-Canonical product-path features should generally have:
+## Module done criteria
+
+Canonical product-path features should usually have:
 
 - public API
 - implementation
-- at least one canonical example or quickstart path
+- at least one canonical example or quickstart
 - user-facing documentation
-- successful builds on the supported targets for that path
-- validation appropriate to its release role
-
-Advanced or validation-only surfaces may require a different mix of examples, docs, and validation depending on their role in the repo.
-
-## Testing Strategy
-
-### Goals
-
-- verify builds on all supported targets
-- verify runtime behavior on real boards
-- verify lifecycle and concurrency behavior where it matters
-
-### Validation Layers
-
-1. build all shipped examples for `esp32`, `esp32c3`, and `esp32s3`
-2. run the hardware smoke tests in `docs/internals/testing/hardware-smoke-tests.md`
-3. run the concurrency examples when changing lifecycle, locking, or callback behavior
-
-### Testing Rules
-
-- test the public API, not internal ESP-IDF details
-- keep hardware checks small and repeatable
-- add regression coverage when bugs are fixed
-
-## Documentation Standards
-
-### Writing Rules
-
-- write for application developers first
-- explain the task before listing APIs
-- prefer short examples over long theory
-- avoid repeating setup, build, and flash instructions across many pages
-- keep user docs task-first, module docs reference-first
-
-### Module Reference Page Shape
-
-- purpose
-- supported targets
-- quick example
-- lifecycle
-- blocking and async behavior
-- thread safety
-- ISR notes when relevant
-- limitations and error behavior
-
-### Task Guide Shape
-
-- problem statement
-- prerequisites
-- minimal example
-- APIs used
-- expected behavior
-- common mistakes
-
-## Module reference docs (HAL and services)
-
-Hand-written pages for each HAL or service should follow a predictable spine so readers can scan quickly. Use a **summary line**, then the sections below in order. Omit a section (or a single *N/A* line) when it does not apply. Link to the generated API reference and `components/blusys/include/...` headers in the intro or a blockquote when helpful.
-
-1. **Quick example** (minimal, copy-pasteable) — for C modules, a short `app_main` or function-level snippet.
-2. **Common mistakes** (optional) — bullets, not prose.
-3. **Target support** — if **ESP32, ESP32-C3, and ESP32-S3** are all supported, use one line: `**ESP32, ESP32-C3, ESP32-S3** — all supported.` Use a table only when per-target support differs, or when extra columns are needed (for example, backend variants).
-4. **Concurrency** — one heading name repo-wide, either *Thread safety* or *Concurrency*; use imperative bullets. Note ISR rules or *not ISR-safe* in one line when N/A.
-5. **Limitations** (optional) — when the public contract has sharp edges.
-6. **See also** — example path under `examples/`, index pages, and the API reference.
-
-Services index pages that mostly link outward can lead with a **one-line** guidance that product code should prefer [Capabilities](../app/capabilities.md) over raw service calls.
-
-### Admonition vocabulary (docs)
-
-Use consistently in Markdown: `!!! note` for “read this / prefer this path” (e.g. product vs C API), `!!! tip` for a happy-path shortcut, `!!! warning` for invariants, breaking behaviour, or ordering constraints. Favour a short title line after the type. Collapsible `???+` (Details) is for long reference blocks that are optional on first read.
-
-## Project Tracking
-
-- product foundations: `../README.md` (**Product foundations**)
+- successful builds on the supported targets
+- validation appropriate to the support tier
 
 ## Maintaining
 
-The single merged component and its `REQUIRES` name:
-
 | Directory | Component | Role |
 |-----------|-----------|------|
-| `components/blusys/` | `blusys` | All four layers (hal/drivers/services/framework); public headers under `include/blusys/` |
+| `components/blusys/` | `blusys` | all four layers, public headers under `include/blusys/` |
 
-Dependency direction within the component: framework → services → drivers → hal → ESP-IDF. The `blusys/` include namespace is shared across all layers.
+## Pre-merge checks
 
-### Suggested reading order
-
-1. Repository root `README.md` — product foundations
-2. [Architecture](architecture.md) — tiers and layering
-3. This page — API and workflow
-4. Repository root `inventory.yml` — modules, examples, docs (CI manifest)
-
-### Pre-merge / pre-release checks
-
-Aligned with `.github/workflows/ci.yml`:
-
-- `./blusys lint` — layering (`scripts/lint-layering.sh`) + framework UI source list consistency
+- `./blusys lint`
 - `python3 scripts/check-inventory.py`
-- `python3 scripts/check-framework-ui-sources.py` (after CMake or widget path changes)
-- `mkdocs build --strict` (any doc or `mkdocs.yml` change)
-- Representative builds: `blusys host-build` (e.g. `scripts/host` or a quickstart example with `host/`), and `blusys build` on at least one HAL validation example when components change
+- `mkdocs build --strict`
+- `blusys host-build`
+- representative `blusys build` on changed component paths
 
 For broader changes, also run `python3 scripts/check-product-layout.py` and `scripts/scaffold-smoke.sh`.
-
-## Integration baseline (metrics)
-
-Record before/after snapshots when shrinking the product entrypoint or adding framework-owned flows.
-
-```bash
-python3 scripts/measure_integration_baseline.py
-```
-
-The script prints lines of code in the product entrypoint area and counts `on_event` function bodies (heuristic) for reference examples.
-
-The default action queue capacity is `app_runtime<State, Action, 16>` unless a project overrides the third template argument. See [App Runtime Model](../app/app-runtime-model.md) for overflow behavior and `action_queue_drop_count()`.

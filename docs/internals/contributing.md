@@ -1,31 +1,27 @@
 # Contributing
 
-Concrete checks, CI jobs, and local validation for Blusys contributors. Read [Architecture](architecture.md) and [Guidelines](guidelines.md) first for the rules these checks enforce.
+Use the smallest set of checks that matches the scope of your change.
 
 ## Local checks
 
-Run proportionate checks for the scope of your change:
-
-| Change touches… | Run |
-|-----------------|-----|
-| Anything under `components/` | `./blusys lint` (layering + framework UI sources + host-bridge spine) |
-| Widget paths, UI sources | `python3 scripts/check-framework-ui-sources.py` |
+| Touches | Run |
+|---------|-----|
+| `components/` | `./blusys lint` |
+| UI source paths | `python3 scripts/check-framework-ui-sources.py` |
 | `inventory.yml`, new modules/examples/docs | `python3 scripts/check-inventory.py` |
 | Product-shaped `main/` layouts | `python3 scripts/check-product-layout.py` |
 | Example paths | `python3 scripts/example-health.py` |
-| `blusys create`, `scripts/scaffold/` catalog, generated host CMake | `scripts/scaffold-smoke.sh` |
-| Docs, `mkdocs.yml` | `mkdocs build --strict` |
+| Scaffold or create matrix | `scripts/scaffold-smoke.sh` |
+| Docs or `mkdocs.yml` | `mkdocs build --strict` |
 | Components or examples | `blusys build` / `blusys host-build` |
 
-### Host tests
-
-From `scripts/host/build-host/` (configure with `blusys host-build`):
+## Host tests
 
 ```sh
-ctest                               # all host tests (spine, snapshot buffer)
+ctest
 ```
 
-Sanitizer variant:
+For sanitizer coverage:
 
 ```sh
 cmake -S scripts/host -B scripts/host/build-host-asan -DBLUSYS_HOST_SANITIZE=ON
@@ -33,59 +29,37 @@ cmake --build scripts/host/build-host-asan
 ctest --test-dir scripts/host/build-host-asan
 ```
 
-Mirrors CI’s “Host spine tests (sanitizer)” job.
-
-### Device and QEMU
+## Device and QEMU
 
 ```sh
 blusys build <project> <esp32|esp32c3|esp32s3>
 blusys qemu --serial-only <project> <qemu32|qemu32c3|qemu32s3>
 ```
 
-After app-flow or integration changes, prioritize: host interactive, headless, scaffold, and ST7735-class device builds on all three silicon targets.
+After app-flow or integration changes, prioritize host interactive, headless, scaffold, and ST7735-class device builds on all three silicon targets.
 
-???+ note "CI jobs (PR) — full stage matrix"
-    Workflow: `.github/workflows/ci.yml`. Triggered by push/PR to `main` on watched paths.
+## CI
 
-    | Stage | What it runs |
-    |-------|--------------|
-    | Lint | `scripts/lint-layering.sh` + layer-invariant scripts + `scripts/check-framework-ui-sources.py` |
-    | Inventory | `scripts/check-inventory.py` + `scripts/check-product-layout.py` |
-    | Host smoke | Configure/build `scripts/host`, run smokes, `ctest`, sanitizer build/run; build `headless` host example; `scaffold-smoke.sh` |
-    | Docs | `mkdocs build --strict` |
-    | Device builds | `scripts/build-from-inventory.sh` with `ci_pr=true` across the target matrix |
-    | Display variants | `scripts/build-display-variants.sh` |
-    | QEMU smokes | Subset via `scripts/qemu-test.sh` |
+PR CI runs layering checks, inventory checks, host smokes, docs strict build, inventory-selected device builds, display variants, and QEMU smoke subsets.
 
-    PR coverage runs only examples flagged `ci_pr: true` in `inventory.yml`. Nightly (`.github/workflows/nightly.yml`) runs broader example builds.
+## Adding code
 
-## Adding a module, example, or doc
-
-1. Add the code/content.
-2. Register it in `inventory.yml` (see existing entries for the schema; `layout_exempt` / `product_layout` flags documented at the top of the file).
-3. If it’s a doc, add the nav entry in `mkdocs.yml`.
-4. Run `python3 scripts/check-inventory.py` and `mkdocs build --strict`.
-5. If it’s a product-shaped example, run `python3 scripts/check-product-layout.py`.
-6. If it touches scaffold generation or the create matrix, run `scripts/scaffold-smoke.sh`.
-
-## Tier discipline
-
-- HAL and services are C and must not expose ESP-IDF types in public headers.
-- Framework is C++ (`-fno-exceptions -fno-rtti`), no allocation after init, no RAII over LVGL or ESP-IDF handles.
-- Reverse dependencies across tiers are forbidden; `blusys lint` enforces the HAL/drivers boundary.
+1. Add the code or content.
+2. Register it in `inventory.yml`.
+3. Add the nav entry in `mkdocs.yml` for docs.
+4. Run the matching checks above.
 
 ## Release
 
-Single tag covers the merged `components/blusys/` component. Before tagging:
+Before tagging:
 
-- `./blusys lint` clean
-- `python3 scripts/check-inventory.py` clean
-- `mkdocs build --strict` clean
-- Representative `blusys build` across `esp32`, `esp32c3`, `esp32s3`
-- `BLUSYS_VERSION_STRING` in `components/blusys/include/blusys/hal/version.h` matches the tag
-- `blusys version` prints the new string
+- `./blusys lint`
+- `python3 scripts/check-inventory.py`
+- `mkdocs build --strict`
+- representative `blusys build` across `esp32`, `esp32c3`, and `esp32s3`
+- `BLUSYS_VERSION_STRING` matches the tag
 
 ## See also
 
 - [Architecture](architecture.md)
-- [Guidelines](guidelines.md) — `Maintaining` and `Integration baseline` sections
+- [Guidelines](guidelines.md)

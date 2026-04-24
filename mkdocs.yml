@@ -65,25 +65,25 @@ nav:
   - Home: index.md
   - Start:
       - start/index.md
+      - Product shape: start/product-shape.md
       - Interactive Quickstart: start/quickstart-interactive.md
       - Headless Quickstart: start/quickstart-headless.md
-      - Product shape: start/product-shape.md
   - App:
       - app/index.md
       - Reducer Model: app/reducer-model.md
-      - App Runtime Model: app/app-runtime-model.md
       - Views & Widgets: app/views-and-widgets.md
-      - Widget Gallery: app/widget-gallery.md
-      - Capability Composition: app/capability-composition.md
       - Capabilities: app/capabilities.md
+      - Capability Composition: app/capability-composition.md
+      - Profiles: app/profiles.md
+      - App Runtime Model: app/app-runtime-model.md
+      - Widget Gallery: app/widget-gallery.md
+      - "Validation & host loop": app/validation-host-loop.md
+      - "Device, host & QEMU CLI": app/cli-host-qemu.md
       - "Authoring a capability": app/capability-authoring.md
       - "Adding a capability": app/adding-a-capability.md
       - "Adding a flow": app/adding-a-flow.md
       - "Memory and budgets": app/memory-and-budgets.md
       - Product-custom capabilities: app/custom-capabilities.md
-      - Profiles: app/profiles.md
-      - "Validation & host loop": app/validation-host-loop.md
-      - "Device, host & QEMU CLI": app/cli-host-qemu.md
   - Services:
       - services/index.md
       - Connectivity:

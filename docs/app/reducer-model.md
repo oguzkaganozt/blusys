@@ -1,35 +1,29 @@
 # Reducer Model
 
+One `update(ctx, state, action)` function owns state changes. Everything else feeds it.
+
 ## At a glance
 
-- **Idea:** one `update(ctx, state, action)` mutates your `State`; optional `on_event` turns external events into `Action`s.
-- **Define** an `app_spec<State, Action>` with `update` plus hooks you need.
-- **Next:** [App runtime model](app-runtime-model.md) for queues and threading.
+- `app_spec<State, Action>` wires the reducer and any optional hooks.
+- `State` is a plain struct mutated in place.
+- `Action` is the product vocabulary that drives behavior.
+- `on_event()` translates framework/capability events into actions.
+- `on_tick()` handles periodic headless work when needed.
 
-The Blusys app model follows a reducer pattern: all state changes flow through a single `update()` function.
-
-## Core Types
-
-### `app_spec`
-
-Defines the complete application:
+## `app_spec`
 
 ```cpp
 static const blusys::app_spec<State, Action> spec{
-    .initial_state = {},      // initial value of State
-    .update        = update,  // required: reducer function
-    .on_init       = on_init, // optional: void(app_ctx&, app_fx&, State&) — UI setup for interactive apps
-    .on_event      = on_event, // optional: std::optional<Action>(event, State&) — unified event hook
-    .on_tick       = on_tick, // optional: void(app_ctx&, app_fx&, State&, uint32_t) — periodic callback
-    .tick_period_ms = 100,    // tick interval; default is 10 ms
+    .initial_state = {},
+    .update        = update,
+    .on_init       = on_init,
+    .on_event      = on_event,
+    .on_tick       = on_tick,
+    .tick_period_ms = 100,
 };
 ```
 
-All fields except `update` are optional. The framework owns the runtime loop — you only fill in what your product needs.
-
-### State
-
-Your app state is a plain struct. The reducer mutates it in place:
+## State and actions
 
 ```cpp
 struct State {
@@ -37,13 +31,7 @@ struct State {
     bool connected = false;
     float temperature = 0.0f;
 };
-```
 
-### Actions
-
-Actions are the events that drive state changes:
-
-```cpp
 enum class Action {
     increment,
     decrement,
@@ -54,22 +42,20 @@ enum class Action {
 };
 ```
 
-### `app_ctx` and `app_fx`
+## Context and effects
 
-The context object provided to your reducer is `app_ctx`. Use it for **dispatch**, **capability status**, and **feedback**. Typed navigation, overlays, shell/screen router, and ESP filesystem handles live on **`app_fx`**, reached as **`ctx.fx()`** or the `fx` hook parameter.
+`app_ctx` handles dispatch, capability status, and feedback. `app_fx` exposes typed navigation, overlays, and filesystem handles.
 
 ```cpp
-ctx.dispatch(Action::increment);          // queue an action (returns false if the queue is full)
-ctx.fx().nav.to(RouteId::settings);       // set root route
-ctx.fx().nav.push(RouteId::detail);       // push route
-ctx.fx().nav.back();                      // pop route
-ctx.fx().nav.show_overlay(OverlayId::confirm); // show overlay
-ctx.emit_feedback(                        // haptic / audio feedback
-    blusys::feedback_channel::haptic,
-    blusys::feedback_pattern::click);
+ctx.dispatch(Action::increment);
+ctx.fx().nav.to(RouteId::settings);
+ctx.fx().nav.push(RouteId::detail);
+ctx.fx().nav.show_overlay(OverlayId::confirm);
+ctx.emit_feedback(blusys::feedback_channel::haptic,
+                  blusys::feedback_pattern::click);
 ```
 
-## The Update Function
+## Update
 
 ```cpp
 void update(blusys::app_ctx &ctx, State &state, const Action &action)
@@ -92,57 +78,45 @@ void update(blusys::app_ctx &ctx, State &state, const Action &action)
 }
 ```
 
-## Dispatch Lifecycle
+## Event hook
 
-1. A widget callback, event hook, or tick hook calls `ctx.dispatch(action)`
-2. The framework queues the action
-3. At each step the framework calls `update(ctx, state, action)` for each queued action
-4. The reducer mutates state in place — no reactive framework, no subscriptions
-
-## Event Hook (phase 4)
-
-`on_event` is the unified hook. It sees framework intents and capability events as one stream and returns an optional action.
+`on_event()` sees intents and integration events as one stream. Return `std::optional<Action>` and keep the reducer free of raw event IDs.
 
 ```cpp
 std::optional<Action> on_event(blusys::event e, State &state)
 {
     (void)state;
-    switch (e.source) {
-    case blusys::event_source::intent:
-        switch (static_cast<blusys::intent>(e.kind)) {
-        case blusys::intent::increment:
-            return Action::increment;
-        case blusys::intent::decrement:
-            return Action::decrement;
-        case blusys::intent::confirm:
-            return Action::reset;
-        default:
-            return std::nullopt;
-        }
-    default:
+    if (e.source != blusys::event_source::intent) {
         return std::nullopt;
+    }
+
+    switch (static_cast<blusys::intent>(e.kind)) {
+    case blusys::intent::increment: return Action::increment;
+    case blusys::intent::decrement: return Action::decrement;
+    case blusys::intent::confirm:   return Action::reset;
+    default:                        return std::nullopt;
     }
 }
 ```
 
-## Periodic Tick
-
-For headless apps that need periodic work, `on_tick` runs at `tick_period_ms` intervals:
+## Periodic work
 
 ```cpp
-void on_tick(blusys::app_ctx &ctx, blusys::app_fx &fx, State & /*state*/, std::uint32_t /*now_ms*/)
+void on_tick(blusys::app_ctx &ctx, blusys::app_fx &, State &, std::uint32_t)
 {
-    (void)fx;
     ctx.dispatch(Action::temp_reading);
 }
 ```
 
-## Entry Points
+## Entry points
 
 ```cpp
-// Interactive app — host SDL or device LCD + input
 BLUSYS_APP(spec)
-
-// Headless app — no UI, terminal / ESP32
 BLUSYS_APP_HEADLESS(spec)
 ```
+
+## Next steps
+
+- [App runtime model](app-runtime-model.md)
+- [Views & widgets](views-and-widgets.md)
+- [Capabilities](capabilities.md)

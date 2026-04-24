@@ -1,10 +1,9 @@
 # Getting started
 
-Targets **ESP32 / ESP32-C3 / ESP32-S3** with **ESP-IDF 5.5+**. [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md): install, validation, and CLI overview.
+Blusys starts with one decision: interactive or headless. From there you choose capabilities, optionally a profile, and run the same product on host before you touch hardware.
 
-1. **Shape** — [Product shape](product-shape.md): `blusys create`, `blusys.project.yml`, `interface`, `capabilities`, `profile`, `policies`. Run **`blusys create --list`** for presets.
-2. **Quickstart** — pick **interactive** (UI + `main/ui/`) or **headless** (terminal) below; then [App](../app/index.md) for the reducer and capabilities.
-3. **Optional:** `scripts/scaffold-smoke.sh` clones a temp tree and runs both quickstart host builds (CI-style smoke).
+!!! note "Live catalog"
+    `blusys create --list` shows the current interfaces, starter presets, capabilities, profiles, and policies.
 
 <div class="grid cards" markdown>
 
@@ -12,33 +11,39 @@ Targets **ESP32 / ESP32-C3 / ESP32-S3** with **ESP-IDF 5.5+**. [README](https://
 
     ---
 
-    `blusys create --interface interactive …` — SDL host window, `main/ui/`.
+    Local UI, screens, and encoder-friendly products.
 
-    [:octicons-arrow-right-24: Interactive Quickstart](quickstart-interactive.md)
+    [Interactive Quickstart](quickstart-interactive.md)
 
 -   **Headless App**
 
     ---
 
-    `blusys create --interface headless …` — same runtime, no `ui/` by default.
+    Connected products with no local UI by default.
 
-    [:octicons-arrow-right-24: Headless Quickstart](quickstart-headless.md)
+    [Headless Quickstart](quickstart-headless.md)
 
 </div>
 
-## Where things live
+## The flow
 
-| Layer | Role |
-|-------|------|
-| [App](../app/index.md) | Reducer, views, capabilities, profiles (product code starts here) |
-| [Services](../services/index.md) | C services when you go below capabilities |
-| [HAL + drivers](../hal/index.md) | Direct hardware |
-| [Internals](../internals/index.md) | Architecture, layer checks, target matrix, contributing |
+1. Choose the product shape.
+2. Scaffold it with `blusys create`.
+3. Run it on host with `blusys host-build`.
+4. Move to hardware or QEMU when you need it.
+5. Add capabilities and profiles as the product grows.
 
-## Product types (examples)
+## What each path is for
 
-Interactive consumer / panels; headless connected appliances; industrial telemetry — same platform, different `interface` and capability sets.
+| Path | Use it when |
+|------|-------------|
+| Interactive | the product has a local UI, encoder, or screen |
+| Headless | the product has no local UI and should stay reducer-first |
 
-## Requirements
+## Next steps
 
-ESP-IDF v5.5+; supported chips as above.
+- [Product shape](product-shape.md)
+- [App](../app/index.md)
+- [Capabilities](../app/capabilities.md)
+- [Profiles](../app/profiles.md)
+- [Device, host & QEMU CLI](../app/cli-host-qemu.md)

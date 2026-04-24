@@ -1,68 +1,50 @@
 # Filesystem
 
-SPIFFS-backed filesystem for reading and writing files on the internal SPI flash. For hierarchical paths and wear-levelling, use [`fatfs`](fatfs.md) instead.
+SPIFFS-backed filesystem for simple flash storage. Use FATFS when you need directories or wear levelling.
 
-## Quick Example
+## At a glance
+
+- mount before file access
+- SPIFFS is flat, not hierarchical
+- data is not wear-levelled like FATFS
+
+## Quick example
 
 ```c
-#include "blusys/blusys.h"
+blusys_fs_t *fs;
+blusys_fs_config_t cfg = {
+    .base_path = "/fs",
+    .partition_label = NULL,
+    .max_files = 5,
+};
 
-void app_main(void)
-{
-    blusys_fs_t *fs;
-    blusys_fs_config_t cfg = {
-        .base_path              = "/fs",
-        .partition_label        = NULL,     /* default "spiffs" partition */
-        .max_files              = 5,
-        .format_if_mount_failed = false,
-    };
-    blusys_fs_mount(&cfg, &fs);
-
-    const char *msg = "hello\n";
-    blusys_fs_write(fs, "log.txt", msg, strlen(msg));
-
-    char buf[64] = {0};
-    size_t n = 0;
-    blusys_fs_read(fs, "log.txt", buf, sizeof(buf) - 1, &n);
-    printf("%s", buf);
-
-    blusys_fs_unmount(fs);
-}
+blusys_fs_mount(&cfg, &fs);
+blusys_fs_write(fs, "log.txt", "hello\n", 6);
+blusys_fs_unmount(fs);
 ```
 
-## Common Mistakes
+## Common mistakes
 
-- **missing SPIFFS partition** — the app's partition table must include a SPIFFS partition (label `"spiffs"` by default); `mount()` returns `BLUSYS_ERR_IO` otherwise
-- **using subdirectories** — SPIFFS has a flat namespace; `"logs/boot.txt"` is just a filename, not a directory
-- **filename over 32 characters** — SPIFFS rejects longer names
-- **high-frequency writes to the same file** — SPIFFS is not wear-levelled; use NVS for frequently updated key-value data
+- missing the SPIFFS partition
+- treating SPIFFS paths as directories
+- using long filenames
+- writing the same file at high frequency
 
-## Target Support
+## Target support
 
-| Target | Supported |
-|--------|-----------|
-| ESP32 | yes |
-| ESP32-C3 | yes |
-| ESP32-S3 | yes |
+**ESP32, ESP32-C3, ESP32-S3** — all supported.
 
-## Thread Safety
+## Thread safety
 
-- all operations on a handle are serialised with an internal mutex
-- concurrent calls on the same handle are safe
-- concurrent calls on different handles backed by different partitions are also safe
-
-## ISR Notes
-
-No ISR-safe calls are defined for the filesystem module.
+- operations on a handle are serialised internally
+- concurrent calls on different handles are safe
 
 ## Limitations
 
-- SPIFFS does not support subdirectories; all files live in a flat namespace at the partition root
-- maximum filename length is 32 characters (SPIFFS constraint)
-- file paths passed to Blusys FS functions are limited to 63 characters
-- SPIFFS is not wear-levelled; avoid high-frequency writes to the same file (use NVS instead)
-- only one SPIFFS partition may be mounted at a time via this module; multiple partitions require direct ESP-IDF SPIFFS APIs
+- flat namespace only
+- 32-character filename limit
+- only one SPIFFS partition through this module at a time
 
-## Example App
+## Example app
 
-See `examples/validation/platform_lab/` (`plat_storage` scenario, SPIFFS menuconfig).
+`examples/validation/platform_lab/` (`plat_storage`)

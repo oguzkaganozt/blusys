@@ -1,36 +1,36 @@
 # App
 
-`blusys::app` is the product API: reducer, views, capabilities, and profiles. Tiers and repo layout: [Architecture](../internals/architecture.md). Onboarding: [Getting started](../start/index.md).
+`blusys::app` is the product layer: state, actions, views, capabilities, and profiles.
 
-## Model
+## What lives where
 
-| Concept | Owner | Description |
-|---------|-------|-------------|
-| **State** / **Actions** | App | Data and events |
-| **`update(ctx, state, action)`** | App | Reducer (in-place state changes) |
-| **Screens & views** | App | Stock or custom widgets |
-| **Profiles** | Framework | Host, headless, device |
-| **Capabilities** | Framework | Connectivity, storage, and other services |
+| Product code owns | Framework owns |
+|-------------------|----------------|
+| `State`, `Action`, and `update(ctx, state, action)` | runtime, routing, overlays, and locks |
+| screens, views, and widgets | input bridges and capability orchestration |
+| app wiring in `main/` | host, device, and QEMU adapters |
+| product-specific decisions | display bring-up and profile-driven setup |
 
-## Read in this order
+## Read this order
 
-1. [Reducer model](reducer-model.md) → [App runtime model](app-runtime-model.md) → [Views & widgets](views-and-widgets.md) / [Widget gallery](widget-gallery.md) for UI.
-2. [Capabilities](capabilities.md) + [Capability composition](capability-composition.md) → [Profiles](profiles.md).
-3. Extending the stack: [Authoring a capability](capability-authoring.md), [Adding a capability](adding-a-capability.md), [Adding a flow](adding-a-flow.md), [Custom capabilities](custom-capabilities.md) — most products stop at step 2.
-4. [Memory and budgets](memory-and-budgets.md) if you tune queues/heap; [Validation and host loop](validation-host-loop.md) and [Device, host & QEMU CLI](cli-host-qemu.md) for local/CI workflow.
+1. [Reducer model](reducer-model.md)
+2. [Views & widgets](views-and-widgets.md)
+3. [Capabilities](capabilities.md) and [Capability composition](capability-composition.md)
+4. [Profiles](profiles.md)
+5. [App runtime model](app-runtime-model.md) and [Validation & host loop](validation-host-loop.md) when you need the operational path
 
 ## What the framework handles
 
-You should not need `runtime.init`, `route_sink` / `feedback_sink`, raw `blusys_display_lock` orchestration, or ad hoc Wi-Fi bring-up — runtime, profiles, and capabilities own that.
+You should not need `runtime.init`, `route_sink`, `feedback_sink`, raw `blusys_display_lock` orchestration, or ad hoc Wi-Fi bring-up. Use `ctx.fx()` for navigation and overlays, and let capabilities own lifecycle-heavy services.
 
-**Prefer** `app_spec`, thin `app_main.cpp`, `update()` + **actions** + `view::` helpers (not raw `lv_` in product code). Use `row` / `col` / `page_create_in` with the shell ([UI layout](../internals/architecture.md#ui-layout-lvgl-flex)). For cases the canonical path cannot cover yet, keep HAL/service usage at clear boundaries.
+## Example paths
 
-## Example apps
+| Path | Why read it |
+|------|-------------|
+| [`examples/reference/connectivity/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connectivity) | Wi-Fi, HTTP, MQTT in a compact connected product |
+| [`examples/reference/display/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/display) | LCD, LVGL, encoder, and UI flow |
+| [`examples/reference/hal/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/hal) | GPIO, UART, I2C, SPI, ADC, PWM, and other low-level work |
+| [`examples/reference/atlas/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/atlas) | full connected product composition |
+| [`examples/reference/override/`](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/override) | product-local capability and explicit app spec |
 
-- [reference/display](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/display) — display, LVGL, encoder
-- [reference/connectivity](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/connectivity) — Wi-Fi, HTTP, MQTT
-- [reference/hal](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/hal) — GPIO, PWM, UART, etc.
-- [reference/override](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/override) — product-local capability
-- [external](https://github.com/oguzkaganozt/blusys/tree/main/examples/external) — header-shape check
-
-Scaffolded products: [Getting started](../start/index.md) quickstarts; deeper demos above.
+Validation examples in `examples/validation/` are for regression and smoke testing, not first-time learning.

@@ -1,51 +1,42 @@
 # System
 
-Runtime helpers common across all supported targets: uptime, reset reason, heap statistics, and soft restart.
+Common runtime helpers: uptime, reset reason, heap statistics, and soft restart.
 
-> **API reference:** `components/blusys/include/blusys/hal/system.h` and the generated API reference.
+## At a glance
 
-## Quick Example
+- available on all supported targets
+- read-only helpers are thread-safe
+- restart does not return
+
+## Quick example
 
 ```c
-#include <inttypes.h>
-#include <stdio.h>
-
-#include "blusys/blusys.h"
-
-void app_main(void)
-{
-    uint64_t uptime_us;
-
-    if (blusys_system_uptime_us(&uptime_us) == BLUSYS_OK) {
-        printf("uptime_us=%" PRIu64 "\n", uptime_us);
-    }
+uint64_t uptime_us;
+if (blusys_system_uptime_us(&uptime_us) == BLUSYS_OK) {
+    printf("uptime_us=%" PRIu64 "\n", uptime_us);
 }
 ```
 
-## Common Mistakes
+## Common mistakes
 
-- passing `NULL` for output pointers
-- assuming uptime survives restart or deep sleep
-- expecting raw ESP-IDF reset reason values instead of the Blusys enum
+- passing NULL output pointers
+- expecting uptime to survive restart or deep sleep
+- expecting raw ESP-IDF reset reasons
 
-## Target Support
+## Target support
 
 **ESP32, ESP32-C3, ESP32-S3** — all supported.
 
-## Thread Safety
+## Thread safety
 
-- all read functions are safe to call from multiple tasks concurrently
-- `blusys_system_restart()` terminates normal program flow and does not return
-
-## ISR Notes
-
-No ISR-safe calls are defined for the system module.
+- read functions are safe to call concurrently
+- restart terminates normal program flow
 
 ## Limitations
 
-- uptime resets after a software restart or deep sleep wakeup
-- reset reasons are mapped into a compact Blusys enum; unknown ESP-IDF reasons map to `BLUSYS_RESET_REASON_UNKNOWN`
+- uptime resets after restart or deep sleep wakeup
+- unknown reset reasons map to `BLUSYS_RESET_REASON_UNKNOWN`
 
-## Example App
+## Example app
 
-See `examples/validation/hal_io_lab/` (menuconfig: system_info scenario).
+`examples/validation/hal_io_lab` (`system_info`)

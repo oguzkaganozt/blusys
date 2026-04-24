@@ -1,9 +1,19 @@
 # Product shape
 
-New products are described in `blusys.project.yml` by **`schema`**, **`interface`**, **`capabilities`**, **`profile`**, and **`policies`** (the scaffold and examples use the same vocabulary).
+`blusys.project.yml` captures the shape of a product: `schema`, `interface`, `capabilities`, `profile`, and `policies`.
 
-!!! note "CLI"
-    Use `blusys create --list` to see interfaces, presets, capabilities, profiles, and policies. Requires a working [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md) install / `blusys` on your `PATH`.
+!!! note
+    `blusys create --list` shows the live catalog. In a terminal, `blusys create` also offers the same choices in a small prompt.
+
+## Shape fields
+
+| Field | What it controls | Default |
+|-------|------------------|---------|
+| `schema` | manifest version | `1` |
+| `interface` | local UI on or off | `interactive` |
+| `capabilities` | framework modules to wire | `[]` |
+| `profile` | interactive hardware preset or `null` | `null` |
+| `policies` | non-capability overlays | `[]` |
 
 ## Grammar
 
@@ -12,75 +22,32 @@ blusys create [--interface interactive|headless] [--profile profile] [--with cap
 blusys create --list
 ```
 
-- **`--interface`** (single): how the product presents itself locally - UI on/off, host build defaults.
-- **`--with`** (multi): [framework capabilities](../app/capabilities.md) - connectivity, storage, telemetry, OTA, and the rest (see `--list`).
-- **`profile`** (single): built-in device/profile factory name; `null` uses the interface default.
-- **`--policy`** (multi): cross-cutting behavior that is **not** a runtime capability - e.g. `low_power`.
+- **`--interface`** chooses the runtime shape.
+- **`--with`** adds framework capabilities such as connectivity, storage, telemetry, OTA, diagnostics, or LAN control.
+- **`--profile`** selects an interactive device profile; leave it `null` for the interface default.
+- **`--policy`** applies an overlay such as `low_power`.
 
-Defaults: **`interactive`**, empty capabilities, `null` profile, empty policies. `blusys create` with no flags uses that default shape.
+## Good starting shapes
 
-## Interfaces
+| Goal | Command |
+|------|---------|
+| blank interactive | `blusys create my_product` |
+| compact display | `blusys create --interface interactive --profile st7735_160x128 --with connectivity,storage my_panel` |
+| connected headless | `blusys create --interface headless --with connectivity,telemetry,ota --policy low_power my_sensor` |
 
-| Interface | Role | Typical use |
-|-----------|------|-------------|
-| **interactive** | Local UI enabled, encoder-friendly | Small displays, operator panels, settings |
-| **headless** | No local UI by default; headless entry | Telemetry, gateways, invisible-when-healthy devices |
+!!! note
+    Profile catalogs are interactive-only today. Headless products use `BLUSYS_APP_HEADLESS` without a display profile.
 
-Interactive and headless starters stay reducer-first through `update(ctx, state, action)`; interactive products add `main/ui/` only when needed.
+!!! warning
+    Capability rules are validated. For example, `telemetry` requires `connectivity`, and `ota` needs connectivity, Bluetooth, or USB.
 
-## Reference examples in this repo
+## What this means
 
-After `blusys create`, use [Getting started](index.md) quickstarts for the thin scaffold; go deeper with `examples/reference/` (demos) and `examples/validation/` (smoke apps). Older in-tree quickstart templates are not the path for new work.
+- **Capabilities** are wired in product code and turned into actions by the reducer path.
+- **Profiles** are named hardware presets selected by the manifest.
+- **Policies** adjust defaults and overlays without introducing another capability type.
 
-| Direction | Example path | Notes |
-|-----------|--------------|-------|
-| Display + LVGL | `examples/reference/display/` | LCD / UI / encoder / OLED scenarios (menuconfig) |
-| Connected clients | `examples/reference/connectivity/` | Wi-Fi / HTTP / MQTT scenarios (menuconfig) |
-| HAL demos | `examples/reference/hal/` | GPIO, PWM, button, timer, NVS, ADC, SPI, I2C, UART |
-| Low-power telemetry | `examples/validation/headless_telemetry_low_power/` | Internal validation build |
-
-For historical minimal connectivity demos (kept for regression), see `examples/validation/connected_device/` and `examples/validation/connected_headless/`. New projects should start from the manifest-first starter docs instead of in-tree quickstart templates.
-
-## Capabilities and policies
-
-- **Capabilities** are composed in the product code behind the manifest; the reducer receives work via **actions**; capability events are handled in the product event path (see [Capability composition](../app/capability-composition.md)).
-- **Profiles** are named C++ factories selected by the manifest's `profile` field. Leave it `null` for the interface default.
-- **Policies** adjust defaults and integration overlays (e.g. power-related `sdkconfig` fragments) without adding a new capability kind.
-
-Dependency, target, and profile/interface compatibility rules (e.g. `telemetry` requires `connectivity`, `usb` targets ESP32-S3) are enforced by the generator and manifest validator.
-
-## Build layout for generated projects
-
-`blusys create` writes a top-level `CMakeLists.txt` that sets `EXTRA_COMPONENT_DIRS`
-to the Blusys `components/` tree from the checkout used at generation time (embedded
-path). Managed dependencies (ESP-IDF component registry, LVGL, etc.) stay in
-`main/idf_component.yml`. If you move the project or build outside the original tree,
-update `EXTRA_COMPONENT_DIRS` or vendor the platform components - see
-[Architecture](../internals/architecture.md) (consumption models).
-
-## Rules
-
-- No raw LVGL in normal product screens - use `blusys::` UI helpers, stock widgets, and the custom widget contract.
-- Keep the event bridge thin: profiles, capability list, `on_event`, bridges; heavy logic stays in application code.
-
-## Advanced
-
-### Override in code
-
-The generated spec lives in `build/generated/blusys_app_spec.h`. If you need a one-off shape change, copy it or hand-write your own `AppSpec` in `app_main.cpp` and pass it to `blusys::run`. The manifest validator still runs, so the repo stays schema-driven.
-
-```cpp
-#include "blusys_app_spec.h"
-
-extern "C" void app_main() {
-    auto spec = blusys::generated::kAppSpec;
-    blusys::run(spec);
-}
-```
-
-For a complete product-local capability example, see [Product-custom capabilities](../app/custom-capabilities.md) and the [override reference example](https://github.com/oguzkaganozt/blusys/tree/main/examples/reference/override/).
-
-## Next pages
+## Next steps
 
 - [Interactive quickstart](quickstart-interactive.md)
 - [Headless quickstart](quickstart-headless.md)

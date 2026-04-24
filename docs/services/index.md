@@ -1,49 +1,38 @@
 # Services
 
-Runtime services provide stateful capabilities on top of the HAL layer.
+Runtime services sit above the HAL and below the framework capabilities. Use them when you need exact lifecycle or module-specific types.
 
-!!! note "Product code"
-
-    For most product apps, prefer [Capabilities](../app/capabilities.md) instead of calling these C APIs directly. Use the service pages here when you need the exact lifecycle or types for a specific module.
+!!! note
+    Most product code should prefer [Capabilities](../app/capabilities.md) and only drop down to services when the direct API matters.
 
 ## Connectivity
 
-| Service | Description |
-|---------|-------------|
-| [WiFi](wifi.md) | Station and AP mode connection management |
-| [WiFi Provisioning](wifi_prov.md) | BLE or SoftAP-based credential provisioning |
-| [WiFi Mesh](wifi_mesh.md) | ESP-MESH network formation |
-| [ESP-NOW](espnow.md) | Connectionless peer-to-peer messaging |
-| [Bluetooth](bluetooth.md) | Classic Bluetooth SPP profiles |
-| [BLE GATT](ble_gatt.md) | BLE peripheral GATT server |
-| [mDNS](mdns.md) | Multicast DNS service discovery |
+- [WiFi](wifi.md)
+- [WiFi Provisioning](wifi_prov.md)
+- [WiFi Mesh](wifi_mesh.md)
+- [ESP-NOW](espnow.md)
+- [Bluetooth](bluetooth.md)
+- [BLE GATT](ble_gatt.md)
+- [BLE HID Device](ble_hid_device.md)
+- [mDNS](mdns.md)
 
 ## Protocol
 
-| Service | Description |
-|---------|-------------|
-| [HTTP](http.md) | HTTP client and server |
-| [MQTT](mqtt.md) | MQTT client with TLS support |
-| [WebSocket](ws_client.md) | WebSocket client |
-
-!!! tip "Protocol clients"
-    HTTP, MQTT, and WebSocket assume a working IP path (usually [WiFi](wifi.md) associated first). Each service page documents common failure modes in **Common mistakes**.
+- [HTTP](http.md)
+- [MQTT](mqtt.md)
+- [WebSocket](ws_client.md)
 
 ## Display & Input
 
-| Service | Description |
-|---------|-------------|
-| [UI](ui.md) | LVGL widget system and display runtime |
-| [USB HID](usb_hid.md) | USB and BLE HID input devices |
+- [UI (LVGL)](ui.md)
+- [USB HID](usb_hid.md)
 
 ## System
 
-| Service | Description |
-|---------|-------------|
-| [Console](console.md) | Serial console and command registration |
-| [Filesystem](fs.md) | SPIFFS-based filesystem |
-| [FAT Filesystem](fatfs.md) | FAT filesystem on flash or SD |
-| [Local Control](local_ctrl.md) | Local network control endpoint |
-| [Power Management](power_mgmt.md) | CPU frequency and sleep policy |
-| [SNTP](sntp.md) | Network time synchronization |
-| [OTA](ota.md) | Over-the-air firmware updates |
+- [Console](console.md)
+- [Filesystem](fs.md)
+- [FAT Filesystem](fatfs.md)
+- [Local Control](local_ctrl.md)
+- [Power Management](power_mgmt.md)
+- [SNTP](sntp.md)
+- [OTA](ota.md)

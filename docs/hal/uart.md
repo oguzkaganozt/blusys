@@ -1,10 +1,14 @@
 # UART
 
-Blocking serial communication with an optional async callback layer. Fixed line format: 8N1.
+Blocking serial communication with an optional async callback layer.
 
-Callbacks run in task context through an internal worker task — not in ISR context.
+## At a glance
 
-## Quick Example
+- fixed 8N1 line format
+- callbacks run in task context
+- concurrent read/write on the same handle is serialised
+
+## Quick example
 
 ```c
 blusys_uart_t *uart;
@@ -17,38 +21,32 @@ blusys_uart_read(uart, rx_buffer, sizeof(rx_buffer), 1000, &read_size);
 blusys_uart_close(uart);
 ```
 
-## Common Mistakes
+## Common mistakes
 
-- using a UART port that is already occupied by board firmware or application code
-- forgetting to connect TX to RX for loopback testing
-- using board pins that are not routed safely on your hardware
-- calling `blusys_uart_read()` while an RX callback is registered (mutually exclusive)
-- calling `blusys_uart_close()` from inside a UART async callback
+- using a busy port
+- forgetting loopback for tests
+- overlapping blocking reads with RX callbacks
+- closing from inside a callback
 
-## Target Support
+## Target support
 
 **ESP32, ESP32-C3, ESP32-S3** — all supported.
 
-## Thread Safety
+## Thread safety
 
-- concurrent read and write on the same handle are serialized internally
 - different handles may be used independently
-- do not call `blusys_uart_close()` concurrently with other calls on the same handle
-- do not call `blusys_uart_close()` or change callbacks from within a UART async callback
-- blocking `blusys_uart_read()` must not overlap with an active RX callback
 - blocking and async TX must not overlap on the same handle
 
-## ISR Notes
+## ISR notes
 
-UART callbacks run in task context through an internal worker task, not in ISR context.
+- callbacks run in task context, not ISR context
 
 ## Limitations
 
-- one async TX operation can be pending per handle
-- the line format is fixed to 8N1; hardware flow control is not exposed
-- each handle owns one ESP-IDF UART driver instance for one UART port
-- closing the handle cancels pending async callback delivery
+- one async TX can be pending per handle
+- hardware flow control is not exposed
 
-## Example App
+## Example apps
 
-See `examples/reference/hal/` (UART scenario — blocking loopback) and `examples/validation/platform_lab/` (UART suite — async callbacks).
+- `examples/reference/hal` (`UART`)
+- `examples/validation/platform_lab` (`UART callbacks`)

@@ -1,11 +1,11 @@
 # Architecture
 
-Tiering, include rules, and where code lives. For mission, install, and the high-level stack diagram, see the repository [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md) (**Product foundations** and **Architecture**). For product API usage, see [App](../app/index.md).
+Tiering, include rules, and where code lives. For mission, install, and the high-level stack diagram, see the repository [README](https://github.com/oguzkaganozt/blusys/blob/main/README.md). For product API usage, see [App](../app/index.md).
 
 ## At a glance
 
 - **You are** a contributor changing `components/blusys/` or wiring a product to the tiers.
-- **You need** the dependency direction, CI layering rules, and where HAL vs framework files sit.
+- **You need** the dependency direction, the layer model, and where HAL vs framework files sit.
 - **Next** [Guidelines](guidelines.md) for API shape, then [Contributing](contributing.md) for checks.
 
 The repo ships a single ESP-IDF component `components/blusys/` with four internal layers sharing the `blusys/` header namespace:

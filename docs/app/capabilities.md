@@ -1,46 +1,42 @@
 # Capabilities
 
-Capabilities wrap runtime services (WiFi, storage, …) so product code uses **config + `on_event` + `update()`** instead of hand-rolling lifecycles. **Stacks and rules:** [Capability composition](capability-composition.md). **Implementing a new one:** [Authoring a capability](capability-authoring.md).
+Capabilities wrap runtime services so product code configures them, reacts to events, and reads status instead of owning lifecycles.
 
-**Contract (summary):** plain config; wire on `app_spec` from `main/`; **status** via `app_ctx`; **events** → `on_event` → `Action`. Details and edge cases: [Authoring a capability](capability-authoring.md#contract).
+## How they fit
 
-`on_event` example:
+1. Define config in `main/`.
+2. Add capability instances to `app_spec`.
+3. Translate integration events in `on_event`.
+4. Query live state with `ctx.status_of<T>()`.
 
-```cpp
-std::optional<Action> on_event(blusys::event event, State &state)
-{
-    (void)state;
-    if (event.source == blusys::event_source::integration &&
-        event.id == 0x0102u) { // example: connectivity ready
-        return Action::wifi_connected;
-    }
-    return std::nullopt;
-}
-```
+## Common capabilities
 
-## `connectivity_capability`
+| Capability | Best for | Depends on |
+|------------|----------|------------|
+| `connectivity` | Wi-Fi, SNTP, mDNS | none |
+| `telemetry` | buffered delivery | `connectivity` |
+| `ota` | firmware update | `connectivity`, `bluetooth`, or `usb` |
+| `lan_control` | local HTTP control | `connectivity` |
+| `storage` | SPIFFS / FATFS | none |
+| `diagnostics` | health snapshots | none |
 
-Manages WiFi connection and reconnect lifecycle, SNTP, and mDNS.
-
-### Config
+## Wiring
 
 ```cpp
 blusys::connectivity_config conn_cfg{
-    .wifi_ssid      = "MyNetwork",
-    .wifi_password  = "password",
-    .sntp_server    = "pool.ntp.org",   // optional
-    .mdns_hostname  = "my-device",      // optional
+    .wifi_ssid     = "MyNetwork",
+    .wifi_password = "password",
+    .sntp_server   = "pool.ntp.org",
 };
-```
 
-### Wiring (in `main/app_main.cpp`)
-
-```cpp
-#include "blusys/framework/capabilities/connectivity.hpp"
-#include "blusys/framework/capabilities/list.hpp"
+blusys::storage_config stor_cfg{
+    .spiffs_base_path = "/fs",
+    .fatfs_base_path  = "/sd",
+};
 
 static blusys::connectivity_capability conn{conn_cfg};
-static blusys::capability_list_storage capabilities{&conn};
+static blusys::storage_capability stor{stor_cfg};
+static blusys::capability_list_storage capabilities{&conn, &stor};
 
 static const blusys::app_spec<State, Action> spec{
     .initial_state = {},
@@ -50,63 +46,35 @@ static const blusys::app_spec<State, Action> spec{
 };
 ```
 
-### Status query
+## Event bridge
 
 ```cpp
-// In on_tick or update():
+std::optional<Action> on_event(blusys::event event, State &state)
+{
+    (void)state;
+    if (event.source == blusys::event_source::integration &&
+        event.id == 0x0102u) {
+        return Action::wifi_connected;
+    }
+    return std::nullopt;
+}
+```
+
+## Status
+
+```cpp
 const auto *status = ctx.status_of<blusys::connectivity_capability>();
 if (status != nullptr && status->connected) {
-    // WiFi is up
+    // Wi-Fi is up
 }
 ```
 
-### Events
+## Advanced use
 
-| Event | Description |
-|-------|-------------|
-| `connectivity_event::got_ip` | WiFi connected and IP assigned |
-| `connectivity_event::disconnected` | WiFi disconnected |
-| `connectivity_event::time_synced` | SNTP sync complete |
+If you need direct filesystem handles, `ctx.fx().storage.spiffs()` and `ctx.fx().storage.fatfs()` are available on device builds.
 
-## `storage_capability`
+## Next steps
 
-Manages SPIFFS and FAT filesystem mounting.
-
-### Config
-
-```cpp
-blusys::storage_config stor_cfg{
-    .spiffs_base_path = "/fs",    // nullptr to skip SPIFFS
-    .fatfs_base_path  = "/sd",    // nullptr to skip FAT
-};
-```
-
-### Wiring
-
-```cpp
-#include "blusys/framework/capabilities/storage.hpp"
-
-static blusys::storage_capability stor{stor_cfg};
-static blusys::capability_list_storage capabilities{&conn, &stor};
-```
-
-### File access (ESP-IDF target only)
-
-```cpp
-// After storage mounts, access raw filesystem handles:
-blusys_fs_t    *spiffs = ctx.fx().storage.spiffs();  // POSIX path-rooted FS
-blusys_fatfs_t *fatfs  = ctx.fx().storage.fatfs();   // FAT FS handle
-```
-
-### Status query
-
-```cpp
-const auto *status = ctx.status_of<blusys::storage_capability>();
-if (status != nullptr && status->spiffs_mounted) {
-    // SPIFFS is ready
-}
-```
-
-## Raw Service Access
-
-The underlying `blusys_wifi_*`, `blusys_sntp_*`, `blusys_fs_*` APIs remain available for advanced use cases through the capability/service internals.
+- [Capability composition](capability-composition.md)
+- [Authoring a capability](capability-authoring.md)
+- [Product-custom capabilities](custom-capabilities.md)

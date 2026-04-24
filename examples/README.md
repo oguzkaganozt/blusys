@@ -1,28 +1,25 @@
 # Examples
 
-The tree is intentionally small (see root `inventory.yml`). Everything else is selected via **menuconfig** scenarios inside merged projects.
+The example tree is intentionally small. Start with the reference examples, use validation examples for regression only.
 
-The quickstart starters were removed during the manifest-first scaffold refactor. See the starter docs under `docs/start/` for the target replacement shape.
+## Learn first
 
-## reference/
+- **connectivity** - Wi-Fi, HTTP, and MQTT in a compact connected product
+- **display** - LCD, LVGL, encoder, and UI flow
+- **hal** - GPIO, UART, I2C, SPI, ADC, PWM, timer, NVS, and more
 
-Focused capability demos. Pick a scenario in menuconfig.
+## Learn next
 
-- **hal** — HAL demos: GPIO, PWM, button, timer, NVS, ADC, SPI loopback, I2C scan, UART
-- **display** — LCD bring-up, LVGL UI, encoder, OLED; SPI/I2C pin config per target
-- **connectivity** — WiFi connect, HTTP client, MQTT client
+- **atlas** - full connected product composition and provisioning
+- **override** - product-local capability and explicit app spec
 
-## validation/
+## Validation only
 
-Internal CI / hardware smoke. Not the primary learning path.
+- **connected_headless** / **connected_device** - legacy regression coverage
+- **headless_telemetry_low_power** - policy and low-power smoke
+- **framework_device_basic** and the rest of `validation/` - CI and hardware smokes
 
-- **hal_io_lab** — consolidated digital / sensor / timing checks
-- **peripheral_lab** — I2C/SPI slave, TWAI, RMT, I2S, SD, GPIO expander, SSD1306
-- **network_services** — HTTP server, WebSocket, mDNS, SNTP, OTA, WiFi provisioning, local control
-- **platform_lab** — smoke, storage, power, console, framework core, concurrency suites
-- **wireless_esp_lab** / **wireless_bt_lab** — RF stacks
-- **usb_peripheral_lab** — USB host / device / HID
-- **headless_telemetry_low_power** — low-power telemetry profile
-- **external** — umbrella-header external-shape validation sample
-- **connected_device** / **connected_headless** — regression coverage (superseded by quickstarts)
-- **framework_device_basic** — device profile smoke build
+## Notes
+
+- Inventory and example selection live in `inventory.yml`.
+- `docs/start/` is the recommended new-product path.

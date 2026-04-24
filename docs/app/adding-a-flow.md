@@ -1,73 +1,46 @@
 # Adding a flow
 
-Flows are spec-selectable UI behaviors (settings, connectivity, OTA, …). They are not hard-wired framework internals — you pick them via `app_spec::flows`.
+Flows are UI behaviors you choose through `app_spec::flows`.
 
 ## What a flow is
 
-A flow is an object implementing `flow_base`:
-
-```cpp
-// blusys/framework/flows/flow_base.hpp
-class flow_base {
-public:
-    virtual void start(blusys::app_ctx &ctx) = 0;  // called before on_init
-    virtual void stop() {}                          // called on deinit
-};
-```
-
-`start()` registers the flow's screens with the navigation controller. By the time `on_init` fires, the flow's screens are navigable.
-
-## Stock flows
-
-| Flow | Class | When to use |
-|------|-------|-------------|
-| `settings_flow` | `blusys/framework/flows/settings.hpp` | Any app with user-facing settings |
-| `connectivity_flow` | `blusys/framework/flows/connectivity_flow.hpp` | When a connectivity capability is present |
-| `provisioning_flow` | `blusys/framework/flows/provisioning_flow.hpp` | When `wifi_prov` capability is present |
-| `ota_flow` | `blusys/framework/flows/ota_flow.hpp` | When `ota` capability is present |
-| `diagnostics_flow` | `blusys/framework/flows/diagnostics_flow.hpp` | When `diagnostics` capability is present |
-| `status_flow` | `blusys/framework/flows/status.hpp` | Default-on for apps with UI |
-| `boot_flow` | `blusys/framework/flows/boot.hpp` | Framework built-in; auto-included |
-| `error_flow` | `blusys/framework/flows/error.hpp` | Framework built-in; always on |
-| `loading_flow` | `blusys/framework/flows/loading.hpp` | Used internally by other flows |
-
-`boot_flow` and `error_flow` are framework built-ins that run regardless of spec. All others must be listed explicitly in `spec.flows`.
-
-## Using stock flows
-
-In `main/app_main.cpp`:
-
-```cpp
-static blusys::flows::settings_flow    kSettings{};
-static blusys::flows::connectivity_flow kConnect{};
-
-static blusys::flows::flow_base *kFlows[] = {&kSettings, &kConnect};
-
-spec.flows      = kFlows;
-spec.flow_count = std::size(kFlows);
-```
-
-Activation is conditional: `connectivity_flow` is a no-op if no connectivity capability is in `spec.capabilities`. Declare both; the framework handles the rest.
-
-## Writing a custom flow
-
-Subclass `flow_base`, register screens in `start()`, and add it to `spec.flows`:
+A flow implements `flow_base` and registers screens during `start()`.
 
 ```cpp
 class my_wizard_flow : public blusys::flows::flow_base {
 public:
     void start(blusys::app_ctx &ctx) override {
-        // register screens through the navigation fx namespace
-        ctx.fx().nav.register_screen(RouteId::my_wizard_step1, my_step1_create);
-        ctx.fx().nav.register_screen(RouteId::my_wizard_step2, my_step2_create);
+        ctx.fx().nav.register_screen(RouteId::step1, my_step1_create);
+        ctx.fx().nav.register_screen(RouteId::step2, my_step2_create);
     }
 };
 ```
 
-Keep flow constructors lightweight. Heavy state init belongs in `start()`.
+## Stock flows
 
-## See also
+| Flow | When to use |
+|------|-------------|
+| `settings_flow` | user-facing settings |
+| `connectivity_flow` | connectivity capability present |
+| `provisioning_flow` | Wi-Fi provisioning capability present |
+| `ota_flow` | OTA capability present |
+| `diagnostics_flow` | diagnostics capability present |
+| `status_flow` | UI apps that need a default status screen |
 
-- [App Runtime Model](app-runtime-model.md) — when flows start relative to on_init
-- [Capability composition](capability-composition.md) — pairing flows with capabilities
-- `components/blusys/include/blusys/framework/flows/` — all flow headers
+`boot_flow` and `error_flow` are built in and always on.
+
+## Use it
+
+```cpp
+static blusys::flows::settings_flow     kSettings{};
+static blusys::flows::connectivity_flow  kConnect{};
+static blusys::flows::flow_base *kFlows[] = {&kSettings, &kConnect};
+
+spec.flows = kFlows;
+spec.flow_count = std::size(kFlows);
+```
+
+## Next steps
+
+- [App runtime model](app-runtime-model.md)
+- [Capability composition](capability-composition.md)
