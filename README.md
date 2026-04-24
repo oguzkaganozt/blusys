@@ -2,6 +2,8 @@
 
 **Internal ESP32 product platform** on [ESP-IDF](https://docs.espressif.com/projects/esp-idf/) **v5.5+**. One dependency stack, one CLI, three supported silicon targets — **ESP32**, **ESP32-C3**, and **ESP32-S3** — and a product-facing API in `blusys::app` built around reducers, screens, and optional capabilities.
 
+Repo-specific workflow notes for agents live in `AGENTS.md`.
+
 ---
 
 ## Why this repo exists
@@ -28,7 +30,7 @@ These are the grounding constraints for the platform.
 
 **Principles.** One strong default path; keep implementations small; add abstraction only when it removes real app burden; one fixed scaffold; runtime services stay in C, product composition in the framework.
 
-**Validation.** Host smokes, scaffold checks, and CI expectations: **[docs/app/validation-host-loop.md](docs/app/validation-host-loop.md)**. Fast repo preflight: `blusys validate` (manifest checks, inventory, product-layout, lint, and tracked `build/generated/**` drift). Inventory-driven example builds: `blusys build-inventory <target> <ci_pr|ci_nightly>`. Unified `blusys build` / `blusys qemu` (chip, `host`, `qemu*`): **[docs/app/cli-host-qemu.md](docs/app/cli-host-qemu.md)**.
+**Validation.** Host smokes, scaffold checks, and CI expectations: **[docs/app/validation-host-loop.md](docs/app/validation-host-loop.md)**. Fast repo preflight: `blusys validate` (generated-artifact check first; then inventory, product-layout, layer invariants, framework UI + host bridge checks, and manifest scans when no manifest path is given). Inventory-driven example builds: `blusys build-inventory <target> <ci_pr|ci_nightly>`. Unified `blusys build` / `blusys qemu` (chip, `host`, `qemu*`): **[docs/app/cli-host-qemu.md](docs/app/cli-host-qemu.md)**.
 
 ---
 
@@ -130,7 +132,7 @@ idf_component_register(SRCS "main.cpp" REQUIRES blusys)
 SDL2 + LVGL host iteration on Linux for fast UI and smoke-test loops without flashing every change. `scripts/host/` holds the interactive demos and host smokes; `scripts/host-test/` is the minimal no-SDL headless loop. Setup: **[scripts/host/README.md](scripts/host/README.md)**.
 
 ```sh
-sudo apt install libsdl2-dev   # or your distro’s SDL2 dev package
+sudo apt install build-essential cmake pkg-config libsdl2-dev   # or your distro’s SDL2 dev package
 blusys host-build
 ./scripts/host/build-host/hello_lvgl
 ```
@@ -144,7 +146,7 @@ blusys host-build
 | `examples/reference/` | Deeper demos and per-area examples, nightly CI |
 | `examples/validation/` | Internal smoke and stress, nightly CI |
 
-The quickstart starters are temporarily removed while the manifest-first scaffold is being rewritten. See the manifest-first starter docs under `docs/start/`.
+The quickstart starters are currently absent while the manifest-first scaffold is being rewritten. See `docs/start/` for the replacement shape.
 
 Details and flags: **`inventory.yml`**.
 
