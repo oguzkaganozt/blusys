@@ -1,5 +1,7 @@
 #include "sdkconfig.h"
 
+#include <stdio.h>
+
 void run_platform_smoke(void);
 void run_platform_storage(void);
 void run_platform_power_mgmt(void);
