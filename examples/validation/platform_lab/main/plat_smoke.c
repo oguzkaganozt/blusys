@@ -35,6 +35,9 @@ void run_platform_smoke(void)
 {
     unsigned int feature;
 
+    printf(">>> run_platform_smoke entered\n");
+    fflush(stdout);
+
     printf("Blusys smoke app\n");
     printf("version: %s\n", blusys_version_string());
     printf("version_packed: %u\n", (unsigned int) blusys_version_packed());
