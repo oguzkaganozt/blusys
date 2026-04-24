@@ -1,3 +1,5 @@
+#include "sdkconfig.h"
+
 #if CONFIG_PLATFORM_LAB_SCENARIO_SMOKE
 #include <stdio.h>
 
