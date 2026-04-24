@@ -35,16 +35,25 @@ void run_platform_smoke(void)
 {
     unsigned int feature;
 
+    printf("### run_platform_smoke ENTERED ###\n");
+    fflush(stdout);
+
     printf("Blusys smoke app\n");
+    fflush(stdout);
     printf("version: %s\n", blusys_version_string());
+    fflush(stdout);
     printf("version_packed: %u\n", (unsigned int) blusys_version_packed());
+    fflush(stdout);
     printf("target: %s\n", blusys_target_name());
+    fflush(stdout);
     printf("cpu_cores: %u\n", (unsigned int) blusys_target_cpu_cores());
+    fflush(stdout);
 
     for (feature = 0; feature < BLUSYS_FEATURE_COUNT; ++feature) {
         printf("feature_%s: %s\n",
                feature_name((blusys_feature_t) feature),
                blusys_target_supports((blusys_feature_t) feature) ? "yes" : "no");
+        fflush(stdout);
     }
 
     printf("status_ok_string: %s\n", blusys_err_string(BLUSYS_OK));
