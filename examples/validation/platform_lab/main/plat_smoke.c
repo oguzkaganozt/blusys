@@ -48,6 +48,7 @@ void run_platform_smoke(void)
     }
 
     printf("status_ok_string: %s\n", blusys_err_string(BLUSYS_OK));
+    fflush(stdout);
 }
 
 #else
