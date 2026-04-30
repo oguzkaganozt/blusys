@@ -1,12 +1,12 @@
-name: Nightly Validation
+name: Weekly CI
 
 on:
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "0 3 * * 0"
   workflow_dispatch:
 
 concurrency:
-  group: nightly-${{ github.ref }}
+  group: weekly-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -60,9 +60,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: ccache-nightly-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
+          key: ccache-weekly-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
           restore-keys: |
-            ccache-nightly-${{ matrix.target }}-
+            ccache-weekly-${{ matrix.target }}-
 
       - name: Build all examples
         shell: bash
@@ -157,9 +157,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: ccache-nightly-display-variants-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
+          key: ccache-weekly-display-variants-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
           restore-keys: |
-            ccache-nightly-display-variants-
+            ccache-weekly-display-variants-
 
       - name: Build display variant matrix
         shell: bash
@@ -198,9 +198,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: ccache-nightly-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
+          key: ccache-weekly-${{ matrix.target }}-${{ hashFiles('components/**/*.c', 'components/**/*.h') }}
           restore-keys: |
-            ccache-nightly-${{ matrix.target }}-
+            ccache-weekly-${{ matrix.target }}-
 
       - name: Restore QEMU tools
         id: qemu-cache
